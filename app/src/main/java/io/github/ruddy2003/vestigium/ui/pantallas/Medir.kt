@@ -448,7 +448,7 @@ fun DialogoVisita(v: io.github.ruddy2003.vestigium.data.Visita, cerrar: () -> Un
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Repo.lugares.forEach { l -> io.github.ruddy2003.vestigium.ui.Ficha(l.nombre, l.id == lugar) { lugar = l.id } }
                 }
-                Ayuda("Si no fue en ninguno de tus lugares, «no estuve aquí» la quita.", Modifier.padding(top = 6.dp))
+                Ayuda("Si no fue en ninguno de tus lugares, «no estuve aquí» la quita, y la detección no la vuelve a poner.", Modifier.padding(top = 6.dp))
                 BotonTexto(onClick = {
                     if (!confirmar) { confirmar = true; return@BotonTexto }
                     Repo.borrarVisita(v.id); cerrar()
@@ -462,7 +462,7 @@ fun DialogoVisita(v: io.github.ruddy2003.vestigium.data.Visita, cerrar: () -> Un
             val cierre = when { nuevaSalida == null -> null; fin != v.salida?.let { Fechas.millis(it) } -> io.github.ruddy2003.vestigium.data.Lugares.CIERRE_MANUAL; else -> v.cierre }
             val n = v.copy(lugar = lugar, entrada = Fechas.isoDeMillis(ini), salida = nuevaSalida, cierre = cierre)
             if (n != v) {
-                Repo.guardarVisita(n)
+                Repo.guardarVisita(n, corregida = true)
                 io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Visita corregida") { Repo.guardarVisita(v) }
             }
             cerrar()

@@ -419,9 +419,9 @@ object Estadistica {
             io.github.ruddy2003.vestigium.data.ColdTurkey.CATEGORIAS.forEach { o -> v += Variable("laptop_${o.id}_min", "Minutos en la laptop: ${o.nombre.lowercase()}", "Laptop") }
         }
         if (Repo.momentos.any { it.con_quien.isNotEmpty() }) {
-            v += Variable("acompanado_pct", "Avisos de ánimo con alguien (0 a 1)", "Social")
-            Catalogo.CON_QUIEN.filter { it.id != "solo" }.forEach { o -> v += Variable("con_${o.id}", "Avisos con ${o.nombre.lowercase()} (0 a 1)", "Social") }
-            v += Variable("valencia_acompanado", "Valencia en avisos con alguien", "Ánimo"); v += Variable("valencia_solo", "Valencia en avisos estando solo", "Ánimo")
+            v += Variable("acompanado_pct", "Registros de ánimo con alguien en persona (0 a 1)", "Social")
+            Catalogo.CON_QUIEN.filter { it.id != "solo" }.forEach { o -> v += Variable("con_${o.id}", "Registros de ánimo con ${o.nombre.lowercase()} (0 a 1)", "Social") }
+            v += Variable("valencia_acompanado", "Valencia en registros con alguien en persona", "Ánimo"); v += Variable("valencia_solo", "Valencia en registros sin nadie en persona", "Ánimo")
         }
         Catalogo.CONTEXTOS.forEach { v += Variable("ctx_${it.id}", "Contexto: ${it.nombre} (0/1)", "Contexto") }
         Catalogo.CIENTIFICAS.forEach { p -> p.opciones.filter { it.id != "no_aplica" }.forEach { o -> v += Variable("${p.clave}_${o.id}", "${o.nombre} (0/1)", "Lectura del día") } }
@@ -518,14 +518,15 @@ object Estadistica {
             emoUsadas.forEach { e -> r["n_$e"] = regs.count { e in Catalogo.emocionesDe(it) }.toDouble() }
             penUsados.forEach { t -> r["n_$t"] = regs.count { t in Catalogo.pensamientosDe(it) }.toDouble() }
             if (primerImpulso != null && f >= primerImpulso) r["n_impulso"] = lista.count { it.tipo == "impulso" }.toDouble()
-            // Con quién: la proporción de avisos de ánimo con cada compañía, y el ánimo solo o acompañado.
-            val con = mu.filter { it.con_quien.isNotEmpty() }
+            // Con quién: la proporción de registros de ánimo (avisos y los que abres tú) con cada compañía, y el ánimo solo o
+            // acompañado. Acompañado es con alguien en persona: «por mensaje o llamada» no cuenta (D.201).
+            val con = an.filter { it.con_quien.isNotEmpty() }
             if (con.isNotEmpty()) {
-                val acomp = con.filter { "solo" !in it.con_quien }
+                val (acomp, solos) = con.partition { Catalogo.acompanado(it.con_quien) }
                 r["acompanado_pct"] = acomp.size.toDouble() / con.size
                 Catalogo.CON_QUIEN.filter { it.id != "solo" }.forEach { o -> r["con_${o.id}"] = con.count { o.id in it.con_quien }.toDouble() / con.size }
                 r["valencia_acompanado"] = media(acomp.mapNotNull { it.valencia?.toDouble() })
-                r["valencia_solo"] = media(con.filter { "solo" in it.con_quien }.mapNotNull { it.valencia?.toDouble() })
+                r["valencia_solo"] = media(solos.mapNotNull { it.valencia?.toDouble() })
             }
         }
         // Avisos de ánimo (v13): planeados, mostrados, respondidos y tasa de respuesta. Los días sin registro quedan sin dato.

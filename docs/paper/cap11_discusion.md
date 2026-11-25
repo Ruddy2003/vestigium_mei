@@ -214,7 +214,7 @@ Muchas reglas de la app son **[Diseño propio]** o **[Aproximación]**. Varias s
 | Valencia del diario | `muestreo_valencia` y el cierre (`animo_cierre_valencia`) del mismo día | La convergencia entre el ánimo recordado y el momentáneo; en qué días se separan |
 | Ventana de ±10 días y umbral de 0.12 para «lenta» | `vm_relaciones(ventana = 7)`, `14` o `28` | Si las relaciones firmes dependen de esas cifras (análisis de sensibilidad) |
 | Factor AR(1) y n efectivo | Simulaciones con la autocorrelación real de tus variables | Si la cobertura del 95 % se cumple con la forma real de tus series, no solo con AR(1) |
-| Detección de lugares (75 m, 20 min, 120 m) | Las visitas que corregiste («fue en…», «no estuve aquí», desde N7) | Los errores de la detección automática; hoy «no estuve aquí» no se guarda (capítulo 4, sección 4.4.3), así que primero habría que guardarlo |
+| Detección de lugares (75 m, 20 min, 120 m) | Las visitas que corregiste («fue en…», «no estuve aquí», desde N7) | Los errores de la detección automática. Desde el esquema 29 (D.203), las visitas quitadas o pasadas a otro lugar quedan en `Config.visitas_quitadas` (capítulo 4, sección 4.4.3), pero solo 90 días y solo en el respaldo, no en la exportación: para usarlas en R habría que exportarlas en una tabla nueva |
 
 La primera fila es la más fácil y la más útil: el panel ya trae `sueno_inicio_h`, `sueno_fin_h`, `primer_uso_h` y `ultimo_uso_h`, así que es una comparación de una tarde en R.
 

@@ -698,6 +698,14 @@ object Widgets {
         return v
     }
 
+    /** Si hay al menos un widget de la app puesto en el teléfono (para los días de uso, `UsoDias.WIDGET`). */
+    fun hayAlguno(ctx: Context): Boolean = runCatching {
+        val m = AppWidgetManager.getInstance(ctx)
+        listOf(WidgetEnfoque::class.java, WidgetAnimo::class.java, WidgetMomento::class.java, WidgetHoy::class.java, WidgetGasto::class.java,
+            WidgetSueno::class.java, WidgetHabitos::class.java, WidgetMes::class.java, WidgetAnillos::class.java, WidgetFoto::class.java,
+            WidgetCifra::class.java).any { m.getAppWidgetIds(ComponentName(ctx, it)).isNotEmpty() }
+    }.getOrDefault(false)
+
     fun actualizar(ctx: Context) {
         val m = AppWidgetManager.getInstance(ctx)
         // Cada widget por su cuenta: antes, si uno fallaba, los siguientes y los accesos directos ya no se actualizaban.

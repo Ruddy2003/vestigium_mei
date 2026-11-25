@@ -1255,7 +1255,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** las variables de lugar (`en_casa_min`, minutos por tipo, `lugares_distintos`; H-1-2) cuentan visitas mal asignadas, y las huérfanas desaparecen de unas variables pero no de otras.
 - **Gravedad:** Media.
 - **Propuesta:** N-05 (renombrar, cambiar el radio, reasignar o quitar una visita; al borrar un lugar, decidir qué pasa con sus visitas).
-- **Estado:** Resuelto en la entrega N7 de la revisión de navegación: renombrar, radio, ignorar; visitas con «fue en…» y «no estuve aquí»; al quitar un lugar, sus visitas pasan a otro o se quitan. Queda abierto que «no estuve aquí» no se recuerda (ver capítulo 4).
+- **Estado:** Resuelto en la entrega N7 de la revisión de navegación: renombrar, radio, ignorar; visitas con «fue en…» y «no estuve aquí»; al quitar un lugar, sus visitas pasan a otro o se quitan. Lo que quedaba abierto, que «no estuve aquí» no se recordaba, se resolvió en el esquema 29 (D.203, 25 nov 2026): las visitas quitadas o pasadas a otro lugar se recuerdan 90 días y la detección no las vuelve a crear (capítulo 4, sección 4.4.3).
 
 ### H-NAV-5 · La corrección manual del sueño se puede perder sin aviso
 - **Dónde:** `ui/EditarSueno.kt:63-67` («quitar la corrección y volver a lo del reloj»: un toque, sin confirmar); `sensores/Salud.kt:226-231` (si el reloj no tiene esa noche, la relectura deja `sueno_min = null`); `data/Importar.kt:72` (restaurar un respaldo reemplaza el registro de salud del día).
@@ -1386,6 +1386,7 @@ Encontrados al llevar la información nueva de los momentos a pantallas y report
 - **Por qué importa:** la misma pregunta da cifras distintas según la pantalla. Que los avisos sean al azar y los registros propios no (capítulo 3) es una buena razón para separarlos, pero no está dicha en la pantalla.
 - **Gravedad:** Baja.
 - **Propuesta:** decidir una regla y usarla en todos lados, o rotular en Explorar y en los reportes que esas cifras incluyen los registros propios.
+- **Estado:** Resuelto en el esquema 29 (D.201, 25 nov 2026). Decisión del autor: todos los registros de ánimo en todas las pantallas (panel, reporte para terapia, Explorar y reportes periódicos). La cifra ya no es una muestra al azar del día; el capítulo 3 lo dice en «Cuándo falla».
 
 ### H-18-2 · «Solo por mensaje» cuenta como acompañado en el panel
 - **Dónde:** `ciencia/Estadistica.kt`, `panel` (`acomp = con.filter { "solo" !in it.con_quien }`); `ciencia/Terapia.kt` (misma regla). El Apéndice A.11 dice lo contrario («“Mensaje” puede ir con “solo” y no cuenta como acompañado»), y `data/Presencias.kt` (`deMomento`) trata «mensaje» como no estar en persona.
@@ -1397,6 +1398,7 @@ Encontrados al llevar la información nueva de los momentos a pantallas y report
 ## Esquema 21 (8 nov 2026, sin módulo)
 
 Encontrados al hacer los cambios del esquema 21 (D.161 a D.165). Quedan anotados; no piden cambio de código ahora.
+- **Estado:** Resuelto en el esquema 29 (D.201, 25 nov 2026). Decisión del autor: acompañado es con alguien en persona (`Catalogo.acompanado`); «mensaje» solo, o con «solo», cuenta como solo, como ya decía el Apéndice A.11.
 
 ### H-21-1 · `enfoque_min` cambia de definición
 - **Dónde:** `data/Enfoque.kt` (`guardarBloque`, `pasarADescanso`), `vm_tramos.csv:min`, `enfoque_min`.

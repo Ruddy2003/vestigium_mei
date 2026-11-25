@@ -212,7 +212,31 @@ object FondosTelefono {
 
     /** Anota que se acaba de poner el fondo [clave], y a qué hora (para no cambiar la luz más de una vez por pulso). */
     fun marcarUltimo(ctx: Context, clave: ClaveFondo) {
-        prefs(ctx).edit().putString("ultimo", clave.texto()).putLong("ultimo_ms", System.currentTimeMillis()).apply()
+        val (inicio, bloqueo) = idsDelTelefono(ctx)
+        prefs(ctx).edit().putString("ultimo", clave.texto()).putLong("ultimo_ms", System.currentTimeMillis())
+            .putInt("ultimo_id_inicio", inicio).putInt("ultimo_id_bloqueo", bloqueo).apply()
+        if (clave.cuadro) io.github.ruddy2003.vestigium.data.Repo.anotarUso(io.github.ruddy2003.vestigium.data.UsoDias.FONDO_ESCENA)
+    }
+
+    /** El número que el teléfono da a cada fondo puesto (inicio, bloqueo); -1 si no lo dice. Cambia si alguien pone otro. */
+    private fun idsDelTelefono(ctx: Context): Pair<Int, Int> = runCatching {
+        val wm = WallpaperManager.getInstance(ctx)
+        wm.getWallpaperId(WallpaperManager.FLAG_SYSTEM) to wm.getWallpaperId(WallpaperManager.FLAG_LOCK)
+    }.getOrDefault(-1 to -1)
+
+    /**
+     * Si el último fondo fijo que puso la app es una escena del cuadro y sigue puesto en inicio o en bloqueo (para los días de
+     * uso, `UsoDias.FONDO_ESCENA`). Si el teléfono no dice qué fondo tiene, o se puso antes de guardar su número, basta con
+     * que el último que puso la app sea una escena.
+     */
+    fun escenaPuesta(ctx: Context): Boolean {
+        if (ultimo(ctx)?.cuadro != true) return false
+        val p = prefs(ctx)
+        val antes = p.getInt("ultimo_id_inicio", -1) to p.getInt("ultimo_id_bloqueo", -1)
+        if (antes.first < 0 && antes.second < 0) return true
+        val ahora = idsDelTelefono(ctx)
+        if (ahora.first < 0 && ahora.second < 0) return true
+        return (antes.first >= 0 && ahora.first == antes.first) || (antes.second >= 0 && ahora.second == antes.second)
     }
 
     private fun msDesdeUltimo(ctx: Context): Long = System.currentTimeMillis() - prefs(ctx).getLong("ultimo_ms", 0L)

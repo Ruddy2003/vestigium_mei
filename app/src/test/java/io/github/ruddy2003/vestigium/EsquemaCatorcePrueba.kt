@@ -31,8 +31,9 @@ class EsquemaCatorcePrueba {
     // el 25, un valor nuevo en la postura de las ideas: «hecho» (hecho comprobado);
     // el 26, un valor nuevo en la preferencia de claro u oscuro (Config.modo): «hora» (ver ModoHoraPrueba);
     // el 27, los cuadros y las historias en Config: seguidos, cuentos leídos, días de uso y cuadros guardados (ver EsquemaVeintisietePrueba);
-    // el 28, un valor nuevo en las presencias del día: «llamada», aparte de «mensajes» (ver LlamadaPrueba).
-    @Test fun esquema() = assertEquals(28, SCHEMA_V)
+    // el 28, un valor nuevo en las presencias del día: «llamada», aparte de «mensajes» (ver LlamadaPrueba);
+    // el 29, las visitas quitadas con «no estuve aquí» o «fue en…» en Config y el día del gato en los días de uso (ver VisitasPrueba).
+    @Test fun esquema() = assertEquals(29, SCHEMA_V)
 
     @Test fun configDeAntesTraeElCuadroYLaHistoriaEncendidos() {
         // Una configuración guardada antes del esquema 24 no trae los dos ajustes nuevos: toman su valor por omisión.

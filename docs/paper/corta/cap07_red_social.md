@@ -76,7 +76,7 @@ Se calculan solo los días en que **se pudo nombrar a alguien** (`Dinamicas.dias
 | `penso_en_pareja`, `penso_en_expareja`, `penso_en_familia`, `penso_en_amistades` | 1 si pensaste sin ver a alguien de ese grupo |
 | `cercania_media` | promedio de `cercaniaEn` de **todas** las personas del día que tengan cercanía |
 
-Condiciones exactas y las variables `cartas_otros` y `presencias_revisado`: versión completa, §7.7.1. La compañía de los avisos (`acompanado_pct`…) es otra fuente, independiente (capítulo 3).
+Condiciones exactas y las variables `cartas_otros` y `presencias_revisado`: versión completa, §7.7.1. La compañía de los registros de ánimo (`acompanado_pct`…; desde el esquema 29, todos los registros y solo en persona) es otra fuente, independiente (capítulo 3).
 
 ### 7.4.2 Una variable por persona (`Dinamicas.construir`)
 

@@ -24,8 +24,8 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `animo_activacion` | Activación promedio al momento (todos los registros) | numérica | — | Si hay registros de ánimo |
 | `animo_cierre_valencia` | Valencia al cerrar el día | numérica | — | Si hay registros de cierre del día |
 | `animo_cierre_activacion` | Activación al cerrar el día | numérica | — | Si hay registros de cierre del día |
-| `valencia_acompanado` | Valencia en avisos con alguien | numérica | — | Si hay avisos con «con quién» |
-| `valencia_solo` | Valencia en avisos estando solo | numérica | — | Si hay avisos con «con quién» |
+| `valencia_acompanado` | Valencia en registros de ánimo con alguien en persona (desde el esquema 29, D.201; antes, solo avisos y con «mensaje» como compañía) | numérica | — | Si hay registros con «con quién» |
+| `valencia_solo` | Valencia en registros de ánimo sin nadie en persona: solo, o solo por mensaje o llamada (desde el esquema 29, D.201) | numérica | — | Si hay registros con «con quién» |
 | `avisos_planeados` | Avisos de ánimo planeados | numérica | avisos | Desde el esquema 13, los días con avisos encendidos |
 | `avisos_mostrados` | Avisos de ánimo mostrados (menos de 50 min tarde y con permiso de notificaciones) | numérica | avisos | Desde el esquema 13 |
 | `avisos_respondidos` | Avisos mostrados con respuesta (con o sin valencia) | numérica | avisos | Desde el esquema 13 |
@@ -154,7 +154,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `penso_en_familia` | Pensé en mi familia sin verla (0/1) | binaria (0/1) | — | Si hay presencias |
 | `penso_en_amistades` | Pensé en una amistad sin verla (0/1) | binaria (0/1) | — | Si hay presencias |
 | `cercania_media` | Cercanía media de quien mencioné (1 a 7) | numérica | — | Si alguna persona tiene cercanía |
-| `acompanado_pct` | Avisos de ánimo con alguien (0 a 1) | numérica | — | Si hay avisos con «con quién» |
+| `acompanado_pct` | Registros de ánimo con alguien en persona (0 a 1): avisos y los que abres tú; «por mensaje o llamada» no cuenta (desde el esquema 29, D.201) | numérica | — | Si hay registros con «con quién» |
 
 ### Mente
 
@@ -372,7 +372,7 @@ Estas se crean una por cada elemento que el usuario ha usado (o, en las de catá
 | `enfoque_<tipo>_min` | Enfoque: ‹tipo› (min); los tipos usados de estudio, lectura, idiomas, tesis, trabajo, creativo y, desde el esquema 17, otro (`enfoque_otro_min`, que junta todos los «otro» aunque tengan nombres distintos) | Enfoque |
 | `horas_tipo_<tipo>` | Horas en lugares de tipo ‹tipo›; los tipos de tus lugares, de 14 posibles (12 hasta el esquema 17, que agregó restaurante o café y tienda) | Lugares |
 | `laptop_<categoria>_min` | Minutos en la laptop: ‹categoría› (productivo, ocio, social, otro); con Cold Turkey | Laptop |
-| `con_<id>` | Avisos con ‹pareja, amigos, familia, hijos, compañeros, desconocidos, mascota o mensaje› (0 a 1; las tres últimas compañías desde el esquema 17); si hay avisos con «con quién». «Mensaje» puede ir con «solo» y no cuenta como acompañado | Social |
+| `con_<id>` | Registros de ánimo con ‹pareja, amigos, familia, hijos, compañeros, desconocidos, mascota o mensaje› (0 a 1; las tres últimas compañías desde el esquema 17; todos los registros, no solo los avisos, desde el esquema 29, D.201); si hay registros con «con quién». «Mensaje» puede ir con «solo» y no cuenta como acompañado | Social |
 | `ctx_<id>` | Contexto: ‹nombre› (0/1); siempre, los 13 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, cita o tiempo en pareja (`ctx_romantico`), familia y, desde el esquema 17, casa o descanso, fiesta, trámites o pendientes | Contexto |
 | `flow_<id>`, `sdt_necesidad_<id>`, `apreciacion_<id>` | Opción elegida en las tres preguntas científicas del día (0/1); siempre, 13 opciones (4, 5 y 4; «No aplica» no cuenta) | Lectura del día |
 | `hab_<id>` | Hábito: ‹nombre› (0/1; vacío si ese día no lo contestaste, desde el esquema 17) | Hábitos |
@@ -680,7 +680,7 @@ Cambia lo que se guarda: `SCHEMA_V` = 17. El detalle está en el capítulo 3 y e
 | `vm_momentos.csv:detonante_otro`, `vm_dias.csv:detonante_otro` | El detonante escrito con «otro» (seguimiento privado) |
 | `n_<emoción>` nuevas | `n_amor`, `n_decepcion`, `n_anhelo`…; solo desde que se usan. Antes del esquema 17 no se podían marcar |
 | `n_<pensamiento>` nuevos | `n_trabajo`, `n_cuerpo`, `n_imaginando`, `n_nada`. Un registro con varios pensamientos cuenta en cada uno |
-| `con_hijos`, `con_mascota`, `con_mensaje` | Igual que los demás `con_*`. «Mensaje» puede ir con «solo» y no cuenta como acompañado |
+| `con_hijos`, `con_mascota`, `con_mensaje` | Igual que los demás `con_*`. «Mensaje» puede ir con «solo» y no cuenta como acompañado (así lo calcula el panel desde el esquema 29, D.201; antes, solo «mensaje» contaba como acompañado) |
 | `ctx_casa`, `ctx_fiesta`, `ctx_tramites` | Contextos nuevos; 0 en los días de antes (no existían) |
 | `vm_dias.csv:ctx_otro` | Otro contexto escrito a mano |
 | `vm_dias.csv:habitos_tri`, `hab_*` | Con `habitos_tri` = 1, un hábito sin respuesta queda vacío en `hab_*` en vez de 0 |

@@ -237,6 +237,7 @@ object Importar {
             ciudades_visitadas = (c.ciudades_visitadas + r.ciudades_visitadas).distinctBy { it.id },
             paises_rascados = (c.paises_rascados + r.paises_rascados).distinct(), paises_tapados = (c.paises_tapados + r.paises_tapados).distinct(),
             unesco_marcados = (c.unesco_marcados + r.unesco_marcados).distinctBy { it.id }, unesco_descartados = (c.unesco_descartados + r.unesco_descartados).distinct(),
+            visitas_quitadas = (c.visitas_quitadas + r.visitas_quitadas).distinctBy { it.lugar to it.entrada },
             perfil = if (perfilVacio) r.perfil else c.perfil, perfil_historial = (r.perfil_historial + c.perfil_historial).distinct().sortedBy { it.fecha },
             conocer_visto = c.conocer_visto || r.conocer_visto, politica = (c.politica + r.politica).distinctBy { it.fecha }.sortedBy { it.fecha },
             fotos_aparatos = (c.fotos_aparatos + r.fotos_aparatos).distinct(), fotos_sin_fecha = (c.fotos_sin_fecha + r.fotos_sin_fecha).distinct(),

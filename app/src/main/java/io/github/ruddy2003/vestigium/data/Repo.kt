@@ -548,16 +548,30 @@ object Repo {
         }
         enMain { visitas = Lugares.reasignar(visitas, id, pasarA) }
         borrarLugar(id)
+        // El lugar ya no existe: lo quitado ahí ya no hace falta recordarlo (esquema 29).
+        if (config.visitas_quitadas.any { it.lugar == id }) cambiarConfig { c -> c.copy(visitas_quitadas = c.visitas_quitadas.filter { it.lugar != id }) }
     }
 
-    /** Corrige una visita (por ejemplo, «fue en…» otro lugar). */
-    fun guardarVisita(v: Visita) {
+    /**
+     * Corrige una visita (por ejemplo, «fue en…» otro lugar). Con [corregida] (la corrección a mano de la visita), si cambia
+     * de lugar, la de antes queda recordada como quitada de su lugar, para que la detección no la vuelva a crear. Si vuelve
+     * tal cual a un lugar donde estaba quitada (deshacer, la papelera), se olvida (esquema 29).
+     */
+    fun guardarVisita(v: Visita, corregida: Boolean = false) {
+        val antes = visitas.firstOrNull { it.id == v.id }?.takeIf { corregida }
         db.poner("visitas", v.id, v.entrada.take(10), JSON.encodeToString(Visita.serializer(), v))
         enMain { visitas = (visitas.filter { it.id != v.id } + v).sortedBy { it.entrada } }
+        val ahora = Fechas.ahoraIso()
+        val f: (Config) -> Config = { c -> Lugares.olvidarQuitada(c, v).let { if (antes != null && antes.lugar != v.lugar) Lugares.anotarQuitada(it, antes, ahora) else it } }
+        if (f(config) !== config) cambiarConfig(f)
     }
 
-    /** «No estuve aquí»: quita una visita. */
-    fun borrarVisita(id: String) { aPapelera("visitas", id); db.borrar("visitas", id); enMain { visitas = visitas.filter { it.id != id } } }
+    /** «No estuve aquí»: quita una visita y la recuerda, para que la detección no la vuelva a crear (esquema 29). */
+    fun borrarVisita(id: String) {
+        val v = visitas.firstOrNull { it.id == id }
+        aPapelera("visitas", id); db.borrar("visitas", id); enMain { visitas = visitas.filter { it.id != id } }
+        if (v != null) cambiarConfig { Lugares.anotarQuitada(it, v, Fechas.ahoraIso()) }
+    }
 
     /** Guarda y quita varias visitas de una vez (en una transacción) y las publica juntas. */
     @Synchronized
@@ -1005,6 +1019,18 @@ object Repo {
     }
 
     fun equivalencias(): Map<String, String> = config.equivalencias
+
+    /**
+     * Anota que hoy (el día lógico) se usó lo de [claves] (`Config.uso_dias`, solo para los logros). Si ya estaban todas, no
+     * escribe nada: se puede llamar en cada pulso o en cada caricia sin tocar la base. Nunca falla hacia afuera.
+     */
+    fun anotarUso(vararg claves: String) {
+        runCatching {
+            val dia = Fechas.diaLogico()
+            val nuevas = claves.filter { UsoDias.valida(it) && !UsoDias.anotada(config, it, dia) }
+            if (nuevas.isNotEmpty()) cambiarConfig { UsoDias.anotarVarios(it, nuevas, dia) }
+        }
+    }
 }
 
 object Geo {

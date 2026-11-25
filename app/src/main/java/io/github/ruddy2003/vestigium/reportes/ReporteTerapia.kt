@@ -138,9 +138,9 @@ object ReporteTerapia {
             if (d.emociones.isNotEmpty()) p.clave("Emociones más nombradas", lista(d.emociones))
             d.negativasPct?.let { p.clave("Emociones desagradables", "${pct(it)} de las que nombré") }
             if (d.pensamientos.isNotEmpty()) p.clave("En qué pensaba", lista(d.pensamientos))
-            d.acompanadoPct?.let { p.clave("Con alguien", "${pct(it)} de los avisos que respondí") }
+            d.acompanadoPct?.let { p.clave("Con alguien en persona", "${pct(it)} de mis registros de ánimo") }
             if (d.valSolo != null || d.valAcompanado != null)
-                p.clave("Ánimo solo y acompañado", "solo ${d.valSolo?.let(::n1) ?: "—"} · acompañado ${d.valAcompanado?.let(::n1) ?: "—"} (avisos, de 1 a 7)")
+                p.clave("Ánimo solo y acompañado", "solo ${d.valSolo?.let(::n1) ?: "—"} · acompañado ${d.valAcompanado?.let(::n1) ?: "—"} (registros de ánimo, de 1 a 7)")
             if (d.apreciacion.isNotEmpty()) p.clave("Cómo viví la exigencia del día", lista(d.apreciacion))
             d.errorPrediccion?.let {
                 p.clave("Mi predicción del día siguiente", (if (abs(it) < 0.05) "En promedio, los días salieron como los predije"

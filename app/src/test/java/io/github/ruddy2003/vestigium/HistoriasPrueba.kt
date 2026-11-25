@@ -118,10 +118,22 @@ class HistoriasPrueba {
         assertEquals(listOf("2027-01-05"), UsoDias.dias(c, "tema:heleno"))
     }
 
-    @Test fun soloLasClavesDeLaLista() {
-        // Ni el gato (D.190), ni algo privado o de sustancias, ni una clave inventada, ni un día que no es fecha.
+    @Test fun variasDeUnaVez() {
         val c = Config()
-        listOf("gato", "gato:heleno", "recaida", "cannabis", "tema:", "tema:Heleno", "otra").forEach { k ->
+        val n = UsoDias.anotarVarios(c, listOf(UsoDias.tema("heleno"), UsoDias.WIDGET, "recaida"), "2027-01-05")
+        assertEquals(setOf("tema:heleno", UsoDias.WIDGET), n.uso_dias.keys)
+        assertTrue(UsoDias.anotada(n, UsoDias.WIDGET, "2027-01-05"))
+        assertFalse(UsoDias.anotada(n, UsoDias.WIDGET, "2027-01-06"))
+        // Si ya estaban todas, la misma configuración: así el pulso no escribe nada.
+        assertSame(n, UsoDias.anotarVarios(n, listOf(UsoDias.tema("heleno"), UsoDias.WIDGET), "2027-01-05"))
+    }
+
+    @Test fun soloLasClavesDeLaLista() {
+        // Ni algo privado o de sustancias, ni una clave inventada, ni un día que no es fecha. El gato sí, desde el esquema 29
+        // (D.202), pero solo su clave sola: nada por tema ni por caricia.
+        val c = Config()
+        assertTrue(UsoDias.valida(UsoDias.GATO))
+        listOf("gato:heleno", "recaida", "cannabis", "tema:", "tema:Heleno", "otra").forEach { k ->
             assertFalse(k, UsoDias.valida(k))
             assertSame(k, c, UsoDias.anotar(c, k, "2027-01-05"))
         }
@@ -176,7 +188,7 @@ class HistoriasPrueba {
             seguidos = listOf(Seguido("roma", "2027-01-03"), Seguido("roma", "2026-12-01"), Seguido("egipto", "2027-01-02")),
             historia_avisada = mapOf("roma|a|2027-01-05" to "respaldo", "egipto|b|2027-01-02" to "respaldo"),
             cuentos_leidos = listOf(CuentoLeido("roma", "2027-01-05", "2027-01-05"), CuentoLeido("egipto", "2027-01-02", "2027-01-02")),
-            uso_dias = mapOf(UsoDias.HISTORIA_HOY to listOf("2027-01-04", "2027-01-05"), "gato" to listOf("2027-01-04")),
+            uso_dias = mapOf(UsoDias.HISTORIA_HOY to listOf("2027-01-04", "2027-01-05"), "gato" to listOf("2027-01-04"), "recaida" to listOf("2027-01-04")),
             cuadros_guardados = listOf(cuadro("a1"), cuadro("c3")),
         )
         val c = combinarHistorias(aqui, respaldo)
@@ -186,7 +198,8 @@ class HistoriasPrueba {
         assertEquals("2027-01-05", c.cuentos_leidos.first { it.vida == "roma" }.leido)
         assertEquals(2, c.cuentos_leidos.size)
         assertEquals(listOf("2027-01-04", "2027-01-05"), c.uso_dias[UsoDias.HISTORIA_HOY])
-        assertFalse("gato" in c.uso_dias)
+        assertEquals(listOf("2027-01-04"), c.uso_dias[UsoDias.GATO])
+        assertFalse("recaida" in c.uso_dias)
         assertEquals(listOf("a1", "c3"), c.cuadros_guardados.map { it.id })
         assertEquals("aqui", c.historia_avisada["roma|a|2027-01-05"])
         assertEquals("respaldo", c.historia_avisada["egipto|b|2027-01-02"])

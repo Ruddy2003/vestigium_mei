@@ -227,7 +227,7 @@ Lo mismo con el gasto, que hasta la entrega 10c era la excepción. Con diario de
 | `registros_animo` | conteo | 0 estructural desde el primer registro |
 | `gasto_total` | suma | `gasto_imprevisto` es **binaria** (¿hubo algún gasto imprevisto?), no un monto (H-1-5) |
 | `gasto_imprevisto_monto` | suma de los gastos marcados como imprevistos | Desde 10e (D.94): el monto que `gasto_imprevisto` no da. Misma base que `gasto_total` (0 desde el primer gasto, en días con diario); un día con gastos y ninguno imprevisto vale 0. `gasto_imprevisto` conserva su nombre para no romper la serie (H-1-5, resuelto) |
-| `acompanado_pct` | proporción de avisos con alguien | solo si hay avisos con «con quién» |
+| `acompanado_pct` | proporción de registros de ánimo con alguien en persona (desde el esquema 29, D.201) | solo si hay registros con «con quién» |
 | `en_casa_min` | minutos dentro de lugares tipo «casa», recortados por día lógico, tope 1440 | visitas > 40 días se descartan como probable error |
 | `aire_libre_min` | máximo entre luz alta del teléfono y tiempo a pie/corriendo/bici | **[Aproximación]**: dos proxies de la misma cosa, se toma el mayor |
 | `ruido_db` | media de las lecturas del día | |

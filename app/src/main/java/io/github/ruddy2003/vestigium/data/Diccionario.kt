@@ -52,8 +52,8 @@ object Diccionario {
         "por_hora_min" to "Minutos de pantalla en cada hora, de 0 a 23 (lista)",
         "enfoque_min" to "Minutos de enfoque medidos con el cronómetro (sin siestas)", "siesta_min" to "Minutos de siesta", "siesta" to "Tomó siesta (0/1)",
         "aire_libre_min" to "Minutos al aire libre, estimados con la luz de exterior o el tiempo caminando, corriendo o en bici (el mayor)",
-        "en_casa_min" to "Minutos dentro de tus lugares de tipo casa", "acompanado_pct" to "Proporción de avisos de ánimo en que estabas con alguien",
-        "valencia_acompanado" to "Valencia promedio en avisos con alguien", "valencia_solo" to "Valencia promedio en avisos estando solo", "n_recaida" to "Recaídas registradas con hora (seguimiento privado)",
+        "en_casa_min" to "Minutos dentro de tus lugares de tipo casa", "acompanado_pct" to "Proporción de registros de ánimo (avisos y los que abres tú) en que estabas con alguien en persona; «por mensaje o llamada» no cuenta",
+        "valencia_acompanado" to "Valencia promedio en registros de ánimo con alguien en persona", "valencia_solo" to "Valencia promedio en registros de ánimo sin nadie en persona (solo, o solo por mensaje o llamada)", "n_recaida" to "Recaídas registradas con hora (seguimiento privado)",
         // Ánimo unificado, sustancias y la tabla por hora
         "es_animo" to "Es un registro de ánimo (aviso o hecho por ti), no un impulso ni una recaída (0/1)",
         "emociones" to "Lo que sentías (lista de Catalogo: alegria, calma, estres, frustracion…; no_se = no lo sabías nombrar; otro = ver emocion_otra)",
@@ -494,11 +494,20 @@ object Diccionario {
      * decisión del autor (docs/PENDIENTES.md, «Máxima prioridad»).
      */
     private const val VERSION_ESQUEMA_28 = 292
+    /**
+     * La versión que trae el esquema 29 («con quién» con todos los registros y solo en persona, los días de uso conectados y
+     * las visitas quitadas que se recuerdan, 25 nov 2026): **provisional**, la siguiente corrida de `apk.yml` después de la
+     * 312. Se corrige con la primera versión publicada en `main` que lo traiga.
+     */
+    private const val VERSION_ESQUEMA_29 = 313
     // Los esquemas 26 y 27 no agregan ni cambian columnas. El 26 es una preferencia de interfaz (`Config.modo`, D.198). El 27
     // (D.199) guarda en `Config` los personajes que sigues, los cuentos leídos, los días de uso de algunas funciones y los
     // cuadros guardados: es estado de la app (qué leíste, qué te gustó), no una medida de tu día, y no se exporta a CSV ni a
     // R; viaja en vm_respaldo.json, dentro de config. Si algún día se quiere analizar, se exporta en una tabla nueva sin
     // tocar las que ya existen.
+    // El 29 (D.201 a D.203) cambia cómo se calcula «con quién» en el panel (las entradas de DESDE con VERSION_ESQUEMA_29) y
+    // guarda en `Config` las visitas quitadas (`visitas_quitadas`) y más días de uso (el gato, el respaldo, el ensayo, la
+    // exportación, el widget, el fondo y el tema): estado de la app, también solo en vm_respaldo.json.
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
@@ -670,6 +679,18 @@ object Diccionario {
         "vm_momentos.csv:intensidades" to (110 to "nueva: cuánto de cada emoción (D.130)"),
         "vm_momentos.csv:con_quien" to (110 to "más opciones: hijos, mascota, por mensaje o llamada (D.132)"),
         "con_*" to (110 to "más opciones: hijos, mascota, mensaje (D.132)"),
+        // Las de «con quién», una por una (el patrón «con_*» también toca a con_diario, que no es de aquí).
+        "con_pareja" to (VERSION_ESQUEMA_29 to "sobre todos los registros de ánimo, no solo los avisos (D.201)"),
+        "con_amigos" to (VERSION_ESQUEMA_29 to "sobre todos los registros de ánimo, no solo los avisos (D.201)"),
+        "con_familia" to (VERSION_ESQUEMA_29 to "sobre todos los registros de ánimo, no solo los avisos (D.201)"),
+        "con_companeros" to (VERSION_ESQUEMA_29 to "sobre todos los registros de ánimo, no solo los avisos (D.201)"),
+        "con_desconocidos" to (VERSION_ESQUEMA_29 to "sobre todos los registros de ánimo, no solo los avisos (D.201)"),
+        "con_hijos" to (VERSION_ESQUEMA_29 to "sobre todos los registros de ánimo, no solo los avisos (D.201); desde la v110, opción nueva (D.132)"),
+        "con_mascota" to (VERSION_ESQUEMA_29 to "sobre todos los registros de ánimo, no solo los avisos (D.201); desde la v110, opción nueva (D.132)"),
+        "con_mensaje" to (VERSION_ESQUEMA_29 to "sobre todos los registros de ánimo, no solo los avisos (D.201); desde la v110, opción nueva (D.132)"),
+        "acompanado_pct" to (VERSION_ESQUEMA_29 to "sobre todos los registros de ánimo, no solo los avisos, y solo en persona: «mensaje» ya no cuenta como acompañado (D.201)"),
+        "valencia_acompanado" to (VERSION_ESQUEMA_29 to "sobre todos los registros de ánimo y solo en persona: «mensaje» sin nadie en persona pasa a solo (D.201)"),
+        "valencia_solo" to (VERSION_ESQUEMA_29 to "sobre todos los registros de ánimo; incluye los de solo «mensaje», que antes contaban como acompañado (D.201)"),
         "vm_ideas.csv:temas" to (110 to "suma los temas del campo «Temas» a los #temas del texto (D.134)"),
         "vm_dias.csv:sueno_rareza" to (110 to "nueva: qué tan raro fue el sueño; los días de antes, desde su tipo (D.127)"),
         "vm_dias.csv:sueno_pesadilla" to (110 to "nueva: si fue pesadilla; los días de antes, desde su tipo (D.127)"),

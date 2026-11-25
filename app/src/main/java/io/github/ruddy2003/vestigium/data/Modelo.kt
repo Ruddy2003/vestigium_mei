@@ -10,8 +10,12 @@ val JSON = Json {
     isLenient = true
 }
 
-/** Esquema 28 (18 nov 2026): «llamada» como tipo de presencia aparte de «mensajes» ([Dia.presencias], `Presencias.LLAMADA`). */
-const val SCHEMA_V = 28
+/**
+ * Esquema 29 (25 nov 2026): las visitas que quitaste o pasaste a otro lugar se recuerdan ([Config.visitas_quitadas]) y el
+ * día en que acariciaste al gato entra en los días de uso (`UsoDias.GATO`). Esquema 28 (18 nov 2026): «llamada» como tipo
+ * de presencia aparte de «mensajes» ([Dia.presencias], `Presencias.LLAMADA`).
+ */
+const val SCHEMA_V = 29
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -885,6 +889,11 @@ data class Config(
     /** Patrimonio Mundial: los que marcaste a mano y los que quitaste aunque pasaste cerca. */
     val unesco_marcados: List<SitioMarcado> = emptyList(),
     val unesco_descartados: List<Int> = emptyList(),
+    /**
+     * Esquema 29: las visitas que quitaste con «no estuve aquí» o pasaste a otro lugar con «fue en…», para que la detección
+     * no las vuelva a crear (al agrandar el radio o al cerrar una visita abierta). Se olvidan a los [VisitaQuitada.DIAS] días.
+     */
+    val visitas_quitadas: List<VisitaQuitada> = emptyList(),
     /** Al cambiar de tema, el fondo de pantalla del teléfono cambia también. */
     val fondo_telefono_auto: Boolean = false,
     /** Dónde poner el fondo del teléfono: «ambas», «inicio» o «bloqueo». */
@@ -1033,6 +1042,19 @@ data class Config(
      */
     val ambiente_cuadro: Boolean = true,
 )
+
+/**
+ * Esquema 29: una visita a [lugar] que quitaste («no estuve aquí») o que pasaste a otro lugar («fue en…»), de [entrada] a
+ * [salida] (ISO; null si seguía abierta) y cuándo la quitaste ([quitada]). La detección (`Lugares.reconstruirEn`) no vuelve
+ * a poner una visita a ese lugar en ese tramo.
+ */
+@Serializable
+data class VisitaQuitada(val lugar: String, val entrada: String, val salida: String? = null, val quitada: String = "") {
+    companion object {
+        /** Lo que se recuerda: más que los 30 días que mira hacia atrás la detección al cambiar un radio. */
+        const val DIAS = 90
+    }
+}
 
 /**
  * Esquema 27: un personaje de «Otras vidas» que sigues ([vida], su id en `OtrasVidas`), desde el día lógico [desde] y, si ya

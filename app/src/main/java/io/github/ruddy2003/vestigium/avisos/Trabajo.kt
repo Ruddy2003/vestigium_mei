@@ -129,6 +129,14 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         // primer pulso después de las 5:00 avisaba con el tema de ayer. Lo de fuera de la app (widget, ícono, accesos y fondo
         // del teléfono) se pone al día aquí aunque el tema lo haya cambiado una alarma o la app.
         anotando("tema del día") { io.github.ruddy2003.vestigium.ui.RotacionTema.revisar(); io.github.ruddy2003.vestigium.ui.RotacionTema.propagar(ctx) }
+        // Los días de uso que solo el pulso puede ver (esquema 29, para los logros): el tema puesto, si hay algún widget de la
+        // app y si sigue de fondo una escena del cuadro. Solo el día; si ya estaba anotado, no se escribe nada.
+        intentar {
+            val U = io.github.ruddy2003.vestigium.data.UsoDias
+            Repo.anotarUso(*listOfNotNull(U.tema(Repo.config.tema),
+                U.WIDGET.takeIf { io.github.ruddy2003.vestigium.widget.Widgets.hayAlguno(ctx) },
+                U.FONDO_ESCENA.takeIf { io.github.ruddy2003.vestigium.ui.FondosTelefono.escenaPuesta(ctx) }).toTypedArray())
+        }
         intentar { Repo.registrarZona() }
         // Una sola vez: la fuerza de referencia de los entrenos que ya estaban (H-7-14).
         intentar {

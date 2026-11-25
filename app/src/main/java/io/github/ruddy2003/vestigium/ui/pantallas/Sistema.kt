@@ -653,7 +653,7 @@ fun PantallaDatos(nav: Nav) {
                     scope.launch {
                         ocupado = true
                         val f = withContext(Dispatchers.IO) { runCatching { Exportar.zipResumido(ctx) } }
-                        f.getOrNull()?.let { Exportar.compartir(ctx, it) } ?: run { msg = "No pude armar la exportación: ${f.exceptionOrNull()?.message ?: "error desconocido"}" }
+                        f.getOrNull()?.let { Exportar.compartir(ctx, it); Repo.anotarUso(io.github.ruddy2003.vestigium.data.UsoDias.EXPORTAR) } ?: run { msg = "No pude armar la exportación: ${f.exceptionOrNull()?.message ?: "error desconocido"}" }
                         ocupado = false
                     }
                 }
@@ -667,7 +667,7 @@ fun PantallaDatos(nav: Nav) {
                     scope.launch {
                         ocupado = true
                         val f = withContext(Dispatchers.IO) { runCatching { Exportar.zip(ctx) } }
-                        f.getOrNull()?.let { Exportar.compartir(ctx, it) } ?: run { msg = "No pude armar la exportación: ${f.exceptionOrNull()?.message ?: "error desconocido"}" }
+                        f.getOrNull()?.let { Exportar.compartir(ctx, it); Repo.anotarUso(io.github.ruddy2003.vestigium.data.UsoDias.EXPORTAR) } ?: run { msg = "No pude armar la exportación: ${f.exceptionOrNull()?.message ?: "error desconocido"}" }
                         ocupado = false
                     }
                 }

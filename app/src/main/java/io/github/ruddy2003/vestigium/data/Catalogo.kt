@@ -365,6 +365,11 @@ object Catalogo {
      * Marcar o desmarcar a alguien en «¿con quién?». «Solo» excluye a quien está contigo en persona; «por mensaje o llamada»
      * puede ir con «solo» (estás solo, pero hablando con alguien).
      */
+    /**
+     * Con alguien en persona: cualquier compañía menos «solo» y «por mensaje o llamada» (D.201). Un registro con solo
+     * «mensaje» cuenta como estar solo; la mascota cuenta como compañía, igual que antes.
+     */
+    fun acompanado(con: List<String>): Boolean = con.any { it != "solo" && it != "mensaje" }
     fun alternarConQuien(con: List<String>, id: String): List<String> = when {
         id in con -> con - id
         id == "solo" -> con.filter { it == "mensaje" } + "solo"

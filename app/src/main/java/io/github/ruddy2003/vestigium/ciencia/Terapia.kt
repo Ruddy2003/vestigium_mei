@@ -6,6 +6,7 @@ import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Momento
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Sustancias
+import io.github.ruddy2003.vestigium.data.esAnimo
 import io.github.ruddy2003.vestigium.data.privado
 import kotlin.math.sqrt
 
@@ -217,8 +218,9 @@ object Terapia {
         val registros = mu.filter { Catalogo.esRegistro(it) && !Estadistica.cierreFuera(it) }
         val (emo, neg) = emociones(registros)
         val pens = conteo(registros.flatMap { Catalogo.pensamientosDe(it) }) { id -> Catalogo.PENSAMIENTOS.firstOrNull { it.id == id }?.nombre ?: id }
-        val con = mu.filter { it.tipo == "muestreo" && it.con_quien.isNotEmpty() }
-        val solos = con.filter { "solo" in it.con_quien }; val acomp = con.filter { "solo" !in it.con_quien }
+        // Con quién: todos los registros de ánimo (avisos y los que abres tú), como el panel; acompañado es en persona (D.201).
+        val con = mu.filter { it.esAnimo && !Estadistica.cierreFuera(it) && it.con_quien.isNotEmpty() }
+        val (acomp, solos) = con.partition { Catalogo.acompanado(it.con_quien) }
         val apre = conteo(dias.mapNotNull { it.apreciacion?.takeIf { a -> a != "no_aplica" } }) { id -> Catalogo.CIENTIFICAS.first { it.clave == "apreciacion" }.opciones.firstOrNull { it.id == id }?.nombre ?: id }
         val errores = fechas.mapNotNull { f -> Repo.dias[Fechas.sumar(f, -1)]?.prediccion_manana?.let { pr -> Repo.dias[f]?.valencia?.let { (it - pr).toDouble() } } }
 

@@ -163,9 +163,9 @@ El autor, con la v292: «sigue súper bugueado y lento el de Psicodelia». Se mi
 Lo que quedó sin hacer o sin decidir en otros documentos del repositorio, que esta lista no recogía (revisados el 17 nov 2026, en solo lectura). Cada punto se cotejó con el código y con los documentos posteriores; lo que no se pudo comprobar lo dice. En `app/src/main/java/` no hay `TODO` ni `FIXME`: ningún trabajo pendiente se esconde en comentarios.
 
 ### Metodología y paper
-- **«Con quién» y «solo por mensaje»:** el panel y el reporte de terapia cuentan solo los registros de aviso (Explorar y los reportes periódicos, todos). Además, «mensaje» sin «solo» cuenta como acompañado, al revés de lo que dice el Apéndice A.11. Falta decidir la regla. Conviene hacerlo antes de 2027, porque cambia `acompanado_pct` (H-18-1 y H-18-2, `docs/paper/hallazgos.md`; sigue igual en `Estadistica.kt` y `Terapia.kt`).
-- **Fechas señaladas «solo para mí»:** su texto sale entero en los reportes que se guardan en la galería. La casilla propuesta, un campo opcional, no se hizo, aunque el autor aprobó aplicar el resto de la revisión (hallazgo 28, `docs/revision_general_2026-11.md`; `Senalada` no tiene ese campo).
-- **`video_id` de YouTube sale vacío en lo importado:** para revisar la cabecera hace falta un Takeout de muestra. Si se arregla, cambia lo guardado (hallazgo 33 e, `revision_general_2026-11.md`).
+- ~~**«Con quién» y «solo por mensaje»**~~ **Hecho (25 nov 2026, esquema 29, D.201):** todos los registros de ánimo en todas las pantallas y acompañado solo en persona (decisión del autor; H-18-1 y H-18-2 resueltos).
+- ~~**Fechas señaladas «solo para mí»**~~ **Descartado por el autor (25 nov 2026):** así está bien; no se agrega la casilla (hallazgo 28, `docs/revision_general_2026-11.md`).
+- **`video_id` de YouTube sale vacío en lo importado:** para revisar la cabecera hace falta un Takeout de muestra. Si se arregla, cambia lo guardado (hallazgo 33 e, `revision_general_2026-11.md`). El autor decidió dejarlo pendiente (25 nov 2026).
 - **Los nulos que se vuelven valores por omisión al leer** (`coerceInputValues`): el hallazgo dice «queda para una revisión con el teléfono» (H-1-4, `hallazgos.md`).
 - **Restos de hallazgos «resueltos en parte» que todavía son trabajo:** elegir qué copia de Drive se restaura (H-8-14); el texto de las cartas aún selladas sigue abierto en el JSON de exportación (H-8-5); los reportes automáticos siguen en carpetas públicas (H-8-4). Los demás restos de los 26 hallazgos «en parte» son límites que el paper ya documenta (`hallazgos.md`).
 - **El paper ensamblado y la versión corta están atrasados:** la última vez que se generaron fue el 8 nov 2026, con el esquema 21. Los capítulos y el Apéndice D ya van por el esquema 27. Hay que volver a correr `docs/paper/ensamblado/construir.sh` (comprobado por las fechas de los commits).
@@ -174,12 +174,12 @@ Lo que quedó sin hacer o sin decidir en otros documentos del repositorio, que e
 - **Pantalla de rescate:** la base dañada ya se aparta en vez de borrarse, pero falta la pantalla que la copie tal cual a una carpeta. Hoy «Estado de los datos» solo avisa (hallazgo 4, `revision_general_2026-11.md`).
 - **Contorno de control de 3:1** en todo lo que se toca, en todos los esquemas, con una prueba automática de contraste. Los esquemas siguen usando el mismo color en `outline` y en `outlineVariant`, y la prueba no existe (hallazgo 12).
 - **Caché de todo el panel** según la versión de los datos: solo `kmPorDia` la tiene (hallazgo 22).
-- **«No estuve aquí» no se recuerda:** si después se agranda el radio del lugar, la visita quitada puede volver (N-05 en `docs/navegacion/revision_navegacion.md`; H-NAV-4).
+- ~~**«No estuve aquí» no se recuerda**~~ **Hecho (25 nov 2026, esquema 29, D.203):** las visitas quitadas o pasadas a otro lugar se recuerdan 90 días y la detección no las vuelve a crear (`Config.visitas_quitadas`).
 - **Lo que quedó fuera de N-27 y N-29:** el número del ánimo al tocar la capa del Calendario; la descripción para TalkBack en los unos 31 botones de un solo signo; y la oferta de pasar los gastos viejos a una subcategoría («Diferencias con lo propuesto», `revision_navegacion.md`; sin comprobar si se hizo después).
 
 ### Diseño y temas
 - **Helénico:** una rama del olivo tapa media luna a las 21:00 (`docs/diseno/ESCENAS.md`, regla 2; sin comprobar si sigue así). Es el cuadro aprobado: si se toca, se le enseña al autor.
-- **Los días de uso que nadie anota todavía** (respaldo verificado, ensayo, exportación, widget, fondo con escena, tema del día). No cuentan hacia atrás: cada día sin anotarlos es un día que sus logros no verán. Falta que el autor diga si se conectan ya, antes de hacer los logros (`docs/diseno/CUADROS_PLAN.md`, pregunta 3).
+- ~~**Los días de uso que nadie anota todavía**~~ **Hecho (25 nov 2026, esquema 29, D.202):** se anotan el respaldo verificado, el ensayo, la exportación, el widget, el fondo con escena, el tema del día y, por decisión del autor, el día en que acariciaste al gato (`docs/diseno/CUADROS_PLAN.md`, preguntas 2 y 3).
 - **Lo que quedó sin verificar en las fuentes de los cinco temas nuevos:** está en la sección «Lo que queda sin verificar» de cada `docs/diseno/temas/fuentes_*.md` y en `PLAN_TEMAS.md`, 10h. Entre otras cosas, si los nombres de las salas, la radio y el festival de Psicodelia son marcas registradas.
 
 ### Cuadros e historias
@@ -202,3 +202,25 @@ Lo que quedó sin hacer o sin decidir en otros documentos del repositorio, que e
   - el halo privado y el formato de horas, sin comprobar;
   - `PiezaLogro` (`ui/pantallas/Hall.kt`) ya no lo usa nadie, y `docs/diseno/informes/RESUMEN.md` pedía decidir si se borra.
   Los ajustes muertos de ese hallazgo ya están resueltos.
+
+## 6. Las tandas (25 nov 2026)
+
+El autor pidió repartir lo pendiente, sin las escenas, los cuentos, las bibliotecas, los momentos y las portadas, en tandas, y que antes de cada una se le explique cada cosa y se le pregunte.
+
+| # | Tanda | Estado |
+|---|---|---|
+| 1 | Lo que se guarda, antes del 1 de enero: «con quién», días de uso y gato, YouTube, fechas «solo para mí», visitas quitadas | **Hecha** el 25 nov 2026 en `ccr-3b4fd67f-5vlhkz` (esquema 29, D.201 a D.203). YouTube queda pendiente y la casilla «solo para mí» se descartó |
+| 2 | El paper al día: D.200 y los capítulos del esquema 28 («llamada»), y volver a armar el ensamblado y la versión corta | Pendiente |
+| 3 | La noche en Hoy: el botón grande de la noche y el «cómo estás al despertar» (sección 4, «Lo que queda») | Pendiente |
+| 4 | Privacidad y rescate: la pantalla de rescate, las cartas selladas en el JSON, los reportes en carpetas públicas, qué copia de Drive se restaura, los nulos al leer (H-1-4) | Pendiente |
+| 5 | Accesibilidad: el contorno 3:1 con su prueba, TalkBack en los botones de un signo, el número del ánimo en el Calendario, la oferta de los gastos viejos | Pendiente |
+| 6 | Rendimiento y limpieza: los muebles de Frente y Galia, el lacre, la caché del panel, el formato del dinero, `PiezaLogro`, el halo y las horas; decidir las escalas de Psicodelia y la lámpara genérica | Pendiente |
+| 7 | Los logros nuevos (parte 9, `docs/diseno/LOGROS_NUEVOS.md`) | Pendiente |
+| 8 | Lo temático nuevo (parte 7 de `docs/diseno/PLAN_MEJORAS.md`), con piloto en tres temas | Pendiente |
+| 9 | Los muebles de Vida, el tablero de notas y las preguntas abiertas de los Idearios | Pendiente |
+
+Aparte, la lista de lo que solo se prueba en el teléfono, que crece con cada tanda. De la tanda 1:
+- Que un respaldo, un ensayo y una exportación no fallen ni tarden más (solo anotan el día).
+- Acariciar al gato del cuadro: que no se trabe (escribe la configuración una vez al día).
+- «No estuve aquí» en una visita y, después, agrandar el radio de ese lugar: la visita no vuelve.
+- El reporte para terapia y Análisis → «Ánimo según con quién estás» dicen «registros».

@@ -472,6 +472,8 @@ object Respaldos {
                 it.copy(respaldo_ultimo = ahora, respaldo_verificado = ahora, respaldo_conteo = hecho.conteo, respaldo_detalle = hecho.detalle,
                     respaldo_error = if (ok) null else "El último quedó bien, pero no pude guardar las copias con fecha en «$COPIAS».")
             }
+            // El día del respaldo verificado, para los logros (esquema 29).
+            Repo.anotarUso(UsoDias.RESPALDO_OK)
             return true
         } finally { a.delete() }
     }
@@ -565,6 +567,8 @@ object Respaldos {
             Lectura.PideContrasena -> "Falló: la contraseña guardada no abre el respaldo de la carpeta."
         }
         Repo.cambiarConfig { it.copy(respaldo_ensayo = Fechas.ahoraIso(), respaldo_ensayo_resultado = resultado) }
+        // El día de un ensayo que salió bien, para los logros (esquema 29).
+        if (resultado.startsWith("Bien")) Repo.anotarUso(UsoDias.ENSAYO_OK)
         return resultado
     }
 

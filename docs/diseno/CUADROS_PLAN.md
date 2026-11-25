@@ -218,8 +218,8 @@ Si se quiere repartir en cuatro: **D · Los sonidos** (los 38 `n_<tema>_historia
 
 **Preguntas:**
 1. **El ambiente y `Config.sonidos`.** Los sonidos de la app vienen **apagados** por omisión; tal como se pidió («respeta el ajuste de sonidos»), el ambiente tampoco suena hasta que los enciendas. ¿Está bien, o quieres que el ambiente dependa solo de su propio interruptor?
-2. **El gato:** ¿se queda sin logro (D.190) o se guardan solo los días en que lo acariciaste (A14 de `LOGROS_NUEVOS.md`)? Hoy no se guarda nada.
-3. **Las claves de uso de la parte 9** (respaldo verificado, ensayo, exportación, widget, tema de cada día) están declaradas pero nadie las anota. Cada día que pasa sin anotarlas es un día que esos logros no contarán. ¿Las conecto ya (unas líneas en `Respaldos`, `Exportar` y el pulso), aunque los logros se hagan después?
+2. **El gato:** ¿se queda sin logro (D.190) o se guardan solo los días en que lo acariciaste (A14 de `LOGROS_NUEVOS.md`)? Hoy no se guarda nada. **Contestada el 25 nov 2026:** se guardan solo los días (`UsoDias.GATO`, esquema 29, D.202).
+3. **Las claves de uso de la parte 9** (respaldo verificado, ensayo, exportación, widget, tema de cada día) están declaradas pero nadie las anota. Cada día que pasa sin anotarlas es un día que esos logros no contarán. ¿Las conecto ya (unas líneas en `Respaldos`, `Exportar` y el pulso), aunque los logros se hagan después? **Contestada el 25 nov 2026:** sí; conectadas en el esquema 29 (D.202).
 4. **¿Leer exige un tiempo mínimo?** Hoy basta llegar al final (lo que dijiste). Un cuento se lee en minuto y medio; bajar de golpe hasta el final también contaría.
 
 ---

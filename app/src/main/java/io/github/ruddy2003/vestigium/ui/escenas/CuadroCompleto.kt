@@ -265,10 +265,14 @@ internal fun tieneCuadro(vida: String): Boolean {
     return escenaDe(t)?.let { vida in it.vidas } == true
 }
 
-/** Una caricia al gato: la vibración corta de siempre y el ronroneo (con sonidos encendidos). No se guarda (D.190). */
+/**
+ * Una caricia al gato: la vibración corta de siempre y el ronroneo (con sonidos encendidos). Desde el esquema 29 se guarda
+ * solo el día en que lo acariciaste (`UsoDias.GATO`, D.202), para los logros; ni cuántas veces ni a qué hora.
+ */
 internal fun acariciar(ctx: android.content.Context) {
     Sentidos.vibrarEvento(ctx, Sentidos.Evento.TOQUE)
     runCatching { Ronroneo.sonar(ctx) }
+    io.github.ruddy2003.vestigium.data.Repo.anotarUso(io.github.ruddy2003.vestigium.data.UsoDias.GATO)
 }
 
 // ---------------------------------------------------------------- el toque que no es caricia

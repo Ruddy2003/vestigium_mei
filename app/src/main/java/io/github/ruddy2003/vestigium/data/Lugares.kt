@@ -280,11 +280,56 @@ object Lugares {
             } else if (ini != null) { rachas += ini to fin; ini = null }
         }
         ini?.let { rachas += it to fin }
+        // Lo que quitaste a mano en este lugar («no estuve aquí», «fue en…») no vuelve (esquema 29).
+        val libres = restar(rachas, Repo.config.visitas_quitadas.filter { it.lugar == l.id }.mapNotNull { tramoQuitado(it) })
         val existentes = visitas.filter { it.lugar == l.id }.map { Fechas.millis(it.entrada) to (it.salida?.let { s -> Fechas.millis(s) } ?: ahora) }
-        return rachas.filter { (a, b) -> b - a >= VISITA_MINIMA_MS && existentes.none { (x, y) -> a < y && b > x } }.map { (a, b) ->
+        return libres.filter { (a, b) -> b - a >= VISITA_MINIMA_MS && existentes.none { (x, y) -> a < y && b > x } }.map { (a, b) ->
             val abierta = ahora - b < 30 * 60_000L && visitas.none { it.lugar == l.id && it.salida == null }
             Visita(Repo.nuevoId(), l.id, Fechas.isoDeMillis(a), if (abierta) null else Fechas.isoDeMillis(b), if (abierta) null else CIERRE_RECONSTRUIDA)
         }
+    }
+
+    /**
+     * Esquema 29: el tramo (en ms) que tapa una visita quitada: de su entrada a su salida; si seguía abierta, hasta que la
+     * quitaste (o 12 h, si no se sabe). null si la entrada no es una hora.
+     */
+    fun tramoQuitado(q: VisitaQuitada): Pair<Long, Long>? {
+        val a = Fechas.millis(q.entrada).takeIf { it > 0 } ?: return null
+        val z = q.salida?.let { Fechas.millis(it) }?.takeIf { it > a } ?: Fechas.millis(q.quitada).takeIf { it > a } ?: (a + 12 * 3_600_000L)
+        return a to z
+    }
+
+    /** Lo que queda de cada una de [rachas] fuera de los [tramos] (una racha puede partirse en dos). Sin choques, igual. */
+    fun restar(rachas: List<Pair<Long, Long>>, tramos: List<Pair<Long, Long>>): List<Pair<Long, Long>> {
+        if (tramos.isEmpty()) return rachas
+        val orden = tramos.sortedBy { it.first }
+        return rachas.flatMap { (a, b) ->
+            val choca = orden.filter { (x, y) -> x < b && y > a }
+            if (choca.isEmpty()) return@flatMap listOf(a to b)
+            val trozos = ArrayList<Pair<Long, Long>>(); var ini = a
+            for ((x, y) in choca) {
+                if (x > ini) trozos += ini to x
+                ini = maxOf(ini, y)
+            }
+            if (ini < b) trozos += ini to b
+            trozos
+        }
+    }
+
+    /**
+     * Esquema 29: [c] con [v] anotada como quitada de su lugar a la hora [ahora] (ISO). Se olvidan las de hace más de
+     * [VisitaQuitada.DIAS] días. Una que ya estaba no se repite.
+     */
+    fun anotarQuitada(c: Config, v: Visita, ahora: String): Config {
+        val limite = Fechas.millis(ahora) - VisitaQuitada.DIAS * 86_400_000L
+        val vigentes = c.visitas_quitadas.filter { q -> !(q.lugar == v.lugar && q.entrada == v.entrada) && Fechas.millis(q.entrada) >= limite }
+        return c.copy(visitas_quitadas = vigentes + VisitaQuitada(v.lugar, v.entrada, v.salida, ahora))
+    }
+
+    /** Si [v] vuelve tal cual a su lugar (deshacer), deja de estar quitada. La misma [c] si no estaba. */
+    fun olvidarQuitada(c: Config, v: Visita): Config {
+        val l = c.visitas_quitadas.filterNot { it.lugar == v.lugar && it.entrada == v.entrada }
+        return if (l.size == c.visitas_quitadas.size) c else c.copy(visitas_quitadas = l)
     }
 
     /** Minutos de cada día en cada tipo de lugar (la visita se recorta a cada día lógico). */

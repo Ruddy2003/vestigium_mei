@@ -90,8 +90,8 @@ object CuentosLeidos {
  * Los días de uso de lo que no deja otro rastro (`Config.uso_dias`), solo para los logros: se guarda **en qué días** se usó,
  * no cuántas veces (un toque al día cuenta lo mismo que cien). Solo se aceptan las claves de aquí.
  *
- * - Las caricias al gato **no** se guardan, ni sus días (decisión D.190 del Apéndice D, que el autor mantuvo): no hay clave
- *   «gato».
+ * - Del gato se guardan solo **los días** en que lo acariciaste ([GATO], decisión del autor del 25 nov 2026, D.202), no
+ *   cuántas caricias ni a qué hora. Hasta el esquema 28 no se guardaba nada (D.190).
  * - Nunca una clave de Privado ni de Sustancias (regla 1 y 2 de `LOGROS_NUEVOS.md`, sección 6).
  */
 object UsoDias {
@@ -99,20 +99,25 @@ object UsoDias {
     const val HISTORIA_HOY = "historia_hoy"
     /** Abriste un cuento desde «en la época de…» de «Hoy en la historia». */
     const val HISTORIA_EPOCA = "historia_epoca"
-    /** Un respaldo verificado (para la parte 9; hoy nadie lo anota). */
+    /** Un respaldo a la carpeta escrito y verificado (lo anota `Respaldos`, desde el esquema 29). */
     const val RESPALDO_OK = "respaldo_ok"
-    /** Un ensayo de restauración bien (para la parte 9; hoy nadie lo anota). */
+    /** Un ensayo de restauración que salió bien (lo anota `Respaldos.ensayo`, desde el esquema 29). */
     const val ENSAYO_OK = "ensayo_ok"
-    /** Una exportación a mano (para la parte 9; hoy nadie lo anota). */
+    /** Una exportación a mano, resumida o extendida, que se armó bien (lo anota Ajustes, desde el esquema 29). */
     const val EXPORTAR = "exportar"
-    /** El pulso vio un widget de la app puesto (para la parte 9; hoy nadie lo anota). */
+    /** El pulso vio al menos un widget de la app puesto en el teléfono (desde el esquema 29). */
     const val WIDGET = "widget"
-    /** Una escena del cuadro como fondo del teléfono (parte 6 o 9; hoy nadie lo anota). */
+    /**
+     * Una escena del cuadro como fondo fijo del teléfono (desde el esquema 29): el día en que la app la pone y cada día en que
+     * el pulso ve que sigue puesta (`FondosTelefono.escenaPuesta`).
+     */
     const val FONDO_ESCENA = "fondo_escena"
-    /** «tema:<id>»: ese tema estuvo puesto ese día (para la parte 9; hoy nadie lo anota). */
+    /** Acariciaste al gato del cuadro (desde el esquema 29, D.202): solo el día. */
+    const val GATO = "gato"
+    /** «tema:<id>»: ese tema estuvo puesto ese día, visto por el pulso de 15 minutos (desde el esquema 29). */
     const val PREFIJO_TEMA = "tema:"
 
-    val FIJAS: Set<String> = setOf(HISTORIA_HOY, HISTORIA_EPOCA, RESPALDO_OK, ENSAYO_OK, EXPORTAR, WIDGET, FONDO_ESCENA)
+    val FIJAS: Set<String> = setOf(HISTORIA_HOY, HISTORIA_EPOCA, RESPALDO_OK, ENSAYO_OK, EXPORTAR, WIDGET, FONDO_ESCENA, GATO)
 
     private val ID_TEMA = Regex("""[a-z][a-z0-9_]*""")
 
@@ -127,6 +132,12 @@ object UsoDias {
         val l = c.uso_dias[clave].orEmpty()
         return if (dia in l) c else c.copy(uso_dias = c.uso_dias + (clave to (l + dia).distinct().sorted()))
     }
+
+    /** Anota varias [claves] el mismo [dia]; devuelve la misma [c] si ya estaban todas (así no se escribe la configuración). */
+    fun anotarVarios(c: Config, claves: Collection<String>, dia: String): Config = claves.fold(c) { a, k -> anotar(a, k, dia) }
+
+    /** Ya está anotada [clave] el [dia]: para no escribir la configuración cada vez. */
+    fun anotada(c: Config, clave: String, dia: String): Boolean = dia in c.uso_dias[clave].orEmpty()
 
     fun dias(c: Config, clave: String): List<String> = c.uso_dias[clave].orEmpty()
 }

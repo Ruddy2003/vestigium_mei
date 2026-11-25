@@ -521,15 +521,15 @@ private fun EtapasDeVida(panel: Map<String, Map<String, Double?>>) {
 private fun fmtCorto(v: Double) = if (kotlin.math.abs(v) >= 100) "%,.0f".format(v) else "%.1f".format(v)
 
 
-/** Tu ánimo en los avisos según con quién estabas (lo que contestas en «¿con quién estás?»). */
+/** Tu ánimo en los registros (avisos y los que abres tú) según con quién estabas (lo que contestas en «¿con quién estás?»). */
 @Composable
 private fun ConQuien() {
     val mu = Repo.momentos.filter { it.esAnimo && it.valencia != null && it.con_quien.isNotEmpty() }
     if (mu.isEmpty()) return
-    Seccion("Ánimo según con quién estás", "Tu ánimo en los avisos, según la compañía.", plegable = true,
-        explica = "Promedio de la valencia en los avisos de ánimo, según con quién dijiste que estabas. La raya es tu promedio general. Con 10 avisos con compañía o más empieza a verse algo; con 30, ya es una pista. Cuidado: con quién estás también depende de la hora y el lugar.") {
+    Seccion("Ánimo según con quién estás", "Tu ánimo en tus registros, según la compañía.", plegable = true,
+        explica = "Promedio de la valencia en tus registros de ánimo (los de los avisos y los que abres tú), según con quién dijiste que estabas. La raya es tu promedio general. Con 10 registros con compañía o más empieza a verse algo; con 30, ya es una pista. Cuidado: con quién estás también depende de la hora y el lugar.") {
         Tarjeta {
-            if (mu.size < 10) Ayuda("${porNumero(mu.size, "1 aviso", "${mu.size} avisos")} con compañía; con 10 empieza a verse algo.")
+            if (mu.size < 10) Ayuda("${porNumero(mu.size, "1 registro", "${mu.size} registros")} con compañía; con 10 empieza a verse algo.")
             val general = mu.mapNotNull { it.valencia }.average()
             val cs = MaterialTheme.colorScheme
             val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()

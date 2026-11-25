@@ -225,7 +225,7 @@ Se calculan solo para los días en que **se pudo nombrar a alguien** (`Dinamicas
 | `cartas_otros` | Cartas escritas a otra persona ese día (0 desde la primera carta) | hay cartas a otros |
 | `presencias_revisado` | 1 si ese día revisaste quién estuvo y en quién solo pensaste; 0 si hay personas en el diario sin revisar; vacío los días sin personas ni revisión (desde 10c) | siempre (es obvia con las sociales, sección 7.12) |
 
-Hay además variables de **compañía en los avisos** (`acompanado_pct`, `con_pareja`, `con_amigos`…), que **no** salen de las @menciones sino de la pregunta «¿con quién estás?» de cada registro de ánimo. Se explican en el capítulo 3; son una segunda fuente, independiente, sobre lo mismo.
+Hay además variables de **compañía en los registros de ánimo** (`acompanado_pct`, `con_pareja`, `con_amigos`…), que **no** salen de las @menciones sino de la pregunta «¿con quién estás?» de cada registro de ánimo. Desde el esquema 29 (D.201) cuentan todos los registros, no solo los de aviso, y «acompañado» es con alguien en persona. Se explican en el capítulo 3; son una segunda fuente, independiente, sobre lo mismo.
 
 ### 7.7.2 Variables dinámicas: una por persona (`Dinamicas.construir`)
 
