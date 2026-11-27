@@ -49,11 +49,12 @@ internal fun DrawScope.huecoLibreCiber(k: Int, r: Rect, ocupado: Float, g: Marco
     val piso = r.bottom - w * 0.009f
     val alto = r.height
     clipRect(r.left, r.top, r.right, r.bottom) {
-        val primero = ORDEN_HUECOS_CIBER[Math.floorMod(k + k / 5 + g.n, 5)]
+        val i = Math.floorMod(k + k / 5 + g.n, 5)
+        val primero = ORDEN_HUECOS_CIBER[i]
         if (libre > w * 0.44f) {
             ganchoCiber(g, Offset(xa + libre * 0.5f, r.top + alto * 0.2f), k)
             grupoCiber(primero, Rect(xa, r.top, xa + libre * 0.46f, piso), alto, g, k)
-            grupoCiber((primero + 2) % 5, Rect(xa + libre * 0.54f, r.top, xb, piso), alto, g, k + 7)
+            grupoCiber(ORDEN_HUECOS_CIBER[(i + 3) % 5], Rect(xa + libre * 0.54f, r.top, xb, piso), alto, g, k + 7)
         } else {
             if (libre > w * 0.26f) ganchoCiber(g, Offset(xb - libre * 0.2f, r.top + alto * 0.2f), k)
             grupoCiber(primero, Rect(xa, r.top, xb, piso), alto, g, k)

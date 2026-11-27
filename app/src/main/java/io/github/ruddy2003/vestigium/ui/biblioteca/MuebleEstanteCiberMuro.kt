@@ -59,7 +59,7 @@ private fun DrawScope.paredArribaCiber(g: MarcoCiber) {
     val paradas = Array(7) { i ->
         val f = i / 6f
         val p = pantalla + Offset(w * 1.05f * f * 0.8f, -w * 1.05f * f * 0.6f)
-        f to g.t(p).c(PARED)
+        f to g.t(p).c(PARED, 0.8f)
     }
     drawRect(Brush.radialGradient(*paradas, center = pantalla, radius = w * 1.05f), Offset.Zero, Size(w, hasta))
     pinceladas(Rect(0f, 0f, w, hasta), NOCHE, 6101, 44, u, 0.16f)
@@ -78,8 +78,8 @@ private fun DrawScope.paredArribaCiber(g: MarcoCiber) {
     drawPath(grieta, NOCHE.copy(alpha = 0.5f), style = Stroke(1.1f * u))
     translate(1f * u, 0.6f * u) { drawPath(grieta, g.t(w * 0.47f, w * 0.08f).b(0.25f), style = Stroke(0.6f * u)) }
     // El halo de la pantalla en la pared: tiñe de su color lo que tiene cerca.
-    mancha(pantalla + Offset(0f, -w * 0.04f), w * 0.5f, g.a.colores[0].copy(alpha = if (g.a.noche) 0.13f else 0.17f))
-    mancha(pantalla, w * 0.26f, g.a.colores[0].copy(alpha = if (g.a.noche) 0.12f else 0.16f))
+    mancha(pantalla + Offset(0f, -w * 0.04f), w * 0.46f, g.a.colores[0].copy(alpha = if (g.a.noche) 0.08f else 0.1f))
+    mancha(pantalla, w * 0.24f, g.a.colores[0].copy(alpha = if (g.a.noche) 0.08f else 0.1f))
     // El resto de cinta y el recuadro más limpio de un cartel que ya no está, a la izquierda del banderín.
     val r = Rect(w * 0.3f, w * 0.215f, w * 0.43f, w * 0.31f)
     val t = g.t(r.center)
@@ -116,7 +116,7 @@ private fun DrawScope.banderinCiber(g: MarcoCiber) {
     }
     // La sombra en la pared, hacia fuera de la pantalla (abajo y a la derecha).
     translate(w * 0.012f, w * 0.01f) { drawPath(tira, NOCHE.copy(alpha = 0.42f)) }
-    val pap = Array(6) { i -> val f = i / 5f; f to g.t(x0 + (x1 - x0) * f, y0 + alto / 2).c(PAPEL, 1.15f) }
+    val pap = Array(6) { i -> val f = i / 5f; f to g.t(x0 + (x1 - x0) * f, y0 + alto / 2).c(PAPEL, 0.9f) }
     drawPath(tira, Brush.horizontalGradient(*pap, startX = x0, endX = x1))
     clipPath(tira) {
         val margen = w * 0.011f

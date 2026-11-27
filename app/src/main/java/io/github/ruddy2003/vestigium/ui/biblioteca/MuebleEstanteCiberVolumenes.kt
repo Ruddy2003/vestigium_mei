@@ -97,10 +97,10 @@ private class LuzVolumenCiber(val a: AireCiber, val t: TonoCiber) {
      */
     fun animo(col: Color, mas: Float = 1f): Color {
         val k = (t.k * mas).coerceIn(0f, 1.3f)
-        val apagado = Color(col.red * 0.34f + 0.012f, col.green * 0.34f + 0.02f, col.blue * 0.37f + 0.05f, col.alpha)
+        val apagado = Color(col.red * 0.3f + 0.012f, col.green * 0.3f + 0.02f, col.blue * 0.33f + 0.05f, col.alpha)
         val lit = t.c(col, mas)
         val vivo = mezcla(col, lit, 0.4f)
-        return mezcla(apagado, vivo, (0.2f + 1.15f * k.pow(1.25f)).coerceAtMost(0.97f))
+        return mezcla(apagado, vivo, (0.14f + 1.1f * k.pow(1.2f)).coerceAtMost(0.97f))
     }
 
     /**
@@ -111,7 +111,7 @@ private class LuzVolumenCiber(val a: AireCiber, val t: TonoCiber) {
         val ke = t.k.coerceIn(0f, 1f).pow(1.6f)
         val l = t.l
         val porLuz = Color(base.red * (0.55f + 0.45f * l.red), base.green * (0.55f + 0.45f * l.green), base.blue * (0.55f + 0.45f * l.blue))
-        val lejos = conLuminanciaCiber(mezcla(base, porLuz, 0.6f), ETIQUETA_MINIMA_CIBER)
+        val lejos = conLuminanciaCiber(mezcla(mezcla(base, porLuz, 0.6f), PaletaCiber.PARED, 0.35f), ETIQUETA_MINIMA_CIBER)
         val cerca = conLuminanciaCiber(porLuz, 0.42f)
         val e = mezcla(lejos, cerca, ke)
         return if (luminanciaCiber(e) < ETIQUETA_MINIMA_CIBER) conLuminanciaCiber(e, ETIQUETA_MINIMA_CIBER) else e
@@ -365,6 +365,14 @@ private fun DrawScope.bolsaCiber(v: Volumen, medidor: TextMeasurer, l: LuzVolume
         close()
     }
     asientoCiber(l, x0, x1, arriba)
+    val recuesta = (azar(v.semilla, 13) - 0.5f) * 7f
+    rotate(recuesta, Offset(if (recuesta > 0f) x1 else x0, h)) { bolsaDentroCiber(v, medidor, l, tinte, bolsa, panza, arriba, x0, x1, zy) }
+}
+
+/** La bolsa ya puesta (recostada o no): lo de dentro, el plástico, el cierre y la luna. */
+private fun DrawScope.bolsaDentroCiber(v: Volumen, medidor: TextMeasurer, l: LuzVolumenCiber, tinte: Color?, bolsa: Path, panza: Float,
+                                       arriba: Float, x0: Float, x1: Float, zy: Float) {
+    val u = density; val w = size.width; val h = size.height
     drawPath(bolsa, l.c(mezcla(NOCHE, ACERO_OSC, 0.35f), 0.8f).copy(alpha = 0.5f))
     // Los disquetes, uno encima de otro en abanico, que llenan la bolsa; el de delante abajo, con la etiqueta.
     val dw = (x1 - x0) * 0.86f
@@ -394,7 +402,7 @@ private fun DrawScope.bolsaCiber(v: Volumen, medidor: TextMeasurer, l: LuzVolume
                     drawRect(NOCHE.copy(alpha = 0.7f), Offset(d.left + dw * 0.05f, d.bottom - dh * 0.1f), Size(dw * 0.07f, dh * 0.06f))
                 }
                 if (j == 0) {
-                    val eh = minOf(24.5f * u, dh * 0.62f)
+                    val eh = minOf(24.5f * u, dh * 0.76f)
                     val et = Rect(d.left + dw * 0.1f, d.bottom - dh * 0.04f - eh, d.right - dw * 0.1f, d.bottom - dh * 0.04f)
                     etiquetaCiber(et, v, medidor, l, borde = if (Math.floorMod(v.semilla, 2) == 0) Color(0xFFB8452F) else Color(0xFF2F5E9E))
                 }

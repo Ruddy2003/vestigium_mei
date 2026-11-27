@@ -92,9 +92,9 @@ internal class AireCiber(val noche: Boolean) {
     /** El color de cada luz: la pantalla, la regleta y el monitor ámbar. */
     val colores: Array<Color> = if (noche) arrayOf(p.LUNA, p.ROJO, p.AMBAR_LUZ) else arrayOf(p.CIAN_LUZ, p.ROJO, p.AMBAR_LUZ)
     /** La fuerza de cada una. */
-    val fuerzas: FloatArray = if (noche) floatArrayOf(0.92f, 0.55f, 0.22f) else floatArrayOf(1.35f, 1.1f, 1.15f)
+    val fuerzas: FloatArray = if (noche) floatArrayOf(0.88f, 0.78f, 0.3f) else floatArrayOf(1.4f, 1.2f, 1.05f)
     /** Cuánto tiñe cada luz lo que toca (el cian, poco: el beis sigue siendo beis; el rojo y el ámbar, más). */
-    private val tintes: FloatArray = if (noche) floatArrayOf(0.42f, 0.55f, 0.5f) else floatArrayOf(0.3f, 0.55f, 0.5f)
+    private val tintes: FloatArray = if (noche) floatArrayOf(0.32f, 0.55f, 0.42f) else floatArrayOf(0.2f, 0.55f, 0.4f)
 
     /** Lo hondo de un color: oscuro pero de su mismo tono, apenas hacia la noche azul del cuarto (el beis, a un pardo azulado). */
     fun hondo(c: Color): Color = if (noche) Color(c.red * 0.15f + 0.008f, c.green * 0.15f + 0.014f, c.blue * 0.17f + 0.04f, c.alpha)
@@ -107,7 +107,7 @@ internal class AireCiber(val noche: Boolean) {
     fun luz(c: Color, k: Float, l: Color, tinte: Float): Color {
         val kk = k.coerceIn(0f, 1.3f)
         val mr = 1f + (l.red - 1f) * tinte; val mg = 1f + (l.green - 1f) * tinte; val mb = 1f + (l.blue - 1f) * tinte
-        val brilla = 0.16f * kk * kk
+        val brilla = 0.07f * min(kk, 1f) * min(kk, 1f)
         val v = Color(min(1f, c.red * mr + l.red * brilla), min(1f, c.green * mg + l.green * brilla), min(1f, c.blue * mb + l.blue * brilla), c.alpha)
         return mezcla(hondo(c), v, cuanto(kk))
     }
@@ -135,13 +135,14 @@ internal class TonoCiber(val a: AireCiber, val k: Float, val l: Color, val tn: F
  */
 internal fun lucesCiber(fx: Float, fy: Float, a: AireCiber, regY: Float, ambY: Float, k: FloatArray) {
     val m = MuebleEstanteCiber
-    val dx0 = fx - m.PANT_X; val dy0 = fy - m.PANT_Y
-    val d0 = sqrt(dx0 * dx0 + (dy0 * (if (dy0 > 0f) 0.82f else 1.25f)).let { it * it })
-    k[0] = a.fuerzas[0] * exp(-2.9f * d0)
+    // Cada charco cae como una campana: fuerte cerca, deprisa a media distancia y casi nada lejos (entre dos charcos, lo hondo).
+    val dx0 = fx - m.PANT_X; val dy0 = (fy - m.PANT_Y) * (if (fy > m.PANT_Y) 0.82f else 1.2f)
+    val s0 = if (a.noche) 0.6f else 0.52f
+    k[0] = a.fuerzas[0] * exp(-(dx0 * dx0 + dy0 * dy0) / (s0 * s0))
     val dx1 = (fx - m.REG_X) * 1.15f; val dy1 = fy - regY
-    k[1] = a.fuerzas[1] * exp(-5.8f * sqrt(dx1 * dx1 + dy1 * dy1))
+    k[1] = a.fuerzas[1] * exp(-(dx1 * dx1 + dy1 * dy1) / (0.21f * 0.21f))
     val dx2 = fx - m.AMB_X; val dy2 = (fy - ambY) * (if (fy < ambY) 0.7f else 1.1f)
-    k[2] = a.fuerzas[2] * exp(-3.5f * sqrt(dx2 * dx2 + dy2 * dy2))
+    k[2] = a.fuerzas[2] * exp(-(dx2 * dx2 + dy2 * dy2) / (0.43f * 0.43f))
 }
 
 /** El tono en ([fx], [fy]) en anchos del mueble. */
