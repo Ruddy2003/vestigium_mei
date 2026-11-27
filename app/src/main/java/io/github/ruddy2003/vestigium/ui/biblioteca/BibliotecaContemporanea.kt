@@ -7566,15 +7566,10 @@ object EstanteNavidad : DisenoBiblioteca {
 
     // ---------------------------------------------------------------- la libreta de momentos
 
-    /** El cartón rojo de la casita de adviento, el verde de sus puertas, el chocolate de la taza y la galleta de jengibre. */
+    /** El cartón rojo de la casita (la de la viñeta de la portada de las obras). */
     private val CASITA = Color(0xFFB3122E)
-    private val PUERTA = Color(0xFF1F6B3A)
-    private val CHOCOLATE = Color(0xFF5A3420)
-    private val JENGIBRE = Color(0xFFB9783E)
-    /** El orden revuelto de las 24 casillas, como en los calendarios de verdad. */
-    private val ORDEN_CASILLAS = listOf(13, 2, 21, 7, 18, 10, 4, 23, 15, 1, 9, 20, 6, 17, 12, 24, 3, 14, 8, 22, 11, 5, 19, 16)
 
-    override val altoLibreta: Dp = 264.dp
+    override val altoLibreta: Dp = MuebleLibretaNavidad.ALTO
 
     /** Una ramita de acebo de hojas dentadas (más grande que la del estante): dos hojas y tres bayas en [c]. */
     private fun DrawScope.aceboDentado(c: Offset, s: Float, hoja: Color, baya: Color) {
@@ -7590,178 +7585,11 @@ object EstanteNavidad : DisenoBiblioteca {
         listOf(Offset(-0.12f, -0.06f), Offset(0.12f, -0.06f), Offset(0f, 0.1f)).forEach { o -> drawCircle(baya, s * 0.13f, Offset(c.x + o.x * s, c.y + o.y * s)) }
     }
 
-    /**
-     * El calendario de adviento de pie sobre la mesa de la sala, contra el papel pintado de rayas y la ventana donde nieva:
-     * una casita de cartón rojo con su tejado nevado y la chimenea, el banderín crema con el nombre y la cuenta, y las 24
-     * casillas en orden revuelto; cada hoja escrita abre una (hasta las 24), con su dulce dentro. Engorda con las hojas: la
-     * caja es más honda (se ve su costado) y, pasadas las 24, se le apilan detrás los calendarios de los años anteriores (uno
-     * cada 24 hojas, hasta 3). En la mesa, el plato de galletas de jengibre, la taza de chocolate con sus malvaviscos, la vela
-     * en su palmatoria y una rama de abeto. Al abrirse se abre la puerta grande de la casita, abajo al centro: sus dos hojas se
-     * apartan y dejan ver la estrella dorada con su luz. En modo oscuro, la sala de noche: alumbran la vela (el único
-     * degradado), las ventanitas abiertas y la puerta.
-     */
-    override fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        val a = e.abierto.coerceIn(0f, 1f)
-        val lleno = llenoLibreta(e.hojas)
-        fun c(x: Color) = if (oscuro) mezcla(t(x, true, false), Color(0xFF0C0908), 0.45f) else x
-        fun cp(x: Color) = if (oscuro) mezcla(x, Color(0xFF0C0908), 0.28f) else x
-        val mesaY = h * 0.8f
-        // El papel pintado de rayas y la ventana con la nieve.
-        drawRect(c(PARED), Offset.Zero, Size(w, mesaY))
-        var x = 0f; var k = 0
-        while (x < w) { drawRect(c(PARED_RAYA).copy(alpha = if (k % 2 == 0) 0.5f else 0.25f), Offset(x, 0f), Size(if (k % 2 == 0) 5 * u else 2 * u, mesaY)); x += 12 * u; k++ }
-        val ven = Rect(w * 0.03f, h * 0.06f, w * 0.2f, h * 0.56f)
-        drawRect(c(NOGAL), ven.inflate(4 * u).topLeft, ven.inflate(4 * u).size)
-        drawRect(c(if (oscuro) CIELO_NOCHE else CIELO_DIA), ven.topLeft, ven.size)
-        for (j in 0 until 18) drawCircle(c(NIEVE).copy(alpha = 0.9f), (0.8f + 1.4f * azar(170, j)) * u, Offset(ven.left + ven.width * azar(171, j), ven.top + ven.height * azar(172, j)))
-        drawRect(c(NIEVE), Offset(ven.left, ven.bottom - 7 * u), Size(ven.width, 7 * u))
-        drawLine(c(NOGAL), Offset(ven.center.x, ven.top), Offset(ven.center.x, ven.bottom), 3 * u)
-        drawLine(c(NOGAL), Offset(ven.left, ven.center.y), Offset(ven.right, ven.center.y), 3 * u)
-        // La mesa de nogal con su mantel de cuadros en la orilla.
-        drawRect(c(NOGAL), Offset(0f, mesaY), Size(w, h - mesaY))
-        vetas(Rect(0f, mesaY, w, h), c(NOGAL_VETA).copy(alpha = 0.6f), 173, densidad = 0.8f)
-        drawRect(c(NOGAL_LUZ), Offset(0f, mesaY), Size(w, 2.5f * u))
-        // La casita: sus medidas y su hondura.
-        val W = w * 0.52f
-        val casa = Rect(w * 0.26f, h * 0.05f, w * 0.26f + W, mesaY + 4 * u)
-        val hondo = (5f + 16f * lleno) * u
-        val techo = casa.top + casa.height * 0.2f
-        // Los calendarios de años anteriores, apilados detrás.
-        val viejos = ((e.hojas - 1) / 24).coerceIn(0, 3)
-        for (j in viejos downTo 1) {
-            val o = Offset(j * 9 * u, -j * 6 * u)
-            drawPath(Path().apply { moveTo(casa.left + o.x, techo + o.y); lineTo(casa.center.x + o.x, casa.top + o.y); lineTo(casa.right + o.x, techo + o.y)
-                lineTo(casa.right + o.x, casa.bottom); lineTo(casa.left + o.x, casa.bottom); close() }, c(mezcla(if (j % 2 == 0) CASITA else PUERTA, Color.Black, 0.2f + 0.08f * j)))
-            drawPath(Path().apply { moveTo(casa.left + o.x, techo + o.y); lineTo(casa.center.x + o.x, casa.top + o.y); lineTo(casa.right + o.x, techo + o.y) }, c(NIEVE).copy(alpha = 0.7f), style = Stroke(3 * u))
-        }
-        // La sombra en la mesa y el costado de la caja (más hondo cuantas más hojas).
-        drawOval(Color.Black.copy(alpha = if (oscuro) 0.4f else 0.22f), Offset(casa.left - 4 * u, casa.bottom - 7 * u), Size(W + hondo + 14 * u, 14 * u))
-        drawPath(Path().apply { moveTo(casa.right, techo); lineTo(casa.right + hondo, techo - hondo * 0.5f); lineTo(casa.right + hondo, casa.bottom - hondo * 0.5f); lineTo(casa.right, casa.bottom); close() },
-            c(mezcla(CASITA, Color.Black, 0.4f)))
-        drawPath(Path().apply { moveTo(casa.center.x, casa.top); lineTo(casa.center.x + hondo, casa.top - hondo * 0.5f); lineTo(casa.right + hondo, techo - hondo * 0.5f); lineTo(casa.right, techo); close() },
-            c(NIEVE).copy(alpha = 0.85f))
-        // La chimenea con su humo.
-        val ch = Rect(casa.left + W * 0.68f, casa.top + casa.height * 0.02f, casa.left + W * 0.78f, casa.top + casa.height * 0.13f)
-        drawRect(c(mezcla(CASITA, Color.Black, 0.3f)), ch.topLeft, ch.size)
-        drawRect(c(NIEVE), Offset(ch.left - 2 * u, ch.top - 3 * u), Size(ch.width + 4 * u, 4 * u))
-        for (j in 0 until 3) drawCircle(c(NIEVE).copy(alpha = 0.35f - 0.08f * j), (4f + 2f * j) * u, Offset(ch.center.x + (3 + j * 5) * u, ch.top - (8 + j * 9) * u))
-        // El frente: la fachada roja con su tejado nevado.
-        val frente = Path().apply { moveTo(casa.left, techo); lineTo(casa.center.x, casa.top); lineTo(casa.right, techo); lineTo(casa.right, casa.bottom); lineTo(casa.left, casa.bottom); close() }
-        drawPath(frente, c(CASITA))
-        drawPath(Path().apply { moveTo(casa.left - 6 * u, techo + 4 * u); lineTo(casa.center.x, casa.top - 3 * u); lineTo(casa.right + 6 * u, techo + 4 * u) }, c(NIEVE), style = Stroke(6 * u))
-        for (j in 0 until 7) { val f = (j + 0.5f) / 7f; val px = casa.left - 6 * u + (W + 12 * u) * f
-            val py = if (f < 0.5f) techo + 4 * u - (techo - casa.top + 7 * u) * f * 2 else casa.top - 3 * u + (techo - casa.top + 7 * u) * (f - 0.5f) * 2
-            drawCircle(c(NIEVE), 3 * u, Offset(px, py + 3.5f * u)) }
-        drawPath(estrella(Offset(casa.center.x, casa.top + casa.height * 0.1f), 8 * u, 5, 0.42f), c(ORO))
-        // El banderín crema con el nombre y la cuenta.
-        val ban = Rect(casa.left + W * 0.06f, techo + 6 * u, casa.right - W * 0.06f, techo + 40 * u)
-        drawRect(Color.Black.copy(alpha = 0.2f), ban.topLeft + Offset(1 * u, 1.5f * u), ban.size)
-        drawPath(Path().apply { moveTo(ban.left - 8 * u, ban.top + 4 * u); lineTo(ban.left, ban.top + 4 * u); lineTo(ban.left, ban.bottom + 4 * u); lineTo(ban.left - 8 * u, ban.bottom + 4 * u); lineTo(ban.left - 4 * u, ban.center.y + 4 * u); close() }, c(mezcla(CREMA, Color.Black, 0.15f)))
-        drawPath(Path().apply { moveTo(ban.right + 8 * u, ban.top + 4 * u); lineTo(ban.right, ban.top + 4 * u); lineTo(ban.right, ban.bottom + 4 * u); lineTo(ban.right + 8 * u, ban.bottom + 4 * u); lineTo(ban.right + 4 * u, ban.center.y + 4 * u); close() }, c(mezcla(CREMA, Color.Black, 0.15f)))
-        drawRect(cp(CREMA), ban.topLeft, ban.size)
-        drawRect(c(ORO), ban.deflate(2.5f * u).topLeft, ban.deflate(2.5f * u).size, style = Stroke(0.8f * u))
-        textoEn(medidor, e.nombre, Rect(ban.left + 6 * u, ban.top + 3 * u, ban.right - 6 * u, ban.top + ban.height * 0.62f), letra, c(TINTA), 14f, peso = FontWeight.Bold, minimo = 7.5f)
-        textoEn(medidor, e.cuenta, Rect(ban.left + 6 * u, ban.top + ban.height * 0.58f, ban.right - 6 * u, ban.bottom - 3 * u), letra, c(ROJO), 9.5f, minimo = 6f)
-        // Las 24 casillas: las abiertas, con su dulce y la puertecita girada; las cerradas, verdes con su número.
-        val abiertas = e.hojas.coerceIn(0, 24)
-        val cols = 6; val filas = 4
-        val rejilla = Rect(casa.left + W * 0.06f, ban.bottom + 6 * u, casa.right - W * 0.06f, casa.bottom - 44 * u)
-        val cw = rejilla.width / cols; val chh = rejilla.height / filas
-        val dulces = listOf(Color(0xFFFFD27A), Color(0xFF6FB3E0), Color(0xFFE85A6A), Color(0xFF8BD17A))
-        for (i in 0 until 24) {
-            val col = i % cols; val fila = i / cols
-            val o = Offset(rejilla.left + col * cw + cw * 0.1f, rejilla.top + fila * chh + chh * 0.1f); val s = Size(cw * 0.8f, chh * 0.8f)
-            val num = ORDEN_CASILLAS[i]
-            if (num <= abiertas) {
-                drawRect(if (oscuro) mezcla(LLAMA, Color.Black, 0.35f) else Color(0xFF2A1A10), o, s)
-                val cc = Offset(o.x + s.width / 2, o.y + s.height / 2)
-                if (num % 3 == 0) drawPath(estrella(cc, minOf(s.width, s.height) * 0.32f, 5, 0.45f), c(ORO))
-                else drawCircle(c(dulces[num % 4]), minOf(s.width, s.height) * 0.24f, cc)
-                drawRect(c(mezcla(PUERTA, Color.White, 0.1f)), Offset(o.x - s.width * 0.22f, o.y), Size(s.width * 0.24f, s.height))
-            } else {
-                drawRect(c(PUERTA), o, s)
-                drawRect(c(ORO).copy(alpha = 0.8f), o, s, style = Stroke(0.8f * u))
-                textoEn(medidor, "$num", Rect(o, s), letra, cp(CREMA), 9f, peso = FontWeight.Bold, minimo = 5f)
-            }
-        }
-        // La puerta grande de abajo, con sus dos hojas que se abren.
-        val pu = Rect(casa.center.x - 18 * u, casa.bottom - 40 * u, casa.center.x + 18 * u, casa.bottom - 2 * u)
-        drawRect(if (oscuro || a > 0f) mezcla(LLAMA, Color(0xFF3A1A08), 0.5f - 0.3f * a) else Color(0xFF2A1A10), pu.topLeft, pu.size)
-        if (a > 0.02f) {
-            drawCircle(LLAMA.copy(alpha = 0.35f * a), 20 * u, pu.center)
-            drawPath(estrella(pu.center, 11 * u * (0.5f + 0.5f * a), 5, 0.42f), cp(ORO))
-        }
-        val hoja = pu.width / 2 * (1f - a * 0.85f)
-        listOf(pu.left to 1f, pu.right to -1f).forEach { (bx, s) ->
-            val x0 = if (s > 0) bx else bx - hoja
-            drawRect(c(PUERTA), Offset(x0, pu.top), Size(hoja, pu.height))
-            drawRect(c(ORO), Offset(x0, pu.top), Size(hoja, pu.height), style = Stroke(1 * u))
-            if (hoja > 6 * u) drawCircle(c(ORO), 1.6f * u, Offset(if (s > 0) x0 + hoja - 3.5f * u else x0 + 3.5f * u, pu.center.y))
-            if (a > 0f) drawRect(Color.Black.copy(alpha = 0.3f * a), Offset(x0, pu.top), Size(hoja, pu.height))
-        }
-        aceboDentado(Offset(pu.center.x, pu.top - 5 * u), 11 * u, c(VERDE), c(ROJO))
-        // La rama de abeto, el plato de galletas a la izquierda; la taza y la vela a la derecha.
-        for (j in 0 until 9) drawLine(c(ABETO), Offset(w * 0.02f + j * 6 * u, h * 0.93f), Offset(w * 0.02f + j * 6 * u + 5 * u, h * 0.88f - (j % 2) * 3 * u), 2 * u)
-        drawLine(c(NOGAL_VETA), Offset(w * 0.01f, h * 0.94f), Offset(w * 0.2f, h * 0.9f), 1.4f * u)
-        val pl = Offset(w * 0.13f, h * 0.84f)
-        drawOval(Color.Black.copy(alpha = 0.18f), Offset(pl.x - 26 * u, pl.y - 4 * u), Size(54 * u, 16 * u))
-        drawOval(cp(CREMA), Offset(pl.x - 27 * u, pl.y - 8 * u), Size(54 * u, 16 * u))
-        drawOval(c(ROJO).copy(alpha = 0.5f), Offset(pl.x - 23 * u, pl.y - 6.5f * u), Size(46 * u, 13 * u), style = Stroke(0.8f * u))
-        drawPath(estrella(Offset(pl.x - 9 * u, pl.y - 3 * u), 9 * u, 5, 0.5f), c(JENGIBRE))
-        drawPath(estrella(Offset(pl.x - 9 * u, pl.y - 3 * u), 9 * u, 5, 0.5f), c(NIEVE), style = Stroke(0.8f * u))
-        val mu = Offset(pl.x + 10 * u, pl.y - 4 * u)
-        drawCircle(c(JENGIBRE), 3.2f * u, Offset(mu.x, mu.y - 7 * u))
-        drawPath(Path().apply { moveTo(mu.x - 3 * u, mu.y - 4 * u); lineTo(mu.x + 3 * u, mu.y - 4 * u); lineTo(mu.x + 7 * u, mu.y - 1 * u); lineTo(mu.x + 4 * u, mu.y)
-            lineTo(mu.x + 5 * u, mu.y + 6 * u); lineTo(mu.x, mu.y + 3 * u); lineTo(mu.x - 5 * u, mu.y + 6 * u); lineTo(mu.x - 4 * u, mu.y); lineTo(mu.x - 7 * u, mu.y - 1 * u); close() }, c(JENGIBRE))
-        drawCircle(c(NIEVE), 0.7f * u, Offset(mu.x - 1.2f * u, mu.y - 7.5f * u)); drawCircle(c(NIEVE), 0.7f * u, Offset(mu.x + 1.2f * u, mu.y - 7.5f * u))
-        val tz = Offset(w * 0.86f, h * 0.83f)
-        drawOval(Color.Black.copy(alpha = 0.2f), Offset(tz.x - 14 * u, tz.y + 10 * u), Size(32 * u, 8 * u))
-        drawArc(c(VERDE), -70f, 140f, false, Offset(tz.x + 8 * u, tz.y - 6 * u), Size(14 * u, 14 * u), style = Stroke(3.2f * u))
-        drawRect(c(VERDE), Offset(tz.x - 12 * u, tz.y - 8 * u), Size(24 * u, 20 * u))
-        drawOval(c(VERDE), Offset(tz.x - 12 * u, tz.y + 8 * u), Size(24 * u, 7 * u))
-        drawRect(c(NIEVE).copy(alpha = 0.8f), Offset(tz.x - 12 * u, tz.y - 1 * u), Size(24 * u, 3 * u))
-        drawOval(cp(CREMA), Offset(tz.x - 12 * u, tz.y - 11 * u), Size(24 * u, 7 * u))
-        drawOval(c(CHOCOLATE), Offset(tz.x - 10 * u, tz.y - 10 * u), Size(20 * u, 5 * u))
-        listOf(-4f, 2f, 5f).forEach { dx -> drawRect(cp(NIEVE), Offset(tz.x + dx * u - 1.8f * u, tz.y - 9.6f * u), Size(3.6f * u, 3 * u)) }
-        // La vela en su palmatoria de latón.
-        val ve = Offset(w * 0.9f, h * 0.48f)
-        drawOval(c(ORO), Offset(ve.x - 13 * u, mesaY - 6 * u), Size(26 * u, 8 * u))
-        drawLine(c(ORO), Offset(ve.x, mesaY - 4 * u), Offset(ve.x, ve.y + 46 * u), 3 * u)
-        drawOval(c(ORO), Offset(ve.x - 8 * u, ve.y + 44 * u), Size(16 * u, 5 * u))
-        drawRect(cp(CERA), Offset(ve.x - 5 * u, ve.y + 8 * u), Size(10 * u, 38 * u))
-        drawRect(Color.Black.copy(alpha = 0.1f), Offset(ve.x + 2 * u, ve.y + 8 * u), Size(3 * u, 38 * u))
-        drawLine(c(TINTA), Offset(ve.x, ve.y + 8 * u), Offset(ve.x, ve.y + 4 * u), 0.8f * u)
-        drawPath(Path().apply { moveTo(ve.x, ve.y + 5 * u); quadraticTo(ve.x - 4.5f * u, ve.y - 1 * u, ve.x, ve.y - 9 * u); quadraticTo(ve.x + 4.5f * u, ve.y - 1 * u, ve.x, ve.y + 5 * u) }, LLAMA)
-        drawCircle(Color.White.copy(alpha = 0.8f), 1.4f * u, Offset(ve.x, ve.y + 1 * u))
-        if (oscuro) drawRect(Brush.radialGradient(listOf(LLAMA.copy(alpha = 0.32f), LLAMA.copy(alpha = 0.1f), Color.Transparent), Offset(ve.x, ve.y), w * 0.8f))
-    }
+    override fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleLibretaNavidad) { libreta(e, medidor, oscuro) }
 
-    /**
-     * La pestaña del día es una casilla de adviento: la puertecita roja o verde (según la semilla) con su marco dorado, la
-     * letra de la semana arriba, el número grande y, colgando abajo, la bola de árbol en el color del ánimo con su casquillo
-     * dorado (sin ánimo, un copo de nieve).
-     */
-    override fun DrawScope.pestana(e: EstadoPestana, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, false)
-        val r = Rect(4 * u, 3 * u, w - 4 * u, h - 3 * u)
-        drawRect(Color.Black.copy(alpha = 0.25f), r.topLeft + Offset(1 * u, 1.5f * u), r.size)
-        drawRect(c(if ((e.semilla and 1) == 0) PUERTA else CASITA), r.topLeft, r.size)
-        drawRect(c(ORO), r.deflate(2 * u).topLeft, r.deflate(2 * u).size, style = Stroke(1 * u))
-        drawCircle(c(ORO), 1.4f * u, Offset(r.right - 5.5f * u, r.top + 38 * u))
-        textoEn(medidor, e.semana, Rect(r.left + 4 * u, r.top + 4 * u, r.right - 4 * u, r.top + 12 * u), letra, c(CREMA).copy(alpha = 0.85f), 7.5f, minimo = 5f)
-        textoEn(medidor, e.dia, Rect(r.left + 3 * u, r.top + 12 * u, r.right - 3 * u, r.top + 33 * u), letra, c(CREMA), 19f, peso = FontWeight.Bold, minimo = 9f)
-        val b = Offset(r.center.x, r.bottom - 9 * u)
-        if (e.tono != null) {
-            drawLine(c(ORO), Offset(b.x, r.top + 34 * u), Offset(b.x, b.y - 6 * u), 0.7f * u)
-            drawRect(c(ORO), Offset(b.x - 2.2f * u, b.y - 7.5f * u), Size(4.4f * u, 2.6f * u))
-            drawCircle(e.tono, 5.4f * u, b)
-            drawCircle(Color.White.copy(alpha = 0.45f), 1.5f * u, b + Offset(-2 * u, -1.8f * u))
-        } else for (k in 0 until 3) rotate(k * 60f, b) { drawLine(c(NIEVE).copy(alpha = 0.8f), Offset(b.x - 5 * u, b.y), Offset(b.x + 5 * u, b.y), 0.9f * u) }
-    }
+    override fun DrawScope.pestana(e: EstadoPestana, medidor: TextMeasurer, oscuro: Boolean) =
+        with(IndiceLibretaNavidad) { pestana(e, medidor, oscuro) }
 
     /** El mes en una cinta de raso roja que cruza la franja, con su ribete dorado y una ramita de acebo en cada punta. */
     override fun DrawScope.rotuloMes(texto: String, medidor: TextMeasurer, oscuro: Boolean) {
