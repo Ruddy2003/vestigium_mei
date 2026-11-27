@@ -3,6 +3,8 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -10,10 +12,12 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.TextMeasurer
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
+import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 
 /**
@@ -137,21 +141,30 @@ internal object ObraEstanteBotanico {
         val w = size.width; val u = density
         // Una fila de más arriba y abajo: así las juntas con las tablas no dejan asomar el fondo.
         val fr = Rect(r.left - 1f, r.top - 1f, r.right + 1f, r.bottom + 1f)
-        val n = tramos(s, r.width)
         val techo = w * 0.026f
         val lado = w * 0.028f
         val piso = w * 0.022f
-        for (i in 0 until n) {
-            val x0 = fr.left + fr.width * i / n; val x1 = fr.left + fr.width * (i + 1) / n + 1f
-            val t = s.t(Offset((x0 + x1) / 2, r.center.y))
-            // La pared: más honda arriba, bajo la tabla, y un poco más viva abajo, donde le llega la luz por la boca.
-            drawRect(t.c(P.SALVIA, -0.16f), Offset(x0, fr.top), Size(x1 - x0, fr.height))
-            drawRect(t.c(P.SALVIA_LUZ, -0.08f).copy(alpha = if (s.a.oscuro) 0.2f else 0.35f), Offset(x0, r.top + r.height * 0.56f), Size(x1 - x0, r.height * 0.36f))
-        }
         val tc = s.t(r.center)
+        // La pared: honda arriba, en la sombra franca de la tabla y su penumbra, y un poco más viva abajo, donde le llega la luz
+        // por la boca. De día, en un solo trazo (un degradado a lo alto con cortes francos); de noche, la lumbre cambia a lo ancho
+        // y la sombra de la tabla va encima.
+        val s0 = (techo * 0.7f + r.height * 0.13f + 1f) / fr.height
+        val s1 = (techo * 0.7f + r.height * 0.23f + 1f) / fr.height
+        if (!s.a.oscuro) {
+            val c = tc.c(P.SALVIA, -0.16f)
+            val sombra = tc.s(1f).copy(alpha = 1f)
+            val luz = mezcla(c, tc.c(P.SALVIA_LUZ, -0.08f), 0.35f)
+            drawRect(Brush.verticalGradient(0f to mezcla(c, sombra, 0.5f), s0 to mezcla(c, sombra, 0.5f), s0 + 0.001f to mezcla(c, sombra, 0.24f),
+                s1 to mezcla(c, sombra, 0.24f), s1 + 0.001f to c, 0.58f to c, 0.6f to luz, 0.9f to luz, 0.93f to c, 1f to c,
+                startY = fr.top, endY = fr.bottom), fr.topLeft, fr.size)
+        } else {
+            drawRect(s.aLoAncho(fr.left, fr.right, r.center.y) { it.c(P.SALVIA, -0.16f) }, fr.topLeft, fr.size)
+            drawRect(tc.s(0.5f), Offset(r.left, r.top + techo * 0.7f), Size(r.width, r.height * 0.13f))
+            drawRect(tc.s(0.24f), Offset(r.left, r.top + techo * 0.7f + r.height * 0.13f), Size(r.width, r.height * 0.1f))
+        }
         // El enlucido: pinceladas, una grieta en algunos y algún clavo viejo.
-        pinceladas(r, if (s.a.oscuro) P.NOCHE else P.SALVIA_HONDO, 9200 + k, (r.width / (24f * u)).toInt().coerceIn(4, 30), u, 0.12f)
-        pinceladas(r, if (s.a.oscuro) P.NOCHE else P.SALVIA_LUZ, 9300 + k, (r.width / (40f * u)).toInt().coerceIn(3, 20), u, 0.1f)
+        pinceladas(r, if (s.a.oscuro) P.NOCHE else P.SALVIA_HONDO, 9200 + k, (r.width / (34f * u)).toInt().coerceIn(4, 24), u, 0.13f)
+        pinceladas(r, if (s.a.oscuro) P.NOCHE else P.SALVIA_LUZ, 9300 + k, (r.width / (60f * u)).toInt().coerceIn(3, 14), u, 0.1f)
         if (azar(9400, k) > 0.45f) {
             val p0 = Offset(r.left + r.width * (0.2f + 0.6f * azar(9401, k)), r.top + r.height * 0.3f)
             val t = s.t(p0)
@@ -191,9 +204,6 @@ internal object ObraEstanteBotanico {
         // Una mancha de humedad o de cola, vieja.
         val mx = r.left + r.width * azar(9406, k)
         drawOval(tc.s(0.08f), Offset(mx, r.top + r.height * (0.3f + 0.3f * azar(9407, k))), Size(w * 0.09f, w * 0.05f))
-        // La sombra franca de la tabla de arriba en la pared (corrida abajo, la luz viene de arriba), y su penumbra.
-        drawRect(tc.s(0.5f), Offset(r.left, r.top + techo * 0.7f), Size(r.width, r.height * 0.13f))
-        drawRect(tc.s(0.24f), Offset(r.left, r.top + techo * 0.7f + r.height * 0.13f), Size(r.width, r.height * 0.1f))
         // La sombra de la pilastra de la izquierda en la pared (de día; de noche, la de la luz que le toca).
         drawRect(tc.s(0.34f), Offset(r.left + lado, r.top), Size(w * 0.05f, r.height))
         drawRect(tc.s(0.16f), Offset(r.left + lado + w * 0.05f, r.top), Size(w * 0.03f, r.height))
@@ -239,70 +249,71 @@ internal object ObraEstanteBotanico {
         val festonAlto = 5.6f * u
         val n = ((x1 - x0) / festonAncho).toInt().coerceIn(1, 200)
         val paso = (x1 - x0) / n
-        // Un tramo despegado: dos o tres festones que cuelgan torcidos (no en todas las repisas).
-        val roto = if (azar(9500, k + 3) > 0.5f) (azar(9501, k + 3) * (n - 3)).toInt().coerceAtLeast(0) else -10
-        val nt = tramos(s, x1 - x0)
-        for (i in 0 until nt) {
-            val a0 = x0 + (x1 - x0) * i / nt; val a1 = x0 + (x1 - x0) * (i + 1) / nt + 1f
-            val t = s.t(Offset((a0 + a1) / 2, y + tira))
-            drawRect(t.s(0.35f), Offset(a0, y + tira), Size(a1 - a0, 2.2f * u))
-            drawRect(t.c(P.CUERO, 0.04f), Offset(a0, y), Size(a1 - a0, tira))
+        // Un tramo despegado: tres festones con su tira, que se soltaron de sus clavos y cuelgan torcidos de uno (no en todas).
+        val roto = if (n > 6 && azar(9500, k + 3) > 0.5f) (1 + azar(9501, k + 3) * (n - 5)).toInt() else -10
+        val rx0 = x0 + paso * roto; val rx1 = rx0 + paso * 3
+        val tc0 = s.t(Offset((x0 + x1) / 2, y + tira))
+        clipRect(rx0, y - 1f, rx1, y + tira + 3f * u, clipOp = ClipOp.Difference) {
+            drawRect(tc0.s(0.35f), Offset(x0, y + tira), Size(x1 - x0, 2.2f * u))
+            drawRect(s.aLoAncho(x0, x1, y + tira) { it.c(P.CUERO, 0.04f) }, Offset(x0, y), Size(x1 - x0, tira))
         }
-        // Los festones y su sombra en la pared.
+        // Los festones y su sombra en la pared; los del tramo suelto, aparte con su pedazo de tira.
         val fest = Path(); val sombra = Path(); val caido = Path()
         for (i in 0 until n) {
             val cx = x0 + paso * (i + 0.5f)
             val l = cx - paso * 0.5f
             val esRoto = i - roto in 0..2
             val p = if (esRoto) caido else fest
-            val cae = if (esRoto) festonAlto * (0.6f + 0.5f * (i - roto)) else 0f
             p.moveTo(l, y + tira - 0.5f * u)
-            p.lineTo(l + paso, y + tira - 0.5f * u + cae * 0.4f)
-            p.quadraticTo(l + paso * 0.98f, y + tira + festonAlto + cae, cx, y + tira + festonAlto * 1.1f + cae)
-            p.quadraticTo(l + paso * 0.02f, y + tira + festonAlto + cae * 0.6f, l, y + tira - 0.5f * u)
+            p.lineTo(l + paso, y + tira - 0.5f * u)
+            p.quadraticTo(l + paso * 0.98f, y + tira + festonAlto, cx, y + tira + festonAlto * 1.1f)
+            p.quadraticTo(l + paso * 0.02f, y + tira + festonAlto, l, y + tira - 0.5f * u)
             p.close()
-            sombra.addOval(Rect(cx - paso * 0.42f + 1.2f * u, y + tira + festonAlto * 0.3f + 1.6f * u + cae, cx + paso * 0.42f + 1.2f * u, y + tira + festonAlto * 1.25f + 1.6f * u + cae))
+            if (esRoto) p.addRect(Rect(l, y, l + paso + 0.5f * u, y + tira))
+            else sombra.addOval(Rect(cx - paso * 0.42f + 1.2f * u, y + tira + festonAlto * 0.3f + 1.6f * u, cx + paso * 0.42f + 1.2f * u, y + tira + festonAlto * 1.25f + 1.6f * u))
         }
         val tc = s.t(Offset((x0 + x1) / 2, y + tira))
         drawPath(sombra, tc.s(0.3f))
-        // Por tramos de luz, recortando: de noche cada tramo con su lumbre.
-        for (i in 0 until nt) {
-            val a0 = x0 + (x1 - x0) * i / nt; val a1 = x0 + (x1 - x0) * (i + 1) / nt + 1f
-            val t = s.t(Offset((a0 + a1) / 2, y + tira))
-            clipRect(a0, y - 1f, a1, y + tira + festonAlto * 3.5f) {
-                drawPath(fest, t.c(P.CUERO))
-                drawPath(caido, t.c(P.CUERO, -0.15f))
-                drawPath(fest, t.c(P.CUERO_OSC).copy(alpha = 0.6f), style = Stroke(0.7f * u))
-            }
-        }
+        // De noche, cada punto con su lumbre (un degradado a lo ancho).
+        drawPath(fest, s.aLoAncho(x0, x1, y + tira) { it.c(P.CUERO) })
+        drawPath(fest, s.aLoAncho(x0, x1, y + tira) { it.c(P.CUERO_OSC).copy(alpha = 0.6f) }, style = Stroke(0.7f * u))
         // El filete dorado a lo largo de la tira, el filo de luz de arriba y los clavos.
-        drawLine(tc.c(P.LATON).copy(alpha = 0.75f), Offset(x0, y + tira * 0.55f), Offset(x1, y + tira * 0.55f), 0.6f * u)
-        drawRect(tc.b(0.4f), Offset(x0, y), Size(x1 - x0, 0.8f * u))
+        clipRect(rx0, y - 1f, rx1, y + tira + 3f * u, clipOp = ClipOp.Difference) {
+            drawLine(tc.c(P.LATON).copy(alpha = 0.75f), Offset(x0, y + tira * 0.55f), Offset(x1, y + tira * 0.55f), 0.6f * u)
+            drawRect(tc.b(0.4f), Offset(x0, y), Size(x1 - x0, 0.8f * u))
+        }
         for (i in 0..n) {
             val x = x0 + paso * i
-            if (i - roto in 1..3) continue
             val t = s.t(Offset(x, y))
+            if (i - roto in 1..3) { drawCircle(t.s(0.7f), 0.7f * u, Offset(x, y + tira * 0.55f)); continue }
             drawCircle(t.c(P.LATON_OSC), 1.2f * u, Offset(x, y + tira * 0.55f))
             drawCircle(t.b(0.7f), 0.5f * u, Offset(x - 0.3f * u, y + tira * 0.4f))
         }
+        // El tramo suelto: cuelga torcido del clavo de su izquierda, con su sombra en la pared.
+        if (roto >= 0) {
+            val piv = Offset(rx0 + 0.6f * u, y + tira * 0.55f)
+            val tr = s.t(Offset(rx0 + paso * 1.5f, y + tira))
+            rotate(17f + 6f * azar(9502, k + 3), piv) {
+                drawPath(Path().apply { addPath(caido, Offset(1.4f * u, 2f * u)) }, tr.s(0.32f))
+                drawPath(caido, tr.c(P.CUERO, -0.08f))
+                drawPath(caido, tr.c(P.CUERO_OSC).copy(alpha = 0.6f), style = Stroke(0.7f * u))
+                drawLine(tr.c(P.LATON).copy(alpha = 0.7f), Offset(rx0, y + tira * 0.55f), Offset(rx1, y + tira * 0.55f), 0.6f * u)
+            }
+            clavoBotanico(piv, 1.2f * u, tr, P.LATON_OSC)
+        }
     }
-
     // ---------------------------------------------------------------- las tablas
 
     /** La tabla [r] bajo la repisa [k]: el canto grueso de roble con su filete, su media caña y su sombra, y el fleco debajo. */
     fun DrawScope.tabla(k: Int, r: Rect, d: DisposicionEstante, s: SitioBotanico) {
         val w = size.width; val u = density
-        val n = tramos(s, r.width)
         val bocel = r.top + r.height * 0.62f
-        for (i in 0 until n) {
-            val x0 = r.left + r.width * i / n - 1f; val x1 = r.left + r.width * (i + 1) / n + 1f
-            val t = s.t(Offset((x0 + x1) / 2, r.center.y), true)
-            drawRect(t.c(P.ROBLE, 0.02f), Offset(x0, r.top - 1f), Size(x1 - x0, bocel - r.top + 1f))
-            drawRect(t.c(P.ROBLE_LUZ, 0f), Offset(x0, bocel), Size(x1 - x0, (r.bottom - bocel) * 0.45f))
-            drawRect(t.c(P.ROBLE_OSC, 0f), Offset(x0, bocel + (r.bottom - bocel) * 0.45f), Size(x1 - x0, (r.bottom - bocel) * 0.55f + 1f))
-            // De noche, el filo de la lumbre en el canto (más donde más alumbra).
-            if (s.a.lumbre) drawRect(t.filo(0.6f), Offset(x0, r.top), Size(x1 - x0, 1.5f * u))
-        }
+        val x0 = r.left - 1f; val x1 = r.right + 1f
+        drawRect(s.aLoAncho(x0, x1, r.center.y, true) { it.c(P.ROBLE, 0.02f) }, Offset(x0, r.top - 1f), Size(x1 - x0, bocel - r.top + 1f))
+        drawRect(s.aLoAncho(x0, x1, r.center.y, true) { it.c(P.ROBLE_LUZ, 0f) }, Offset(x0, bocel), Size(x1 - x0, (r.bottom - bocel) * 0.45f))
+        drawRect(s.aLoAncho(x0, x1, r.center.y, true) { it.c(P.ROBLE_OSC, 0f) }, Offset(x0, bocel + (r.bottom - bocel) * 0.45f), Size(x1 - x0, (r.bottom - bocel) * 0.55f + 1f))
+        // De noche, el filo de la lumbre en el canto (más donde más alumbra).
+        if (s.a.lumbre) drawRect(s.aLoAncho(x0, x1, r.top, true) { it.filo(0.6f) }, Offset(x0, r.top), Size(x1 - x0, 1.5f * u))
         val tc = s.t(r.center, true)
         vetas(Rect(r.left, r.top, r.right, bocel), tc.c(P.ROBLE_OSC).copy(alpha = 0.35f), 9600 + k, 0.8f, grosor = 0.5f, ondulacion = 0.5f)
         drawRect(tc.b(0.55f), Offset(r.left, r.top), Size(r.width, 1.2f * u))
@@ -328,47 +339,56 @@ internal object ObraEstanteBotanico {
     fun DrawScope.costado(r: Rect, izq: Boolean, d: DisposicionEstante, s: SitioBotanico) {
         val w = size.width; val u = density
         if (r.height < 2f || r.width < 2f) return
-        val nv = if (s.a.lumbre) (r.height / (w * 0.05f)).toInt().coerceIn(1, 120) else 1
-        // La cara, por tramos a lo alto (de noche la luz cambia con la altura).
-        for (i in 0 until nv) {
-            val y0 = r.top + r.height * i / nv - 1f; val y1 = r.top + r.height * (i + 1) / nv + 1f
-            val t = s.t(Offset(r.center.x, (y0 + y1) / 2), true)
-            drawRect(t.c(P.ROBLE, if (izq) 0.04f else -0.04f), Offset(r.left - 1f, y0), Size(r.width + 2f, y1 - y0))
-        }
+        val cxp = r.center.x
+        // La cara, con un degradado a lo alto (de noche la lumbre cambia con la altura).
+        drawRect(s.aLoAlto(r.top, r.bottom, cxp, true) { it.c(P.ROBLE, if (izq) 0.04f else -0.04f) }, Offset(r.left - 1f, r.top - 1f), Size(r.width + 2f, r.height + 2f))
         val capitel = w * 0.06f
         val basa = w * 0.045f
         val c0 = r.top + capitel; val c1 = r.bottom - basa
-        // Los listeles de los bordes y las estrías, por tramos.
+        // Las estrías: honda cada una del lado que no mira a la luz (de día, la izquierda; de noche, la lumbre de su lado).
         val margen = r.width * 0.14f
         val estrias = 5
         val ancho = (r.width - 2 * margen) / estrias
         val junquillo = c1 - (c1 - c0) * 0.3f
-        for (i in 0 until nv) {
-            val y0 = maxOf(c0 + w * 0.012f, r.top + r.height * i / nv); val y1 = minOf(c1 - w * 0.01f, r.top + r.height * (i + 1) / nv + 1f)
-            if (y1 <= y0) continue
-            val t = s.t(Offset(r.center.x, (y0 + y1) / 2), true)
-            // La luz viene de la izquierda (de día) o de la lumbre (de noche): cada estría, honda del lado que no la mira.
-            val luzDer = s.a.oscuro && r.center.x / w < MuebleEstanteBotanico.LAMP_X && t.k > 0.2f
+        val luzDer = s.a.oscuro && cxp / w < MuebleEstanteBotanico.LAMP_X
+        val y0 = c0 + w * 0.012f; val y1 = c1 - w * 0.01f
+        val tc = s.t(r.center, true)
+        if (!s.a.oscuro && junquillo > y0 && y1 > junquillo) {
+            // De día la luz no cambia a lo alto: cada estría y cada junquillo, de un solo trazo (su luz, su cara y su sombra en un
+            // degradado de cortes francos a lo ancho).
+            val tm = s.t(Offset(cxp, (c0 + c1) / 2), true)
+            val honda = tm.c(P.ROBLE_OSC, -0.05f)
+            val sombra = mezcla(honda, tm.s(1f).copy(alpha = 1f), 0.3f)
+            val luz = mezcla(honda, LUZ_MUEBLE, 0.4f * (0.75f + 0.5f * tm.sol))
+            val junco = tm.c(P.ROBLE, 0.02f)
+            val juncoLuz = mezcla(junco, LUZ_MUEBLE, 0.45f * (0.75f + 0.5f * tm.sol))
+            val juncoSombra = mezcla(junco, tm.s(1f).copy(alpha = 1f), 0.3f)
             for (e in 0 until estrias) {
                 val x = r.left + margen + ancho * e
-                val relleno = y1 > junquillo
-                val ya = maxOf(y0, if (relleno) junquillo else y0)
-                if (y0 < junquillo) {
-                    val yb = minOf(y1, junquillo)
-                    drawRect(t.c(P.ROBLE_OSC, -0.05f), Offset(x + ancho * 0.18f, y0), Size(ancho * 0.64f, yb - y0))
-                    drawRect(t.s(0.3f), Offset(if (luzDer) x + ancho * 0.6f else x + ancho * 0.18f, y0), Size(ancho * 0.22f, yb - y0))
-                    drawRect(t.b(0.4f), Offset(if (luzDer) x + ancho * 0.18f else x + ancho * 0.66f, y0), Size(ancho * 0.16f, yb - y0))
-                }
-                if (relleno && y1 > ya) {
-                    // El junquillo: un cilindro dentro de la estría, en el tercio de abajo.
-                    drawRect(t.c(P.ROBLE, 0.02f), Offset(x + ancho * 0.2f, ya), Size(ancho * 0.6f, y1 - ya))
-                    drawRect(t.b(0.45f), Offset(if (luzDer) x + ancho * 0.55f else x + ancho * 0.26f, ya), Size(ancho * 0.14f, y1 - ya))
-                    drawRect(t.s(0.3f), Offset(if (luzDer) x + ancho * 0.2f else x + ancho * 0.62f, ya), Size(ancho * 0.18f, y1 - ya))
-                }
+                val xa = x + ancho * 0.18f; val xb = x + ancho * 0.82f
+                drawRect(Brush.horizontalGradient(0f to sombra, 0.34f to sombra, 0.35f to honda, 0.74f to honda, 0.75f to luz, 1f to luz, startX = xa, endX = xb),
+                    Offset(xa, y0), Size(xb - xa, junquillo - y0))
+                val ja = x + ancho * 0.2f; val jb = x + ancho * 0.8f
+                drawRect(Brush.horizontalGradient(0f to junco, 0.1f to junco, 0.11f to juncoLuz, 0.34f to juncoLuz, 0.35f to junco, 0.7f to junco, 0.71f to juncoSombra, 1f to juncoSombra, startX = ja, endX = jb),
+                    Offset(ja, junquillo), Size(jb - ja, y1 - junquillo))
+            }
+        } else if (junquillo > y0 && y1 > junquillo) {
+            val hondo = s.aLoAlto(y0, junquillo, cxp, true) { it.c(P.ROBLE_OSC, -0.05f) }
+            val brillo = s.aLoAlto(y0, junquillo, cxp, true) { it.b(0.4f) }
+            val junco = s.aLoAlto(junquillo, y1, cxp, true) { it.c(P.ROBLE, 0.02f) }
+            val juncoLuz = s.aLoAlto(junquillo, y1, cxp, true) { it.b(0.45f) }
+            for (e in 0 until estrias) {
+                val x = r.left + margen + ancho * e
+                drawRect(hondo, Offset(x + ancho * 0.18f, y0), Size(ancho * 0.64f, junquillo - y0))
+                drawRect(tc.s(0.3f), Offset(if (luzDer) x + ancho * 0.6f else x + ancho * 0.18f, y0), Size(ancho * 0.22f, junquillo - y0))
+                drawRect(brillo, Offset(if (luzDer) x + ancho * 0.18f else x + ancho * 0.66f, y0), Size(ancho * 0.16f, junquillo - y0))
+                // El junquillo: un cilindro dentro de la estría, en el tercio de abajo.
+                drawRect(junco, Offset(x + ancho * 0.2f, junquillo), Size(ancho * 0.6f, y1 - junquillo))
+                drawRect(juncoLuz, Offset(if (luzDer) x + ancho * 0.55f else x + ancho * 0.26f, junquillo), Size(ancho * 0.14f, y1 - junquillo))
+                drawRect(tc.s(0.3f), Offset(if (luzDer) x + ancho * 0.2f else x + ancho * 0.62f, junquillo), Size(ancho * 0.18f, y1 - junquillo))
             }
         }
         // Los remates redondos de las estrías, arriba y donde empieza el junquillo.
-        val tc = s.t(r.center, true)
         for (e in 0 until estrias) {
             val cx = r.left + margen + ancho * (e + 0.5f)
             val ta = s.t(Offset(cx, c0), true); val tj = s.t(Offset(cx, junquillo), true)
@@ -376,19 +396,12 @@ internal object ObraEstanteBotanico {
             drawArc(tj.c(P.ROBLE, 0.04f), 180f, 180f, true, Offset(cx - ancho * 0.3f, junquillo - ancho * 0.3f), Size(ancho * 0.6f, ancho * 0.6f))
             drawArc(tj.b(0.5f), 200f, 80f, false, Offset(cx - ancho * 0.3f, junquillo - ancho * 0.3f), Size(ancho * 0.6f, ancho * 0.6f), style = Stroke(0.6f * u))
         }
-        // La veta y el canto: el de fuera, con su filo de luz (o de lumbre).
+        // La veta y los cantos: el de fuera, con su filo de luz (o de lumbre).
         vetas(Rect(r.left, c0, r.left + margen, c1), tc.c(P.ROBLE_OSC).copy(alpha = 0.3f), if (izq) 9801 else 9802, 0.9f, vertical = true, grosor = 0.5f)
         vetas(Rect(r.right - margen, c0, r.right, c1), tc.c(P.ROBLE_OSC).copy(alpha = 0.3f), if (izq) 9803 else 9804, 0.9f, vertical = true, grosor = 0.5f)
-        for (i in 0 until nv) {
-            val y0 = r.top + r.height * i / nv; val y1 = r.top + r.height * (i + 1) / nv
-            val t = s.t(Offset(r.center.x, (y0 + y1) / 2), true)
-            drawRect(t.b(if (izq) 0.55f else 0.25f), Offset(r.left, y0), Size(1.3f * u, y1 - y0))
-            drawRect(t.s(if (izq) 0.3f else 0.45f), Offset(r.right - 1.6f * u, y0), Size(1.6f * u, y1 - y0))
-            if (s.a.oscuro) {
-                val der = r.center.x / w < MuebleEstanteBotanico.LAMP_X
-                drawRect(t.filo(0.55f), Offset(if (der) r.right - 1.5f * u else r.left, y0), Size(1.5f * u, y1 - y0))
-            }
-        }
+        drawRect(s.aLoAlto(r.top, r.bottom, cxp, true) { it.b(if (izq) 0.55f else 0.25f) }, Offset(r.left, r.top), Size(1.3f * u, r.height))
+        drawRect(tc.s(if (izq) 0.3f else 0.45f), Offset(r.right - 1.6f * u, r.top), Size(1.6f * u, r.height))
+        if (s.a.oscuro) drawRect(s.aLoAlto(r.top, r.bottom, cxp, true) { it.filo(0.55f) }, Offset(if (luzDer) r.right - 1.5f * u else r.left, r.top), Size(1.5f * u, r.height))
         // El capitel: el ábaco (una tabla que sobresale), el equino redondo y el collarino; con su sombra en la cara.
         val tcap = s.t(Offset(r.center.x, r.top + capitel / 2), true)
         val ab = Rect(r.left - 1f, r.top, r.right + 1f, r.top + capitel * 0.32f)
@@ -452,15 +465,10 @@ internal object ObraEstanteBotanico {
     /** El zócalo de [r] (de debajo de la última tabla hasta el piso): la moldura de arriba, la faja con su filete y los resaltos. */
     fun DrawScope.zocalo(r: Rect, s: SitioBotanico) {
         val w = size.width; val u = density
-        val n = tramos(s, w)
         val mold = r.top + (r.bottom - r.top) * 0.22f
-        for (i in 0 until n) {
-            val x0 = w * i / n; val x1 = w * (i + 1) / n + 1f
-            val t = s.t(Offset((x0 + x1) / 2, r.center.y), true)
-            drawRect(t.c(P.ROBLE, -0.04f), Offset(x0, r.top), Size(x1 - x0, r.height + 1f))
-            drawRect(t.c(P.ROBLE_LUZ, 0f), Offset(x0, r.top), Size(x1 - x0, (mold - r.top) * 0.5f))
-            drawRect(t.c(P.ROBLE_OSC, 0f), Offset(x0, r.top + (mold - r.top) * 0.5f), Size(x1 - x0, (mold - r.top) * 0.5f))
-        }
+        drawRect(s.aLoAncho(0f, w, r.center.y, true) { it.c(P.ROBLE, -0.04f) }, Offset(0f, r.top), Size(w, r.height + 1f))
+        drawRect(s.aLoAncho(0f, w, r.center.y, true) { it.c(P.ROBLE_LUZ, 0f) }, Offset(0f, r.top), Size(w, (mold - r.top) * 0.5f))
+        drawRect(s.aLoAncho(0f, w, r.center.y, true) { it.c(P.ROBLE_OSC, 0f) }, Offset(0f, r.top + (mold - r.top) * 0.5f), Size(w, (mold - r.top) * 0.5f))
         val tc = s.t(r.center, true)
         vetas(Rect(0f, mold, w, r.bottom), tc.c(P.ROBLE_OSC).copy(alpha = 0.32f), 9950, 0.7f, grosor = 0.5f, ondulacion = 0.5f)
         drawRect(tc.s(0.45f), Offset(0f, r.top), Size(w, 2.6f * u))

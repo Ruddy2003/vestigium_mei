@@ -3,8 +3,11 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -56,6 +59,24 @@ internal class SitioBotanico(val a: AireBotanico, val w: Float, private val cerc
         val fx = p.x / w; val fy = p.y / w
         val arriba = a.oscuro && fy < MuebleEstanteBotanico.LAMP_Y - 0.03f && abs(fx - MuebleEstanteBotanico.LAMP_X) < 0.2f
         return a.en(fx, fy, cerca(p), cuerpo, arriba)
+    }
+
+    /**
+     * Un degradado a lo ancho, de [x0] a [x1] a la altura [y], con el color que da [col] en cada punto: de noche la lumbre cambia
+     * de un punto a otro sin escalones (un solo trazo en lugar de muchos tramos). De día, el color del medio (la luz de día cambia
+     * poco a lo largo de una pieza, y un color liso pinta más barato que un degradado).
+     */
+    fun aLoAncho(x0: Float, x1: Float, y: Float, cuerpo: Boolean = false, col: (TonoBotanico) -> Color): Brush {
+        if (x1 - x0 < 2f || !a.lumbre) return SolidColor(col(t(Offset((x0 + x1) / 2, y), cuerpo)))
+        val n = ((x1 - x0) / (w * 0.07f)).toInt().coerceIn(3, 16)
+        return Brush.horizontalGradient(List(n) { i -> col(t(Offset(x0 + (x1 - x0) * i / (n - 1), y), cuerpo)) }, x0, x1)
+    }
+
+    /** Lo mismo a lo alto, de [y0] a [y1] en la [x] dada. */
+    fun aLoAlto(y0: Float, y1: Float, x: Float, cuerpo: Boolean = false, col: (TonoBotanico) -> Color): Brush {
+        if (y1 - y0 < 2f || !a.lumbre) return SolidColor(col(t(Offset(x, (y0 + y1) / 2), cuerpo)))
+        val n = ((y1 - y0) / (w * 0.07f)).toInt().coerceIn(3, 40)
+        return Brush.verticalGradient(List(n) { i -> col(t(Offset(x, y0 + (y1 - y0) * i / (n - 1)), cuerpo)) }, y0, y1)
     }
 }
 
@@ -135,7 +156,7 @@ internal object MuebleEstanteBotanico {
 
     /** La luz del quinqué en el cuerpo: cuánta llega (de 1 a 0) a un punto a [dx] y [dy] de la llama, en anchos. */
     fun quinque(dx: Float, dy: Float, suenos: Boolean): Float {
-        val base = (if (suenos) 0.85f else 1.85f) * exp(-3.75f * sqrt(dx * dx * 1.1f + dy * dy * (if (dy > 0f) 0.5f else 1f)))
+        val base = (if (suenos) 1.45f else 2.86f) * exp(-3.47f * sqrt(dx * dx * 1.1f + dy * dy * (if (dy > 0f) 0.5f else 1f)))
         return (base * pantalla(dx, dy)).coerceIn(0f, 1f)
     }
 
@@ -256,7 +277,7 @@ internal object MuebleEstanteBotanico {
         with(PieEstanteBotanico) { piso(sp, b, suelo, h) }
         with(ObraEstanteBotanico) { zocalo(Rect(0f, arriba, w, suelo), sp) }
         with(PieEstanteBotanico) { objetos(sp, b, suelo, h) }
-        granoMueble(Rect(0f, ch, w, h), oscuro, 0.8f)
+        granoMueble(Rect(0f, ch, w, suelo), oscuro, 0.8f)
     }
 
     fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {

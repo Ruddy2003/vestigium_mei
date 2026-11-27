@@ -34,12 +34,7 @@ internal object PieEstanteBotanico {
     /** El piso de tablas de nogal que se abren hacia quien mira, y la alfombra encima. */
     fun DrawScope.piso(s: SitioBotanico, b: Rect, suelo: Float, h: Float) {
         val w = size.width; val u = density
-        val n = if (s.a.lumbre) 16 else 1
-        for (i in 0 until n) {
-            val x0 = w * i / n; val x1 = w * (i + 1) / n + 1f
-            val t = s.t(Offset((x0 + x1) / 2, (suelo + h) / 2), true)
-            drawRect(t.c(mezcla(P.NOGAL, P.ROBLE_OSC, 0.3f)), Offset(x0, suelo), Size(x1 - x0, h - suelo + 1f))
-        }
+        drawRect(s.aLoAncho(0f, w, (suelo + h) / 2, true) { it.c(mezcla(P.NOGAL, P.ROBLE_OSC, 0.3f)) }, Offset(0f, suelo), Size(w, h - suelo + 1f))
         val tc = s.t(Offset(w * 0.5f, h), true)
         for (i in -4..14) {
             val x0 = w * i / 10f
@@ -72,63 +67,59 @@ internal object PieEstanteBotanico {
         val yA = pisa(suelo, h, 0.3f)
         fun x(f: Float, y: Float): Float { val e = 1f + 0.5f * (y - suelo) / (h - suelo); return w / 2 + (w * f - w / 2) * e }
         val izqA = x(0.3f, yA); val izqB = x(0.3f, h)
-        val forma = poligonoBotanico(izqA, yA, w * 1.1f, yA, w * 1.1f, h + 2f, izqB, h + 2f)
+        // El orillo de la izquierda: dónde empieza la alfombra a cada altura (así nada se sale sin recortes).
+        fun orillo(y: Float) = izqA + (izqB - izqA) * (y - yA) / (h - yA)
+        val forma = poligonoBotanico(izqA, yA, w + 2f, yA, w + 2f, h + 2f, izqB, h + 2f)
         val t = s.t(Offset(w * 0.6f, (yA + h) / 2), true)
-        drawPath(forma, t.s(0.3f))
-        clipPath(forma) {
-            val n = if (s.a.lumbre) 12 else 1
-            for (i in 0 until n) {
-                val x0 = izqB + (w - izqB) * i / n; val x1 = izqB + (w - izqB) * (i + 1) / n + 1f
-                val tt = s.t(Offset((x0 + x1) / 2, (yA + h) / 2), true)
-                drawRect(tt.c(P.GRANZA), Offset(x0, yA), Size(x1 - x0, h - yA + 2f))
-            }
-            // La cenefa: dos franjas de índigo y, entre ellas, la hilera de rombos de ocre y crudo.
-            val c0 = yA + (h - yA) * 0.08f; val c1 = yA + (h - yA) * 0.34f
-            drawRect(t.c(P.INDIGO), Offset(0f, c0), Size(w * 1.2f, c1 - c0))
-            drawRect(t.c(P.OCRE), Offset(0f, c0 + (c1 - c0) * 0.1f), Size(w * 1.2f, (c1 - c0) * 0.06f))
-            drawRect(t.c(P.OCRE), Offset(0f, c1 - (c1 - c0) * 0.16f), Size(w * 1.2f, (c1 - c0) * 0.06f))
-            val cy = (c0 + c1) / 2
-            val ra = (c1 - c0) * 0.3f
-            var i = 0
-            var xx = izqA - ra
-            while (xx < w + ra * 2 && i < 80) {
-                val col = if (i % 2 == 0) P.OCRE else P.CRUDO
-                val tt = s.t(Offset(xx, cy), true)
-                drawPath(poligonoBotanico(xx, cy - ra, xx + ra * 1.3f, cy, xx, cy + ra, xx - ra * 1.3f, cy), tt.c(col, -0.05f))
-                drawPath(poligonoBotanico(xx, cy - ra * 0.4f, xx + ra * 0.5f, cy, xx, cy + ra * 0.4f, xx - ra * 0.5f, cy), tt.c(P.GRANZA))
-                xx += ra * 3f; i++
-            }
-            // El campo: rombos chicos sueltos de índigo, en tresbolillo, más anchos hacia adelante.
-            for (fila in 0 until 3) {
-                val y = c1 + (h - c1) * (0.25f + 0.32f * fila)
-                val e = 1f + 0.5f * (y - suelo) / (h - suelo)
-                val r0 = (h - yA) * 0.034f * e
-                var j = 0
-                var px = izqA + (if (fila % 2 == 0) 0f else r0 * 3f)
-                while (px < w + r0 && j < 60) {
-                    drawPath(poligonoBotanico(px, y - r0, px + r0 * 1.2f, y, px, y + r0, px - r0 * 1.2f, y), t.c(P.INDIGO, -0.05f).copy(alpha = 0.6f))
-                    drawCircle(t.c(P.OCRE).copy(alpha = 0.55f), r0 * 0.3f, Offset(px + r0 * 3f, y))
-                    px += r0 * 6f; j++
-                }
-            }
-            // Lo gastado de pisar, y el pelo.
-            pinceladas(Rect(izqB, yA, w, h), if (s.a.oscuro) P.NOCHE else P.CRUDO, 9720, 12, u, 0.12f)
-            drawRect(t.b(0.12f), Offset(izqA, yA), Size(w, (h - yA) * 0.06f))
+        drawPath(Path().apply { addPath(forma, Offset(w * 0.006f, -w * 0.004f)) }, t.s(0.3f))
+        drawPath(forma, s.aLoAncho(izqB, w, (yA + h) / 2, true) { it.c(P.GRANZA) })
+        // La cenefa: dos franjas de índigo y, entre ellas, la hilera de rombos de ocre y crudo.
+        val c0 = yA + (h - yA) * 0.08f; val c1 = yA + (h - yA) * 0.34f
+        fun franja(y0: Float, y1: Float, col: Color) = drawPath(poligonoBotanico(orillo(y0), y0, w + 2f, y0, w + 2f, y1, orillo(y1), y1), col)
+        franja(c0, c1, t.c(P.INDIGO))
+        franja(c0 + (c1 - c0) * 0.1f, c0 + (c1 - c0) * 0.16f, t.c(P.OCRE))
+        franja(c1 - (c1 - c0) * 0.16f, c1 - (c1 - c0) * 0.1f, t.c(P.OCRE))
+        val cy = (c0 + c1) / 2
+        val ra = (c1 - c0) * 0.3f
+        var i = 0
+        var xx = orillo(cy) + ra * 1.6f
+        while (xx < w + ra * 2 && i < 80) {
+            val col = if (i % 2 == 0) P.OCRE else P.CRUDO
+            val tt = s.t(Offset(xx, cy), true)
+            drawPath(poligonoBotanico(xx, cy - ra, xx + ra * 1.3f, cy, xx, cy + ra, xx - ra * 1.3f, cy), tt.c(col, -0.05f))
+            drawPath(poligonoBotanico(xx, cy - ra * 0.4f, xx + ra * 0.5f, cy, xx, cy + ra * 0.4f, xx - ra * 0.5f, cy), tt.c(P.GRANZA))
+            xx += ra * 3f; i++
         }
-        // El fleco del borde de atrás: hebras cortas de lana cruda.
+        // El campo: rombos chicos sueltos de índigo y puntos de ocre, en tresbolillo, más anchos hacia adelante.
+        for (fila in 0 until 3) {
+            val y = c1 + (h - c1) * (0.25f + 0.32f * fila)
+            val e = 1f + 0.5f * (y - suelo) / (h - suelo)
+            val r0 = (h - yA) * 0.034f * e
+            var j = 0
+            var px = orillo(y) + r0 * 2f + (if (fila % 2 == 0) 0f else r0 * 3f)
+            while (px < w + r0 && j < 60) {
+                drawPath(poligonoBotanico(px, y - r0, px + r0 * 1.2f, y, px, y + r0, px - r0 * 1.2f, y), t.c(P.INDIGO, -0.05f).copy(alpha = 0.6f))
+                drawCircle(t.c(P.OCRE).copy(alpha = 0.55f), r0 * 0.3f, Offset(px + r0 * 3f, y))
+                px += r0 * 6f; j++
+            }
+        }
+        // Lo gastado de pisar.
+        pinceladas(Rect(izqB + w * 0.05f, c1, w, h), if (s.a.oscuro) P.NOCHE else P.CRUDO, 9720, 10, u, 0.12f)
+        // El fleco del borde de atrás: hebras cortas de lana cruda, en una sola línea quebrada.
         val fl = Path()
         var xf = izqA
-        var j = 0
-        while (xf < w && j < 300) {
-            fl.moveTo(xf, yA); fl.lineTo(xf - 1.2f * u + 2.4f * u * azar(9730, j), yA - w * (0.012f + 0.006f * azar(9731, j)))
-            xf += 2.6f * u; j++
+        var k = 0
+        fl.moveTo(xf, yA)
+        while (xf < w && k < 200) {
+            val alto = w * (0.012f + 0.006f * azar(9731, k))
+            fl.lineTo(xf + 0.8f * u, yA - alto); fl.lineTo(xf + 1.8f * u, yA)
+            xf += 3.2f * u; k++
         }
-        drawPath(fl, t.c(P.CRUDO, -0.05f), style = Stroke(1f * u, cap = StrokeCap.Round))
+        drawPath(fl, t.c(P.CRUDO, -0.05f), style = Stroke(0.9f * u))
         drawLine(t.c(P.INDIGO), Offset(izqA, yA), Offset(w, yA), 1.4f * u)
         // El canto del lado izquierdo, con su orillo.
         drawLine(t.c(P.INDIGO, -0.1f), Offset(izqA, yA), Offset(izqB, h), 2f * u)
     }
-
     // ---------------------------------------------------------------- lo que hay en el piso
 
     /** La caja de embarque, el farol y la palmera, de atrás adelante. */
@@ -231,7 +222,7 @@ internal object PieEstanteBotanico {
         val t = s.t(Offset(pie.x, pie.y - fh * 0.4f), true)
         val o = s.a.oscuro
         val luz = if (o) (if (s.a.noche) 0.6f else 1f) else 0f
-        if (o) mancha(Offset(pie.x, pie.y - fh * 0.3f), w * 0.32f, P.LLAMA.copy(alpha = 0.2f * luz))
+        if (o) mancha(Offset(pie.x, pie.y - fh * 0.3f), w * 0.24f, P.LLAMA.copy(alpha = 0.22f * luz))
         contactoBotanico(Offset(pie.x + w * 0.012f, pie.y), fw * 1.6f, w * 0.022f, t, if (o) 0.22f else 0.48f)
         val lata = t.c(mezcla(P.HOJALATA, P.HIERRO, 0.5f), if (o) 0.06f else 0f)
         val lataClara = t.c(P.HOJALATA, 0.04f)
