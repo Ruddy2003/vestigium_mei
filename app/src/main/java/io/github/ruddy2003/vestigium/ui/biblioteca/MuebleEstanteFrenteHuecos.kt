@@ -32,27 +32,32 @@ internal object HuecosEstanteFrente {
 
     /**
      * Pone lo que acompaña en el hueco de la repisa [r], de [oc] (donde acaban las entradas) a [der] (el costado). [n] cuenta los
-     * huecos ya puestos, para variar. Si [xFoco] no es -1, el foco rojo va ahí. Devuelve si puso algo.
+     * grupos ya puestos en las repisas de arriba: cada grupo nuevo es el siguiente de los cuatro, así no se repite de una repisa a
+     * la otra. Si [xFoco] no es -1, el foco rojo va ahí. Devuelve cuántos grupos puso (el foco no cuenta).
      */
-    fun DrawScope.hueco(n: Int, r: Rect, oc: Float, der: Float, xFoco: Float, a: AireFrente, cerca: (Offset) -> Float, frio: (Offset) -> Float): Boolean {
+    fun DrawScope.hueco(n: Int, r: Rect, oc: Float, der: Float, xFoco: Float, a: AireFrente, cerca: (Offset) -> Float, frio: (Offset) -> Float): Int {
         val w = size.width
         val x0 = oc + w * 0.018f; val x1 = der - w * 0.022f
         val libre = x1 - x0
-        if (libre < w * 0.1f) return false
+        if (libre < w * 0.1f) return 0
         val h = r.height
         val piso = r.bottom - 2.5f * density
         if (xFoco >= 0f) {
             foco(Offset(xFoco, piso), r.top, h, a, cerca, frio)
             // Si queda sitio a la derecha del foco, otro grupo.
-            if (x1 - (xFoco + h * 0.62f) > w * 0.16f) grupo((n + 1) % 4 + 1, x1 - (x1 - xFoco - h * 0.5f) * 0.5f, piso, h, minOf(x1 - xFoco - h * 0.5f, h * 0.9f), a, cerca, frio)
-            return true
+            if (x1 - (xFoco + h * 0.62f) > w * 0.16f) {
+                grupo(n % 4 + 1, x1 - (x1 - xFoco - h * 0.5f) * 0.5f, piso, h, minOf(x1 - xFoco - h * 0.5f, h * 0.9f), a, cerca, frio)
+                return 1
+            }
+            return 0
         }
-        val g = n % 4 + 1
         if (libre > w * 0.5f) {
-            grupo(g, x0 + libre * 0.25f, piso, h, libre * 0.42f, a, cerca, frio)
-            grupo((n + 2) % 4 + 1, x0 + libre * 0.72f, piso, h, libre * 0.42f, a, cerca, frio)
-        } else grupo(g, x0 + libre * 0.5f, piso, h, libre, a, cerca, frio)
-        return true
+            grupo(n % 4 + 1, x0 + libre * 0.25f, piso, h, libre * 0.42f, a, cerca, frio)
+            grupo((n + 1) % 4 + 1, x0 + libre * 0.72f, piso, h, libre * 0.42f, a, cerca, frio)
+            return 2
+        }
+        grupo(n % 4 + 1, x0 + libre * 0.5f, piso, h, libre, a, cerca, frio)
+        return 1
     }
 
     /** Uno de los grupos (1 a 4) centrado en [cx], en [libre] de ancho como mucho. */
@@ -295,7 +300,7 @@ internal object HuecosEstanteFrente {
         drawRect(a.luz(P.CONSOLA, k, kv), r.topLeft, Size(r.width, 2f * u))
         drawOval(a.luz(P.CONSOLA_OSC, k * 0.6f, kv), Offset(r.left, r.top - 1.8f * u), Size(r.width, 3.6f * u))
         drawRect(a.luz(P.CONSOLA, k, kv), Offset(r.left, r.bottom - 1.4f * u), Size(r.width, 1.4f * u))
-        drawPath(poligonoFrente(r.left + an * 0.6f, r.top + alto * 0.55f, r.left + an * 0.72f, r.top + alto * 0.5f, r.left + an * 0.68f, r.top + alto * 0.64f), a.luz(P.CONSOLA_OSC, k, kv))
+        drawOval(a.luz(P.CONSOLA_OSC, k, kv), Offset(r.left + an * 0.22f, r.top + alto * 0.22f), Size(an * 0.14f, alto * 0.09f))
     }
 
     // ---------------------------------------------------------------- el transmisor de mano

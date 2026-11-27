@@ -495,7 +495,9 @@ internal object CoronaEstanteFrente {
         drawRect(a.luz(P.CONSOLA, k, kv), r.topLeft, Size(r.width, 2.2f * u))
         drawOval(a.luz(P.CONSOLA_OSC, k * 0.6f, kv), Offset(r.left, r.top - 2f * u), Size(r.width, 4f * u))
         drawOval(a.luz(P.CONSOLA, k, kv), Offset(r.left, r.top - 2f * u), Size(r.width, 4f * u), style = Stroke(1f * u))
-        drawPath(poligonoFrente(r.left + an * 0.62f, r.top + alto * 0.5f, r.left + an * 0.72f, r.top + alto * 0.46f, r.left + an * 0.7f, r.top + alto * 0.58f), a.luz(P.CONSOLA_OSC, k, kv))
+        // Una saltadura del esmalte junto al borde, con su canto claro.
+        drawOval(a.luz(P.CONSOLA_OSC, k, kv), Offset(r.left + an * 0.6f, r.top + alto * 0.2f), Size(an * 0.14f, alto * 0.09f))
+        drawArc(a.brillo(0.4f, k), 0f, 180f, false, Offset(r.left + an * 0.6f, r.top + alto * 0.2f), Size(an * 0.14f, alto * 0.09f), style = Stroke(0.5f * u))
         drawRect(a.luz(P.CONSOLA, k, kv), Offset(r.left, r.bottom - 1.6f * u), Size(r.width, 1.6f * u))
         if (a.oscuro) drawLine(a.filoVidrio(0.7f * kv), Offset(r.right - 0.6f * u, r.top + 2f * u), Offset(r.right - 0.6f * u, r.bottom - 2f * u), 1.2f * u)
     }

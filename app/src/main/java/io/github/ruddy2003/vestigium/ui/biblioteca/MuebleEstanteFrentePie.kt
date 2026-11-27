@@ -51,7 +51,8 @@ internal object PieEstanteFrente {
             tornilloFrente(Offset(m.center.x, m.top + (suelo - m.top) * 0.42f), 1.5f * u, a, k, 50f + 40f * i)
         }
         // El zócalo de consola oscura, metido entre las patas: el parachoques de goma arriba, la cara con sus dos rejillas.
-        val z = Rect(lado, zocalo, w - lado, suelo)
+        // Un píxel por encima de cada pata, para que la junta (que puede caer a medio píxel) no deje asomar el fondo.
+        val z = Rect(lado - 1f, zocalo, w - lado + 1f, suelo)
         val paradas = Array(5) { i -> val x = z.left + z.width * i / 4f; (i / 4f) to en(P.CONSOLA, 0f, Offset(x, z.center.y), a, cerca) }
         drawRect(Brush.horizontalGradient(*paradas, startX = z.left, endX = z.right), z.topLeft, z.size)
         drawRect(Brush.verticalGradient(listOf(a.sombra(0.5f), Color.Transparent), z.top, z.top + z.height * 0.4f), z.topLeft, Size(z.width, z.height * 0.4f))
@@ -73,8 +74,7 @@ internal object PieEstanteFrente {
         listOf(z.left + 7f * u, z.right - 7f * u).forEachIndexed { i, x -> tornilloFrente(Offset(x, z.center.y + 2f * u), 1.6f * u, a, cerca(Offset(x, z.center.y)), 40f + 60f * i) }
         // El piso de hormigón en losas: más hondo junto al mueble, con sus juntas, sus manchas y la franja de peligro.
         val piso = Rect(0f, suelo, w, h)
-        val pp = Array(5) { i -> val x = w * i / 4f; (i / 4f) to en(P.HORMIGON, 0f, Offset(x, piso.center.y), a, cerca) }
-        drawRect(Brush.horizontalGradient(*pp, startX = 0f, endX = w), piso.topLeft, piso.size)
+        drawRect(en(P.HORMIGON, 0f, Offset(w * 0.6f, piso.center.y), a, cerca), Offset(0f, piso.top - 1f), Size(w, piso.height + 2f))
         drawRect(Brush.verticalGradient(listOf(a.sombra(0.4f), a.sombra(0.12f), Color.Transparent), piso.top, piso.top + piso.height * 0.6f), piso.topLeft, Size(w, piso.height * 0.6f))
         clipRect(piso.left, piso.top, piso.right, piso.bottom) {
             // Las juntas de las losas: una a lo largo y las de través, que se abren hacia delante.
@@ -108,9 +108,10 @@ internal object PieEstanteFrente {
             }
         }
         // El rollo del cable grueso, en medio, con su punta que se mete bajo el zócalo.
-        cable(Rect(w * 0.37f, h - w * 0.075f, w * 0.64f, h - w * 0.012f), z, a, cerca)
-        // La caja de equipo, a la derecha, cortada por el borde.
-        caja(Rect(w * 0.7f, h - w * 0.168f, w * 1.04f, h - w * 0.01f), a, cerca)
+        // Las cajas de equipo apiladas, a la derecha, cortadas por el borde: la de chapa hueso detrás y arriba, la verde delante.
+        caja(Rect(w * 0.76f, h - w * 0.27f, w * 1.06f, h - w * 0.13f), a, cerca, P.HUESO_OSC)
+        caja(Rect(w * 0.66f, h - w * 0.168f, w * 1.04f, h - w * 0.01f), a, cerca, Color(0xFF3B4F45))
+        cable(Rect(w * 0.4f, h - w * 0.082f, w * 0.7f, h - w * 0.012f), z, a, cerca)
         // La estufa eléctrica, a la izquierda.
         estufa(Rect(w * 0.035f, h - w * 0.215f, w * 0.305f, h - w * 0.008f), a, cerca)
     }
@@ -133,13 +134,12 @@ internal object PieEstanteFrente {
     }
 
     /** La caja de equipo en [r]: chapa de consola oscura de cantos redondos, sus nervios, sus dos cierres de cromo y el asa. */
-    private fun DrawScope.caja(r: Rect, a: AireFrente, cerca: (Offset) -> Float) {
+    private fun DrawScope.caja(r: Rect, a: AireFrente, cerca: (Offset) -> Float, verde: Color) {
         val u = density
         val k = cerca(r.center)
         contactoFrente(Offset(r.center.x, r.bottom), r.width * 1.1f, 7f * u, a, 0.45f, -1f)
         val tapa = Rect(r.left, r.top, r.right, r.top + r.height * 0.3f)
         val cuerpo = Rect(r.left, tapa.bottom, r.right, r.bottom)
-        val verde = Color(0xFF3B4F45)
         drawRoundRect(Brush.verticalGradient(listOf(a.dia(mezcla(verde, P.HUESO_LUZ, 0.12f), 0f, k), a.dia(verde, 0f, k), a.dia(mezcla(verde, P.SOMBRA, 0.4f), 0f, k)), r.top, r.bottom), r.topLeft, r.size, CornerRadius(6f * u))
         // La junta de la tapa y los nervios del cuerpo.
         drawLine(a.sombra(0.6f), Offset(r.left, tapa.bottom), Offset(r.right, tapa.bottom), 1.4f * u)
@@ -175,14 +175,14 @@ internal object PieEstanteFrente {
         val u = density
         val k = cerca(r.center)
         val arde = a.lumbre
-        val fuerza = if (a.oscuro && !a.noche) 1f else if (a.oscuro) 0.55f else if (a.noche) 0.6f else 0f
+        val fuerza = if (a.oscuro && !a.noche) 1f else if (a.oscuro) 0.4f else if (a.noche) 0.6f else 0f
         contactoFrente(Offset(r.center.x, r.bottom), r.width * 1.15f, 8f * u, a, 0.45f)
         // Las dos patas curvas.
         listOf(r.left + r.width * 0.16f, r.right - r.width * 0.16f).forEach { x ->
             drawLine(a.dia(P.CROMO_OSC, 0f, k), Offset(x, r.bottom - r.height * 0.14f), Offset(x + (if (x < r.center.x) -6f else 6f) * u, r.bottom), 2.4f * u, StrokeCap.Round)
         }
         val marco = Rect(r.left, r.top, r.right, r.bottom - r.height * 0.12f)
-        if (arde) drawCircle(P.ESTUFA.copy(alpha = 0.18f * fuerza), r.width * 0.75f, marco.center)
+        if (arde) drawCircle(Brush.radialGradient(listOf(P.ESTUFA.copy(alpha = 0.3f * fuerza), P.ESTUFA.copy(alpha = 0.1f * fuerza), P.ESTUFA.copy(alpha = 0f)), marco.center, r.width * 0.78f), r.width * 0.78f, marco.center)
         drawRoundRect(Brush.horizontalGradient(listOf(a.dia(P.HUESO_LUZ, 0f, k), a.dia(P.HUESO, 0f, k), a.dia(P.HUESO_OSC, -0.1f, k)), marco.left, marco.right), marco.topLeft, marco.size, CornerRadius(9f * u))
         drawRoundRect(a.sombra(0.4f), marco.topLeft, marco.size, CornerRadius(9f * u), style = Stroke(0.8f * u))
         // El reflector de cromo curvo, más hondo en medio; de noche, encendido por las resistencias.

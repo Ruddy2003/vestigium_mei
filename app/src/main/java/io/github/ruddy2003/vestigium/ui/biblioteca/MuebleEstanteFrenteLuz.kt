@@ -305,6 +305,23 @@ internal fun DrawScope.redondoFrente(r: Rect, cara: Color, claro: Color, hondo: 
     }
 }
 
+/**
+ * Lo mismo que [redondoFrente] pero como pincel (franjas de borde duro dentro de un degradado): sirve para pintar de una vez una
+ * figura cualquiera (un tubo de fondo curvo, una bolsa) sin recortarla, que es más caro.
+ */
+internal fun bandasFrente(r: Rect, cara: Color, claro: Color, hondo: Color, hacia: Float, suave: Float = 1f): androidx.compose.ui.graphics.Brush {
+    val paradas = ArrayList<Pair<Float, Color>>(14)
+    for (j in 0 until 7) {
+        val i = if (hacia < 0f) j else 6 - j
+        val m = TONOS_FRANJA_FRENTE[i] * suave
+        val c = if (m >= 0f) mezcla(cara, claro, m) else mezcla(cara, hondo, -m)
+        val f0 = if (hacia < 0f) FRANJAS_FRENTE[j] else 1f - FRANJAS_FRENTE[7 - j]
+        val f1 = if (hacia < 0f) FRANJAS_FRENTE[j + 1] else 1f - FRANJAS_FRENTE[6 - j]
+        paradas.add(f0 to c); paradas.add(f1 to c)
+    }
+    return androidx.compose.ui.graphics.Brush.horizontalGradient(*paradas.toTypedArray(), startX = r.left, endX = r.right)
+}
+
 /** La media luna recortada de los Sueños, de radio [r] centrada en el origen, armada una vez por tamaño. */
 private var radioLunaFrente = -1f
 private var caminoLunaFrente = Path()

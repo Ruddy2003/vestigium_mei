@@ -46,7 +46,7 @@ internal object MuroEstanteFrente {
     fun DrawScope.pared(r: Rect, a: AireFrente, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
         val u = density
         val w = size.width
-        val kMedio = if (a.oscuro) 0.22f else 1f
+        val kMedio = if (a.oscuro) (if (a.dormida) 0.08f else 0.22f) else 1f
         val humedad = if (a.oscuro) Color(0xFF04100A).copy(alpha = 0.7f) else P.HUMEDAD.copy(alpha = 0.5f)
         with(TrazosFrente) {
             muroSillares(r, HILADA * u, piedra(a, kMedio, P.PIEDRA), piedra(a, kMedio * 0.8f, P.PIEDRA_SOMBRA), humedad,
@@ -75,7 +75,7 @@ internal object MuroEstanteFrente {
                 drawOval(Brush.radialGradient(0f to P.VIDRIO_TRAZO.copy(alpha = if (a.dormida) 0.3f else 0.2f), 0.5f to P.VIDRIO_TRAZO.copy(alpha = if (a.dormida) 0.08f else 0.05f),
                     1f to P.VIDRIO_TRAZO.copy(alpha = 0f), center = vid, radius = rv), Offset(vid.x - rv, vid.y - rv), Size(rv * 2, rv * 2))
                 val centro = if (a.dormida) vid else lamp
-                drawRect(Brush.radialGradient(0f to Color.Transparent, 0.32f to Color.Transparent, 1f to a.hondo.copy(alpha = 0.7f),
+                drawRect(Brush.radialGradient(0f to Color.Transparent, if (a.dormida) 0.22f to Color.Transparent else 0.32f to Color.Transparent, 1f to a.hondo.copy(alpha = if (a.dormida) 0.82f else 0.7f),
                     center = centro, radius = w * 0.95f), r.topLeft, r.size)
             }
             // Las raíces que cuelgan de arriba, por las orillas y una corta en medio.
@@ -115,16 +115,17 @@ internal object MuroEstanteFrente {
     private var pincel2: ShaderBrush? = null
 
     /**
-     * La piedra de dentro de los casilleros y de las orillas: el mismo sillar del muro, en una baldosa que empalma por los cuatro
-     * lados y se pinta una sola vez por densidad y momento ([oscuro]: la penumbra; si no, la piedra en la sombra del mueble).
-     * Guarda las dos últimas (el diario y los Sueños se turnan).
+     * La piedra de dentro de los casilleros: el mismo sillar del muro, en una baldosa que empalma por los cuatro lados y se pinta
+     * una sola vez por densidad y momento ([oscuro]: la penumbra; si no, la piedra en la sombra del mueble). Mide de alto lo que una
+     * repisa con su tabla y lleva ya pintado el hondo del nicho (más oscuro abajo, como los nichos del Ideario): se pega con su
+     * borde de arriba en el de cada casillero. Guarda las dos últimas (el diario y los Sueños se turnan).
      */
     fun baldosa(u: Float, a: AireFrente): ShaderBrush {
         val clave = "$u:${a.oscuro}:${a.noche}"
         if (clave == claveBaldosa) pincel?.let { return it }
         if (clave == claveBaldosa2) pincel2?.let { return it }
-        val ancho = (220f * u).toInt().coerceAtLeast(8)
-        val alto = (4 * HILADA * u).toInt().coerceAtLeast(8)
+        val ancho = (180f * u).toInt().coerceAtLeast(8)
+        val alto = (MuebleEstanteFrente.FILA * u).toInt().coerceAtLeast(8)
         val img = ImageBitmap(ancho, alto)
         val k = if (a.oscuro) 0.2f else 1f
         val base = if (a.oscuro) a.luz(P.PIEDRA, k) else mezcla(a.dia(P.PIEDRA, 0f), P.SOMBRA, 0.42f)
@@ -132,7 +133,16 @@ internal object MuroEstanteFrente {
         val musgo = if (a.oscuro) a.luz(P.MUSGO, k) else mezcla(a.dia(P.MUSGO, 0f), P.SOMBRA, 0.3f)
         val humedad = if (a.oscuro) Color(0xFF020906).copy(alpha = 0.6f) else P.HUMEDAD.copy(alpha = 0.55f)
         CanvasDrawScope().draw(Density(u), LayoutDirection.Ltr, Canvas(img), Size(ancho.toFloat(), alto.toFloat())) {
-            sillares(ancho.toFloat(), alto.toFloat(), 4, base, junta, musgo, humedad, if (a.oscuro) 0.35f else 0.85f)
+            sillares(ancho.toFloat(), alto.toFloat(), 7, base, junta, musgo, humedad, if (a.oscuro) 0.35f else 0.85f)
+            val hondo = if (!a.oscuro && a.noche) mezcla(P.SOMBRA, P.SOMBRA_GUARDIA, 0.35f) else a.hondo
+            val hueco = MuebleEstanteFrente.ALTO_REPISA.value * u
+            drawRect(Brush.verticalGradient(listOf(hondo.copy(alpha = if (a.oscuro) 0.13f else 0.16f), hondo.copy(alpha = if (a.oscuro) 0.58f else 0.6f)), 0f, hueco),
+                Offset.Zero, Size(ancho.toFloat(), alto.toFloat()))
+            // La sombra franca de la tabla de arriba en la piedra, con su penumbra.
+            val hT = hueco * 0.2f
+            drawRect((if (a.oscuro || a.noche) a.sombra(0.3f) else P.SOMBRA.copy(alpha = 0.4f)), Offset.Zero, Size(ancho.toFloat(), hT))
+            drawRect(Brush.verticalGradient(listOf((if (a.oscuro || a.noche) a.sombra(0.22f) else P.SOMBRA.copy(alpha = 0.22f)), Color.Transparent), hT, hT + 14f * u),
+                Offset(0f, hT), Size(ancho.toFloat(), 14f * u))
         }
         val nuevo = ShaderBrush(ImageShader(img, TileMode.Repeated, TileMode.Repeated))
         claveBaldosa2 = claveBaldosa; pincel2 = pincel

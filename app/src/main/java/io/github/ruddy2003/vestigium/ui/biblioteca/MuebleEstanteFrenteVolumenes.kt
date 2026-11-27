@@ -111,6 +111,15 @@ internal object VolumenEstanteFrente {
         if (kv > 0.08f) drawRect(a.filoVidrio(0.75f * kv), Offset(cuerpo.right - 1.2f * u, cuerpo.top), Size(1.2f * u, cuerpo.height))
     }
 
+    /** Las líneas de la trama de una lona, de [y0] a [y1] cada [paso], en un solo camino (un solo trazo, no uno por hilo). */
+    private fun trama(w: Float, y0: Float, y1: Float, paso: Float): Path {
+        val p = Path()
+        if (paso <= 0.1f) return p
+        var y = y0
+        while (y < y1) { p.moveTo(0f, y); p.lineTo(w, y); y += paso }
+        return p
+    }
+
     /** Una tira de cinta de papel en [r] con las puntas rasgadas, su sombra y el día y el mes escritos encima. */
     private fun DrawScope.cinta(v: Volumen, medidor: TextMeasurer, r: Rect, l: Luz, a: AireFrente, semilla: Int) {
         val u = density
@@ -124,10 +133,8 @@ internal object VolumenEstanteFrente {
         }
         translate(0.8f * u, 1.1f * u) { drawPath(p, a.sombra(0.35f)) }
         drawPath(p, l.etiqueta(P.CINTA))
-        clipPath(p) {
-            drawRect(l.etiqueta(P.CINTA_OSC).copy(alpha = 0.55f), Offset(r.left, r.bottom - r.height * 0.14f), Size(r.width, r.height * 0.14f))
-            drawRect(a.claro(0.25f), r.topLeft, Size(r.width, r.height * 0.14f))
-        }
+        drawRect(l.etiqueta(P.CINTA_OSC).copy(alpha = 0.55f), Offset(r.left + 1.6f * u, r.bottom - r.height * 0.14f), Size(r.width - 3.2f * u, r.height * 0.14f))
+        drawRect(a.claro(0.25f), Offset(r.left + 1.6f * u, r.top), Size(r.width - 3.2f * u, r.height * 0.14f))
         diaYMes(v, medidor, Rect(r.left + 1f * u, r.top + 0.5f * u, r.right - 1f * u, r.bottom - 0.5f * u), a.tinta(l.k))
     }
 
@@ -152,21 +159,20 @@ internal object VolumenEstanteFrente {
         val mx = w * (0.56f + 0.14f * azar(s, 5))
         val muesca = Path().apply { addRect(Rect(mx - w * 0.1f, -1f, mx + w * 0.1f, 3.6f * u)) }
         val carcasa = Path().apply { op(caja, muesca, PathOperation.Difference) }
-        clipPath(carcasa) {
-            drawRect(t.cara, cuerpo.topLeft, cuerpo.size)
-            // Los cantos redondeados: claro del lado de la luz, hondo del otro; la cara, más clara arriba.
-            val lado = minOf(3.4f * u, w * 0.1f)
-            val izq = if (hacia < 0f) t.claro else t.hondo
-            val der = if (hacia < 0f) t.hondo else t.claro
-            drawRect(izq, cuerpo.topLeft, Size(lado, cuerpo.height))
-            drawRect(mezcla(izq, t.cara, 0.5f), Offset(cuerpo.left + lado, cuerpo.top), Size(lado * 0.6f, cuerpo.height))
-            drawRect(der, Offset(cuerpo.right - lado, cuerpo.top), Size(lado, cuerpo.height))
-            drawRect(a.claro(0.14f), cuerpo.topLeft, Size(cuerpo.width, cuerpo.height * 0.12f))
-            // Las rayas y los roces del plástico.
-            for (j in 0 until 3) {
-                val y = h * (0.55f + 0.35f * azar(s, 40 + j)); val x = w * (0.15f + 0.5f * azar(s, 50 + j))
-                drawLine(a.claro(0.2f), Offset(x, y), Offset(x + w * 0.25f, y + 0.6f * u), 0.6f * u)
-            }
+        // La carcasa lisa y, encima, los cantos redondeados: claro del lado de la luz, hondo del otro (colores lisos y opacos, sin
+        // recortar: lo más barato de pintar).
+        val lado = minOf(3.4f * u, w * 0.1f)
+        val izq = if (hacia < 0f) t.claro else t.hondo
+        val der = if (hacia < 0f) t.hondo else t.claro
+        drawPath(carcasa, t.cara)
+        drawRect(izq, Offset(cuerpo.left, cuerpo.top + rad), Size(lado, cuerpo.height - 2 * rad))
+        drawRect(mezcla(izq, t.cara, 0.5f), Offset(cuerpo.left + lado, cuerpo.top + rad * 0.5f), Size(lado * 0.6f, cuerpo.height - rad))
+        drawRect(der, Offset(cuerpo.right - lado, cuerpo.top + rad), Size(lado, cuerpo.height - 2 * rad))
+        // La cara, más clara arriba; las rayas y los roces del plástico.
+        drawRect(a.claro(0.14f), Offset(cuerpo.left + rad, cuerpo.top + 3.6f * u), Size(cuerpo.width - 2 * rad, cuerpo.height * 0.12f - 3.6f * u))
+        for (j in 0 until 3) {
+            val y = h * (0.55f + 0.35f * azar(s, 40 + j)); val x = w * (0.15f + 0.5f * azar(s, 50 + j))
+            drawLine(a.claro(0.2f), Offset(x, y), Offset(x + w * 0.25f, y + 0.6f * u), 0.6f * u)
         }
         drawPath(carcasa, a.sombra(0.6f), style = Stroke(0.8f * u))
         drawLine(a.brillo(0.5f, k), Offset(rad, 1.3f * u), Offset(mx - w * 0.11f, 1.3f * u), 0.9f * u)
@@ -179,7 +185,7 @@ internal object VolumenEstanteFrente {
         val vr = CornerRadius(minOf(ven.width, ven.height) * 0.24f)
         drawRoundRect(a.sombra(0.6f), Offset(ven.left - 0.7f * u, ven.top - 0.9f * u), Size(ven.width + 1.4f * u, ven.height + 1.4f * u), vr)
         drawRoundRect(l.c(Color(0xFF181715)), ven.topLeft, ven.size, vr)
-        clipPath(Path().apply { addRoundRect(RoundRect(ven, vr)) }) {
+        clipRect(ven.left, ven.top, ven.right, ven.bottom) {
             val rMax = minOf(ven.width * 0.46f, ven.height * 0.27f)
             val c1 = Offset(ven.center.x, ven.top + ven.height * 0.28f)
             val c2 = Offset(ven.center.x, ven.bottom - ven.height * 0.28f)
@@ -191,7 +197,7 @@ internal object VolumenEstanteFrente {
                 drawCircle(l.c(P.MIEL).copy(alpha = 0.4f), r * 0.66f, c, style = Stroke(0.5f * u))
                 // El cubo blanco de la bobina, con su aro dentado.
                 drawCircle(l.c(P.HUESO, 0.05f), rMax * 0.36f, c)
-                drawCircle(l.c(P.HUESO_OSC), rMax * 0.36f, c, style = Stroke(1.4f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.2f * u, 1.2f * u))))
+                drawCircle(l.c(P.HUESO_OSC), rMax * 0.3f, c, style = Stroke(1f * u))
                 drawCircle(l.c(Color(0xFF181715)), rMax * 0.12f, c)
             }
             // La cinta que corre de una bobina a la otra por el lado del cabezal.
@@ -251,8 +257,9 @@ internal object VolumenEstanteFrente {
             moveTo(tb.left, tb.top); lineTo(tb.right, tb.top); lineTo(tb.right, tb.bottom)
             quadraticTo(tb.center.x, tb.bottom + elipse * 0.7f, tb.left, tb.bottom); close()
         }
-        clipPath(forma) {
-            redondoFrente(Rect(tb.left, tb.top, tb.right, tb.bottom + elipse), t.cara, t.claro, t.hondo, hacia)
+        drawPath(forma, t.cara)
+        clipRect(tb.left, tb.top, tb.right, tb.bottom) {
+            redondoFrente(Rect(tb.left, tb.top, tb.right, tb.bottom - h * 0.05f), t.cara, t.claro, t.hondo, hacia)
             val paso = maxOf(7f * u, tb.width * 0.7f)
             var y = tb.top - tb.width
             while (y < tb.bottom) {
@@ -265,10 +272,16 @@ internal object VolumenEstanteFrente {
                 val yy = tb.top + tb.height * (0.7f + 0.25f * azar(s, 60 + j))
                 drawOval(l.c(P.CARTON).copy(alpha = 0.7f), Offset(tb.left + tb.width * azar(s, 70 + j) * 0.6f, yy), Size(tb.width * 0.3f, 2.4f * u))
             }
-            // El fondo de aluminio, un aro curvo.
-            val fondo = Rect(tb.left, tb.bottom - h * 0.06f, tb.right, tb.bottom + elipse)
-            redondoFrente(fondo, l.c(P.ALUMINIO), l.c(P.CROMO_LUZ), l.c(P.CROMO_OSC), hacia)
         }
+        // El fondo de aluminio, un aro curvo.
+        val yf = tb.bottom - h * 0.06f
+        val fondo = Path().apply {
+            moveTo(tb.left, yf); quadraticTo(tb.center.x, yf + elipse * 0.7f, tb.right, yf)
+            lineTo(tb.right, tb.bottom); quadraticTo(tb.center.x, tb.bottom + elipse * 0.7f, tb.left, tb.bottom); close()
+        }
+        drawPath(fondo, l.c(P.ALUMINIO))
+        drawRect(l.c(P.CROMO_LUZ), Offset(if (hacia < 0f) tb.left + tb.width * 0.1f else tb.right - tb.width * 0.2f, yf + elipse * 0.25f), Size(tb.width * 0.1f, h * 0.045f))
+        drawRect(l.c(P.CROMO_OSC), Offset(if (hacia < 0f) tb.right - tb.width * 0.2f else tb.left + tb.width * 0.05f, yf + elipse * 0.15f), Size(tb.width * 0.15f, h * 0.05f))
         drawPath(Path().apply { moveTo(tb.left, tb.bottom - h * 0.06f); quadraticTo(tb.center.x, tb.bottom - h * 0.06f + elipse * 0.7f, tb.right, tb.bottom - h * 0.06f) },
             a.sombra(0.45f), style = Stroke(0.9f * u))
         // La tapa de aluminio: el canto con sus aros y, encima, su cara redonda vista desde arriba.
@@ -296,12 +309,12 @@ internal object VolumenEstanteFrente {
             lineTo(et.right, et.bottom); quadraticTo(et.center.x, et.bottom + curva * 2f, et.left, et.bottom); close()
         }
         translate(0.6f * u, 1.2f * u) { drawPath(banda, a.sombra(0.35f)) }
-        drawPath(banda, l.etiqueta(P.CINTA))
-        clipPath(banda) {
-            val lado = et.width * 0.2f
-            drawRect(a.sombra(if (a.oscuro) 0.2f else 0.24f), Offset(if (hacia < 0f) et.right - lado else et.left, et.top), Size(lado, et.height + curva * 2f))
-            drawRect(a.claro(0.25f), Offset(if (hacia < 0f) et.left else et.right - lado * 0.6f, et.top), Size(lado * 0.6f, et.height + curva * 2f))
-        }
+        // La cinta es redonda como el tubo: más clara del lado de la luz, más honda del otro.
+        val ce = l.etiqueta(P.CINTA)
+        drawPath(banda, ce)
+        val ladoB = et.width * 0.18f
+        drawRect(mezcla(ce, a.hondo, if (a.oscuro) 0.35f else 0.28f), Offset(if (hacia < 0f) et.right - ladoB else et.left, et.top + curva), Size(ladoB, et.height))
+        drawRect(mezcla(ce, P.HUESO_LUZ, if (a.oscuro) 0.06f else 0.28f), Offset(if (hacia < 0f) et.left + et.width * 0.06f else et.right - et.width * 0.06f - ladoB * 0.6f, et.top + curva), Size(ladoB * 0.6f, et.height))
         diaYMes(v, medidor, Rect(et.left + 1f * u, et.top + curva, et.right - 1f * u, et.bottom + curva), a.tinta(k))
         // La correa ceñida, de cuero, con su hebilla, más abajo.
         val cy = minOf(tb.bottom - h * 0.12f, et.bottom + curva * 2f + h * (0.08f + 0.1f * azar(s, 10)))
@@ -309,7 +322,8 @@ internal object VolumenEstanteFrente {
             moveTo(tb.left - 0.5f * u, cy); quadraticTo(tb.center.x, cy + curva * 2f, tb.right + 0.5f * u, cy)
             lineTo(tb.right + 0.5f * u, cy + 4.6f * u); quadraticTo(tb.center.x, cy + 4.6f * u + curva * 2f, tb.left - 0.5f * u, cy + 4.6f * u); close()
         }
-        clipPath(co) { redondoFrente(Rect(tb.left - 1f * u, cy, tb.right + 1f * u, cy + 4.6f * u + curva * 2f), l.c(P.CUERO), l.c(P.CUERO_LUZ), l.c(mezcla(P.CUERO, P.SOMBRA, 0.5f)), hacia) }
+        drawPath(co, l.c(P.CUERO))
+        drawLine(l.c(P.CUERO_LUZ), Offset(tb.left, cy + 1.2f * u), Offset(tb.right, cy + 1.2f * u), 0.9f * u)
         drawPath(Path().apply { moveTo(tb.left, cy + 5f * u); quadraticTo(tb.center.x, cy + 5f * u + curva * 2f, tb.right, cy + 5f * u) }, a.sombra(0.5f), style = Stroke(0.9f * u))
         val hx = tb.left + tb.width * (0.3f + 0.3f * azar(s, 11))
         drawRect(l.c(P.CROMO), Offset(hx, cy - 0.6f * u + curva), Size(4f * u, 5.8f * u), style = Stroke(1.1f * u))
@@ -345,14 +359,13 @@ internal object VolumenEstanteFrente {
             cubicTo(w * (0.0f - panza), h * 0.6f, w * 0.1f, h * 0.3f, w * 0.14f, arriba)
             close()
         }
-        clipPath(bolsa) {
-            redondoFrente(Rect(-w * 0.04f, 0f, w * 1.04f, h), t.cara, t.claro, t.hondo, hacia, 0.9f)
-            // La panza: un claro blando abajo, del lado de la luz, y su sombra abajo del todo.
-            drawOval(a.claro(0.18f), Offset(w * (if (hacia < 0f) 0.08f else 0.5f), h * 0.6f), Size(w * 0.42f, h * 0.26f))
-            drawRect(a.sombra(0.22f), Offset(0f, h * 0.9f), Size(w, h * 0.1f))
-            // La trama de la lona.
-            var y = arriba
-            while (y < h) { drawLine(t.hondo.copy(alpha = 0.15f), Offset(0f, y), Offset(w, y), 0.5f * u); y += 1.8f * u }
+        drawPath(bolsa, t.cara)
+        clipRect(w * 0.08f, arriba, w * 0.92f, h - 1.5f * u) {
+            redondoFrente(Rect(w * 0.02f, 0f, w * 0.98f, h), t.cara, t.claro, t.hondo, hacia, 0.9f)
+            // La panza: un claro blando abajo, del lado de la luz.
+            drawOval(a.claro(0.18f), Offset(w * (if (hacia < 0f) 0.1f else 0.48f), h * 0.6f), Size(w * 0.42f, h * 0.26f))
+            // La trama de la lona, en un solo trazo.
+            drawPath(trama(w, arriba, h, 1.8f * u), t.hondo.copy(alpha = 0.15f), style = Stroke(0.5f * u))
             // Los pliegues blandos de la panza: la lona se comba de lado a lado (su sombra abajo, su luz arriba), y el fuelle de
             // los costados.
             listOf(0.7f to 0.05f, 0.84f to 0.04f).forEachIndexed { j, (f, cae) ->
@@ -386,14 +399,14 @@ internal object VolumenEstanteFrente {
             cubicTo(w * 0.03f, sb - h * 0.08f, w * 0.07f, h * 0.25f, w * 0.1f, arriba - 1f * u); close()
         }
         translate(0.6f * u, 2.6f * u) { drawPath(solapa, a.sombra(0.5f)) }
-        clipPath(solapa) {
-            redondoFrente(Rect(0f, 0f, w, sb + h * 0.05f), mezcla(t.cara, t.claro, 0.18f), t.claro, t.hondo, hacia, 0.75f)
-            var y = arriba
-            while (y < sb + h * 0.05f) { drawLine(t.hondo.copy(alpha = 0.13f), Offset(0f, y), Offset(w, y), 0.5f * u); y += 1.8f * u }
-            drawRect(a.claro(0.2f), Offset(0f, arriba - 1f * u), Size(w, 1.6f * u))
-            // El doblez de arriba, donde la solapa da la vuelta.
-            drawRect(t.hondo.copy(alpha = 0.35f), Offset(0f, arriba + 1.2f * u), Size(w, 1f * u))
+        drawPath(solapa, mezcla(t.cara, t.claro, 0.18f))
+        clipRect(w * 0.12f, arriba, w * 0.88f, sb - h * 0.06f) {
+            redondoFrente(Rect(w * 0.06f, 0f, w * 0.94f, h), mezcla(t.cara, t.claro, 0.18f), t.claro, t.hondo, hacia, 0.75f)
+            drawPath(trama(w, arriba, sb, 1.8f * u), t.hondo.copy(alpha = 0.13f), style = Stroke(0.5f * u))
         }
+        drawRect(a.claro(0.2f), Offset(w * 0.1f, arriba - 1f * u), Size(w * 0.8f, 1.6f * u))
+        // El doblez de arriba, donde la solapa da la vuelta.
+        drawRect(t.hondo.copy(alpha = 0.35f), Offset(w * 0.1f, arriba + 1.2f * u), Size(w * 0.8f, 1f * u))
         drawPath(Path().apply {
             moveTo(w * 0.15f, arriba + 3f * u); cubicTo(w * 0.12f, h * 0.25f, w * 0.12f, sb - h * 0.1f, w * 0.22f, sb - h * 0.055f)
             quadraticTo(w * 0.5f, sb - h * 0.005f, w * 0.78f, sb - h * 0.055f); cubicTo(w * 0.88f, sb - h * 0.1f, w * 0.88f, h * 0.25f, w * 0.85f, arriba + 3f * u)

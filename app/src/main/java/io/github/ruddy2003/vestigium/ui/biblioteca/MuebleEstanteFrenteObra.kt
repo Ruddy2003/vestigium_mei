@@ -43,20 +43,59 @@ internal object ObraEstanteFrente {
     private fun DrawScope.en(c: Color, f: Float, x: Float, y: Float, a: AireFrente, cerca: (Offset) -> Float, frio: (Offset) -> Float, dia: Float = 0.3f): Color =
         if (a.oscuro) a.luz(c, cerca(Offset(x, y)), frio(Offset(x, y))) else a.cupula(a.dia(c, f, cerca(Offset(x, y))), charco(x, y) * dia)
 
-    /** Una franja horizontal [r] de [c], con la luz cambiando a lo ancho (cinco puntos). */
-    private fun DrawScope.franjaH(r: Rect, c: Color, f: Float, a: AireFrente, cerca: (Offset) -> Float, frio: (Offset) -> Float, dia: Float = 0.3f) {
+    /** Una franja horizontal [r] de [c] con la luz cambiando a lo ancho en un degradado (para lo que se guarda en la imagen). */
+    private fun DrawScope.franjaHSuave(r: Rect, c: Color, f: Float, a: AireFrente, cerca: (Offset) -> Float, frio: (Offset) -> Float, dia: Float = 0.3f) {
         if (r.width <= 0f || r.height <= 0f) return
         val y = r.center.y
         val paradas = Array(5) { i -> val x = r.left + r.width * i / 4f; (i / 4f) to en(c, f, x, y, a, cerca, frio, dia) }
         drawRect(Brush.horizontalGradient(*paradas, startX = r.left, endX = r.right), r.topLeft, r.size)
     }
 
-    /** Una franja vertical [r] de [c], con la luz cambiando a lo alto en los puntos [ys] (de arriba abajo, dentro de [r]). */
+    /**
+     * Una franja horizontal [r] de [c], con la luz cambiando a lo ancho: en tramos lisos y opacos (en el teléfono, un degradado o
+     * un velo cuestan por cada píxel mucho más que un color liso), seis de noche y tres de día; el paso de uno a otro es menor que
+     * lo que se ve.
+     */
+    private fun DrawScope.franjaH(r: Rect, c: Color, f: Float, a: AireFrente, cerca: (Offset) -> Float, frio: (Offset) -> Float, dia: Float = 0.3f) {
+        if (r.width <= 0f || r.height <= 0f) return
+        val n = if (a.lumbre) 12 else 4
+        val y = r.center.y
+        val paso = r.width / n
+        for (i in 0 until n) {
+            val x0 = r.left + paso * i
+            drawRect(en(c, f, x0 + paso / 2, y, a, cerca, frio, dia), Offset(x0, r.top), Size(paso + (if (i < n - 1) 1f else 0f), r.height))
+        }
+    }
+
+    /**
+     * Una franja vertical [r] de [c], con la luz cambiando a lo alto: en tramos lisos y opacos, tres por cada tramo entre los
+     * puntos [ys] (de arriba abajo, dentro de [r]); de día, uno solo, que la luz de la sala no cambia a lo alto.
+     */
     private fun DrawScope.franjaV(r: Rect, c: Color, f: Float, ys: FloatArray, a: AireFrente, cerca: (Offset) -> Float, frio: (Offset) -> Float, dia: Float = 0.3f) {
         if (r.width <= 0f || r.height <= 0f) return
         val x = r.center.x
-        val paradas = Array(ys.size) { i -> ((ys[i] - r.top) / r.height).coerceIn(0f, 1f) to en(c, f, x, ys[i], a, cerca, frio, dia) }
-        drawRect(Brush.verticalGradient(*paradas, startY = r.top, endY = r.bottom), r.topLeft, r.size)
+        if (!a.lumbre) { drawRect(en(c, f, x, r.top + r.height * 0.3f, a, cerca, frio, dia), r.topLeft, r.size); return }
+        for (i in 0 until ys.size - 1) {
+            val y0 = maxOf(r.top, ys[i]); val y1 = minOf(r.bottom, ys[i + 1])
+            if (y1 <= y0) continue
+            val paso = (y1 - y0) / 3f
+            for (j in 0 until 3) {
+                val ya = y0 + paso * j
+                drawRect(en(c, f, x, ya + paso / 2, a, cerca, frio, dia), Offset(r.left, ya), Size(r.width, paso + (if (i < ys.size - 2 || j < 2) 1f else 0f)))
+            }
+        }
+    }
+
+    /** Una figura [p] (dentro de [r]) pintada de [c] con la luz de su centro, lisa y opaca. */
+    private fun DrawScope.figura(p: Path, r: Rect, c: Color, f: Float, a: AireFrente, cerca: (Offset) -> Float, frio: (Offset) -> Float, dia: Float = 0.3f) =
+        drawPath(p, en(c, f, r.center.x, r.center.y, a, cerca, frio, dia))
+
+    /** El pincel de [franjaV], para pintar con él una figura cualquiera sin recortarla (recortar con un camino es caro). */
+    private fun DrawScope.pincelV(r: Rect, c: Color, f: Float, ys: FloatArray, a: AireFrente, cerca: (Offset) -> Float, frio: (Offset) -> Float, dia: Float = 0.3f): Brush {
+        val x = r.center.x
+        val alto = maxOf(1f, r.height)
+        val paradas = Array(ys.size) { i -> ((ys[i] - r.top) / alto).coerceIn(0f, 1f) to en(c, f, x, ys[i], a, cerca, frio, dia) }
+        return Brush.verticalGradient(*paradas, startY = r.top, endY = r.bottom)
     }
 
     // ---------------------------------------------------------------- la capota y el friso
@@ -75,8 +114,8 @@ internal object ObraEstanteFrente {
         val cara = Rect(r.left + w * 0.012f, y0, r.right - w * 0.012f, y0 + w * 0.024f)
         val formaCara = Path().apply { addRoundRect(RoundRect(cara, CornerRadius(rad, w * 0.02f), CornerRadius(rad, w * 0.02f), CornerRadius.Zero, CornerRadius.Zero)) }
         clipPath(formaCara) {
-            franjaH(Rect(cara.left, cara.top, cara.right, cara.top + cara.height * 0.3f), P.HUESO_OSC, -0.06f, a, cerca, frio, 0.4f)
-            franjaH(Rect(cara.left, cara.top + cara.height * 0.3f, cara.right, cara.bottom + 1f), P.HUESO_LUZ, 0.04f, a, cerca, frio, 0.6f)
+            franjaHSuave(Rect(cara.left, cara.top, cara.right, cara.top + cara.height * 0.3f), P.HUESO_OSC, -0.06f, a, cerca, frio, 0.4f)
+            franjaHSuave(Rect(cara.left, cara.top + cara.height * 0.3f, cara.right, cara.bottom + 1f), P.HUESO_LUZ, 0.04f, a, cerca, frio, 0.6f)
             for (j in 0 until 5) {
                 val x = cara.left + cara.width * azar(331, j); val y = cara.top + cara.height * (0.3f + 0.5f * azar(333, j))
                 drawOval(a.sombra(0.1f), Offset(x, y), Size((6f + 14f * azar(337, j)) * u, 1.6f * u))
@@ -88,10 +127,10 @@ internal object ObraEstanteFrente {
         val forma = Path().apply { addRoundRect(RoundRect(labio, CornerRadius(rad * 0.7f), CornerRadius(rad * 0.7f), CornerRadius.Zero, CornerRadius.Zero)) }
         clipPath(forma) {
             val alto = labio.height
-            franjaH(Rect(labio.left, labio.top, labio.right, labio.top + alto * 0.16f), P.HUESO_LUZ, 0.1f, a, cerca, frio, 0.5f)
-            franjaH(Rect(labio.left, labio.top + alto * 0.16f, labio.right, labio.top + alto * 0.45f), P.HUESO, 0.06f, a, cerca, frio, 0.45f)
-            franjaH(Rect(labio.left, labio.top + alto * 0.45f, labio.right, labio.top + alto * 0.78f), P.HUESO, -0.02f, a, cerca, frio, 0.35f)
-            franjaH(Rect(labio.left, labio.top + alto * 0.78f, labio.right, labio.bottom + 1f), P.HUESO_OSC, -0.05f, a, cerca, frio, 0.25f)
+            franjaHSuave(Rect(labio.left, labio.top, labio.right, labio.top + alto * 0.16f), P.HUESO_LUZ, 0.1f, a, cerca, frio, 0.5f)
+            franjaHSuave(Rect(labio.left, labio.top + alto * 0.16f, labio.right, labio.top + alto * 0.45f), P.HUESO, 0.06f, a, cerca, frio, 0.45f)
+            franjaHSuave(Rect(labio.left, labio.top + alto * 0.45f, labio.right, labio.top + alto * 0.78f), P.HUESO, -0.02f, a, cerca, frio, 0.35f)
+            franjaHSuave(Rect(labio.left, labio.top + alto * 0.78f, labio.right, labio.bottom + 1f), P.HUESO_OSC, -0.05f, a, cerca, frio, 0.25f)
             // Las esquinas, más hondas: la curva da la vuelta.
             drawRect(Brush.horizontalGradient(0f to a.sombra(0.3f), 0.05f to Color.Transparent, 0.95f to Color.Transparent, 1f to a.sombra(0.4f), startX = labio.left, endX = labio.right), labio.topLeft, labio.size)
             // La humedad que baja desde arriba y la pintura saltada.
@@ -112,17 +151,17 @@ internal object ObraEstanteFrente {
         var y = labio.bottom
         for (k in 0 until 2) {
             val m = Rect(r.left + w * 0.006f, y, r.right - w * 0.006f, y + w * 0.012f)
-            franjaH(Rect(m.left, m.top, m.right, m.top + m.height * 0.4f), P.HUESO_LUZ, 0.06f, a, cerca, frio, 0.45f)
-            franjaH(Rect(m.left, m.top + m.height * 0.4f, m.right, m.bottom), P.HUESO_OSC, -0.08f, a, cerca, frio, 0.3f)
+            franjaHSuave(Rect(m.left, m.top, m.right, m.top + m.height * 0.4f), P.HUESO_LUZ, 0.06f, a, cerca, frio, 0.45f)
+            franjaHSuave(Rect(m.left, m.top + m.height * 0.4f, m.right, m.bottom), P.HUESO_OSC, -0.08f, a, cerca, frio, 0.3f)
             drawLine(a.sombra(0.5f), Offset(m.left, m.bottom - 0.3f * u), Offset(m.right, m.bottom - 0.3f * u), 0.8f * u)
             y = m.bottom
         }
         val cromo = Rect(r.left, y, r.right, y + w * 0.009f)
-        franjaH(Rect(cromo.left, cromo.top, cromo.right, cromo.center.y), P.CROMO_LUZ, 0f, a, cerca, frio, 0.3f)
-        franjaH(Rect(cromo.left, cromo.center.y, cromo.right, cromo.bottom), P.CROMO_OSC, 0f, a, cerca, frio, 0.3f)
+        franjaHSuave(Rect(cromo.left, cromo.top, cromo.right, cromo.center.y), P.CROMO_LUZ, 0f, a, cerca, frio, 0.3f)
+        franjaHSuave(Rect(cromo.left, cromo.center.y, cromo.right, cromo.bottom), P.CROMO_OSC, 0f, a, cerca, frio, 0.3f)
         // El friso: un panel de consola oscura, metido entre la capota y el primer casillero.
         val friso = Rect(r.left, cromo.bottom, r.right, r.bottom)
-        franjaH(friso, P.CONSOLA, 0f, a, cerca, frio, 0.2f)
+        franjaHSuave(friso, P.CONSOLA, 0f, a, cerca, frio, 0.2f)
         drawRect(a.sombra(0.55f), friso.topLeft, Size(friso.width, 3f * u))
         drawRect(a.brillo(0.18f, cerca(Offset(w * 0.3f, friso.bottom))), Offset(friso.left, friso.bottom - 4.6f * u), Size(friso.width, 0.8f * u))
         val cy = friso.top + (friso.bottom - 2f - friso.top) * 0.5f
@@ -169,56 +208,50 @@ internal object ObraEstanteFrente {
         val u = density
         val w = size.width
         val af = AireFrente(a.oscuro, a.noche, fondo = true)
-        with(MuroEstanteFrente) { piedraEn(r, af, k * 137f * u, k * 29f * u) }
-        // De noche, la luz a lo ancho del fondo: hondo lejos de las luces, tibio cerca.
+        // La piedra, con el hondo del nicho ya pintado en la baldosa: su borde de arriba, en el de este casillero.
+        with(MuroEstanteFrente) { piedraEn(r, af, k * 137f * u, r.top) }
+        // De noche, la piedra ya viene hundida en la baldosa: solo se enciende donde llega una luz (el lado de la cúpula, el del
+        // vidrio, el de la estufa), con un resplandor que se apaga hacia el otro lado.
         if (a.oscuro) {
             val y = r.top + r.height * 0.45f
-            val paradas = Array(6) { i ->
-                val x = r.left + r.width * i / 5f
-                val kk = cerca(Offset(x, y)); val kv = frio(Offset(x, y))
-                val c = when {
-                    kv > 0.25f && kv > kk -> P.VIDRIO_TRAZO.copy(alpha = ((kv - 0.25f) * 0.4f).coerceAtMost(0.22f))
-                    kk > 0.45f -> P.LAMPARA.copy(alpha = ((kk - 0.45f) * 0.45f).coerceAtMost(0.24f))
-                    else -> af.hondo.copy(alpha = ((0.45f - kk) * 1.5f).coerceAtMost(0.62f))
-                }
-                (i / 5f) to c
+            val kI = cerca(Offset(r.left, y)); val kD = cerca(Offset(r.right, y)); val vD = frio(Offset(r.right, y))
+            val kMax = maxOf(kI, kD)
+            if (kMax > 0.18f) {
+                val izqMas = kI >= kD
+                val c = Offset(if (izqMas) r.left else r.right, r.top + r.height * 0.3f)
+                val rr = r.width * (0.35f + 0.4f * kMax)
+                drawRect(Brush.radialGradient(listOf(P.LAMPARA.copy(alpha = ((kMax - 0.12f) * 0.5f).coerceAtMost(0.3f)), P.LAMPARA.copy(alpha = 0f)), c, rr),
+                    Offset(if (izqMas) r.left else maxOf(r.left, r.right - rr), r.top), Size(minOf(rr, r.width), r.height))
             }
-            drawRect(Brush.horizontalGradient(*paradas, startX = r.left, endX = r.right), r.topLeft, r.size)
+            if (vD > 0.22f) {
+                val c = Offset(r.right, r.top + r.height * 0.2f)
+                val rr = r.width * 0.45f
+                drawRect(Brush.radialGradient(listOf(P.VIDRIO_TRAZO.copy(alpha = ((vD - 0.18f) * 0.4f).coerceAtMost(0.2f)), P.VIDRIO_TRAZO.copy(alpha = 0f)), c, rr),
+                    Offset(r.right - rr, r.top), Size(rr, r.height))
+            }
             if (xFoco >= 0f) {
                 val c = Offset(xFoco, r.bottom - r.height * M.FOCO_Y)
-                val rr = w * 0.3f
-                drawCircle(Brush.radialGradient(0f to P.FOCO.copy(alpha = if (a.noche) 0.26f else 0.42f), 0.35f to P.FOCO.copy(alpha = if (a.noche) 0.1f else 0.16f),
+                val rr = w * 0.25f
+                drawCircle(Brush.radialGradient(0f to P.FOCO.copy(alpha = if (a.noche) 0.28f else 0.46f), 0.35f to P.FOCO.copy(alpha = if (a.noche) 0.1f else 0.18f),
                     1f to P.FOCO.copy(alpha = 0f), center = c, radius = rr), rr, c)
             }
-        } else if (a.noche) {
-            // Al turno de guardia, el fondo se apaga hacia el violeta lejos de la cúpula y de la estufa.
-            val y = r.top + r.height * 0.45f
-            val paradas = Array(4) { i ->
-                val x = r.left + r.width * i / 3f
-                (i / 3f) to P.SOMBRA_GUARDIA.copy(alpha = ((1f - cerca(Offset(x, y))) * 0.3f).coerceIn(0f, 0.3f))
-            }
-            drawRect(Brush.horizontalGradient(*paradas, startX = r.left, endX = r.right), r.topLeft, r.size)
         }
-        // El hondo del nicho: más oscuro abajo, como los nichos del Ideario cavados en la piedra.
-        val hondoNicho = if (!a.oscuro && a.noche) mezcla(P.SOMBRA, P.SOMBRA_GUARDIA, 0.35f) else af.hondo
-        drawRect(Brush.verticalGradient(listOf(hondoNicho.copy(alpha = if (a.oscuro) 0.13f else 0.16f), hondoNicho.copy(alpha = if (a.oscuro) 0.58f else 0.6f)), r.top, r.bottom), r.topLeft, r.size)
         // La sombra franca del costado de la luz y de la tabla de arriba en el fondo, con su penumbra.
         val izq = r.left + 6f * u
-        val hT = r.height * 0.2f; val wL = w * 0.06f
+        val hT = r.height * 0.2f; val wL = w * 0.055f
         val sombra = Path().apply {
-            moveTo(r.left, r.top); lineTo(r.right, r.top); lineTo(r.right, r.top + hT * 0.75f)
-            lineTo(izq + wL + hT * 0.6f, r.top + hT); lineTo(izq + wL, r.top + hT + wL * 0.5f); lineTo(izq + wL * 0.85f, r.bottom); lineTo(r.left, r.bottom); close()
+            moveTo(r.left, r.top + hT * 0.6f); lineTo(izq + wL + hT * 0.5f, r.top + hT * 0.6f); lineTo(izq + wL, r.top + hT + wL * 0.4f)
+            lineTo(izq + wL * 0.85f, r.bottom); lineTo(r.left, r.bottom); close()
         }
-        drawPath(sombra, a.sombra(if (a.oscuro) 0.3f else 0.4f))
-        drawRect(Brush.verticalGradient(listOf(a.sombra(0.22f), Color.Transparent), r.top + hT, r.top + hT + 14f * u), Offset(r.left, r.top + hT), Size(r.width, 14f * u))
+        drawPath(sombra, a.sombra(if (a.oscuro) 0.3f else 0.38f))
         // La cara de dentro de los costados: la de la izquierda, en sombra; la de la derecha, mirando a la luz.
         val hondo = 6f * u
         val ys = floatArrayOf(r.top, r.center.y, r.bottom)
         val caraIzq = Path().apply { moveTo(r.left, r.top); lineTo(r.left + hondo, r.top + hondo * 0.8f); lineTo(r.left + hondo, r.bottom - 3f * u); lineTo(r.left, r.bottom); close() }
-        clipPath(caraIzq) { franjaV(Rect(r.left, r.top, r.left + hondo, r.bottom), P.HUESO_OSC, -0.35f, ys, a, cerca, frio, 0.05f) }
+        drawPath(caraIzq, pincelV(Rect(r.left, r.top, r.left + hondo, r.bottom), P.HUESO_OSC, -0.35f, ys, a, cerca, frio, 0.05f))
         drawLine(a.sombra(0.35f), Offset(r.left + hondo, r.top + hondo * 0.8f), Offset(r.left + hondo, r.bottom - 3f * u), 0.8f * u)
         val caraDer = Path().apply { moveTo(r.right, r.top); lineTo(r.right - hondo, r.top + hondo * 0.8f); lineTo(r.right - hondo, r.bottom - 3f * u); lineTo(r.right, r.bottom); close() }
-        clipPath(caraDer) { franjaV(Rect(r.right - hondo, r.top, r.right, r.bottom), P.HUESO, 0.02f, ys, a, cerca, frio, 0.25f) }
+        drawPath(caraDer, pincelV(Rect(r.right - hondo, r.top, r.right, r.bottom), P.HUESO, 0.02f, ys, a, cerca, frio, 0.25f))
         drawLine(a.sombra(0.25f), Offset(r.right - hondo, r.top + hondo * 0.8f), Offset(r.right - hondo, r.bottom - 3f * u), 0.7f * u)
         // La panza de la tabla de arriba, en sombra.
         val panza = Rect(r.left, r.top, r.right, r.top + 4f * u)
@@ -256,13 +289,12 @@ internal object ObraEstanteFrente {
         val h = r.height
         // Debajo, la fila entera (de píxel entero) del color de la cara, para que la junta con el casillero no deje asomar nada.
         drawRect(en(P.HUESO, 0f, r.center.x, r.center.y, a, cerca, frio), Offset(r.left, kotlin.math.floor(r.top)), Size(r.width, kotlin.math.ceil(r.bottom) - kotlin.math.floor(r.top)))
-        franjaH(Rect(r.left, r.top, r.right, r.top + h * 0.08f), P.HUESO_LUZ, 0.25f, a, cerca, frio, 0.5f)
-        franjaH(Rect(r.left, r.top + h * 0.08f, r.right, r.top + h * 0.22f), P.HUESO_LUZ, 0.05f, a, cerca, frio, 0.45f)
-        franjaH(Rect(r.left, r.top + h * 0.22f, r.right, r.top + h * 0.36f), P.HUESO, 0f, a, cerca, frio, 0.35f)
-        franjaH(Rect(r.left, r.top + h * 0.36f, r.right, r.top + h * 0.44f), P.HUESO_OSC, -0.1f, a, cerca, frio, 0.25f)
+        franjaH(Rect(r.left, r.top, r.right, r.top + h * 0.1f), P.HUESO_LUZ, 0.2f, a, cerca, frio, 0.5f)
+        franjaH(Rect(r.left, r.top + h * 0.1f, r.right, r.top + h * 0.3f), P.HUESO, 0.03f, a, cerca, frio, 0.4f)
+        franjaH(Rect(r.left, r.top + h * 0.3f, r.right, r.top + h * 0.44f), P.HUESO_OSC, -0.08f, a, cerca, frio, 0.25f)
         // El filo de cromo bajo el labio.
-        franjaH(Rect(r.left, r.top + h * 0.44f, r.right, r.top + h * 0.5f), P.CROMO_LUZ, 0f, a, cerca, frio, 0.2f)
-        franjaH(Rect(r.left, r.top + h * 0.5f, r.right, r.top + h * 0.55f), P.CROMO_OSC, 0f, a, cerca, frio, 0.2f)
+        franjaH(Rect(r.left, r.top + h * 0.44f, r.right, r.top + h * 0.55f), P.CROMO, 0f, a, cerca, frio, 0.2f)
+        drawRect(a.brillo(0.35f, cerca(r.center)), Offset(r.left, r.top + h * 0.44f), Size(r.width, h * 0.035f))
         // La cara de la bandeja.
         franjaH(Rect(r.left, r.top + h * 0.55f, r.right, r.bottom), P.HUESO, -0.04f, a, cerca, frio, 0.3f)
         drawRect(a.sombra(0.14f), Offset(r.left, r.bottom - h * 0.16f), Size(r.width, h * 0.16f))
@@ -299,6 +331,9 @@ internal object ObraEstanteFrente {
         ys[0] = r.top
         d.repisas.forEachIndexed { k, rep -> ys[k + 1] = rep.center.y.coerceIn(r.top, r.bottom) }
         ys[ys.size - 1] = r.bottom
+        // Debajo, un píxel más hacia dentro del mueble, para que la junta con los casilleros (que puede caer a medio píxel) no
+        // deje asomar el fondo.
+        franjaV(Rect(if (izq) r.right - 2f else r.left - 1f, r.top, if (izq) r.right + 1f else r.left + 2f, r.bottom), P.HUESO, if (izq) -0.32f else 0.24f, ys, a, cerca, frio, 0.35f)
         // Los dos cantos redondos de chapa hueso, de la luz a la sombra a lo ancho; cada franja con su luz a lo alto.
         val franjas = floatArrayOf(0f, 0.06f, 0.14f, 0.24f, 0.76f, 0.86f, 0.94f, 1f)
         val tonos = floatArrayOf(0.24f, 0.12f, 0f, -0.1f, -0.06f, -0.16f, -0.32f)
@@ -350,10 +385,6 @@ internal object ObraEstanteFrente {
             // El óxido que baja de un tornillo.
             if (azar(s, 11) > 0.5f) drawLine(en(P.OXIDO, 0f, cx, rep.bottom, a, cerca, frio).copy(alpha = 0.45f),
                 Offset(cx, rep.top + rep.height * 0.88f), Offset(cx + 0.3f * u, rep.bottom + 4f * u), 1.3f * u, StrokeCap.Round)
-        }
-        // La raíz que cae desde la capota por el costado de la izquierda, por delante, con su sombra en la chapa.
-        if (izq) with(MuroEstanteFrente) {
-            raices(listOf(Triple(r.left + r.width * 0.12f, w * 0.62f, 2.8f * u)), r.top - w * 0.03f, a, cerca, 41)
         }
     }
 

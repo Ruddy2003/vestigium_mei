@@ -210,6 +210,9 @@ internal object MuebleEstanteFrente {
                 with(ObraEstanteFrente) { capota(Rect(0f, apoyo, w, ch + 2f), ac, cerca, frio) }
                 // Lo de delante pisa la cara de arriba de la capota, un poco más adelante que su canto de atrás.
                 with(CoronaEstanteFrente) { delante(w, apoyo + w * PISA, ch, a, cerca, frio) }
+                // La raíz que cae por delante de la capota, por el costado de la izquierda (como las que caen por los costados de
+                // la consola del Ideario), hasta el friso.
+                with(MuroEstanteFrente) { raices(listOf(Triple(w * LADO * 0.3f, ch - apoyo + w * 0.06f, 2.8f * density)), apoyo - w * 0.06f, ac, cerca, 41) }
                 granoMueble(Rect(0f, 0f, w, ch + 2f), oscuro)
             }
         }
@@ -218,11 +221,11 @@ internal object MuebleEstanteFrente {
             d.repisas.forEachIndexed { k, r -> casillero(k, r, ac, cerca, frio, xs[k]) }
         }
         with(HuecosEstanteFrente) {
-            // Cada hueco sabe cuántos hubo antes, para no repetir lo que acompaña de una repisa a otra.
+            // Cada hueco sabe cuántos grupos se pusieron antes, para no repetir lo que acompaña de una repisa a otra.
             var n = if (noche) 2 else 0
             d.repisas.forEachIndexed { k, r ->
                 val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
-                if (hueco(n, r, oc, d.derecha.left, xs[k], ac, cerca, frio)) n++
+                n += hueco(n, r, oc, d.derecha.left, xs[k], ac, cerca, frio)
             }
         }
         with(ObraEstanteFrente) {
@@ -234,7 +237,7 @@ internal object MuebleEstanteFrente {
         // Lo de abajo, en vivo: el zócalo, el suelo y lo que hay en él, desde el píxel entero de encima y sobre un fondo
         // opaco, para que la junta con la última tabla no deje asomar nada.
         val arriba = floor(minOf(b.top, d.tablas.lastOrNull()?.bottom ?: b.top))
-        drawRect(ac.luz(PaletaFrente.CONSOLA_OSC, cerca(Offset(w / 2, b.top))), Offset(0f, arriba), Size(w, ceil(h) - arriba + 1f))
+        drawRect(ac.luz(PaletaFrente.CONSOLA_OSC, cerca(Offset(w / 2, b.top))), Offset(0f, arriba), Size(w, 3f))
         val cercaPie: (Offset) -> Float = { p -> if (!a.lumbre) 1f else calor(p.x / w, p.y / w, yE, suenos, FloatArray(0), a.dormida) }
         with(PieEstanteFrente) { alPie(Rect(0f, arriba, w, h), b.top, b.top + b.height * ZOCALO, ac, cercaPie) }
         granoMueble(Rect(0f, ch, w, h), oscuro, 0.8f)
