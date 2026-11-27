@@ -17,9 +17,10 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /**
  * El índice de la libreta de Frente: cada día es un cartucho chico del mismo aluminio que el de la grabadora, de frente, con
- * su etiqueta de cinta de papel (el día grande, a tinta), la letra de la semana grabada en la caja, la ventanilla con sus dos
- * bobinas y, asomando por arriba, la pestaña de escritura del color del ánimo de ese día. Sin ánimo, la pestaña falta y queda
- * su hueco: cambia la silueta, no solo el color. Las pestañas son decenas: lo que no depende del día se mide una vez por tamaño
+ * la cabecera pintada del color del ánimo de ese día (con la letra de la semana) y, asomando por arriba como remate, la pestaña
+ * de escritura del mismo color; debajo, su etiqueta de cinta de papel con el día grande a tinta y la ventanilla con sus dos
+ * bobinas. Sin ánimo, la cabecera queda en el aluminio desnudo y la pestaña falta, con su hueco: cambia la silueta, no solo el
+ * color. Las pestañas son decenas: lo que no depende del día se mide una vez por tamaño
  * y los números y las letras se miden una sola vez ([capaEn]).
  */
 internal object IndiceLibretaFrente {
@@ -33,9 +34,11 @@ internal object IndiceLibretaFrente {
         val caja = Rect(w * 0.08f, h * 0.13f, w * 0.92f, h * 0.965f)
         val lengua = Rect(caja.right - w * 0.33f, h * 0.035f, caja.right - w * 0.1f, caja.top + 3f * u)
         val hueco = Rect(lengua.left, caja.top, lengua.right, caja.top + 3.6f * u)
-        val letra = Rect(caja.left + 2f * u, caja.top + 0.6f * u, caja.left + w * 0.36f, caja.top + 8.4f * u)
-        val etiqueta = Rect(caja.left + 3f * u, caja.top + 9.4f * u, caja.right - 3f * u, caja.top + caja.height * 0.72f)
-        val numero = Rect(etiqueta.left, etiqueta.top + 2.8f * u, etiqueta.right, etiqueta.bottom - 0.4f * u)
+        /** La cabecera, donde va el color del ánimo: con la pestaña, cerca de un tercio de la pestaña del índice. */
+        val cabecera = Rect(caja.left, caja.top, caja.right, caja.top + 14.5f * u)
+        val letra = Rect(caja.left + 2f * u, caja.top + 2f * u, caja.left + w * 0.4f, cabecera.bottom - 2f * u)
+        val etiqueta = Rect(caja.left + 3f * u, cabecera.bottom + 1.6f * u, caja.right - 3f * u, caja.top + caja.height * 0.78f)
+        val numero = Rect(etiqueta.left, etiqueta.top + 0.6f * u, etiqueta.right, etiqueta.bottom - 0.2f * u)
         val ventana = Rect(caja.left + 4f * u, etiqueta.bottom + 2.6f * u, caja.right - 4f * u, caja.bottom - 2.6f * u)
     }
 
@@ -79,7 +82,14 @@ internal object IndiceLibretaFrente {
             drawRect(mezcla(tono, Color.White, 0.35f), Offset(l.left + 1f * u, l.top + 0.6f * u), Size(l.width - 2f * u, 0.9f * u))
         }
         drawRoundRect(alu, c.topLeft, c.size, CornerRadius(3.5f * u))
-        drawRect(mezcla(alu, Color.White, if (oscuro) 0.08f else 0.4f), Offset(c.left + 2.5f * u, c.top + 0.5f * u), Size(c.width - 5f * u, 1f * u))
+        // La cabecera pintada del color del ánimo (sin ánimo, el aluminio desnudo), con la junta que la separa de la caja.
+        val cab = g.cabecera
+        if (tono != null) {
+            drawRoundRect(tono, cab.topLeft, cab.size, CornerRadius(3.5f * u))
+            drawRect(tono, Offset(cab.left, cab.bottom - 3.5f * u), Size(cab.width, 3.5f * u))
+        }
+        drawRect(P.SOMBRA.copy(alpha = 0.35f), Offset(cab.left + 0.5f * u, cab.bottom), Size(cab.width - 1f * u, 0.8f * u))
+        drawRect(mezcla(tono ?: alu, Color.White, if (oscuro) 0.1f else 0.4f), Offset(c.left + 2.5f * u, c.top + 0.5f * u), Size(c.width - 5f * u, 1f * u))
         drawRect(mezcla(alu, P.SOMBRA, 0.25f), Offset(c.right - 3f * u, c.top + 3f * u), Size(2.5f * u, c.height - 6f * u))
         drawRoundRect(P.SOMBRA.copy(alpha = 0.55f), c.topLeft, c.size, CornerRadius(3.5f * u), style = Stroke(0.7f * u))
         if (tono == null) {
@@ -88,9 +98,14 @@ internal object IndiceLibretaFrente {
             drawRect(if (oscuro) Color(0xFF040806) else mezcla(P.CONSOLA_OSC, alu, 0.15f), hh.topLeft, hh.size)
             drawRect(mezcla(alu, Color.White, if (oscuro) 0.06f else 0.35f), Offset(hh.left, hh.bottom), Size(hh.width, 0.7f * u))
         }
-        // La letra de la semana, grabada en la caja.
-        val grabado = if (oscuro) mezcla(P.ALUMINIO, HONDO, 0.82f) else mezcla(P.ALUMINIO, P.TINTA, 0.62f)
-        medido(medidor, e.semana.uppercase(), g.letra, grabado, 7f, FontWeight.Medium, 5f, oscuro, 'l')
+        // La letra de la semana, en la cabecera: oscura sobre los colores claros, clara sobre los hondos; sin ánimo, grabada.
+        val claro = tono != null && tono.red * 0.3f + tono.green * 0.59f + tono.blue * 0.11f < 0.45f
+        val letra = when {
+            tono == null -> if (oscuro) mezcla(P.ALUMINIO, HONDO, 0.82f) else mezcla(P.ALUMINIO, P.TINTA, 0.62f)
+            claro -> Color(0xFFF2EDE1)
+            else -> Color(0xFF14110C)
+        }
+        medido(medidor, e.semana.uppercase(), g.letra, letra, 8f, FontWeight.Medium, 5f, oscuro, if (tono == null) 'g' else if (claro) 'c' else 'o')
         // La etiqueta de cinta de papel, con su franja y el día.
         val et = g.etiqueta
         drawRect(P.SOMBRA.copy(alpha = 0.3f), Offset(et.left + 0.6f * u, et.top + 0.9f * u), et.size)
