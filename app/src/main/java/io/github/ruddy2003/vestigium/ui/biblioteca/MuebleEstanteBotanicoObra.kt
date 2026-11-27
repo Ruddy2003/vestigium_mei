@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ClipOp
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -35,8 +36,37 @@ internal object ObraEstanteBotanico {
 
     // ---------------------------------------------------------------- la cornisa (en la imagen guardada de arriba)
 
-    /** La cornisa de [r] (de donde pisan las cosas hasta el arranque de las repisas, y un poco más). */
+    /**
+     * La cornisa de [r] (de donde pisan las cosas hasta el arranque de las repisas, y un poco más). Con el parche del ocaso o
+     * de la luna, se pinta primero fuera de él y después dentro, recortada por el parche con su penumbra (tres pasos): así su
+     * borde sigue la inclinación de la luz al pasar de la pared a la cornisa y al friso, y no se corta en vertical en un tramo.
+     */
     fun DrawScope.cornisa(r: Rect, s: SitioBotanico) {
+        val a = s.a
+        if (a.parche == null) { cornisaSola(r, s); return }
+        val w = size.width
+        try {
+            a.forzar = 0f
+            cornisaSola(r, s)
+            a.forzar = 1f
+            val b = AireBotanico.BORDE * 0.5f
+            val caja = Rect(0f, r.top - w * 0.02f, w, r.bottom)
+            listOf(b to 0.35f, 0f to 0.5f, -b to 1f).forEach { (crece, al) ->
+                val pa = MuroEstanteBotanico.parche(w, a, crece) ?: return@forEach
+                clipPath(pa) {
+                    if (al < 1f) {
+                        drawContext.canvas.saveLayer(caja, Paint().apply { alpha = al })
+                        cornisaSola(r, s)
+                        drawContext.canvas.restore()
+                    } else cornisaSola(r, s)
+                }
+            }
+        } finally {
+            a.forzar = -1f
+        }
+    }
+
+    private fun DrawScope.cornisaSola(r: Rect, s: SitioBotanico) {
         val w = size.width; val u = density
         val y0 = r.top
         val sup0 = y0 - w * 0.014f

@@ -129,10 +129,16 @@ internal class AireBotanico(val oscuro: Boolean, val noche: Boolean) {
         else -> null
     }
 
+    /**
+     * Para pintar algo dos veces, fuera y dentro del parche, y recortarlo después por él (la cornisa): 0, todo fuera; 1, todo
+     * dentro; negativo, según dónde esté cada cosa.
+     */
+    var forzar = -1f
+
     /** Cuánto le llega de la luz de día (o del ocaso, o de la luna) a un punto, en anchos del mueble. */
     fun luzDia(x: Float, y: Float): Float {
         val q = parche
-        if (q != null) return dentro(q, x, y, BORDE)
+        if (q != null) return if (forzar >= 0f) forzar else dentro(q, x, y, BORDE)
         if (oscuro) return 0f
         val dx = x - 0.02f; val dy = y * 0.62f
         return exp(-1.35f * sqrt(dx * dx + dy * dy))
@@ -152,7 +158,7 @@ internal class AireBotanico(val oscuro: Boolean, val noche: Boolean) {
          * La luna: el rectángulo de la ventana, alto y estrecho, en la pared entre los ramilletes, el tejado de la caja de Ward y
          * la cornisa; a su izquierda y a su derecha, la noche.
          */
-        val LUNA_Q = floatArrayOf(0.04f, 0.075f, 0.29f, 0.1f, 0.35f, 0.6f, 0.1f, 0.64f)
+        val LUNA_Q = floatArrayOf(0.03f, 0.075f, 0.27f, 0.1f, 0.4f, 0.62f, 0.14f, 0.66f)
         /** El ancho del borde del parche (su penumbra), en anchos: un borde decidido, no un velo. */
         const val BORDE = 0.014f
 
@@ -214,8 +220,15 @@ internal class TonoBotanico(val a: AireBotanico, val k: Float, val sol: Float, v
             if (a.noche) {
                 // El ocaso pinta solo donde cae: el mismo color virado a melocotón y un paso más claro (sin irse al naranja); el
                 // violeta va en las sombras ([s]), no aquí. Las luces recién prendidas, un poco.
-                val l = Color((d.red * 1.14f + 0.07f).coerceAtMost(1f), (d.green * 1.04f + 0.035f).coerceAtMost(1f), (d.blue * 0.96f + 0.02f).coerceAtMost(1f), c.alpha)
-                return mezcla(mezcla(d, mezcla(l, p.OCASO, 0.34f), sol), p.LLAMA, 0.1f * k)
+                // En la madera del mueble, roble dorado y no naranja: sube más el verde y se apaga un poco el color.
+                val l = if (cuerpo) Color((d.red * 1.06f + 0.05f).coerceAtMost(1f), (d.green * 1.09f + 0.05f).coerceAtMost(1f), (d.blue * 0.98f + 0.02f).coerceAtMost(1f), c.alpha)
+                    else Color((d.red * 1.14f + 0.07f).coerceAtMost(1f), (d.green * 1.04f + 0.035f).coerceAtMost(1f), (d.blue * 0.96f + 0.02f).coerceAtMost(1f), c.alpha)
+                var lit = mezcla(l, p.OCASO, if (cuerpo) 0.2f else 0.34f)
+                if (cuerpo) {
+                    val g = lit.red * 0.3f + lit.green * 0.59f + lit.blue * 0.11f
+                    lit = mezcla(lit, Color(g, g, g, lit.alpha), 0.1f)
+                }
+                return mezcla(mezcla(d, lit, sol), p.LLAMA, 0.1f * k)
             }
             // De día: lo de arriba a la izquierda, más claro y tibio; lo lejano, un poco más hondo.
             val luz = (sol - 0.42f)

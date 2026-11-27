@@ -79,8 +79,12 @@ internal object MuroEstanteBotanico {
             val lit0 = s.a.en(q[0] + 0.05f, q[1] + 0.05f, 0f).c(P.SALVIA)
             val lit1 = s.a.en(q[2] - 0.05f, q[3] + 0.05f, 0f).c(P.SALVIA, -0.04f)
             val borde = Brush.linearGradient(listOf(lit0, lit1), Offset(q[0] * w, q[1] * w), Offset(q[2] * w, q[3] * w))
-            parche(w, a, AireBotanico.BORDE * 0.6f)?.let { drawPath(it, borde, alpha = 0.45f) }
-            drawPath(pa, borde)
+            // La penumbra: el borde blando, en cuatro pasos de unos dp.
+            val b = AireBotanico.BORDE
+            parche(w, a, b * 0.9f)?.let { drawPath(it, borde, alpha = 0.28f) }
+            parche(w, a, b * 0.45f)?.let { drawPath(it, borde, alpha = 0.42f) }
+            drawPath(pa, borde, alpha = 0.6f)
+            parche(w, a, -b * 0.45f)?.let { drawPath(it, borde) }
         }
         pinceladas(r, if (a.oscuro) P.NOCHE else P.SALVIA_OSC, 9001, 46, u, 0.1f)
         pinceladas(r, if (a.oscuro) P.NOCHE else mezcla(P.SALVIA, LUZ_MUEBLE, 0.4f), 9002, 22, u, 0.1f)
