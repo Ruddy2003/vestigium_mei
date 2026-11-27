@@ -261,9 +261,11 @@ internal object ParedEstanteDistopia {
             drawRect(lk.b(0.5f), Offset(r.left + 0.01f * w, r.top + r.height * 0.16f), Size(r.width - 0.01f * w, r.height * 0.14f))
             drawRect(lk.s(0.35f), Offset(r.left, r.bottom - r.height * 0.3f), Size(r.width, r.height * 0.3f))
             // La ventanilla con el papel enrollado dentro.
-            val ve = Rect(r.left + r.width * 0.34f, r.top + r.height * 0.3f, r.left + r.width * 0.8f, r.bottom - r.height * 0.3f)
-            drawRoundRect(lk.c(P.HUESO), ve.topLeft, ve.size, CornerRadius(ve.height / 2))
-            drawRoundRect(lk.c(P.ACERO_LUZ), ve.topLeft, ve.size, CornerRadius(ve.height / 2), style = Stroke(0.8f * u))
+            val ve = Rect(r.left + r.width * 0.34f, r.top + r.height * 0.24f, r.left + r.width * 0.8f, r.bottom - r.height * 0.24f)
+            drawRect(lk.c(mezcla(P.CARPETA, P.HUESO, 0.45f)), ve.topLeft, ve.size)
+            drawLine(lk.s(0.4f), Offset(ve.left + ve.width * 0.45f, ve.top), Offset(ve.left + ve.width * 0.55f, ve.bottom), 0.8f * u)
+            drawRect(lk.s(0.35f), ve.topLeft, Size(ve.width, ve.height * 0.25f))
+            drawRect(lk.c(P.ACERO_LUZ), ve.topLeft, ve.size, style = Stroke(0.8f * u))
             // El tope de fieltro, más ancho que el cuerpo, y la tapa pavonada.
             val tope = Rect(r.left + 0.004f * w, r.top - rt * 0.28f, r.left + 0.015f * w, r.bottom + rt * 0.28f)
             drawRoundRect(lk.c(mezcla(P.OLIVA, P.BAQUELITA, 0.55f)), tope.topLeft, tope.size, CornerRadius(tope.width * 0.45f))

@@ -257,22 +257,28 @@ private fun DrawScope.capsulaDistopia(v: Volumen, tono: Color?, medidor: TextMea
         val fleje = Rect(x0 - 0.6f * u, eti.top - 2.2f * u, x0 + an + 0.6f * u, eti.top + 1.2f * u)
         drawRect(Brush.verticalGradient(listOf(l.c(P.ACERO_LUZ), l.c(P.ACERO)), fleje.top, fleje.bottom), fleje.topLeft, fleje.size)
         drawRect(l.s(0.35f), Offset(fleje.left, fleje.bottom), Size(fleje.width, 0.9f * u))
-        // La ventanilla, debajo: el marco de acero y, tras el celuloide, el expediente enrollado (crema, con el canto de la última
-        // hoja en diagonal), un poco teñido por el vidrio.
-        val ve = Rect(cx - an * 0.24f, eti.bottom + 3.2f * u, cx + an * 0.24f, cuerpoR.bottom - 3f * u)
+        // La ventanilla, debajo: el marco de acero y, llenándola de lado a lado, el expediente enrollado (papel manila claro, con
+        // dos o tres vueltas del canto a la vista y la sombra del marco arriba). Sin brillo: el celuloide viejo está mate.
+        val ve = Rect(cx - an * 0.3f, eti.bottom + 3.2f * u, cx + an * 0.3f, cuerpoR.bottom - 3f * u)
         if (ve.height > 6f * u) {
-            val vent = Path().apply { addRoundRect(RoundRect(ve, CornerRadius(ve.width / 2))) }
-            drawPath(vent, l.a.hondo.copy(alpha = 0.85f))
+            val vent = Path().apply { addRoundRect(RoundRect(ve, CornerRadius(minOf(ve.width * 0.3f, 3f * u)))) }
             clipPath(vent) {
-                val rollo = Rect(ve.left + ve.width * 0.1f, ve.top, ve.right - ve.width * 0.1f, ve.bottom)
-                cilindroDistopia(Path().apply { addRect(rollo) }, l.c(mezcla(P.HUESO, P.CARPETA, 0.15f)), l, hacia, 0.3f)
-                val hoja = Path().apply { moveTo(rollo.left, ve.top + ve.height * 0.55f); lineTo(rollo.right, ve.top + ve.height * 0.32f) }
-                drawPath(hoja, l.s(0.4f), style = Stroke(0.9f * u))
-                drawPath(Path().apply { moveTo(rollo.left, ve.top + ve.height * 0.55f + 1f * u); lineTo(rollo.right, ve.top + ve.height * 0.32f + 1f * u) }, l.b(0.4f), style = Stroke(0.6f * u))
-                drawRect(l.c(P.ACERO_LUZ).copy(alpha = 0.16f), ve.topLeft, ve.size)
-                drawRect(l.b(0.75f), Offset(if (hacia < 0f) ve.left + ve.width * 0.18f else ve.right - ve.width * 0.3f, ve.top), Size(ve.width * 0.12f, ve.height))
+                // El rollo: el papel con su volumen (más claro del lado de la luz, más hondo del otro).
+                val papel = l.c(mezcla(P.CARPETA, P.HUESO, 0.45f))
+                val hondo = mezcla(papel, l.s(1f).copy(alpha = 1f), 0.3f)
+                drawRect(Brush.horizontalGradient(if (hacia < 0f) listOf(mezcla(papel, Color.White, 0.08f), papel, hondo) else listOf(hondo, papel, mezcla(papel, Color.White, 0.08f)), ve.left, ve.right), ve.topLeft, ve.size)
+                // Las vueltas del canto: el borde de cada hoja, que baja en diagonal suave, con su sombra debajo y su filo de luz.
+                val vueltas = if (ve.height > 18f * u) 3 else 2
+                for (j in 0 until vueltas) {
+                    val y0 = ve.top + ve.height * (0.3f + 0.24f * j + 0.06f * azar(s, 70 + j))
+                    val caida = ve.height * 0.1f
+                    drawLine(l.s(0.45f), Offset(ve.left, y0), Offset(ve.right, y0 + caida), 1f * u)
+                    drawLine(l.b(0.3f), Offset(ve.left, y0 - 1f * u), Offset(ve.right, y0 + caida - 1f * u), 0.6f * u)
+                }
+                // La sombra que el marco echa arriba, dentro.
+                drawRect(Brush.verticalGradient(listOf(l.s(0.5f), l.s(0f)), ve.top, ve.top + ve.height * 0.2f), ve.topLeft, Size(ve.width, ve.height * 0.2f))
             }
-            drawPath(vent, l.c(mezcla(P.ACERO_LUZ, P.ACERO, 0.3f)), style = Stroke(1.2f * u))
+            drawPath(vent, l.c(mezcla(P.ACERO_LUZ, P.ACERO, 0.3f)), style = Stroke(1.3f * u))
         }
         if (l.k > 0.06f) drawPath(bordeDistopia(cuerpo, -hacia * 1.4f * u, 0f), l.filo(0.75f))
         if (l.luna > 0.05f) drawPath(bordeDistopia(cuerpo, 1.2f * u, 0f), l.frio(0.55f))
