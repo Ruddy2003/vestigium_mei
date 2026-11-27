@@ -19,14 +19,16 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
  * Lo que hay en los huecos libres de las repisas del estante de Navidad ([MuebleEstanteNavidad]): grupos de dos o tres cosas de la
  * casa, solapadas y distintas de un hueco a otro. La caja de esferas de vidrio con la tapa apoyada y el carrete de cinta; la jarra
  * de loza con ramas y las naranjas con clavos; los ovillos de lana con las agujas; el fajo de cartas atado con cinta y las piñas;
- * los platos buenos de canto con el paño doblado; los mitones de lana colgados de un clavito.
- * Donde hay sitio (nunca en dos repisas seguidas ni en la primera), la palmatoria con su vela: de noche, la luz de en medio.
+ * los platos buenos de canto con el paño doblado; los mitones de lana colgados de un clavito; la botella de licor con su copita;
+ * la tetera esmaltada con su taza.
+ * Donde hay sitio (nunca en dos repisas seguidas ni en la primera), la palmatoria con su vela, al fondo del hueco junto
+ * al costado: de noche, la luz de en medio.
  */
 internal object HuecosEstanteNavidad {
     private val P = PaletaNavidad
 
     /** Con qué grupo empieza el hueco de cada repisa (así no se repiten de una repisa a la siguiente). */
-    private val ORDEN = intArrayOf(0, 5, 2, 4, 1, 3)
+    private val ORDEN = intArrayOf(0, 3, 6, 1, 4, 7, 2, 5)
 
     /** La luz de lo que está en [p]: la del momento y, de noche, desde la luz que más alumbra. */
     private fun luzEn(p: Offset, a: AireNavidad, cerca: (Offset) -> Float, xLuz: Float): LuzNavidad {
@@ -54,31 +56,35 @@ internal object HuecosEstanteNavidad {
         val piso = r.bottom - w * 0.008f
         val alto = r.height
         var x = x0
-        if (xVela >= 0f) {
-            val lv = luzEn(Offset(xVela, piso - alto * 0.3f), a, cerca, xVela)
-            palmatoriaNavidad(Offset(xVela, piso), platillo(w), vela(alto), LuzNavidad(a, maxOf(lv.k, if (a.oscuro) 0.9f else 0f), 0f, null, 0f, lv.hacia), 9800 + k)
-            x = xVela + w * 0.075f
-        }
-        // Uno o dos grupos, según el sitio; cambia de un hueco a otro.
+        // La vela va al fondo, junto al costado: lo demás se acomoda delante de ella.
+        val fin = if (xVela >= 0f) xVela - w * 0.06f else x1
+        // Uno, dos o tres grupos, según el sitio; cada repisa empieza tres grupos más allá que la de arriba, así que dos repisas
+        // seguidas nunca repiten grupo.
         var g = ORDEN[Math.floorMod(k, ORDEN.size)]
         var vueltas = 0
-        while (x1 - x > w * 0.12f && vueltas < 3) {
+        while (fin - x > w * 0.12f && vueltas < 3) {
             val usado = when (g) {
-                0 -> esferas(x, x1, piso, alto, a, cerca, xVela)
-                1 -> jarraConRamas(x, x1, piso, alto, a, cerca, xVela)
-                2 -> labor(x, x1, piso, alto, a, cerca, xVela)
-                3 -> cartas(x, x1, piso, alto, a, cerca, xVela)
-                4 -> platos(x, x1, piso, alto, a, cerca, xVela)
-                else -> mitones(x, x1, piso, alto, a, cerca, xVela)
+                0 -> esferas(x, fin, piso, alto, a, cerca, xVela)
+                1 -> jarraConRamas(x, fin, piso, alto, a, cerca, xVela)
+                2 -> labor(x, fin, piso, alto, a, cerca, xVela)
+                3 -> cartas(x, fin, piso, alto, a, cerca, xVela)
+                4 -> platos(x, fin, piso, alto, a, cerca, xVela)
+                5 -> mitones(x, fin, piso, alto, a, cerca, xVela)
+                6 -> botella(x, fin, piso, alto, a, cerca, xVela)
+                else -> tetera(x, fin, piso, alto, a, cerca, xVela)
             }
             x += usado + w * 0.03f
-            g = (g + 2) % 6
+            g = (g + 1) % 8
             vueltas++
         }
         // En lo que sobra, una piña suelta.
-        if (x1 - x > w * 0.05f) {
+        if (fin - x > w * 0.05f) {
             val c = Offset(x + w * 0.025f, piso - w * 0.024f)
             pinaNavidad(c, w * 0.02f, w * 0.026f, 70f, luzEn(c, a, cerca, xVela))
+        }
+        if (xVela >= 0f) {
+            val lv = luzEn(Offset(xVela, piso - alto * 0.3f), a, cerca, xVela)
+            palmatoriaNavidad(Offset(xVela, piso), platillo(w), vela(alto), LuzNavidad(a, maxOf(lv.k, if (a.oscuro) 0.9f else 0f), 0f, null, 0f, lv.hacia), 9800 + k)
         }
     }
 
@@ -200,10 +206,13 @@ internal object HuecosEstanteNavidad {
             drawPath(poligonoNavidad(frente.left, frente.top + w * 0.008f, frente.right, frente.top + w * 0.008f, frente.center.x, frente.top + frente.height * 0.32f), l.sombra(0.12f))
             drawLine(l.c(P.CARTULINA_OSC), Offset(frente.left, frente.top + w * 0.008f), Offset(frente.center.x, frente.top + frente.height * 0.32f), 0.8f * u)
             drawLine(l.c(P.CARTULINA_OSC), Offset(frente.right, frente.top + w * 0.008f), Offset(frente.center.x, frente.top + frente.height * 0.32f), 0.8f * u)
-            // La cinta roja en cruz con su lazo.
-            drawRect(l.c(P.CARMIN), Offset(frente.left, frente.top + frente.height * 0.55f), Size(frente.width, w * 0.012f))
-            drawRect(l.c(P.CARMIN), Offset(frente.center.x - w * 0.006f, frente.top), Size(w * 0.012f, frente.height))
-            lazoNavidad(Offset(frente.center.x, frente.top + frente.height * 0.55f + w * 0.006f), w * 0.05f, P.CARMIN, l, 0.6f)
+            // El cordel crudo que lo ata, descentrado (dos vueltas a lo alto, cerca del canto, y una a lo ancho, abajo), con su nudo y
+            // una ramita de acebo metida debajo.
+            val cx = frente.left + frente.width * 0.3f
+            listOf(0f, w * 0.006f).forEach { d -> drawLine(l.c(P.CARTULINA, -0.12f), Offset(cx + d, frente.top), Offset(cx + d, frente.bottom), 1.4f * u) }
+            drawLine(l.c(P.CARTULINA, -0.12f), Offset(frente.left, frente.top + frente.height * 0.7f), Offset(frente.right, frente.top + frente.height * 0.72f), 1.4f * u)
+            aceboNavidad(Offset(cx + w * 0.004f, frente.top + frente.height * 0.7f), w * 0.05f, -20f, l)
+            drawCircle(l.c(P.CARTULINA_OSC), 2.2f * u, Offset(cx + w * 0.003f, frente.top + frente.height * 0.71f))
             drawRect(l.sombra(0.2f), Offset(frente.right - frente.width * 0.18f, frente.top), Size(frente.width * 0.18f, frente.height))
             drawRect(l.claro(0.3f), frente.topLeft, Size(1.2f * u, frente.height))
         }
@@ -303,6 +312,121 @@ internal object HuecosEstanteNavidad {
             return ancho * 2.4f + w * 0.03f
         }
         return ancho * 2.2f
+    }
+
+    /**
+     * La botella de licor de guindas hecho en casa, alta, de vidrio verde oscuro con el corcho y una cinta roja al cuello (sin
+     * etiqueta), y la copita delante, con su reflejo.
+     */
+    private fun DrawScope.botella(x0: Float, x1: Float, piso: Float, alto: Float, a: AireNavidad, cerca: (Offset) -> Float, xLuz: Float): Float {
+        val w = size.width; val u = density
+        val ancho = minOf(w * 0.075f, (x1 - x0) * 0.45f)
+        val cx = x0 + ancho * 0.6f
+        val h = alto * 0.8f
+        val l = luzEn(Offset(cx, piso - h * 0.4f), a, cerca, xLuz)
+        val hombro = piso - h * 0.55f; val cuello = piso - h * 0.82f
+        val vidrio = Path().apply {
+            moveTo(cx - ancho / 2, piso)
+            lineTo(cx - ancho / 2, hombro)
+            cubicTo(cx - ancho / 2, hombro - h * 0.12f, cx - ancho * 0.16f, cuello + h * 0.06f, cx - ancho * 0.15f, cuello)
+            lineTo(cx - ancho * 0.15f, piso - h)
+            lineTo(cx + ancho * 0.15f, piso - h)
+            lineTo(cx + ancho * 0.15f, cuello)
+            cubicTo(cx + ancho * 0.16f, cuello + h * 0.06f, cx + ancho / 2, hombro - h * 0.12f, cx + ancho / 2, hombro)
+            lineTo(cx + ancho / 2, piso); close()
+        }
+        drawPath(corridoNavidad(vidrio, -l.hacia * w * 0.014f, w * 0.006f), l.sombra(0.3f))
+        drawOval(l.sombra(0.45f), Offset(cx - ancho * 0.6f, piso - w * 0.008f), Size(ancho * 1.25f, w * 0.016f))
+        drawPath(vidrio, l.c(Color(0xFF243E2A)))
+        clipPath(vidrio) {
+            // El licor de dentro, más rojo hasta el hombro, y el vidrio con su luz y su sombra.
+            drawRect(l.c(Color(0xFF5A1620)), Offset(cx - ancho, hombro + h * 0.05f), Size(ancho * 2f, piso - hombro))
+            drawRect(l.c(Color(0xFF3E6A48)).copy(alpha = 0.5f), Offset(cx + l.hacia * ancho * 0.3f - ancho * 0.12f, piso - h), Size(ancho * 0.24f, h))
+            drawRect(l.sombra(0.3f), Offset(cx - l.hacia * ancho * 0.35f - ancho * 0.15f, piso - h), Size(ancho * 0.3f, h))
+            drawRect(l.brillo(0.75f), Offset(cx + l.hacia * ancho * 0.28f - 1f * u, hombro - h * 0.05f), Size(1.6f * u, h * 0.5f))
+        }
+        // El corcho y la cinta roja anudada al cuello.
+        drawRect(l.c(P.PINO), Offset(cx - ancho * 0.13f, piso - h - h * 0.06f), Size(ancho * 0.26f, h * 0.08f))
+        drawRect(l.c(P.CARMIN), Offset(cx - ancho * 0.17f, cuello + h * 0.02f), Size(ancho * 0.34f, h * 0.035f))
+        lazoNavidad(Offset(cx + ancho * 0.1f, cuello + h * 0.04f), ancho * 0.6f, P.CARMIN, l, 0.8f)
+        // La copita, delante a la derecha.
+        val c = Offset(cx + ancho * 0.85f, piso)
+        if (x1 - x0 > ancho * 1.5f + w * 0.03f) {
+            val lc = luzEn(Offset(c.x, piso - w * 0.03f), a, cerca, xLuz)
+            val cw = w * 0.034f
+            drawOval(lc.sombra(0.4f), Offset(c.x - cw * 0.6f, piso - w * 0.005f), Size(cw * 1.3f, w * 0.01f))
+            drawLine(lc.c(P.VIDRIO_PLATA, -0.2f), Offset(c.x, piso - w * 0.004f), Offset(c.x, piso - w * 0.022f), 1.4f * u)
+            drawOval(lc.c(P.VIDRIO_PLATA, -0.1f).copy(alpha = 0.7f), Offset(c.x - cw * 0.4f, piso - w * 0.008f), Size(cw * 0.8f, w * 0.006f))
+            val copa = Path().apply {
+                moveTo(c.x - cw / 2, piso - w * 0.05f); lineTo(c.x + cw / 2, piso - w * 0.05f)
+                quadraticTo(c.x + cw * 0.45f, piso - w * 0.022f, c.x, piso - w * 0.022f)
+                quadraticTo(c.x - cw * 0.45f, piso - w * 0.022f, c.x - cw / 2, piso - w * 0.05f); close()
+            }
+            drawPath(copa, lc.c(Color(0xFF7A2030)))
+            drawPath(copa, lc.c(P.VIDRIO_PLATA, 0.1f).copy(alpha = 0.7f), style = Stroke(1f * u))
+            drawLine(lc.brillo(0.7f), Offset(c.x - cw * 0.3f, piso - w * 0.047f), Offset(c.x - cw * 0.15f, piso - w * 0.03f), 1f * u)
+            return ancho * 1.5f + w * 0.03f
+        }
+        return ancho * 1.1f
+    }
+
+    /** La tetera esmaltada de rojo, con su borde y su asa negros y el pico, y la taza de loza blanca con su plato delante. */
+    private fun DrawScope.tetera(x0: Float, x1: Float, piso: Float, alto: Float, a: AireNavidad, cerca: (Offset) -> Float, xLuz: Float): Float {
+        val w = size.width; val u = density
+        val ancho = minOf(w * 0.15f, (x1 - x0) * 0.7f)
+        val cx = x0 + ancho * 0.55f
+        val h = ancho * 0.72f
+        val l = luzEn(Offset(cx, piso - h * 0.5f), a, cerca, xLuz)
+        val esmalte = Color(0xFFB23126); val filo = Color(0xFF1E1A1C)
+        val cuerpo = Path().apply {
+            moveTo(cx - ancho * 0.36f, piso)
+            cubicTo(cx - ancho * 0.52f, piso - h * 0.3f, cx - ancho * 0.44f, piso - h * 0.78f, cx - ancho * 0.2f, piso - h * 0.82f)
+            lineTo(cx + ancho * 0.2f, piso - h * 0.82f)
+            cubicTo(cx + ancho * 0.44f, piso - h * 0.78f, cx + ancho * 0.52f, piso - h * 0.3f, cx + ancho * 0.36f, piso)
+            close()
+        }
+        drawOval(l.sombra(0.45f), Offset(cx - ancho * 0.42f, piso - w * 0.008f), Size(ancho * 0.95f, w * 0.016f))
+        drawPath(corridoNavidad(cuerpo, -l.hacia * w * 0.018f, w * 0.006f), l.sombra(0.3f))
+        // El asa de atrás (a la izquierda) y el pico (a la derecha).
+        drawArc(l.c(filo), 100f, 160f, false, Offset(cx - ancho * 0.62f, piso - h * 0.75f), Size(ancho * 0.36f, h * 0.55f), style = Stroke(ancho * 0.05f))
+        val pico = Path().apply {
+            moveTo(cx + ancho * 0.34f, piso - h * 0.3f); quadraticTo(cx + ancho * 0.56f, piso - h * 0.42f, cx + ancho * 0.64f, piso - h * 0.7f)
+            lineTo(cx + ancho * 0.58f, piso - h * 0.72f); quadraticTo(cx + ancho * 0.5f, piso - h * 0.5f, cx + ancho * 0.3f, piso - h * 0.48f); close()
+        }
+        drawPath(pico, l.c(esmalte, -0.1f))
+        drawPath(cuerpo, l.c(esmalte))
+        clipPath(cuerpo) {
+            drawRect(l.claro(0.3f), Offset(cx - ancho * 0.45f, piso - h), Size(ancho * 0.16f, h))
+            drawRect(l.sombra(0.3f), Offset(cx + ancho * 0.18f, piso - h), Size(ancho * 0.3f, h))
+            drawOval(l.brillo(0.8f), Offset(cx - ancho * 0.25f, piso - h * 0.62f), Size(ancho * 0.06f, h * 0.22f))
+            // Una saltadura del esmalte, cerca del pie, que deja ver el hierro.
+            drawOval(l.c(filo), Offset(cx + ancho * 0.06f, piso - h * 0.16f), Size(ancho * 0.06f, h * 0.05f))
+        }
+        drawLine(l.c(filo), Offset(cx - ancho * 0.36f, piso - 0.6f * u), Offset(cx + ancho * 0.36f, piso - 0.6f * u), 1.6f * u)
+        // La tapa con su pomo.
+        drawOval(l.c(filo), Offset(cx - ancho * 0.22f, piso - h * 0.88f), Size(ancho * 0.44f, h * 0.1f))
+        drawOval(l.c(esmalte), Offset(cx - ancho * 0.18f, piso - h * 0.92f), Size(ancho * 0.36f, h * 0.08f))
+        drawCircle(l.c(filo), ancho * 0.045f, Offset(cx, piso - h * 0.95f))
+        // La taza con su plato, delante a la derecha.
+        if (x1 - x0 > ancho * 1.35f + w * 0.03f) {
+            val tc = Offset(cx + ancho * 0.66f, piso)
+            val lt = luzEn(Offset(tc.x, piso - w * 0.02f), a, cerca, xLuz)
+            val tw = w * 0.055f
+            drawOval(lt.sombra(0.4f), Offset(tc.x - tw * 0.75f, piso - w * 0.006f), Size(tw * 1.6f, w * 0.012f))
+            drawOval(lt.c(P.LOZA, -0.06f), Offset(tc.x - tw * 0.75f, piso - w * 0.01f), Size(tw * 1.5f, w * 0.01f))
+            val taza = Path().apply {
+                moveTo(tc.x - tw / 2, piso - w * 0.042f); lineTo(tc.x + tw / 2, piso - w * 0.042f)
+                quadraticTo(tc.x + tw * 0.48f, piso - w * 0.008f, tc.x, piso - w * 0.008f)
+                quadraticTo(tc.x - tw * 0.48f, piso - w * 0.008f, tc.x - tw / 2, piso - w * 0.042f); close()
+            }
+            drawArc(lt.c(P.LOZA, -0.1f), -70f, 140f, false, Offset(tc.x + tw * 0.36f, piso - w * 0.038f), Size(tw * 0.3f, w * 0.022f), style = Stroke(1.6f * u))
+            drawPath(taza, lt.c(P.LOZA))
+            drawLine(lt.c(P.FILETE), Offset(tc.x - tw * 0.48f, piso - w * 0.035f), Offset(tc.x + tw * 0.48f, piso - w * 0.035f), 1.4f * u)
+            drawOval(lt.c(P.CORTEZA, -0.1f), Offset(tc.x - tw * 0.46f, piso - w * 0.046f), Size(tw * 0.92f, w * 0.008f))
+            drawPath(taza, lt.sombra(0.2f), style = Stroke(0.8f * u))
+            return ancho * 1.35f + w * 0.03f
+        }
+        return ancho * 1.05f
     }
 
     /** La llama de la vela de un hueco, encima de todo (de noche y al ocaso de los Sueños), con su halo en el fondo del hueco. */

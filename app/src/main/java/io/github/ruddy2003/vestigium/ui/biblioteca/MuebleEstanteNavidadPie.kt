@@ -20,7 +20,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
  * la alfombra trenzada de trapo (anillos rojos, verdes y crudos); a la izquierda, la esquina de la cocina de hierro con su tapa de
  * fuegos, su barra de latón, la puerta del fogón con su rejilla (de noche, la lumbre que alumbra el pie y las repisas de abajo) y
  * el hervidor de cobre echando vapor; en medio, el cesto de mimbre del Ideario, ahora lleno de leña; a la derecha, el taburete de
- * pino con la labor: el calcetín a medio tejer en sus agujas y los ovillos.
+ * pino con la labor: la bufanda a medio tejer en su aguja, el hilo al ovillo y la otra aguja clavada en él.
  */
 internal object PieEstanteNavidad {
     private val P = PaletaNavidad
@@ -58,7 +58,7 @@ internal object PieEstanteNavidad {
         if (a.oscuro) {
             val fu = Offset(w * MuebleEstanteNavidad.LUMBRE_X, b.top + b.height * MuebleEstanteNavidad.LUMBRE_Y)
             val f = if (a.noche) 0.55f else 1f
-            clipRect(0f, suelo, w * 0.75f, h) { mancha(Offset(fu.x + w * 0.06f, h), w * 0.5f, P.LUMBRE.copy(alpha = 0.22f * f)) }
+            clipRect(0f, suelo, w * 0.6f, h) { mancha(Offset(fu.x + w * 0.05f, h), w * 0.38f, P.LUMBRE.copy(alpha = 0.2f * f)) }
         }
     }
 
@@ -352,35 +352,51 @@ internal object PieEstanteNavidad {
         drawRect(l.c(P.PINO), asiento.topLeft, asiento.size)
         drawRect(l.sombra(0.3f), Offset(asiento.left, asiento.bottom - 1.4f * u), Size(asiento.width, 1.4f * u))
         drawRect(l.brillo(0.5f), Offset(asiento.left, asiento.top), Size(asiento.width, 1f * u))
-        // La labor: el calcetín rojo a medio tejer, colgando del borde, con el puño crema y las agujas cruzadas arriba.
-        val ag = Offset(asiento.left + w * 0.09f, asiento.top - w * 0.012f)
-        val calc = Path().apply {
-            moveTo(ag.x - w * 0.045f, ag.y)
-            lineTo(ag.x + w * 0.04f, ag.y)
-            lineTo(ag.x + w * 0.05f, asiento.bottom + w * 0.06f)
-            quadraticTo(ag.x, asiento.bottom + w * 0.075f, ag.x - w * 0.035f, asiento.bottom + w * 0.065f)
+        // La labor: la bufanda a medio tejer, crema con dos rayas rojas, colgando del borde del asiento desde su aguja (tumbada
+        // encima, con sus dos bolitas), y el hilo que va al ovillo rojo, donde está clavada la otra aguja.
+        val ag0 = Offset(asiento.left + w * 0.015f, asiento.top - w * 0.006f)
+        val ag1 = Offset(asiento.left + w * 0.17f, asiento.top - w * 0.012f)
+        val tejido = Rect(asiento.left + w * 0.03f, asiento.top - w * 0.008f, asiento.left + w * 0.13f, asiento.bottom + w * 0.075f)
+        val tela = Path().apply {
+            moveTo(tejido.left, tejido.top); lineTo(tejido.right, tejido.top)
+            lineTo(tejido.right + w * 0.004f, tejido.bottom - w * 0.006f)
+            quadraticTo(tejido.center.x, tejido.bottom + w * 0.008f, tejido.left - w * 0.003f, tejido.bottom)
             close()
         }
-        drawPath(corridoNavidad(calc, w * 0.008f, w * 0.006f), a.sombra(0.35f))
-        drawPath(calc, l.c(P.LANA_ROJA))
-        clipPath(calc) {
-            val pts = Path()
-            var y = ag.y + w * 0.022f
+        drawPath(corridoNavidad(tela, w * 0.008f, w * 0.006f), a.sombra(0.35f))
+        drawPath(tela, l.c(P.LANA_CREMA))
+        clipPath(tela) {
+            listOf(0.42f, 0.62f).forEach { f -> drawRect(l.c(P.LANA_ROJA), Offset(tejido.left - w * 0.01f, tejido.top + tejido.height * f), Size(tejido.width + w * 0.02f, tejido.height * 0.1f)) }
+            // El punto: columnas de uves, bien marcadas, en el tono hondo de cada franja.
+            val punto = Path()
+            var yy = tejido.top + w * 0.006f
             var j = 0
-            while (y < asiento.bottom + w * 0.08f && j < 40) {
-                var x = ag.x - w * 0.05f
-                while (x < ag.x + w * 0.06f) { pts.moveTo(x, y); pts.lineTo(x + w * 0.004f, y + w * 0.005f); pts.lineTo(x + w * 0.008f, y); x += w * 0.009f }
-                y += w * 0.008f; j++
+            while (yy < tejido.bottom + w * 0.01f && j < 40) {
+                var xx = tejido.left + w * 0.002f
+                while (xx < tejido.right) { punto.moveTo(xx, yy); punto.lineTo(xx + w * 0.005f, yy + w * 0.006f); punto.lineTo(xx + w * 0.01f, yy); xx += w * 0.011f }
+                yy += w * 0.0065f; j++
             }
-            drawPath(pts, l.c(mezcla(P.LANA_ROJA, P.TINTA, 0.35f)).copy(alpha = 0.6f), style = Stroke(0.7f * u))
-            drawRect(l.c(P.LANA_CREMA), Offset(ag.x - w * 0.05f, ag.y), Size(w * 0.1f, w * 0.022f))
-            drawRect(l.sombra(0.25f), Offset(ag.x + w * 0.015f, ag.y), Size(w * 0.04f, w * 0.12f))
+            drawPath(punto, l.sombra(0.35f), style = Stroke(0.8f * u))
+            drawRect(l.sombra(0.25f), Offset(tejido.right - tejido.width * 0.3f, tejido.top), Size(tejido.width * 0.3f, tejido.height + w * 0.02f))
+            drawRect(l.claro(0.3f), Offset(tejido.left, tejido.top), Size(tejido.width * 0.15f, tejido.height + w * 0.02f))
+            drawRect(a.sombra(0.3f), Offset(tejido.left - w * 0.01f, asiento.top - w * 0.002f), Size(tejido.width + w * 0.02f, w * 0.006f))
         }
-        drawLine(l.c(P.VIDRIO_PLATA, -0.1f), Offset(ag.x - w * 0.07f, ag.y + w * 0.012f), Offset(ag.x + w * 0.07f, ag.y - w * 0.01f), 1.8f * u, StrokeCap.Round)
-        drawLine(l.c(P.VIDRIO_PLATA, -0.2f), Offset(ag.x - w * 0.06f, ag.y - w * 0.012f), Offset(ag.x + w * 0.075f, ag.y + w * 0.006f), 1.8f * u, StrokeCap.Round)
+        // La aguja con los puntos montados, y sus bolitas.
+        drawLine(a.sombra(0.35f), ag0 + Offset(w * 0.004f, w * 0.004f), ag1 + Offset(w * 0.004f, w * 0.004f), 2f * u)
+        drawLine(l.c(P.VIDRIO_PLATA, -0.1f), ag0, ag1, 2f * u, StrokeCap.Round)
+        drawLine(l.brillo(0.6f), ag0 - Offset(0f, 0.7f * u), ag1 - Offset(0f, 0.7f * u), 0.7f * u)
+        drawCircle(l.c(P.LANA_ROJA), 2.8f * u, ag1)
+        drawCircle(l.brillo(0.6f), 0.9f * u, ag1 - Offset(0.8f * u, 0.8f * u))
+        // El hilo que sube del tejido al ovillo.
+        val bola = Offset(asiento.left + w * 0.2f, asiento.top - w * 0.03f)
+        drawPath(Path().apply { moveTo(tejido.right, tejido.top + w * 0.004f); quadraticTo(tejido.right + w * 0.04f, asiento.top + w * 0.01f, bola.x - w * 0.02f, bola.y + w * 0.02f) },
+            l.c(P.LANA_ROJA), style = Stroke(1.1f * u, cap = StrokeCap.Round))
+        // La otra aguja, clavada en el ovillo.
+        drawLine(l.c(P.VIDRIO_PLATA, -0.15f), bola + Offset(-w * 0.005f, w * 0.005f), bola + Offset(-w * 0.03f, -w * 0.065f), 1.8f * u, StrokeCap.Round)
+        drawCircle(l.c(P.LANA_ROJA), 2.6f * u, bola + Offset(-w * 0.03f, -w * 0.065f))
         // Los ovillos en el asiento.
-        ovilloNavidad(Offset(asiento.left + w * 0.175f, asiento.top - w * 0.03f), w * 0.032f, P.LANA_ROJA, l, 9960)
-        ovilloNavidad(Offset(asiento.left + w * 0.235f, asiento.top - w * 0.024f), w * 0.026f, P.LANA_CREMA, l, 9961)
+        ovilloNavidad(Offset(asiento.left + w * 0.2f, asiento.top - w * 0.03f), w * 0.032f, P.LANA_ROJA, l, 9960)
+        ovilloNavidad(Offset(asiento.left + w * 0.26f, asiento.top - w * 0.024f), w * 0.026f, P.LANA_CREMA, l, 9961)
         if (a.oscuro && k > 0.2f) drawLine(a.filo(0.4f * k), Offset(asiento.left, asiento.top), Offset(asiento.right, asiento.top), 1.2f * u)
     }
 }

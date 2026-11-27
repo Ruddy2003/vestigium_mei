@@ -95,14 +95,12 @@ internal object PaletaNavidad {
     val CIELO_NOCHE = Color(0xFF152A40)
     val CIELO_NOCHE_ALTO = Color(0xFF0A1528)
     val NIEVE_NOCHE = Color(0xFF51677F)
-    /** La noche de la cocina (la del Ideario) y la de los Sueños; lo hondo del almagre de noche y en los Sueños. */
+    /** La noche de la cocina (la del Ideario) y la de los Sueños; lo hondo del almagre de noche. */
     val NOCHE = Color(0xFF0D1C20)
-    val NOCHE_SUENOS = Color(0xFF0E1A30)
-    val VINO = Color(0xFF250A0B)
-    val HONDO_SUENOS = Color(0xFF260C18)
-    /** Lo hondo del salvia de los casilleros de noche: verde de botella (en los Sueños, azul de lago). */
-    val FONDO_NOCHE = Color(0xFF0A1D17)
-    val FONDO_SUENOS = Color(0xFF0B1A28)
+    val NOCHE_SUENOS = Color(0xFF0A1A26)
+    val VINO = Color(0xFF1A0709)
+    /** El filo frío que deja la nieve de la ventana de noche. */
+    val NIEVE_FILO = Color(0xFF8DB2BC)
     /** La sombra del ocaso de los Sueños claros (violeta), su luz y el sol de la tarde. */
     val SOMBRA_OCASO = Color(0xFF402A62)
     val OCASO = Color(0xFFF2B286)
@@ -125,29 +123,23 @@ internal object PaletaNavidad {
 /**
  * El aire del momento en el estante de Navidad: de día (el sol de la tarde que entra por la ventana), de noche (el modo oscuro:
  * arden la vela de la cornisa, la de un hueco y la lumbre de la cocina de hierro) y en los Sueños ([noche]: el ocaso en claro, la
- * luna en oscuro). De noche cada color va de su hondo (oscuro, de su tono, con el aire de la noche) a su color según cuánta luz le
- * llega ([luz], de 0 a 1), con el calor de la llama encima. Arriba la noche es la verde azulada de la cocina; en el cuerpo de la
- * alacena y en el suelo ([cuerpo]), lo que no se alumbra se hunde en un vino de almagre (en los Sueños, en un ciruela hondo); en el
- * salvia de los casilleros ([fondo]), en verde de botella.
+ * luna en oscuro). De noche es la misma cocina que el Ideario a la misma hora: lo que no alumbra una llama se hunde en su verde
+ * azulado hondo (la receta del Ideario: el color propio mezclado con esa noche, menos cuanto más luz le llega, y el calor de la
+ * llama encima); la madera roja de la alacena ([madera]) se hunde en un vino muy oscuro, pero sus sombras y sus cantos fríos son de
+ * ese verde azulado. En los Sueños oscuros, lo mismo hacia el azul verdoso de la casa con luna.
  */
-internal class AireNavidad(val oscuro: Boolean, val noche: Boolean, val cuerpo: Boolean = false, val fondo: Boolean = false) {
+internal class AireNavidad(val oscuro: Boolean, val noche: Boolean, val cuerpo: Boolean = false, val fondo: Boolean = false, val madera: Boolean = false) {
     private val p = PaletaNavidad
     /** Si arden las luces (de noche siempre; en los Sueños claros, recién prendidas). */
     val lumbre: Boolean get() = oscuro || noche
+    /** La noche de la casa: la verde azulada del Ideario (en los Sueños, la azul verdosa de la luna). */
+    val nocheCasa: Color get() = if (noche) p.NOCHE_SUENOS else p.NOCHE
     /** El aire en que se hunde lo que no se alumbra. */
     val hondo: Color get() = when {
-        oscuro && fondo -> if (noche) p.FONDO_SUENOS else p.FONDO_NOCHE
-        oscuro && cuerpo -> if (noche) p.HONDO_SUENOS else p.VINO
-        oscuro -> if (noche) p.NOCHE_SUENOS else p.NOCHE
+        oscuro && madera -> if (noche) mezcla(p.VINO, p.NOCHE_SUENOS, 0.75f) else p.VINO
+        oscuro -> nocheCasa
         noche -> p.SOMBRA_OCASO
         else -> sombraMueble(1f)
-    }
-
-    /** El color propio de algo, hundido: oscuro, algo de su tono, con el aire de la noche. */
-    fun hundido(c: Color): Color {
-        val n = hondo
-        val f = if (cuerpo) 0.1f else 0.12f
-        return Color(c.red * f + n.red * 0.85f, c.green * f + n.green * 0.85f, c.blue * f + n.blue * 0.85f, c.alpha)
     }
 
     /** El color de algo a la luz de la vela: alumbra en naranja, así que el azul y el verde bajan más que el rojo. */
@@ -158,20 +150,18 @@ internal class AireNavidad(val oscuro: Boolean, val noche: Boolean, val cuerpo: 
         if (cuerpo) Color(c.red * 0.8f, c.green * 0.74f, c.blue * 0.76f, c.alpha)
         else Color(c.red * 0.85f, c.green * 0.78f, c.blue * 0.74f, c.alpha)
 
-    /** Cerca de la llama, lo claro se vuelve ámbar (el crema pasa a miel, no a pardo). */
-    private fun ambar(c: Color, k: Float): Color {
-        val v = aLaLlama(c)
-        val l = c.red * 0.3f + c.green * 0.59f + c.blue * 0.11f
-        val tono = Color((l * 1.5f).coerceAtMost(1f), (l * 1.08f).coerceAtMost(1f), l * 0.55f, c.alpha)
-        return mezcla(mezcla(c, v, 0.8f), tono, (if (cuerpo) 0.26f else 0.45f) * k)
-    }
-
+    /**
+     * De noche: el color propio hundido en [hondo] (casi del todo lejos de la luz) y, cuanto más cerca de la llama, más su color,
+     * virado a la llama, con el calor encima. En el cuerpo de la alacena la luz cae algo más deprisa, para que entre una llama y otra
+     * se hunda de verdad.
+     */
     fun luz(c: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) mezcla(alOcaso(c), p.LLAMA, 0.1f * k) else c
-        // En el cuerpo la luz cae más deprisa: lo de en medio, entre una llama y otra, se hunde de verdad.
-        val e = if (cuerpo) 2.0 else 1.35
-        return mezcla(mezcla(hundido(c), ambar(c, k), (1.1f * Math.pow(k.toDouble(), e).toFloat()).coerceAtMost(0.94f)), p.LLAMA, 0.12f * k)
+        val f = Math.pow(k.toDouble(), if (madera) 1.75 else if (cuerpo) 1.35 else 1.0).toFloat()
+        val base = mezcla(c, hondo, (0.9f - 0.74f * f).coerceIn(0.12f, 0.92f))
+        val caliente = mezcla(base, aLaLlama(base), 0.55f * f)
+        return mezcla(caliente, p.LLAMA, 0.15f * f)
     }
 
     /** De día, más claro (positivo) o más hondo (negativo); de noche, como [luz]. */
@@ -183,17 +173,16 @@ internal class AireNavidad(val oscuro: Boolean, val noche: Boolean, val cuerpo: 
 
     /**
      * Lo que toca la mancha de la ventana ([f], de 0 a 1): [c] es el material y [base], su color sin esa luz. De día, el sol de la
-     * tarde, cálido; al ocaso, el melocotón; con la luna, el material en un plata frío. Es el color de la superficie bajo esa luz,
-     * opaco: no un velo encima.
+     * tarde, cálido; al ocaso, el melocotón; con la luna, el mismo material virado al frío y un paso más claro. Es el color de la
+     * superficie bajo esa luz, opaco: no un velo encima.
      */
     fun sol(c: Color, base: Color, f: Float): Color {
         val k = f.coerceIn(0f, 1f)
         return when {
             oscuro -> {
-                val l = c.red * 0.3f + c.green * 0.59f + c.blue * 0.11f
-                val g = mezcla(c, Color(l, l, l), 0.55f)
-                val q = 0.36f * k
-                Color((base.red + g.red * 0.4f * q).coerceAtMost(1f), (base.green + g.green * 0.56f * q).coerceAtMost(1f), (base.blue + (g.blue * 0.95f + 0.1f) * q).coerceAtMost(1f), c.alpha)
+                // La luna: el color de lo que toca, virado al azul verdoso y un paso más claro (sin irse al blanco).
+                val frio = Color((base.red * 1.15f + 0.03f).coerceAtMost(1f), (base.green * 1.3f + 0.06f).coerceAtMost(1f), (base.blue * 1.45f + 0.09f).coerceAtMost(1f), c.alpha)
+                mezcla(base, frio, k)
             }
             noche -> {
                 val l = Color((base.red * 1.2f + 0.06f).coerceAtMost(1f), (base.green * 1.1f + 0.05f).coerceAtMost(1f), (base.blue * 1.02f + 0.04f).coerceAtMost(1f), c.alpha)
@@ -212,9 +201,9 @@ internal class AireNavidad(val oscuro: Boolean, val noche: Boolean, val cuerpo: 
         return if (lit > 0f && m != null) sol(c, base, m.fuerza * lit) else base
     }
 
-    /** La sombra: de día, violeta hondo; al ocaso, violeta; de noche, el aire hondo. */
+    /** La sombra: de día, violeta hondo; al ocaso, violeta; de noche, el verde azulado de la casa (también en la madera roja). */
     fun sombra(a: Float): Color =
-        if (oscuro) hondo.copy(alpha = (a * 1.3f).coerceIn(0f, 1f)) else if (noche) hondo.copy(alpha = (a * 1.15f).coerceIn(0f, 1f)) else sombraMueble(a)
+        if (oscuro) nocheCasa.copy(alpha = (a * 1.3f).coerceIn(0f, 1f)) else if (noche) hondo.copy(alpha = (a * 1.15f).coerceIn(0f, 1f)) else sombraMueble(a)
     /** La sombra fría del día (la del vidrio, el salvia y la nieve); de noche, la misma que las demás. */
     fun frio(a: Float): Color = if (lumbre) sombra(a) else p.FRIO.copy(alpha = a.coerceIn(0f, 1f))
     /** La luz crema del día; al ocaso, la naranja; de noche, casi nada. */
@@ -227,27 +216,41 @@ internal class AireNavidad(val oscuro: Boolean, val noche: Boolean, val cuerpo: 
     fun filo(a: Float): Color = if (oscuro) p.LLAMA.copy(alpha = a.coerceIn(0f, 1f)) else if (noche) p.OCASO.copy(alpha = (a * 0.6f).coerceIn(0f, 1f)) else Color.Transparent
     /** El roce frío de la luna (en los Sueños oscuros, más). */
     fun lunar(a: Float): Color = if (oscuro) p.LUNA_RAS.copy(alpha = (if (noche) a * 1.4f else a).coerceIn(0f, 1f)) else Color.Transparent
+    /** El filo frío de la nieve de la ventana (de noche) o de la luna (en los Sueños oscuros) en los cantos que miran a la izquierda. */
+    fun filoFrio(a: Float): Color = if (!oscuro) Color.Transparent else (if (noche) p.LUNA_RAS else p.NIEVE_FILO).copy(alpha = a.coerceIn(0f, 1f))
 
     /**
-     * El color del ánimo: de noche conserva su tono de día y solo baja con la distancia a la luz (lo rojo sigue rojo, pardo lejos
-     * y encendido cerca); al ocaso, tibio.
+     * El color del ánimo: de noche conserva su tono de día y solo baja con la distancia a la luz (lo rojo sigue rojo, hundido en el
+     * verde azulado lejos y encendido cerca); al ocaso, tibio.
      */
     fun animo(t: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) alOcaso(t) else t
-        val apagado = mezcla(Color(t.red * 0.24f, t.green * 0.2f, t.blue * 0.2f, t.alpha), hondo, 0.25f)
+        val apagado = mezcla(t, hondo, 0.8f)
         val encendido = mezcla(t, aLaLlama(t), 0.5f)
-        return mezcla(apagado, encendido, (1.1f * Math.pow(k.toDouble(), 1.4).toFloat()).coerceAtMost(1f))
+        return mezcla(apagado, encendido, (1.1f * Math.pow(k.toDouble(), 1.3).toFloat()).coerceAtMost(1f))
     }
 
-    /** La cartulina donde va el día: ámbar cerca de la llama, parda honda lejos, siempre con contraste para la tinta. */
+    /**
+     * La cartulina donde va el día: ámbar cerca de la llama y, lejos, el papel en la sombra de la cocina (más frío y apagado), sin
+     * bajar del 4.5 a 1 con la tinta casi negra (una luminancia de 0.2).
+     */
     fun etiqueta(c: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) alOcaso(c) else c
-        val lejos = Color(c.red * 0.52f, c.green * 0.42f, c.blue * 0.3f, c.alpha)
+        val lejos = if (noche) Color(0xFF84796A) else Color(0xFF8A795E)
         val alumbrado = Color((c.red * 1.04f).coerceAtMost(1f), c.green * 0.92f, c.blue * 0.7f, c.alpha)
-        return mezcla(lejos, alumbrado, Math.pow(k.toDouble(), 2.0).toFloat().coerceAtMost(1f))
+        return mezcla(lejos, alumbrado, Math.pow(k.toDouble(), 1.5).toFloat().coerceAtMost(1f))
     }
+}
+
+/**
+ * Cuánta luz fría de la ventana llega de noche a ([fx], [fy]) (anchos): la nieve de afuera (o la luna, en los Sueños) entra por
+ * arriba a la izquierda y filetea lo que mira hacia allá; se apaga hacia abajo y hacia la derecha.
+ */
+internal fun frioVentanaNavidad(fx: Float, fy: Float): Float {
+    val dx = fx - 0.02f; val dy = (fy - 0.3f) * 0.45f
+    return (1f - kotlin.math.sqrt(dx * dx + dy * dy) / 1.05f).coerceIn(0f, 1f)
 }
 
 /**
@@ -312,10 +315,10 @@ internal class ManchaNavidad(val q: FloatArray, val color: Color, val fuerza: Fl
 /**
  * La mancha de la ventana en este momento, en la pared, o null (de noche manda la lumbre y la ventana solo enseña la nieve de
  * afuera). La de la tarde cae a la derecha de la ventana, entre ella y el abeto; al ocaso, más tendida y más baja; la luna,
- * más alta y más tenue.
+ * más angosta y más tenue, en el azulejo entre la ventana y el abeto, quebrándose en la cenefa y en la cornisa.
  */
 internal fun manchaNavidad(a: AireNavidad): ManchaNavidad? = when {
-    a.oscuro && a.noche -> ManchaNavidad(floatArrayOf(0.27f, 0.1f, 0.43f, 0.13f, 0.5f, 0.42f, 0.33f, 0.39f), PaletaNavidad.LUNA, 0.62f)
+    a.oscuro && a.noche -> ManchaNavidad(floatArrayOf(0.265f, 0.2f, 0.4f, 0.22f, 0.465f, 0.53f, 0.33f, 0.51f), PaletaNavidad.LUNA, 0.5f)
     a.oscuro -> null
     a.noche -> ManchaNavidad(floatArrayOf(0.28f, 0.2f, 0.66f, 0.25f, 0.74f, 0.5f, 0.36f, 0.45f), PaletaNavidad.OCASO, 0.75f)
     else -> ManchaNavidad(floatArrayOf(0.28f, 0.12f, 0.56f, 0.16f, 0.66f, 0.53f, 0.38f, 0.49f), PaletaNavidad.SOL, 0.9f)

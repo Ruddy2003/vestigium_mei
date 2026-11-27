@@ -122,12 +122,18 @@ internal object MuebleEstanteNavidad {
     fun arbol(dx: Float, dy: Float, suenos: Boolean): Float =
         ((if (suenos) 0.3f else 0.5f) * exp(-4.8f * sqrt(dx * dx * 1.4f + dy * dy * 0.8f))).coerceIn(0f, 1f)
 
-    /** La lumbre de la cocina de hierro, al pie: baja y anaranjada, para las repisas de abajo. */
-    fun lumbre(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.85f else 1.6f) * exp(-2.8f * sqrt(dx * dx * 1.1f + dy * dy))).coerceIn(0f, 1f)
+    /**
+     * La lumbre de la cocina de hierro, al pie: baja y anaranjada, sale por la rejilla hacia delante y hacia abajo; lo que queda por
+     * encima de la puerta del fogón (el zócalo, las repisas de abajo) recibe bastante menos, porque la tapa de la cocina la tapa.
+     */
+    fun lumbre(dx: Float, dy: Float, suenos: Boolean): Float {
+        val arriba = (-dy / 0.1f).coerceIn(0f, 1f)
+        val tapa = 1f - 0.6f * arriba * arriba * (3f - 2f * arriba)
+        return ((if (suenos) 0.85f else 1.6f) * exp(-3f * sqrt(dx * dx * 1.2f + dy * dy)) * tapa).coerceIn(0f, 1f)
+    }
 
-    /** La vela de un hueco: corta, para sus vecinos, el fondo y el canto de la tabla de arriba. */
-    fun candil(dx: Float, dy: Float): Float = (1.4f * exp(-4.6f * sqrt(dx * dx + dy * dy * 1.4f))).coerceIn(0f, 1f)
+    /** La vela de un hueco: para sus vecinos, el fondo, el costado de al lado y el canto de las tablas de arriba y de abajo. */
+    fun candil(dx: Float, dy: Float): Float = (1.5f * exp(-4.2f * sqrt(dx * dx + dy * dy * 1.5f))).coerceIn(0f, 1f)
 
     /** La vela de hueco que más alumbra ([x], [y]) entre [candiles] (x, y, x, y… en anchos). */
     private fun candilMayor(x: Float, y: Float, candiles: FloatArray): Float {
@@ -159,7 +165,8 @@ internal object MuebleEstanteNavidad {
             val oc = d.ocupado.getOrNull(k) ?: continue
             val x0 = oc + w * 0.02f; val x1 = d.derecha.left - w * 0.025f
             if (k == 0 || x1 - x0 < w * 0.17f || (k > 0 && xs[k - 1] >= 0f)) continue
-            xs[k] = x0 + w * 0.055f
+            // La vela va al fondo del hueco, junto al costado de la derecha: enciende el bastidor y lo que tiene al lado.
+            xs[k] = x1 - w * 0.05f
         }
         return xs
     }
@@ -171,6 +178,8 @@ internal object MuebleEstanteNavidad {
         if (w < 2f || h < 2f) return
         val a = AireNavidad(oscuro, noche)
         val ac = AireNavidad(oscuro, noche, cuerpo = true)
+        // La madera roja de la alacena: se hunde en vino, con sombras y cantos fríos del verde azulado de la cocina.
+        val am = AireNavidad(oscuro, noche, cuerpo = true, madera = true)
         val ch = d.corona.bottom
         val b = d.base
         val apoyo = ch - w * CORNISA
@@ -202,7 +211,7 @@ internal object MuebleEstanteNavidad {
                 drawRect(a.luz(PaletaNavidad.ALMAGRE_OSC, 0.5f), Offset.Zero, Size(w, ceil(ch) + 1f))
                 with(MuroEstanteNavidad) { pared(a, apoyo, cerca, m) }
                 with(MuroEstanteNavidad) { colgado(a, apoyo, cerca, m) }
-                with(ObraEstanteNavidad) { cornisa(Rect(0f, apoyo, w, ch + 2f), a, cerca, m) }
+                with(ObraEstanteNavidad) { cornisa(Rect(0f, apoyo, w, ch + 2f), AireNavidad(oscuro, noche, madera = true), cerca, m) }
                 with(CoronaEstanteNavidad) { encima(a, apoyo, ch, cerca, m) }
                 with(MuroEstanteNavidad) { luzDeNoche(a, ch) }
                 granoMueble(Rect(0f, 0f, w, ch + 2f), oscuro)
@@ -210,7 +219,7 @@ internal object MuebleEstanteNavidad {
         }
         // El cuerpo: los casilleros, las tablas y los costados.
         with(ObraEstanteNavidad) {
-            d.repisas.forEachIndexed { k, r -> casillero(k, r, ac, cerca) }
+            d.repisas.forEachIndexed { k, r -> casillero(k, r, ac, am, cerca) }
         }
         with(HuecosEstanteNavidad) {
             d.repisas.forEachIndexed { k, r ->
@@ -219,20 +228,20 @@ internal object MuebleEstanteNavidad {
             }
         }
         with(ObraEstanteNavidad) {
-            d.tablas.forEachIndexed { k, r -> tabla(k, r, d, ac, cerca) }
-            costado(Rect(d.izquierda.left, ch, d.izquierda.right, b.top), true, d, ac, cerca)
-            costado(Rect(d.derecha.left, ch, d.derecha.right, b.top), false, d, ac, cerca)
+            d.tablas.forEachIndexed { k, r -> tabla(k, r, d, am, ac, cerca) }
+            costado(Rect(d.izquierda.left, ch, d.izquierda.right, b.top), true, d, am, cerca)
+            costado(Rect(d.derecha.left, ch, d.derecha.right, b.top), false, d, am, cerca)
             d.placas.forEach { p -> placa(p, medidor, ac, cerca(p.r.center)) }
         }
         with(HuecosEstanteNavidad) { d.repisas.forEachIndexed { k, r -> if (xs[k] >= 0f) llamaHueco(xs[k], r, ac) } }
         // Lo de abajo, en vivo: el zócalo y el suelo con lo que hay en él, desde el píxel entero de encima del zócalo y sobre un
         // fondo opaco, para que la junta con la última tabla no deje asomar nada.
         val arriba = floor(minOf(b.top, d.tablas.lastOrNull()?.bottom ?: b.top))
-        drawRect(ac.luz(PaletaNavidad.ALMAGRE_OSC, cerca(Offset(w / 2, b.top))), Offset(0f, arriba), Size(w, ceil(h) - arriba + 1f))
+        drawRect(am.luz(PaletaNavidad.ALMAGRE_OSC, cerca(Offset(w / 2, b.top))), Offset(0f, arriba), Size(w, ceil(h) - arriba + 1f))
         val suelo = b.top + b.height * SUELO
         val cercaPie: (Offset) -> Float = { p -> if (!a.lumbre) 1f else calor(p.x / w, p.y / w, yL, noche, FloatArray(0)) }
         with(PieEstanteNavidad) { suelo(ac, b, suelo, h, cercaPie) }
-        with(ObraEstanteNavidad) { zocalo(Rect(0f, arriba, w, suelo), ac, cercaPie) }
+        with(ObraEstanteNavidad) { zocalo(Rect(0f, arriba, w, suelo), am, cercaPie) }
         with(PieEstanteNavidad) { objetos(ac, b, suelo, h, cercaPie) }
         granoMueble(Rect(0f, ch, w, h), oscuro, 0.8f)
     }

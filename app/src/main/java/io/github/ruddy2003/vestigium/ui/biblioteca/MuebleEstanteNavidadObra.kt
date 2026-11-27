@@ -3,6 +3,7 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -27,6 +28,18 @@ internal object ObraEstanteNavidad {
     /** Cuántos tramos lleva lo que se pinta a lo ancho: de noche la luz cambia de un tramo a otro sin escalón. */
     private fun tramos(a: AireNavidad, ancho: Float, w: Float) = if (a.lumbre) (ancho / (w * 0.045f)).toInt().coerceIn(2, 32) else 1
 
+    /**
+     * [r] pintado con el color de [color] (t, de 0 a 1 a lo largo) muestreado en [n] + 1 puntos y unido por un degradado: de noche,
+     * la luz cambia de un punto a otro sin escalones; de día ([n] = 1), un solo color.
+     */
+    private fun DrawScope.degradado(r: Rect, vertical: Boolean, n: Int, color: (Float) -> Color) {
+        if (r.width <= 0f || r.height <= 0f) return
+        if (n <= 1) { drawRect(color(0.5f), r.topLeft, r.size); return }
+        val paradas = Array(n + 1) { i -> (i / n.toFloat()) to color(i / n.toFloat()) }
+        val pincel = if (vertical) Brush.verticalGradient(*paradas, startY = r.top, endY = r.bottom) else Brush.horizontalGradient(*paradas, startX = r.left, endX = r.right)
+        drawRect(pincel, r.topLeft, r.size)
+    }
+
     /** La pintura saltada en un canto: asoma el pino, con el borde de la pintura en sombra. */
     private fun DrawScope.gastado(p: Offset, r: Float, semilla: Int, a: AireNavidad, k: Float) {
         with(MuroEstanteNavidad) { saltado(p, r, semilla, a, k) }
@@ -36,10 +49,63 @@ internal object ObraEstanteNavidad {
 
     /** La cornisa de [r] (de donde pisan las cosas hasta el arranque de las repisas, y un poco más). */
     fun DrawScope.cornisa(r: Rect, a: AireNavidad, cerca: (Offset) -> Float, m: ManchaNavidad?) {
+        val w = size.width
         cornisaCon(r, a, cerca, null)
-        // El sol de la ventana alcanza el tablero y el friso: la misma cornisa, pintada con esa luz, corrida porque está más
-        // adelante que la pared. Con la luna no: en el almagre se leería como un vidrio apoyado.
-        if (m != null && !a.oscuro) clipPath(m.forma(size.width, ManchaNavidad.FRENTE)) { cornisaCon(r, a, cerca, ManchaNavidad(m.q, m.color, m.fuerza * 0.6f)) }
+        // El sol de la ventana (o la luna, más tenue) alcanza el tablero y el friso: la misma cornisa, pintada con esa luz, corrida
+        // porque está más adelante que la pared; así la mancha se quiebra en su canto.
+        if (m != null) clipPath(m.forma(w, ManchaNavidad.FRENTE)) { cornisaCon(r, a, cerca, ManchaNavidad(m.q, m.color, m.fuerza * (if (a.oscuro) 0.5f else 0.6f))) }
+        // La puntilla de papel calado del tablero, que cuelga por el canto (la del Ideario, aquí sobre la cornisa).
+        val y0 = r.top + w * 0.005f
+        puntilla(0f, w, y0, w * 0.022f, AireNavidad(a.oscuro, a.noche, cuerpo = true), cerca, 9250)
+        // De noche, el filo frío de la nieve de la ventana en el canto del tablero, a la izquierda.
+        if (a.oscuro) filoFrioHorizontal(0f, w, r.top - w * 0.008f, a)
+    }
+
+    /**
+     * La puntilla de papel calado (como la de las baldas del Ideario, aquí colgando del canto de una tabla): una tira crema con el
+     * borde de abajo en festones, cada uno con su agujero, su sombra en la madera y, de noche, encendida junto a cada llama y hundida
+     * entre ellas (un degradado a lo ancho, una sola pintada).
+     */
+    fun DrawScope.puntilla(x0: Float, x1: Float, y: Float, alto: Float, a: AireNavidad, cerca: (Offset) -> Float, semilla: Int) {
+        val w = size.width; val u = density
+        if (x1 - x0 < 4f || alto < 1f) return
+        val n = ((x1 - x0) / (w * 0.034f)).toInt().coerceIn(1, 80)
+        val pp = (x1 - x0) / n
+        val p = Path().apply {
+            moveTo(x0, y - 1f); lineTo(x1, y - 1f); lineTo(x1, y + alto * 0.55f)
+            for (j in n downTo 1) {
+                val xa = x0 + pp * j; val xb = x0 + pp * (j - 1)
+                val hondo = alto * (1.05f + 0.08f * azar(semilla, j))
+                cubicTo(xa - pp * 0.04f, y + hondo, xb + pp * 0.04f, y + hondo, xb, y + alto * 0.55f)
+            }
+            close()
+        }
+        val agujeros = Path()
+        for (j in 0 until n) {
+            agujeros.addOval(Rect(Offset(x0 + pp * (j + 0.5f), y + alto * 0.66f), alto * 0.12f))
+            agujeros.addOval(Rect(Offset(x0 + pp * j + pp * 0.25f, y + alto * 0.3f), alto * 0.06f))
+            agujeros.addOval(Rect(Offset(x0 + pp * j + pp * 0.75f, y + alto * 0.3f), alto * 0.06f))
+        }
+        drawPath(corridoNavidad(p, 1f * u, 1.8f * u), a.sombra(0.38f))
+        if (a.lumbre) {
+            val tramos = ((x1 - x0) / (w * 0.06f)).toInt().coerceIn(2, 24)
+            val paradas = Array(tramos + 1) { i -> (i / tramos.toFloat()) to a.dia(P.PAPEL, 0f, cerca(Offset(x0 + (x1 - x0) * i / tramos, y + alto * 0.5f))) }
+            drawPath(p, Brush.horizontalGradient(*paradas, startX = x0, endX = x1))
+        } else drawPath(p, a.dia(P.PAPEL, 0f, 1f))
+        drawPath(agujeros, a.sombra(0.55f))
+        drawPath(p, a.sombra(0.18f), style = Stroke(0.7f * u))
+        drawRect(a.sombra(0.12f), Offset(x0, y - 1f), Size(x1 - x0, 1.2f * u))
+    }
+
+    /** El filo frío de la ventana, de noche, en un canto horizontal de [x0] a [x1] a la altura [y]: fuerte a la izquierda, se apaga. */
+    private fun DrawScope.filoFrioHorizontal(x0: Float, x1: Float, y: Float, a: AireNavidad) {
+        val w = size.width; val u = density
+        val n = ((x1 - x0) / (w * 0.06f)).toInt().coerceIn(1, 24)
+        for (t in 0 until n) {
+            val xa = x0 + (x1 - x0) * t / n; val xb = x0 + (x1 - x0) * (t + 1) / n
+            val f = frioVentanaNavidad((xa + xb) / 2 / w, y / w)
+            if (f > 0.02f) drawRect(a.filoFrio(0.5f * f), Offset(xa, y), Size(xb - xa, 1.3f * u))
+        }
     }
 
     private fun DrawScope.cornisaCon(r: Rect, a: AireNavidad, cerca: (Offset) -> Float, m: ManchaNavidad?) {
@@ -132,7 +198,7 @@ internal object ObraEstanteNavidad {
     // ---------------------------------------------------------------- los casilleros
 
     /** El casillero [r] de la repisa [k]: el machihembrado salvia, sus sombras, los cantos de dentro y la tabla de abajo. */
-    fun DrawScope.casillero(k: Int, r: Rect, a: AireNavidad, cerca: (Offset) -> Float) {
+    fun DrawScope.casillero(k: Int, r: Rect, a: AireNavidad, am: AireNavidad, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
         val af = AireNavidad(a.oscuro, a.noche, cuerpo = true, fondo = true)
         val luna = lunaCuerpoNavidad(a, r.left / w + 0.2f, r.center.y / w)
@@ -143,14 +209,11 @@ internal object ObraEstanteNavidad {
         val techo = w * 0.034f
         val lado = w * 0.022f
         val piso = w * 0.016f
-        for (t in 0 until n) {
-            val x0 = fr.left + fr.width * t / n; val x1 = fr.left + fr.width * (t + 1) / n + 1f
-            val kk = cerca(Offset((x0 + x1) / 2, r.center.y))
-            // El salvia: más vivo abajo, donde llega la luz por la boca, y más hondo arriba, bajo la tabla.
-            drawRect(c(P.SALVIA, 0f, kk), Offset(x0, fr.top), Size(x1 - x0, fr.height))
-            drawRect(c(P.SALVIA_OSC, 0f, kk).copy(alpha = 0.5f), Offset(x0, fr.top), Size(x1 - x0, r.height * 0.42f))
-            drawRect(c(P.SALVIA_LUZ, 0f, kk).copy(alpha = if (a.oscuro) 0.25f else 0.4f), Offset(x0, r.top + r.height * 0.6f), Size(x1 - x0, r.height * 0.3f))
-        }
+        // El salvia: más vivo abajo, donde llega la luz por la boca, y más hondo arriba, bajo la tabla.
+        fun kx(t: Float) = cerca(Offset(fr.left + fr.width * t, r.center.y))
+        degradado(fr, false, n) { t -> c(P.SALVIA, 0f, kx(t)) }
+        degradado(Rect(fr.left, fr.top, fr.right, fr.top + r.height * 0.42f), false, n) { t -> c(P.SALVIA_OSC, 0f, kx(t)).copy(alpha = 0.5f) }
+        degradado(Rect(fr.left, r.top + r.height * 0.6f, fr.right, r.top + r.height * 0.9f), false, n) { t -> c(P.SALVIA_LUZ, 0f, kx(t)).copy(alpha = if (a.oscuro) 0.25f else 0.4f) }
         // El machihembrado: la junta de cada tabla (honda) con su canto de luz al lado, algo torcidas.
         val juntas = Path(); val cantos = Path()
         var x = r.left + w * 0.03f
@@ -173,7 +236,7 @@ internal object ObraEstanteNavidad {
         val kt = cerca(Offset(r.center.x, r.top))
         drawRect(af.sombra(0.55f), Offset(r.left, r.top + techo * 0.8f), Size(r.width, techo * 0.5f))
         drawRect(af.sombra(0.26f), Offset(r.left, r.top + techo * 1.3f), Size(r.width, techo * 1.1f))
-        drawPath(poligonoNavidad(fr.left, fr.top, fr.right, fr.top, r.right - lado, r.top + techo, r.left + lado, r.top + techo), a.dia(P.ALMAGRE_OSC, -0.3f, kt))
+        drawPath(poligonoNavidad(fr.left, fr.top, fr.right, fr.top, r.right - lado, r.top + techo, r.left + lado, r.top + techo), am.dia(P.ALMAGRE_OSC, -0.3f, kt))
         drawRect(a.sombra(0.35f), Offset(r.left + lado, r.top + techo - 1.2f * u), Size(r.width - 2 * lado, 1.2f * u))
         // Los costados de dentro, pintados de salvia: el de la izquierda en sombra (de espaldas a la ventana); el de la
         // derecha, alumbrado. De noche, cada uno según su luz.
@@ -182,6 +245,8 @@ internal object ObraEstanteNavidad {
         drawPath(poligonoNavidad(fr.right, fr.top, r.right - lado, r.top + techo, r.right - lado, r.bottom - piso, fr.right, fr.bottom), c(P.SALVIA_LUZ, -0.02f, kr))
         drawRect(a.sombra(0.28f), Offset(r.left + lado, r.top + techo), Size(w * 0.012f, r.height - techo - piso))
         drawRect(a.brillo(0.22f, kr), Offset(r.right - lado - 1f * u, r.top + techo), Size(1f * u, r.height - techo - piso))
+        // De noche, el costado de dentro de la derecha mira a la ventana: su filo frío.
+        if (a.oscuro) drawRect(a.filoFrio(0.32f * frioVentanaNavidad(r.right / w, r.center.y / w)), Offset(r.right - lado, r.top + techo), Size(1.2f * u, r.height - techo - piso))
         // La tabla, vista desde arriba, con la luz que entra por la boca, y su roce de pino.
         val kp = cerca(Offset(r.center.x, r.bottom))
         drawPath(poligonoNavidad(r.left + lado, r.bottom - piso, r.right - lado, r.bottom - piso, fr.right, fr.bottom, fr.left, fr.bottom), c(P.SALVIA_LUZ, -0.06f, kp))
@@ -195,22 +260,21 @@ internal object ObraEstanteNavidad {
     // ---------------------------------------------------------------- las tablas
 
     /** La tabla [r] bajo la repisa [k]: el canto redondeado con su filete verde, gastado donde se toca. */
-    fun DrawScope.tabla(k: Int, r: Rect, d: DisposicionEstante, a: AireNavidad, cerca: (Offset) -> Float) {
+    fun DrawScope.tabla(k: Int, r: Rect, d: DisposicionEstante, a: AireNavidad, ap: AireNavidad, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
         val n = tramos(a, r.width, w)
         val nariz = r.top + r.height * 0.26f
         val cara1 = r.top + r.height * 0.84f
         // Una fila de más arriba y abajo, del color del canto (la junta con el casillero cae a medio píxel).
-        for (t in 0 until n) {
-            val x0 = r.left + r.width * t / n - 1f; val x1 = r.left + r.width * (t + 1) / n + 1f
-            val kk = cerca(Offset((x0 + x1) / 2, r.center.y))
-            val luna = lunaCuerpoNavidad(a, (x0 + x1) / 2 / w, r.center.y / w) * 0.6f
-            fun c(col: Color, f: Float) = a.dia(col, f, kk).let { if (luna > 0f) a.sol(col, it, luna) else it }
-            // Debajo, la cara a todo el alto (así, donde una banda acaba a medio píxel, asoma la cara y no el fondo).
-            drawRect(c(P.ALMAGRE, 0f), Offset(x0, r.top - 1f), Size(x1 - x0, r.height + 2f))
-            drawRect(c(P.ALMAGRE_LUZ, -0.06f), Offset(x0, r.top - 1f), Size(x1 - x0, nariz - r.top + 1f))
-            drawRect(c(P.ALMAGRE_OSC, -0.1f), Offset(x0, cara1), Size(x1 - x0, r.bottom - cara1 + 1f))
+        fun c(col: Color, f: Float, t: Float): Color {
+            val x = r.left + r.width * t
+            val luna = lunaCuerpoNavidad(a, x / w, r.center.y / w) * 0.6f
+            return a.dia(col, f, cerca(Offset(x, r.center.y))).let { if (luna > 0f) a.sol(col, it, luna) else it }
         }
+        // Debajo, la cara a todo el alto (así, donde una banda acaba a medio píxel, asoma la cara y no el fondo).
+        degradado(Rect(r.left - 1f, r.top - 1f, r.right + 1f, r.bottom + 1f), false, n) { t -> c(P.ALMAGRE, 0f, t) }
+        degradado(Rect(r.left - 1f, r.top - 1f, r.right + 1f, nariz), false, n) { t -> c(P.ALMAGRE_LUZ, -0.06f, t) }
+        degradado(Rect(r.left - 1f, cara1, r.right + 1f, r.bottom + 1f), false, n) { t -> c(P.ALMAGRE_OSC, -0.1f, t) }
         val kc = cerca(r.center)
         // El filo de luz de la nariz, el filete verde pintado y la sombra de abajo.
         drawRect(a.brillo(0.55f, kc), Offset(r.left, r.top), Size(r.width, 1.3f * u))
@@ -220,18 +284,15 @@ internal object ObraEstanteNavidad {
         drawRect(a.dia(P.FILETE, 0f, kc), Offset(r.left + w * 0.012f, fy - 0.8f * u), Size(r.width - w * 0.024f, 1.6f * u))
         drawRect(a.sombra(0.5f), Offset(r.left, r.bottom - 1.4f * u), Size(r.width, 1.4f * u))
         // De noche, el filo de la luz en la nariz (más donde más alumbra).
-        if (a.lumbre && a.oscuro) {
-            for (t in 0 until n) {
-                val x0 = r.left + r.width * t / n; val x1 = r.left + r.width * (t + 1) / n
-                val kk = cerca(Offset((x0 + x1) / 2, r.top))
-                drawRect(a.filo(0.55f * kk), Offset(x0, r.top), Size(x1 - x0, 1.5f * u))
-            }
-        }
+        if (a.lumbre && a.oscuro) degradado(Rect(r.left, r.top, r.right, r.top + 1.5f * u), false, n) { t -> a.filo(0.55f * cerca(Offset(r.left + r.width * t, r.top))) }
         // El gastado de la nariz, donde se apoyan las manos, y algún golpe.
         for (j in 0 until 2) {
             val x = r.left + r.width * azar(9400 + k, j)
             gastado(Offset(x, r.top + r.height * 0.14f), w * (0.004f + 0.003f * azar(9401 + k, j)), 9402 + k * 5 + j, a, cerca(Offset(x, r.top)))
         }
+        // La puntilla de papel calado que cuelga por la nariz, y el filo frío de la ventana en el canto de arriba.
+        puntilla(r.left, r.right, r.top + 0.6f * u, r.height * 0.36f, ap, cerca, 9260 + k)
+        if (a.oscuro) filoFrioHorizontal(r.left, r.right, r.top, a)
     }
 
     // ---------------------------------------------------------------- los costados
@@ -239,17 +300,16 @@ internal object ObraEstanteNavidad {
     /** El costado [r] ([izq]: el de la izquierda): el larguero con su filete verde, su canto, el gastado y lo colgado. */
     fun DrawScope.costado(r: Rect, izq: Boolean, d: DisposicionEstante, a: AireNavidad, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
-        val tramosV = (r.height / (w * 0.075f)).toInt().coerceIn(1, 80).let { if (a.lumbre) it else 1 }
-        for (t in 0 until tramosV) {
-            val y0 = r.top + r.height * t / tramosV - 1f; val y1 = r.top + r.height * (t + 1) / tramosV + 1f
-            val kk = cerca(Offset(r.center.x, (y0 + y1) / 2))
-            val luna = lunaCuerpoNavidad(a, r.center.x / w, (y0 + y1) / 2 / w) * 0.6f
-            fun c(col: Color, f: Float) = a.dia(col, f, kk).let { if (luna > 0f) a.sol(col, it, luna) else it }
-            drawRect(c(P.ALMAGRE, if (izq) 0.03f else -0.06f), Offset(r.left - 1f, y0), Size(r.width + 2f, y1 - y0))
-            // El canto que mira a la ventana, más claro (el bocel de la arista); el otro, en sombra.
-            drawRect(c(P.ALMAGRE_LUZ, -0.04f), Offset(r.left, y0), Size(r.width * 0.13f, y1 - y0))
-            drawRect(c(P.ALMAGRE_OSC, 0f), Offset(r.right - r.width * 0.15f, y0), Size(r.width * 0.15f, y1 - y0))
+        val tramosV = (r.height / (w * 0.04f)).toInt().coerceIn(1, 120).let { if (a.lumbre) it else 1 }
+        fun c(col: Color, f: Float, t: Float, x: Float = r.center.x): Color {
+            val y = r.top + r.height * t
+            val luna = lunaCuerpoNavidad(a, x / w, y / w) * 0.6f
+            return a.dia(col, f, cerca(Offset(x, y))).let { if (luna > 0f) a.sol(col, it, luna) else it }
         }
+        degradado(Rect(r.left - 1f, r.top - 1f, r.right + 1f, r.bottom + 1f), true, tramosV) { t -> c(P.ALMAGRE, if (izq) 0.03f else -0.06f, t) }
+        // El canto que mira a la ventana, más claro (el bocel de la arista); el otro, en sombra.
+        degradado(Rect(r.left, r.top - 1f, r.left + r.width * 0.13f, r.bottom + 1f), true, tramosV) { t -> c(P.ALMAGRE_LUZ, -0.04f, t, r.left) }
+        degradado(Rect(r.right - r.width * 0.15f, r.top - 1f, r.right, r.bottom + 1f), true, tramosV) { t -> c(P.ALMAGRE_OSC, 0f, t, r.right) }
         val kc = cerca(r.center)
         // Las vetas del pino que se marcan bajo la pintura.
         val veta = Path()
@@ -263,13 +323,8 @@ internal object ObraEstanteNavidad {
         clipRect(r.left, r.top, r.right, r.bottom) { drawPath(veta, a.luz(P.ALMAGRE_OSC, kc).copy(alpha = 0.35f), style = Stroke(0.7f * u)) }
         // El filete verde: una media caña pintada a lo alto, con su luz y su sombra.
         val fx = r.left + r.width * 0.46f
-        val tramosF = if (a.lumbre) tramosV else 1
-        for (t in 0 until tramosF) {
-            val y0 = r.top + w * 0.03f + (r.height - w * 0.06f) * t / tramosF
-            val y1 = r.top + w * 0.03f + (r.height - w * 0.06f) * (t + 1) / tramosF
-            val kk = cerca(Offset(fx, (y0 + y1) / 2))
-            drawRect(a.dia(P.FILETE, 0f, kk), Offset(fx - 1.2f * u, y0), Size(2.4f * u, y1 - y0 + 0.5f))
-        }
+        val fr0 = r.top + w * 0.03f; val fr1 = r.bottom - w * 0.03f
+        degradado(Rect(fx - 1.2f * u, fr0, fx + 1.2f * u, fr1), true, tramosV) { t -> a.dia(P.FILETE, 0f, cerca(Offset(fx, fr0 + (fr1 - fr0) * t))) }
         drawLine(a.sombra(0.3f), Offset(fx + 1.8f * u, r.top + w * 0.03f), Offset(fx + 1.8f * u, r.bottom - w * 0.03f), 0.8f * u)
         drawLine(a.claro(0.3f), Offset(fx - 2f * u, r.top + w * 0.03f), Offset(fx - 2f * u, r.bottom - w * 0.03f), 0.7f * u)
         // El capitel de arriba (bajo la cornisa) y la basa de abajo (sobre el zócalo): dos tacos con su moldura.
@@ -285,14 +340,13 @@ internal object ObraEstanteNavidad {
             drawRect(a.sombra(if (arriba) 0.45f else 0.3f), Offset(r.left, if (arriba) y1 else y0 - 1.4f * u), Size(r.width, 1.4f * u))
             drawRect(a.claro(0.3f), Offset(r.left, if (arriba) y0 + 1f * u else y1 - w * 0.012f), Size(r.width, 1f * u))
         }
-        // El filo de la luz en el canto que la mira, de noche.
+        // De noche: el filo de la llama en el canto que la mira y, en el canto que mira a la ventana (el de la izquierda), el filo
+        // frío de la nieve, fuerte arriba y apagándose hacia abajo.
         if (a.lumbre && a.oscuro) {
-            for (t in 0 until tramosV) {
-                val y0 = r.top + r.height * t / tramosV; val y1 = r.top + r.height * (t + 1) / tramosV
-                val kk = cerca(Offset(r.center.x, (y0 + y1) / 2))
-                val luzDer = r.center.x / w < 0.5f
-                drawRect(a.filo(0.6f * kk), Offset(if (luzDer) r.right - 1.5f * u else r.left, y0), Size(1.5f * u, y1 - y0))
-            }
+            val luzDer = r.center.x / w < 0.5f
+            val xf = if (luzDer) r.right - 1.5f * u else r.left
+            degradado(Rect(xf, r.top, xf + 1.5f * u, r.bottom), true, tramosV) { t -> a.filo(0.6f * cerca(Offset(r.center.x, r.top + r.height * t))) }
+            degradado(Rect(r.left, r.top, r.left + 1.6f * u, r.bottom), true, tramosV) { t -> a.filoFrio((if (izq) 0.6f else 0.3f) * frioVentanaNavidad(r.left / w, (r.top + r.height * t) / w)) }
         }
         // El gastado donde se agarra la alacena (a la altura de las manos, en el canto de dentro) y los golpes.
         val canto = if (izq) r.right - r.width * 0.08f else r.left + r.width * 0.08f
@@ -372,13 +426,10 @@ internal object ObraEstanteNavidad {
         val n = tramos(a, w, w)
         // Debajo de la alacena, entre las patas, la sombra honda en el suelo.
         drawRect(a.sombra(if (a.oscuro) 0.75f else 0.55f), Offset(0f, falda), Size(w, r.bottom - falda + w * 0.01f))
-        for (t in 0 until n) {
-            val x0 = w * t / n; val x1 = w * (t + 1) / n + 1f
-            val k = cerca(Offset((x0 + x1) / 2, r.center.y))
-            drawRect(a.dia(P.ALMAGRE_LUZ, -0.05f, k), Offset(x0, r.top), Size(x1 - x0, (bocel - r.top) * 0.5f))
-            drawRect(a.dia(P.ALMAGRE_OSC, 0f, k), Offset(x0, r.top + (bocel - r.top) * 0.5f), Size(x1 - x0, (bocel - r.top) * 0.5f))
-            drawRect(a.dia(P.ALMAGRE, -0.04f, k), Offset(x0, bocel), Size(x1 - x0, falda - bocel))
-        }
+        fun kx(t: Float) = cerca(Offset(w * t, r.center.y))
+        degradado(Rect(0f, r.top, w, r.top + (bocel - r.top) * 0.5f), false, n) { t -> a.dia(P.ALMAGRE_LUZ, -0.05f, kx(t)) }
+        degradado(Rect(0f, r.top + (bocel - r.top) * 0.5f, w, bocel), false, n) { t -> a.dia(P.ALMAGRE_OSC, 0f, kx(t)) }
+        degradado(Rect(0f, bocel, w, falda), false, n) { t -> a.dia(P.ALMAGRE, -0.04f, kx(t)) }
         // El recorte de la falda: arcos rebajados entre las patas, con su canto en sombra.
         val faldaP = Path()
         val arcos = 5

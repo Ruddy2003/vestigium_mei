@@ -57,8 +57,8 @@ internal object CoronaEstanteNavidad {
 
     /**
      * El abeto en maceta: los pisos de ramas, del de abajo al de arriba (cada uno cae sobre el de abajo y le deja su sombra), cada
-     * rama con sus agujas en tres verdes (claras del lado de la ventana; de noche, del lado de la vela), las esferas, la tira de
-     * bombillas y dos lazos.
+     * piso hecho de masas de ramas con su cara de arriba a la luz (la de la ventana; de noche, la de la vela), su vientre en sombra y
+     * pocas agujas sueltas en el borde, como la corona de abeto del Ideario; las esferas, la tira de bombillas y dos lazos.
      */
     private fun DrawScope.abeto(a: AireNavidad, apoyo: Float, cerca: (Offset) -> Float, m: ManchaNavidad?) {
         val w = size.width; val u = density
@@ -87,6 +87,8 @@ internal object CoronaEstanteNavidad {
         val corre = if (a.oscuro) Offset(-w * 0.025f, w * 0.01f) else Offset(w * 0.03f, w * 0.018f)
         drawPath(corridoNavidad(sombraArbol, corre.x, corre.y), a.sombra(if (a.oscuro) 0.35f else 0.22f))
         val nocheVela = a.oscuro
+        // De qué lado le llega la luz: de día, de la ventana (izquierda); de noche, de la vela (derecha).
+        val lado = if (nocheVela) 1f else -1f
         for (i in siluetas.indices) {
             val (fy, fm) = PISOS[i]
             val y = w * fy + (baseY - w * 0.4f)
@@ -94,50 +96,67 @@ internal object CoronaEstanteNavidad {
             val top = y - altos[i]
             val s = siluetas[i]
             val k = cerca(Offset(cx, y - w * 0.05f))
+            val kLuz = cerca(Offset(cx + lado * mitad * 0.6f, y - w * 0.04f))
             // La sombra de este piso en el de abajo.
-            if (i > 0) clipPath(siluetas[i - 1]) { drawPath(corridoNavidad(s, w * 0.006f, w * 0.016f), a.sombra(0.45f)) }
-            drawPath(s, a.dia(P.ABETO_HONDO, 0f, k))
+            if (i > 0) clipPath(siluetas[i - 1]) { drawPath(corridoNavidad(s, w * 0.006f, w * 0.018f), a.sombra(0.5f)) }
+            // La masa del piso, de su verde.
+            drawPath(s, a.dia(P.ABETO, 0f, k))
             clipPath(s) {
-                val claras = Path(); val medias = Path(); val hondas = Path(); val alSol = Path(); val filo = Path()
-                val ramas = 11
-                for (j in 0 until ramas) {
-                    val f = -1f + 2f * (j + 0.5f) / ramas + (azar(9720 + i, j) - 0.5f) * 0.08f
-                    val s0 = Offset(cx + f * mitad * 0.12f, top + altos[i] * 0.25f)
-                    val e0 = Offset(cx + f * mitad * 0.98f, y + w * 0.006f)
-                    val c0 = Offset(cx + f * mitad * 0.62f, top + altos[i] * (0.32f + 0.1f * kotlin.math.abs(f)))
-                    val pasos = 12
-                    for (q in 2..pasos) {
+                // El plano de la luz: la cara del piso que mira a la luz, del eje a la punta de ese lado; su borde de dentro, picado
+                // por las puntas de las ramas (no una recta).
+                val luzPlano = Path().apply {
+                    moveTo(cx, top + altos[i] * 0.12f)
+                    lineTo(cx + lado * mitad * 1.05f, y + w * 0.012f)
+                    val pasos = 6
+                    for (q in 1..pasos) {
                         val t = q / pasos.toFloat()
-                        val mt = 1f - t
-                        val p = Offset(mt * mt * s0.x + 2 * mt * t * c0.x + t * t * e0.x, mt * mt * s0.y + 2 * mt * t * c0.y + t * t * e0.y)
-                        val l = w * (0.011f + 0.008f * azar(9721 + i, j * 20 + q))
-                        for (lado0 in listOf(-1f, 1f)) {
-                            val z = j * 40 + q * 2 + (if (lado0 > 0f) 1 else 0)
-                            if (azar(9725 + i, z) < 0.18f) continue
-                            val gir = (azar(9726 + i, z) - 0.5f) * 0.7f
-                            val dx = (f * 0.55f + lado0 * (0.3f + 0.3f * azar(9727 + i, z)) + gir) * l
-                            val dy = l * (0.45f + 0.4f * azar(9722 + i, z))
-                            val luzLado = (if (nocheVela) f else -f) + lado0 * 0.2f * (if (nocheVela) 1f else -1f) + (azar(9723 + i, j * 20 + q) - 0.5f) * 0.4f
-                            val lit = if (m != null && !a.oscuro) m.toca(p.x / w, p.y / w, ManchaNavidad.FRENTE) else 0f
-                            val dest = when {
-                                lit > 0f && luzLado > -0.2f -> alSol
-                                luzLado > 0.35f -> claras
-                                luzLado < -0.45f -> hondas
-                                else -> medias
-                            }
-                            dest.moveTo(p.x, p.y); dest.lineTo(p.x + dx, p.y + dy)
-                            if (nocheVela && f > 0.25f && lado0 > 0f) { filo.moveTo(p.x, p.y); filo.lineTo(p.x + dx, p.y + dy) }
-                        }
+                        val bx = cx + lado * mitad * (1.05f - 0.97f * t)
+                        val by = y + w * 0.012f - (y + w * 0.018f - (top + altos[i] * 0.12f)) * t * t * 0.95f
+                        val diente = if (q % 2 == 0) w * 0.014f else -w * 0.006f
+                        lineTo(bx + lado * diente, by + w * 0.01f * (if (q % 2 == 0) 1f else 0f))
                     }
+                    close()
                 }
-                drawPath(hondas, a.dia(P.ABETO_OSC, 0f, k), style = Stroke(1.7f * u, cap = StrokeCap.Round))
-                drawPath(medias, a.dia(P.ABETO, 0f, k), style = Stroke(1.7f * u, cap = StrokeCap.Round))
-                drawPath(claras, a.dia(P.ABETO_LUZ, 0f, k), style = Stroke(1.6f * u, cap = StrokeCap.Round))
-                if (m != null && !a.oscuro) drawPath(alSol, a.sol(P.ABETO_LUZ, a.dia(P.ABETO_LUZ, 0.1f, k), m.fuerza), style = Stroke(1.6f * u, cap = StrokeCap.Round))
-                if (nocheVela) drawPath(filo, P.LLAMA.copy(alpha = (0.5f * cerca(Offset(cx + mitad, y))).coerceIn(0.08f, 0.6f)), style = Stroke(1f * u, cap = StrokeCap.Round))
+                val lit = if (m != null && !a.oscuro) m.toca((cx - mitad * 0.55f) / w, (y - w * 0.04f) / w, ManchaNavidad.FRENTE) else 0f
+                val colLuz = when {
+                    lit > 0f && m != null -> a.sol(P.ABETO_LUZ, a.dia(P.ABETO_LUZ, 0f, kLuz), m.fuerza)
+                    nocheVela -> mezcla(a.dia(P.ABETO_LUZ, 0f, kLuz), P.LLAMA, 0.2f * kLuz)
+                    else -> a.dia(P.ABETO_LUZ, 0f, kLuz)
+                }
+                drawPath(luzPlano, colLuz)
+                // El plano de la sombra: el vientre de las ramas y la cara de espaldas a la luz (la media luna que deja la masa
+                // corrida hacia la luz), en el verde hondo.
+                drawPath(Path().apply { op(s, corridoNavidad(s, lado * w * 0.03f, -w * 0.04f), PathOperation.Difference) }, a.dia(P.ABETO_OSC, 0f, k))
+                // Algunas agujas por dentro, pocas, siguiendo las ramas: hacia abajo y hacia fuera.
+                val dentroLuz = Path(); val dentroSombra = Path()
+                for (j in 0 until 22) {
+                    val f = azar(9720 + i, j) * 2f - 1f
+                    val px = cx + f * mitad * 0.9f
+                    val py = y - w * (0.015f + 0.06f * azar(9721 + i, j)) * (1f - kotlin.math.abs(f) * 0.5f)
+                    val l = w * (0.012f + 0.008f * azar(9722 + i, j))
+                    val dx = (f * 0.6f + (azar(9723 + i, j) - 0.5f) * 0.5f) * l
+                    (if (f * lado > 0.1f) dentroLuz else dentroSombra).apply { moveTo(px, py); lineTo(px + dx, py + l * 0.8f) }
+                }
+                drawPath(dentroSombra, a.dia(P.ABETO_OSC, 0f, k), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+                drawPath(dentroLuz, mezcla(colLuz, a.dia(P.ABETO_LUZ, 0.15f, kLuz), 0.5f), style = Stroke(1.3f * u, cap = StrokeCap.Round))
                 // Lo hondo junto al eje, donde no llega la luz.
-                drawRect(a.sombra(0.25f), Offset(cx - mitad * 0.12f, top), Size(mitad * 0.24f, altos[i]))
+                drawRect(a.sombra(0.2f), Offset(cx - mitad * 0.08f, top), Size(mitad * 0.16f, altos[i] * 0.7f))
             }
+            // Las agujas sueltas del borde de abajo: penachos cortos que asoman de la masa (hondos; claros del lado de la luz).
+            val bordeH = Path(); val bordeL = Path()
+            val n = (mitad / (w * 0.012f)).toInt().coerceIn(6, 40)
+            for (j in 0 until n) {
+                val f = -1f + 2f * (j + 0.5f) / n
+                val px = cx + f * mitad * 0.97f
+                val py = y + w * 0.008f * kotlin.math.sin((f + 1f) * 1.5708f) - w * 0.004f
+                val l = w * (0.01f + 0.008f * azar(9726 + i, j))
+                val dx = (f * 0.5f + (azar(9727 + i, j) - 0.5f) * 0.7f) * l
+                (if (f * lado > 0.2f && j % 2 == 0) bordeL else bordeH).apply { moveTo(px, py - l * 0.4f); lineTo(px + dx, py + l * 0.6f) }
+            }
+            drawPath(bordeH, a.dia(P.ABETO_OSC, 0f, k), style = Stroke(1.5f * u, cap = StrokeCap.Round))
+            drawPath(bordeL, a.dia(P.ABETO, 0.05f, kLuz), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+            // De noche, el filo de la vela en el canto del piso que la mira.
+            if (nocheVela) drawLine(P.LLAMA.copy(alpha = (0.6f * kLuz).coerceIn(0.05f, 0.6f)), Offset(cx + mitad * 0.15f, top + altos[i] * 0.2f), Offset(cx + mitad * 1.0f, y + w * 0.006f), 1.4f * u, StrokeCap.Round)
         }
         // Las esferas de vidrio, colgadas de las puntas de las ramas.
         val colores = listOf(P.VIDRIO_ROJO, P.VIDRIO_ORO, P.VIDRIO_AZUL, P.VIDRIO_PLATA, P.VIDRIO_ROJO, P.VIDRIO_ORO, P.VIDRIO_AZUL, P.VIDRIO_ROJO, P.VIDRIO_PLATA, P.VIDRIO_ORO)

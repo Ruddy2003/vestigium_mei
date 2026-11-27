@@ -312,13 +312,16 @@ internal object VolumenEstanteNavidad {
             rojizo(t.base) -> ORO
             else -> P.CARMIN
         }
-        val cx = frente.left + frente.width * (0.4f + 0.2f * azar(s, 4))
+        val cx = frente.left + frente.width * (if (azar(s, 4) > 0.5f) 0.26f + 0.08f * azar(s, 10) else 0.64f + 0.08f * azar(s, 10))
+        val soloVertical = crudo || (claroDe(t.base) && (motivo == 3 || motivo == 2))
         val anchoC = if (crudo) 1.4f * u else minOf(frente.width * 0.16f, 5f * u)
         val cyC = frente.top + frente.height * (0.52f + 0.16f * azar(s, 5))
         val cc = l.c(cintaCol)
         drawRect(cc, Offset(cx - anchoC / 2, frente.top), Size(anchoC, frente.height))
-        drawRect(cc, Offset(frente.left, cyC - anchoC / 2), Size(frente.width, anchoC))
-        drawPath(poligonoNavidad(frente.right, cyC - anchoC / 2, w, cyC - anchoC / 2 - lado * 0.9f, w, cyC + anchoC / 2 - lado * 0.9f, frente.right, cyC + anchoC / 2), l.c(cintaCol, -0.3f))
+        if (!soloVertical) {
+            drawRect(cc, Offset(frente.left, cyC - anchoC / 2), Size(frente.width, anchoC))
+            drawPath(poligonoNavidad(frente.right, cyC - anchoC / 2, w, cyC - anchoC / 2 - lado * 0.9f, w, cyC + anchoC / 2 - lado * 0.9f, frente.right, cyC + anchoC / 2), l.c(cintaCol, -0.3f))
+        }
         drawPath(poligonoNavidad(cx - anchoC / 2, frente.top, cx - anchoC / 2 + lado * 0.8f, arriba, cx + anchoC / 2 + lado * 0.8f, arriba, cx + anchoC / 2, frente.top), l.c(cintaCol, 0.1f))
         if (!crudo) drawRect(a.claro(0.3f), Offset(cx - anchoC / 2, frente.top), Size(1f * u, frente.height))
         // El lazo arriba (o el nudo del cordel con su ramita de abeto).
@@ -362,7 +365,7 @@ internal object VolumenEstanteNavidad {
         val px1 = px0 + pierna
         val gancho = Offset((px0 + px1) / 2, 2f * u)
         val puno0 = h * 0.11f
-        val puno1 = h * 0.4f
+        val puno1 = h * 0.27f
         val talonY = h * 0.71f
         val fin = h * (0.91f + 0.03f * azar(s, 5))
         // El gancho de latón bajo la tabla, y la presilla de lana que baja al puño.
@@ -439,12 +442,17 @@ internal object VolumenEstanteNavidad {
             filos(Rect(px0, puno0, px1, fin), a, k, hacia, luna)
             // La etiqueta cosida al puño, con sus puntadas de hilo rojo.
             val etW = (pierna + w * 0.12f).coerceAtLeast(18f * u).coerceAtMost(w - 2f * u)
-            val cy = (puno0 + puno1) / 2
             val cxE = ((px0 + px1) / 2).coerceIn(etW / 2 + 1f * u, w - etW / 2 - 1f * u)
-            val et = Rect(cxE - etW / 2, cy - 15f * u, cxE + etW / 2, cy + 15f * u)
-            etiquetaDia(v, medidor, et, l)
-            listOf(et.left + 2f * u, et.right - 2f * u).forEach { xx -> drawLine(l.c(P.CARMIN), Offset(xx, et.top + 2f * u), Offset(xx, et.top + 5f * u), 1f * u) }
-            if (v.noche) luna(Offset((px0 + px1) / 2, talonY - (talonY - et.bottom) * 0.45f), minOf(pierna * 0.3f, 7f * u), a)
+            val nudo = Offset(cxE, puno1 - 2.5f * u)
+            val et = Rect(cxE - etW / 2, puno1 + 2.5f * u, cxE + etW / 2, puno1 + 32.5f * u)
+            val giroEt = (azar(s, 12) - 0.5f) * 7f
+            rotate(giroEt, nudo) {
+                drawLine(l.c(P.CARMIN), nudo, Offset(et.center.x, et.top + 3f * u), 1.1f * u)
+                etiquetaDia(v, medidor, et, l)
+                drawCircle(l.c(P.TINTA).copy(alpha = 0.55f), 1.3f * u, Offset(et.center.x, et.top + 3f * u))
+            }
+            drawCircle(l.c(P.CARMIN), 1.6f * u, nudo)
+            if (v.noche) luna(Offset(fx(w * 0.62f), (talonY + fin) / 2 + h * 0.01f), minOf(w * 0.16f, 6.5f * u), a)
         }
     }
 
