@@ -27,7 +27,7 @@ import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
  * por arriba, los cantos de las tarjetas que guarda), el regalo (la caja envuelta en papel con lunares, cuadros o rayas, la cinta
  * cruzada, el lazo arriba y la etiqueta de regalo atada con el día; sin ánimo, papel de estraza con cordel y una ramita) y el
  * calcetín de lana (colgado de su gancho bajo la tabla de arriba, de punto, con el puño crema, el talón, la puntera, la etiqueta
- * cosida y algo que asoma por arriba). El ánimo es la tela, el papel y la lana, en todo el cuerpo ([tonoDeDiaNavidad]); sin
+ * cosida y una ramita o una carta que asoma por arriba). El ánimo es la tela, el papel y la lana, en todo el cuerpo ([tonoDeDiaNavidad]); sin
  * ánimo, lino crudo, estraza o lana sin teñir. En los Sueños, una media luna de plata con su disco apagado.
  */
 internal object VolumenEstanteNavidad {
@@ -333,7 +333,7 @@ internal object VolumenEstanteNavidad {
         val etW = (w - lado - 6f * u).coerceAtLeast(18f * u)
         val etH = 30f * u
         val etX = (frente.width - etW) / 2f + (if (cx > frente.center.x) -1.5f else 1.5f) * u
-        val etY = (frente.top + frente.height * 0.14f).coerceAtMost(h - etH - 4f * u)
+        val etY = (frente.top + frente.height * (0.08f + 0.22f * azar(s, 9))).coerceAtMost(h - etH - 4f * u)
         val et = Rect(etX, etY, etX + etW, etY + etH)
         drawLine(l.c(P.CARTULINA_OSC), nudo, Offset(et.left + 4f * u, et.top + 4f * u), 0.8f * u)
         val giro = (azar(s, 8) - 0.5f) * 8f
@@ -448,7 +448,7 @@ internal object VolumenEstanteNavidad {
         }
     }
 
-    /** Lo que asoma por la boca del calcetín: una ramita de abeto, una naranja o una carta enrollada (con más palabras, dos). */
+    /** Lo que asoma por la boca del calcetín: una ramita de abeto, una de acebo o una carta enrollada (con más palabras, dos). */
     private fun DrawScope.asoma(s: Int, lleno: Float, x0: Float, x1: Float, y: Float, pl: LuzNavidad, l: Luz) {
         val u = density
         val ancho = x1 - x0
@@ -458,7 +458,7 @@ internal object VolumenEstanteNavidad {
             val cx = x0 + ancho * (if (cuantas == 1) 0.5f else 0.3f + 0.4f * i)
             when (tipo) {
                 0 -> ramaAbetoNavidad(Offset(cx, y + 6f * u), Offset(cx + (i - 0.5f) * ancho * 0.6f, y - 18f * u), pl, ancho * 0.28f)
-                1 -> naranjaNavidad(Offset(cx, y - 3f * u), minOf(ancho * 0.24f, 7f * u), pl, s + i)
+                1 -> aceboNavidad(Offset(cx, y - 2f * u), minOf(ancho * 0.7f, 14f * u), -90f + (i - 0.5f) * 30f, pl)
                 else -> {
                     val r = Rect(cx - 3f * u, y - 16f * u, cx + 3f * u, y + 4f * u)
                     rotate(12f - 24f * i, Offset(cx, y)) {

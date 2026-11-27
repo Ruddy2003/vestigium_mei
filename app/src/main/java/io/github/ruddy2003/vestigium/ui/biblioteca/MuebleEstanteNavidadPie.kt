@@ -162,13 +162,10 @@ internal object PieEstanteNavidad {
         val ti = Offset(pu.right - pu.width * 0.12f, pu.center.y + pu.height * 0.18f)
         drawCircle(a.luz(P.LATON, k), w * 0.009f, ti)
         drawCircle(a.brillo(0.6f, k), w * 0.003f, ti - Offset(w * 0.003f, w * 0.003f))
-        // El adorno de fundición de la puerta: un festón en relieve abajo.
-        val fes = Path()
-        for (i in 0 until 4) {
-            val x0 = pu.left + pu.width * (0.12f + 0.19f * i)
-            fes.addArc(Rect(x0, pu.bottom - pu.height * 0.32f, x0 + pu.width * 0.19f, pu.bottom - pu.height * 0.12f), 0f, 180f)
-        }
-        drawPath(fes, a.dia(P.HIERRO_LUZ, 0f, k), style = Stroke(1.2f * u))
+        // El adorno de fundición de la puerta: un recuadro en relieve abajo, con su canto de luz.
+        val rel = Rect(pu.left + pu.width * 0.14f, pu.bottom - pu.height * 0.32f, pu.right - pu.width * 0.14f, pu.bottom - pu.height * 0.12f)
+        drawRect(a.dia(P.HIERRO_LUZ, -0.1f, k), rel.topLeft, rel.size, style = Stroke(1.2f * u))
+        drawLine(a.brillo(0.35f, k), Offset(rel.left, rel.top), Offset(rel.right, rel.top), 0.8f * u)
         // De noche, la lumbre: el resplandor por la rejilla y alrededor de la puerta.
         if (a.oscuro) {
             val f = if (a.noche) 0.55f else 1f
