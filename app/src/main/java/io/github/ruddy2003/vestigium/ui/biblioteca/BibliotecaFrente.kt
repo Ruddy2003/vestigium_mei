@@ -93,6 +93,9 @@ object EstanteFrente : DisenoBiblioteca {
     /** La sala con las luces bajas (modo oscuro) y el petróleo de la madrugada (de noche). */
     private val SALA = Color(0xFF121518)
     private val NOCHE = Color(0xFF0B1519)
+    /** La sombra del cuarto, verde negro (la de la piedra húmeda), y la penumbra verdosa de la base de noche. */
+    private val SOMBRA_CUARTO = Color(0xFF16201C)
+    private val PENUMBRA = Color(0xFF0E1614)
     /** Las ruinas que esconden la base: la piedra (a la luz y en sombra), la raíz, el musgo, el cobre y el hormigón de la losa. */
     private val PIEDRA = TrazosFrente.PIEDRA
     private val PIEDRA_SOMBRA = TrazosFrente.PIEDRA_SOMBRA
@@ -540,8 +543,13 @@ object EstanteFrente : DisenoBiblioteca {
         val x0 = cuerpo.left + w * 0.035f
         val cara = Rect(x0, cuerpo.top, cuerpo.right, cuerpo.bottom)
         val numero = Frente.contador(Math.floorMod(e.semilla, 9000) + 1000)
-        // La sombra sobre la consola.
-        drawRoundRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.24f), Offset(cuerpo.left + 3 * u, cuerpo.top + 4 * u), cuerpo.size, CornerRadius(6 * u))
+        // Donde descansa: la mesa de la consola y la sombra del dosier, del color del cuarto, hacia donde no llega la luz (de día y
+        // de noche la luz viene de la izquierda; en el sueño manda el verde del radar, de arriba a la derecha).
+        mesaTapa(cuerpo, oscuro, e.noche)
+        val hacia = if (e.noche) -1f else 1f
+        val tinte = if (e.noche) NOCHE else SOMBRA_CUARTO
+        drawRoundRect(tinte.copy(alpha = if (oscuro) 0.6f else 0.3f), Offset(cuerpo.left + hacia * 4 * u, cuerpo.top + 3 * u), cuerpo.size, CornerRadius(6 * u))
+        drawRect(tinte.copy(alpha = if (oscuro) 0.55f else 0.32f), Offset(cuerpo.left + hacia * 7 * u, cuerpo.bottom - 1.5f * u), Size(cuerpo.width, 3 * u))
         // La pestaña de la tapa de atrás, con el número del despacho.
         val pes = Rect(w * 0.66f, h * 0.012f, w * 0.9f, cuerpo.top + 3 * u)
         drawPath(Path().apply {
@@ -573,7 +581,7 @@ object EstanteFrente : DisenoBiblioteca {
         val co = cos(ang); val si = sin(ang)
         if (a > 0.01f) drawRect(Color.Black.copy(alpha = 0.32f * si), Offset(x0 + cara.width * co, cara.top), Size(14 * u * si, cara.height))
         afin(co, -si * 0.1f, 0f, 1f, x0 - x0 * co, x0 * si * 0.1f) {
-            drawRoundRect(Brush.verticalGradient(listOf(mezcla(lona, Color.White, 0.08f), lona, mezcla(lona, Color.Black, 0.18f)), cara.top, cara.bottom), cara.topLeft, cara.size, CornerRadius(6 * u))
+            drawRoundRect(lonaConLuz(lona, cara, oscuro, e.noche), cara.topLeft, cara.size, CornerRadius(6 * u))
             clipRect(cara.left, cara.top, cara.right, cara.bottom) {
                 trama(cara, Color.White.copy(alpha = 0.045f), 1.8f * u)
                 // El corte para el dedo, en el canto libre.
@@ -626,6 +634,7 @@ object EstanteFrente : DisenoBiblioteca {
                 drawLine(c(BAQUELITA), p1, p2, 4f * u)
                 drawLine(Color.White.copy(alpha = 0.12f), p1 + Offset(1f * u, s * 1f * u), p2 + Offset(-1f * u, -s * 1f * u), 0.6f * u)
             }
+            cantosTapa(cara, oscuro, e.noche)
             if (a > 0f) drawRoundRect(Color.Black.copy(alpha = 0.45f * (1f - co)), cara.topLeft, cara.size, CornerRadius(6 * u))
         }
         // El lomo doblado, que no se mueve.
@@ -633,8 +642,66 @@ object EstanteFrente : DisenoBiblioteca {
         drawRoundRect(mezcla(lona, Color.Black, 0.2f), lomo.topLeft, lomo.size, CornerRadius(4 * u))
         drawRect(Color.White.copy(alpha = 0.1f), Offset(lomo.left + lomo.width * 0.3f, lomo.top + 2 * u), Size(lomo.width * 0.2f, lomo.height - 4 * u))
         drawLine(Color.Black.copy(alpha = 0.45f), Offset(x0, cuerpo.top + 2 * u), Offset(x0, cuerpo.bottom - 2 * u), 1.2f * u)
-        // De noche, el resplandor verde del radar entra por la esquina.
-        if (e.noche) clipPath(Path().apply { addRoundRect(RoundRect(cuerpo, CornerRadius(6 * u))) }) { mancha(Offset(cuerpo.right, cuerpo.top), w * 0.45f, RADAR.copy(alpha = 0.14f)) }
+    }
+
+    /**
+     * La lona de la tapa con la luz que le llega desde arriba: de día, como siempre; de noche, tibia arriba (la lámpara del cuarto)
+     * y hundida abajo en la penumbra verde; en el sueño, el verde frío del radar arriba y la noche abajo. El pie queda siempre más
+     * hondo que antes, para que lo grabado abajo (la célula, las palabras) no se lea peor; el lado lo dan los cantos.
+     */
+    private fun lonaConLuz(lona: Color, r: Rect, oscuro: Boolean, noche: Boolean): Brush = when {
+        noche -> Brush.verticalGradient(listOf(mezcla(lona, RADAR, if (oscuro) 0.14f else 0.1f), lona, mezcla(mezcla(lona, Color.Black, 0.18f), NOCHE, 0.3f)), r.top, r.bottom)
+        oscuro -> Brush.verticalGradient(listOf(mezcla(lona, PILOTO, 0.1f), lona, mezcla(mezcla(lona, Color.Black, 0.18f), PENUMBRA, 0.3f)), r.top, r.bottom)
+        else -> Brush.verticalGradient(listOf(mezcla(lona, Color.White, 0.08f), lona, mezcla(lona, Color.Black, 0.18f)), r.top, r.bottom)
+    }
+
+    /**
+     * Los cantos de la tapa que miran a la luz: de día, el filo claro de la izquierda; de noche, el tibio a la izquierda (más vivo
+     * abajo, junto al piloto) y el frío del radar a la derecha; en el sueño, el frío arriba y a la derecha.
+     */
+    private fun DrawScope.cantosTapa(r: Rect, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val izq = Rect(r.left + 0.5f * u, r.top + 7 * u, r.left + 1.8f * u, r.bottom - 7 * u)
+        val der = Rect(r.right - 1.8f * u, r.top + 7 * u, r.right - 0.5f * u, r.bottom - 7 * u)
+        val arriba = Rect(r.left + 7 * u, r.top + 0.4f * u, r.right - 7 * u, r.top + 1.6f * u)
+        when {
+            noche -> {
+                val f = if (oscuro) 0.6f else 0.42f
+                drawRect(Brush.horizontalGradient(listOf(RADAR.copy(alpha = 0f), RADAR.copy(alpha = f)), arriba.left, arriba.right), arriba.topLeft, arriba.size)
+                drawRect(Brush.verticalGradient(listOf(RADAR.copy(alpha = f), RADAR.copy(alpha = 0.05f)), der.top, der.bottom), der.topLeft, der.size)
+            }
+            oscuro -> {
+                drawRect(Brush.verticalGradient(listOf(PILOTO.copy(alpha = 0.18f), PILOTO.copy(alpha = 0.55f)), izq.top, izq.bottom), izq.topLeft, izq.size)
+                drawRect(Brush.verticalGradient(listOf(RADAR.copy(alpha = 0.32f), RADAR.copy(alpha = 0.06f)), der.top, der.bottom), der.topLeft, der.size)
+            }
+            else -> drawRect(Color.White.copy(alpha = 0.2f), izq.topLeft, izq.size)
+        }
+    }
+
+    /**
+     * La mesa de la consola donde descansa el dosier: la cara de arriba de chapa hueso, detrás de su pie, y el labio curvo con su
+     * brillo y su línea de sombra. La luz la cruza a lo ancho: de día y de noche viene de la izquierda (de noche, el piloto ámbar
+     * chico del labio es la llama: su charco tibio; lo de la derecha se hunde en la penumbra verde); en el sueño, el verde del
+     * radar alumbra la derecha y el piloto arde bajo.
+     */
+    private fun DrawScope.mesaTapa(cuerpo: Rect, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val y0 = cuerpo.bottom - 3 * u
+        val yl = cuerpo.bottom + (h - cuerpo.bottom) * 0.35f
+        if (h - yl < 2 * u) return
+        fun c(x: Color) = t(x, oscuro, noche)
+        fun luz(x: Color): List<Color> = when {
+            noche -> listOf(mezcla(c(x), NOCHE, 0.4f), c(x), mezcla(c(x), RADAR, if (oscuro) 0.18f else 0.1f))
+            oscuro -> listOf(mezcla(c(x), PILOTO, 0.22f), c(x), mezcla(c(x), PENUMBRA, 0.5f))
+            else -> listOf(mezcla(x, Color.White, 0.25f), x, mezcla(x, BORDE, 0.35f))
+        }
+        drawRect(Brush.horizontalGradient(luz(HUESO_OSC), 0f, w), Offset(0f, y0), Size(w, yl - y0))
+        drawRect(Brush.horizontalGradient(luz(HUESO), 0f, w), Offset(0f, yl), Size(w, h - yl))
+        drawLine(Color.White.copy(alpha = if (oscuro) 0.12f else 0.55f), Offset(0f, yl + 0.8f * u), Offset(w, yl + 0.8f * u), 0.8f * u)
+        drawRect(Color.Black.copy(alpha = if (oscuro) 0.4f else 0.2f), Offset(0f, h - 1.6f * u), Size(w, 1.6f * u))
+        drawLine(SOMBRA_CUARTO.copy(alpha = 0.4f), Offset(0f, yl), Offset(w, yl), 0.6f * u)
+        piloto(Offset(cuerpo.left + 12 * u, (yl + h) / 2f), 1.7f * u, PILOTO, true, c(CROMO), if (noche) 0.5f else if (oscuro) 1.5f else 0.6f)
     }
 
     // =================================================================
