@@ -119,7 +119,19 @@ internal object MuebleLibretaNavidad {
     /** Cuánta luz fría de la nieve de la ventana le llega a [p] de noche (fuerte arriba a la izquierda, se apaga hacia la derecha). */
     fun frio(p: Offset, s: SitioLibretaNavidad): Float {
         val dx = (p.x - s.ventana.right) / s.U; val dy = (p.y - s.ventana.center.y) / s.U
-        return (1.05f - sqrt(dx * dx + dy * dy * 0.6f) / 190f).coerceIn(0f, 1f)
+        return (1.12f - sqrt(dx * dx + dy * dy * 0.5f) / 150f).coerceIn(0f, 1f)
+    }
+
+    /**
+     * El color [base] (ya con la luz de la vela) bajo la luz fría de la nieve en [p], de noche: el mismo material virado al azul
+     * verdoso y más claro, tanto más cuanto más le llega ([fuerza] lo sube en los planos que miran a la ventana). De día, igual.
+     */
+    fun conFrio(base: androidx.compose.ui.graphics.Color, p: Offset, s: SitioLibretaNavidad, a: AireNavidad, fuerza: Float = 1f): androidx.compose.ui.graphics.Color {
+        if (!a.oscuro) return base
+        val f = (frio(p, s) * fuerza).coerceIn(0f, 1f)
+        if (f <= 0f) return base
+        val frio = io.github.ruddy2003.vestigium.ui.ideario.mezcla(base, PaletaNavidad.NIEVE_FILO, 0.55f)
+        return io.github.ruddy2003.vestigium.ui.ideario.mezcla(base, frio, 0.85f * f)
     }
 
     /**

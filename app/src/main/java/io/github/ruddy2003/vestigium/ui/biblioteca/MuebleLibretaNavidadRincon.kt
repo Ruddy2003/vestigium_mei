@@ -365,7 +365,16 @@ internal object RinconLibretaNavidad {
         val U = s.U
         val V = PaletaLibretaNavidad
         val lit = if (m != null) 1f else 0f
-        fun c(col: Color, f: Float, p: Offset) = a.en(col, f, s.k(a, p), lit, m)
+        fun c(col: Color, f: Float, p: Offset) = MuebleLibretaNavidad.conFrio(a.en(col, f, s.k(a, p), lit, m), p, s, a)
+        /** [r] pintado a lo ancho con [col] según la luz de cada punto (de noche, del frío de la izquierda a la vela de la derecha). */
+        fun aLoAncho(r: Rect, col: Color, f: Float, y: Float, fuerza: Float = 1f): Brush {
+            if (!a.oscuro) return Brush.horizontalGradient(listOf(c(col, f, Offset(r.center.x, y)), c(col, f, Offset(r.center.x, y))), r.left, r.right)
+            val n = 10
+            return Brush.horizontalGradient(List(n + 1) { i ->
+                val p = Offset(r.left + r.width * i / n, y)
+                MuebleLibretaNavidad.conFrio(a.en(col, f, s.k(a, p), lit, m), p, s, a, fuerza)
+            }, r.left, r.right)
+        }
         val medio = Offset(s.cx, (s.cajones0 + s.cajones1) / 2)
         val derecha = Offset(s.der, medio.y)
         // El costado que se ve (a la derecha), con su canto.
@@ -374,7 +383,12 @@ internal object RinconLibretaNavidad {
         if (a.oscuro) drawPath(costado, P.LLAMA.copy(alpha = 0.18f * s.k(a, derecha)))
         // El frente: el marco crema de los cajoncitos, con lo hondo entre ellos (se ve por las rendijas).
         val frente = Rect(s.izq, s.cornisa1, s.der, s.zocalo1)
-        drawRect(c(V.VERDE, 0f, medio), frente.topLeft, frente.size)
+        drawRect(aLoAncho(frente, V.VERDE, 0f, medio.y), frente.topLeft, frente.size)
+        // De noche, el larguero de la izquierda mira a la ventana: un plano frío, azul verdoso claro, con su filo.
+        if (a.oscuro) {
+            val larguero = Rect(frente.left, frente.top, s.rejilla.left - 3.5f * U, frente.bottom)
+            drawRect(MuebleLibretaNavidad.conFrio(a.en(V.VERDE_LUZ, 0f, s.k(a, larguero.center), lit, m), Offset(larguero.left, s.cajones0), s, a, 1.25f), larguero.topLeft, larguero.size)
+        }
         drawRect(c(mezcla(P.PINO_OSC, P.TINTA, 0.4f), 0f, medio), s.rejilla.topLeft, s.rejilla.size)
         drawRect(c(mezcla(P.PINO_OSC, P.TINTA, 0.4f), 0f, medio), Offset(s.rejilla.left, s.largo0), Size(s.rejilla.width, s.largo1 - s.largo0))
         // Los filetes verdes del marco: alrededor de la rejilla y del cajón largo.
@@ -389,7 +403,7 @@ internal object RinconLibretaNavidad {
         }
         // El copete con su cartela.
         val cp = copeteForma(s)
-        drawPath(cp, c(V.VERDE, 0f, Offset(s.cx, s.copete + 20f * U)))
+        drawPath(cp, aLoAncho(Rect(s.izq, s.copete, s.der, s.cornisa0), V.VERDE, 0f, s.copete + 20f * U, 1.1f))
         drawPath(Path().apply { op(cp, corridoNavidad(cp, 0f, 2.5f * U), PathOperation.Difference) }, if (a.oscuro) a.filoFrio(0.55f * MuebleLibretaNavidad.frio(Offset(s.izq, s.copete), s)) else a.claro(0.55f))
         clipPath(cp) {
             drawPath(corridoNavidad(cp, 0f, 5f * U), c(P.CREMA, 0f, Offset(s.cx, s.copete)), style = Stroke(1.1f * U))
@@ -406,15 +420,16 @@ internal object RinconLibretaNavidad {
         }
         // La cornisa: el tablero de arriba, su bocel y la gola, con su filete verde.
         val n0 = s.cornisa0; val n1 = s.cornisa1
-        drawRect(c(V.VERDE_LUZ, 0f, Offset(s.cx, n0)), Offset(s.izq - 5f * U, n0), Size(s.ancho + 10f * U, (n1 - n0) * 0.45f))
-        drawRect(c(V.VERDE, -0.08f, Offset(s.cx, n1)), Offset(s.izq - 5f * U, n0 + (n1 - n0) * 0.45f), Size(s.ancho + 10f * U, (n1 - n0) * 0.55f))
+        val cor = Rect(s.izq - 5f * U, n0, s.der + 5f * U, n1)
+        drawRect(aLoAncho(cor, V.VERDE_LUZ, 0f, n0, 1.15f), Offset(s.izq - 5f * U, n0), Size(s.ancho + 10f * U, (n1 - n0) * 0.45f))
+        drawRect(aLoAncho(cor, V.VERDE, -0.08f, n1), Offset(s.izq - 5f * U, n0 + (n1 - n0) * 0.45f), Size(s.ancho + 10f * U, (n1 - n0) * 0.55f))
         drawRect(c(P.CREMA, 0f, Offset(s.cx, n0)), Offset(s.izq - 5f * U, n0 + (n1 - n0) * 0.62f), Size(s.ancho + 10f * U, 1.2f * U))
         drawRect(a.brillo(0.5f, s.k(a, Offset(s.cx, n0))), Offset(s.izq - 5f * U, n0), Size(s.ancho + 10f * U, 1f * U))
         drawRect(a.sombra(0.4f), Offset(s.izq, n1), Size(s.ancho, 1.6f * U))
         drawPath(poligonoNavidad(s.der + 5f * U, n0, s.der + s.fondo + 5f * U, n0 - s.fondo * 0.5f, s.der + s.fondo + 5f * U, n1 - s.fondo * 0.5f, s.der + 5f * U, n1), c(V.VERDE_OSC, -0.1f, derecha))
         // El zócalo con su filete y su bocel, y las patas de bollo.
         val z0 = s.largo1; val z1 = s.zocalo1
-        drawRect(c(V.VERDE, -0.04f, Offset(s.cx, z1)), Offset(s.izq - 3f * U, z0), Size(s.ancho + 6f * U, z1 - z0))
+        drawRect(aLoAncho(Rect(s.izq - 3f * U, z0, s.der + 3f * U, z1), V.VERDE, -0.04f, z1), Offset(s.izq - 3f * U, z0), Size(s.ancho + 6f * U, z1 - z0))
         drawRect(c(P.CREMA, 0f, Offset(s.cx, z1)), Offset(s.izq - 3f * U, z0 + (z1 - z0) * 0.5f), Size(s.ancho + 6f * U, 1.1f * U))
         drawRect(a.brillo(0.45f, s.k(a, Offset(s.cx, z0))), Offset(s.izq - 3f * U, z0), Size(s.ancho + 6f * U, 1f * U))
         drawRect(a.sombra(0.35f), Offset(s.izq - 3f * U, z1 - 1.4f * U), Size(s.ancho + 6f * U, 1.4f * U))

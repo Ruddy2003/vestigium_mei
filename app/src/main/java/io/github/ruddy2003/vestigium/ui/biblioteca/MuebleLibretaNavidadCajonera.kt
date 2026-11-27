@@ -94,8 +94,9 @@ internal object CajoneraLibretaNavidad {
         }
         // El frente: la cara, el filete verde, la luz arriba y la sombra abajo.
         val tono = mezcla(P.CREMA, if (num % 3 == 0) P.PAPEL else P.CARTULINA, 0.15f * azar(semilla, 1))
-        drawRect(a.dia(tono, 0f, k), f.topLeft, f.size)
-        drawRect(a.dia(P.FILETE, 0f, k), f.deflate(2f * U).topLeft, f.deflate(2f * U).size, style = Stroke(0.8f * U))
+        val pf = Offset(f.left, f.center.y)
+        drawRect(MuebleLibretaNavidad.conFrio(a.dia(tono, 0f, k), pf, s, a, 1.1f), f.topLeft, f.size)
+        drawRect(MuebleLibretaNavidad.conFrio(a.dia(P.FILETE, 0f, k), pf, s, a), f.deflate(2f * U).topLeft, f.deflate(2f * U).size, style = Stroke(0.8f * U))
         drawRect(a.brillo(0.45f, k), f.topLeft, Size(f.width, 0.9f * U))
         drawRect(a.sombra(0.25f), Offset(f.left, f.bottom - 1.2f * U), Size(f.width, 1.2f * U))
         if (a.oscuro) {
@@ -104,7 +105,9 @@ internal object CajoneraLibretaNavidad {
             if (k > 0.25f) drawRect(a.filo(0.5f * k), Offset(f.right - 1.2f * U, f.top), Size(1.2f * U, f.height))
         }
         // El número pintado y el tirador de porcelana con su vástago de latón.
-        numero(medidor, num, Rect(f.left + 2f * U, f.top + 2f * U, f.right - 2f * U, f.top + f.height * 0.62f), a.dia(if (num % 2 == 0) P.CARMIN else P.FILETE, 0f, k))
+        // El número: de noche, oscuro y del color de su pintura, para que se lea también en el lado frío.
+        val tintaNum = if (a.oscuro) mezcla(if (num % 2 == 0) P.CARMIN else P.FILETE, P.TINTA, 0.45f).let { mezcla(it, Color(0xFF3A1A0A), 0.25f * k) } else a.dia(if (num % 2 == 0) P.CARMIN else P.FILETE, 0f, k)
+        numero(medidor, num, Rect(f.left + 2f * U, f.top + 2f * U, f.right - 2f * U, f.top + f.height * 0.62f), tintaNum)
         val t = Offset(f.center.x, f.bottom - f.height * 0.24f)
         drawCircle(a.sombra(0.35f), 2.2f * U, t + Offset(0.8f * U, 0.9f * U))
         drawCircle(a.dia(P.LOZA, 0f, maxOf(k, 0.1f)), 2f * U, t)
@@ -144,8 +147,14 @@ internal object CajoneraLibretaNavidad {
             }
             drawRect(a.sombra(0.4f), Offset(f.left, f.bottom), Size(f.width, 2.5f * U * (0.5f + sale)))
         }
-        drawRect(a.dia(P.CREMA, 0.02f, k), f.topLeft, f.size)
-        drawRect(a.dia(P.FILETE, 0f, k), f.deflate(2.5f * U).topLeft, f.deflate(2.5f * U).size, style = Stroke(1f * U))
+        if (a.oscuro) {
+            val n = 8
+            drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(List(n + 1) { i ->
+                val p = Offset(f.left + f.width * i / n, f.center.y)
+                MuebleLibretaNavidad.conFrio(a.dia(P.CREMA, 0.02f, MuebleLibretaNavidad.cerca(p, s, a)), p, s, a, 1.1f)
+            }, f.left, f.right), f.topLeft, f.size)
+        } else drawRect(a.dia(P.CREMA, 0.02f, k), f.topLeft, f.size)
+        drawRect(MuebleLibretaNavidad.conFrio(a.dia(P.FILETE, 0f, k), Offset(f.left, f.center.y), s, a), f.deflate(2.5f * U).topLeft, f.deflate(2.5f * U).size, style = Stroke(1f * U))
         drawRect(a.brillo(0.45f, k), f.topLeft, Size(f.width, 1f * U))
         drawRect(a.sombra(0.25f), Offset(f.left, f.bottom - 1.4f * U), Size(f.width, 1.4f * U))
         listOf(0.22f, 0.78f).forEach { fx ->
