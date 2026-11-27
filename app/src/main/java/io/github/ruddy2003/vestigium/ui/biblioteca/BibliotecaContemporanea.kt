@@ -7268,7 +7268,9 @@ object EstanteNavidad : DisenoBiblioteca {
         val u = density
         val w = size.width; val h = size.height
         val a = e.abierto.coerceIn(0f, 1f)
-        fun c(x: Color) = t(x, oscuro, e.noche)
+        // En el sueño, la misma pieza más tarde: menos velo que antes (manda la luna en los cantos, no un filtro).
+        fun c(x: Color) = if (e.noche) mezcla(t(x, oscuro, false), NOCHE, 0.3f) else t(x, oscuro, false)
+        val luce = oscuro || e.noche
         val it0 = (e.semilla and 0x7fffffff) % TELAS.size
         val tela = c(TELAS[it0])
         val roja = it0 == 0 || it0 == 2
@@ -7277,7 +7279,10 @@ object EstanteNavidad : DisenoBiblioteca {
         val lleno = (e.palabras / 800f).coerceIn(0f, 1f)
         val cu = Rect(w * 0.02f, h * 0.1f, w * 0.965f, h * 0.935f)
         val bisagra = cu.left + w * 0.07f
-        drawRoundRect(Color.Black.copy(alpha = 0.2f), cu.topLeft + Offset(3 * u, 5 * u), cu.size, CornerRadius(3 * u))
+        // Donde descansa: el tablero de pino de la mesa de la cocina, con su canto, y la sombra con color del libro, al lado
+        // contrario a la luz (de día, la ventana a la izquierda; de noche, la vela a la derecha).
+        tableroTapa(h * 0.9f, oscuro, e.noche)
+        drawRoundRect(sombraTapa(oscuro, e.noche, 0.34f), cu.topLeft + Offset(if (luce) -5 * u else 5 * u, 6 * u), cu.size, CornerRadius(3 * u))
         // La cinta de registro, que cuelga por el pie: más larga cuanto más escribiste.
         val xc = w * 0.64f; val cw = w * 0.022f; val lc = cu.bottom + h * (0.025f + 0.035f * lleno)
         drawPath(Path().apply { moveTo(xc, cu.bottom); lineTo(xc + cw, cu.bottom); lineTo(xc + cw, lc); lineTo(xc + cw / 2, lc - cw * 0.6f); lineTo(xc, lc); close() }, cinta)
@@ -7299,7 +7304,9 @@ object EstanteNavidad : DisenoBiblioteca {
             drawRoundRect(tela, cu.topLeft, cu.size, CornerRadius(3 * u))
             var yy = cu.top
             while (yy < cu.bottom) { drawLine(Color.White.copy(alpha = 0.05f), Offset(cu.left, yy), Offset(cu.right, yy), 0.5f * u); yy += 2.2f * u }
-            drawRect(Color.Black.copy(alpha = 0.18f), Offset(cu.right - 4 * u, cu.top), Size(4 * u, cu.height))
+            drawRect(sombraTapa(oscuro, e.noche, 0.22f), Offset(cu.right - 4 * u, cu.top), Size(4 * u, cu.height))
+            // De día, el filete de luz en los cantos que miran a la ventana (arriba y a la izquierda).
+            if (!luce) drawRect(io.github.ruddy2003.vestigium.ui.muebles.luzMueble(0.4f), Offset(bisagra, cu.top), Size(cu.right - bisagra, 1.2f * u))
             // El doble filete dorado, con un botón en cada esquina.
             val marco = Rect(bisagra + 7 * u, cu.top + 7 * u, cu.right - 7 * u, cu.bottom - 7 * u)
             drawRect(oro, marco.topLeft, marco.size, style = Stroke(1 * u))
@@ -7419,13 +7426,67 @@ object EstanteNavidad : DisenoBiblioteca {
                 if (e.noche) {
                     drawCircle(col.copy(alpha = 0.12f), 9 * u, bulbo)
                     drawCircle(col.copy(alpha = 0.25f), 5 * u, bulbo)
-                }
+                } else if (oscuro) drawCircle(col.copy(alpha = 0.2f), 7 * u, bulbo)
                 drawRect(cuerda, Offset(p.x - 1.4f * u, p.y), Size(2.8f * u, 2.6f * u))
-                drawOval(if (e.noche) col else c(col).copy(alpha = 0.85f), Offset(bulbo.x - 2.4f * u, bulbo.y - 2.6f * u), Size(4.8f * u, 6.4f * u))
-                drawCircle(Color.White.copy(alpha = if (e.noche) 0.7f else 0.35f), 0.9f * u, Offset(bulbo.x - 0.8f * u, bulbo.y - 0.6f * u))
+                drawOval(if (luce) col else c(col).copy(alpha = 0.85f), Offset(bulbo.x - 2.4f * u, bulbo.y - 2.6f * u), Size(4.8f * u, 6.4f * u))
+                drawCircle(Color.White.copy(alpha = if (luce) 0.7f else 0.35f), 0.9f * u, Offset(bulbo.x - 0.8f * u, bulbo.y - 0.6f * u))
                 j++
             }
         }
+        ladosTapa(cu, bisagra, oscuro, e.noche)
+    }
+
+    /** La sombra de la tapa con color: de día, el violeta de los muebles; de noche, el verde azulado de la cocina. */
+    private fun sombraTapa(oscuro: Boolean, noche: Boolean, a: Float): Color =
+        if (oscuro || noche) PaletaNavidad.NOCHE.copy(alpha = (a * 1.4f).coerceAtMost(1f)) else io.github.ruddy2003.vestigium.ui.muebles.sombraMueble(a)
+
+    /** El tablero de pino donde descansa el libro (desde [y] hasta abajo): la cara de arriba, su veta, su canto y su filo de luz. */
+    private fun DrawScope.tableroTapa(y: Float, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val canto = y + (h - y) * 0.55f
+        fun c(x: Color) = if (noche) mezcla(t(x, oscuro, false), NOCHE, 0.3f) else t(x, oscuro, false)
+        drawRect(c(mezcla(PaletaNavidad.PINO, PaletaNavidad.PINO_LUZ, 0.3f)), Offset(0f, y), Size(w, canto - y))
+        drawLine(c(PaletaNavidad.PINO_OSC).copy(alpha = 0.3f), Offset(0f, y + (canto - y) * 0.45f), Offset(w, y + (canto - y) * 0.5f), 0.7f * u)
+        drawRect(c(PaletaNavidad.PINO), Offset(0f, canto), Size(w, h - canto))
+        drawRect(c(PaletaNavidad.PINO_OSC).copy(alpha = 0.6f), Offset(0f, h - 2f * u), Size(w, 2f * u))
+        drawRect(if (oscuro || noche) PaletaNavidad.LLAMA.copy(alpha = 0.35f) else io.github.ruddy2003.vestigium.ui.muebles.luzMueble(0.45f), Offset(0f, canto), Size(w, 1f * u))
+    }
+
+    /**
+     * Los dos lados de la luz de noche (y en el sueño): a la derecha, la vela chica en su palmatoria de latón (la de la cocina),
+     * con su charco cálido en el libro y el filo en el canto que la mira; a la izquierda, el filo frío de la nieve de la ventana
+     * (en el sueño, de la luna) en el lomo y en el canto de arriba. De día, la vela está apagada.
+     */
+    private fun DrawScope.ladosTapa(cu: Rect, bisagra: Float, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val luce = oscuro || noche
+        // La palmatoria chica, con pocas piezas: el platillo, el cañón, la vela de cera con su lado en sombra y el pabilo.
+        val pie = Offset(w - 6.5f * u, h * 0.955f)
+        fun c(x: Color) = if (noche) mezcla(t(x, oscuro, false), NOCHE, 0.3f) else t(x, oscuro, false)
+        val laton = if (luce) mezcla(c(PaletaNavidad.LATON), PaletaNavidad.LLAMA, 0.35f) else c(PaletaNavidad.LATON)
+        val arriba = pie.y - 36f * u
+        drawOval(c(PaletaNavidad.LATON_OSC), Offset(pie.x - 7.5f * u, pie.y - 2.5f * u), Size(15f * u, 4.5f * u))
+        drawOval(laton, Offset(pie.x - 7.5f * u, pie.y - 3.5f * u), Size(15f * u, 3.6f * u))
+        drawRect(laton, Offset(pie.x - 2.4f * u, pie.y - 6.5f * u), Size(4.8f * u, 4f * u))
+        drawRect(if (luce) mezcla(c(PaletaNavidad.PAPEL), PaletaNavidad.LLAMA, 0.3f) else c(PaletaNavidad.PAPEL), Offset(pie.x - 1.8f * u, arriba), Size(3.6f * u, pie.y - 6.5f * u - arriba))
+        drawRect(sombraTapa(oscuro, noche, 0.3f), Offset(pie.x + 0.4f * u, arriba), Size(1.4f * u, pie.y - 6.5f * u - arriba))
+        drawLine(c(PaletaNavidad.TINTA), Offset(pie.x, arriba), Offset(pie.x + 0.4f * u, arriba - 2.4f * u), 0.9f * u)
+        if (!luce) return
+        val llama = Offset(pie.x + 0.4f * u, arriba - 4.6f * u)
+        val fuerza = if (noche) 0.6f else 1f
+        // El charco de la vela, solo hasta donde llega su luz.
+        val rc = w * 0.18f
+        drawCircle(Brush.radialGradient(listOf(PaletaNavidad.LLAMA.copy(alpha = 0.36f * fuerza), PaletaNavidad.LLAMA.copy(alpha = 0f)), llama, rc), rc, llama)
+        drawRect(PaletaNavidad.LLAMA.copy(alpha = 0.55f * fuerza), Offset(cu.right - 1.5f * u, cu.top + 4f * u), Size(1.5f * u, cu.height - 8f * u))
+        // El lado frío: el filo en el lomo y en el tramo de la izquierda del canto de arriba.
+        val frio = if (noche) PaletaNavidad.LUNA_RAS else PaletaNavidad.NIEVE_FILO
+        drawRect(frio.copy(alpha = if (noche) 0.75f else 0.55f), Offset(cu.left, cu.top + 3f * u), Size(1.6f * u, cu.height - 6f * u))
+        drawRect(frio.copy(alpha = if (noche) 0.6f else 0.42f), Offset(cu.left, cu.top), Size(cu.width * 0.3f, 1.4f * u))
+        // La llama, de dos óvalos (la gota y su corazón claro), y el azul de su pie.
+        drawOval(mezcla(PaletaNavidad.LLAMA, PaletaNavidad.LUMBRE, 0.2f).copy(alpha = 0.6f + 0.4f * fuerza), Offset(llama.x - 1.7f * u, llama.y - 4.2f * u), Size(3.4f * u, 7f * u))
+        drawOval(PaletaNavidad.FUEGO, Offset(llama.x - 0.8f * u, llama.y - 1.6f * u), Size(1.6f * u, 3.4f * u))
     }
 
     // ---------------------------------------------------------------- la página y el escritor
