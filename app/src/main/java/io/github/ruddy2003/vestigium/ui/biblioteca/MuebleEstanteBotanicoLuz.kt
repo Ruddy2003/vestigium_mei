@@ -181,7 +181,7 @@ internal class TonoBotanico(val a: AireBotanico, val k: Float, val sol: Float, v
             if (a.noche) {
                 // El ocaso pinta lo que toca de melocotón (sin irse al naranja) y las luces recién prendidas, un poco.
                 val l = Color((d.red * 1.2f + 0.05f).coerceAtMost(1f), (d.green * 1.1f + 0.04f).coerceAtMost(1f), (d.blue * 0.98f + 0.03f).coerceAtMost(1f), c.alpha)
-                val lejos = mezcla(d, p.SOMBRA_OCASO, 0.14f)
+                val lejos = mezcla(d, p.SOMBRA_OCASO, 0.07f)
                 return mezcla(mezcla(lejos, mezcla(l, p.OCASO, 0.16f), 0.8f * sol), p.LLAMA, 0.12f * k)
             }
             // De día: lo de arriba a la izquierda, más claro y tibio; lo lejano, un poco más hondo.

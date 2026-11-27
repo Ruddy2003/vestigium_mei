@@ -3,6 +3,7 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -177,7 +178,7 @@ internal object CoronaEstanteBotanico {
         microscopio(Offset(w * 0.69f, apoyo + w * 0.004f), s, apoyo)
         cajaWard(Rect(w * 0.035f, apoyo - w * 0.285f, w * 0.395f, apoyo), s, apoyo)
         folios(Offset(w * 0.49f, apoyo + w * 0.007f), s, apoyo)
-        pliegosColgando(w * 0.03f, w * 0.19f, apoyo, s)
+        pliegosColgando(w * 0.02f, w * 0.2f, apoyo, s)
     }
 
     /**
@@ -188,40 +189,42 @@ internal object CoronaEstanteBotanico {
     private fun DrawScope.pliegosColgando(x0: Float, x1: Float, apoyo: Float, s: SitioBotanico) {
         val w = size.width; val u = density
         val t = s.t(Offset((x0 + x1) / 2, apoyo))
-        val cae = w * 0.04f
-        val hojas = listOf(Triple(0f, 0.02f, mezcla(P.SECANTE, P.KRAFT, 0.3f)), Triple(0.06f, 0f, P.SECANTE), Triple(0.02f, 0.034f, mezcla(P.PAPEL, P.KRAFT, 0.2f)))
-        hojas.forEachIndexed { i, (dx, dy, col) ->
-            val a = x0 + (x1 - x0) * dx; val b = x1 - (x1 - x0) * (0.12f * i)
-            val top = apoyo - w * 0.012f + dy * w * 0.1f
-            val hoja = Path().apply {
-                moveTo(a, top)
-                lineTo(b, top - w * 0.002f)
-                // El borde de delante cae por el canto y se curva hacia fuera.
-                cubicTo(b + w * 0.006f, top + cae * 0.4f, b - w * 0.004f, top + cae * 0.8f, b - w * 0.012f, top + cae + w * 0.004f * i)
-                lineTo(a + w * 0.01f, top + cae * (0.92f + 0.06f * i))
-                cubicTo(a - w * 0.004f, top + cae * 0.7f, a + w * 0.002f, top + cae * 0.3f, a, top)
-                close()
-            }
-            drawPath(Path().apply { addPath(hoja, Offset(w * 0.008f, w * 0.006f)) }, t.s(0.3f))
-            drawPath(hoja, t.c(col, 0.02f))
-            clipPath(hoja) {
-                // La parte de arriba, sobre el tablero, vista en escorzo (más clara); la que cae, más honda abajo.
-                drawRect(t.b(0.3f), Offset(a, top - w * 0.004f), Size(b - a, w * 0.012f))
-                drawRect(t.s(0.14f), Offset(a, top + cae * 0.55f), Size(b - a, cae))
-                if (i == 1) frondaBotanico(Offset(a + (b - a) * 0.3f, top + cae * 0.95f), cae * 1.05f, -70f, t.c(mezcla(P.HOJA, P.KRAFT, 0.4f)), 1f * u, 9)
-                if (i == 2) {
-                    val et = Rect(b - (b - a) * 0.42f, top + cae * 0.55f, b - (b - a) * 0.08f, top + cae * 0.82f)
-                    drawRect(t.c(P.PAPEL), et.topLeft, et.size)
-                    drawRect(t.c(P.TINTA).copy(alpha = 0.4f), et.topLeft, et.size, style = Stroke(0.5f * u))
-                    for (q in 0 until 2) drawLine(t.c(P.TINTA).copy(alpha = 0.5f), Offset(et.left + et.width * 0.12f, et.top + et.height * (0.38f + 0.3f * q)), Offset(et.right - et.width * (0.2f + 0.2f * q), et.top + et.height * (0.38f + 0.3f * q)), 0.5f * u)
-                }
-            }
-            drawPath(hoja, t.s(0.25f), style = Stroke(0.5f * u))
+        // El fajo, tumbado en el tablero: cinco pliegos de papel, secante y cartón, cada uno un poco corrido, con su canto.
+        val capas = listOf(P.KRAFT, P.SECANTE, mezcla(P.PAPEL, P.KRAFT, 0.15f), P.SECANTE, P.PAPEL)
+        val g = 2.2f * u
+        val base = apoyo + w * 0.002f
+        contactoBotanico(Offset((x0 + x1) / 2 + w * 0.01f, base), (x1 - x0) * 1.05f, w * 0.01f, t, 0.4f)
+        capas.forEachIndexed { i, col ->
+            val y = base - g * (i + 1)
+            val a = x0 + w * 0.006f * ((i * 3) % 4); val b = x1 - w * 0.008f * ((i * 2) % 3)
+            drawRect(t.c(col, 0.03f), Offset(a, y), Size(b - a, g))
+            drawRect(t.s(0.3f), Offset(a, y + g - 0.6f * u), Size(b - a, 0.6f * u))
+            drawRect(t.b(0.3f), Offset(a, y), Size(b - a, 0.5f * u))
         }
+        val top = base - g * capas.size
+        // El pliego de arriba asoma por delante y cae por el canto de la cornisa, curvado, con su helecho prensado y su etiqueta.
+        val c0 = x1 - (x1 - x0) * 0.55f; val c1 = x1 + w * 0.012f
+        val cae = w * 0.05f
+        val hoja = Path().apply {
+            moveTo(c0, top)
+            lineTo(c1 - w * 0.01f, top)
+            cubicTo(c1 + w * 0.004f, top + cae * 0.2f, c1 + w * 0.006f, top + cae * 0.7f, c1 - w * 0.004f, top + cae)
+            lineTo(c0 + w * 0.012f, top + cae * 0.92f)
+            cubicTo(c0 + w * 0.004f, top + cae * 0.6f, c0 - w * 0.002f, top + cae * 0.25f, c0, top)
+            close()
+        }
+        drawPath(Path().apply { addPath(hoja, Offset(w * 0.008f, w * 0.005f)) }, t.s(0.3f))
+        drawPath(hoja, Brush.verticalGradient(listOf(t.c(P.PAPEL, 0.05f), t.c(P.PAPEL, -0.06f), t.c(P.SECANTE, -0.18f)), top, top + cae))
+        frondaBotanico(Offset(c0 + (c1 - c0) * 0.25f, top + cae * 0.9f), cae * 0.95f, -64f, t.c(mezcla(P.HOJA, P.KRAFT, 0.35f)), 1f * u, 9)
+        val et = Rect(c1 - (c1 - c0) * 0.48f, top + cae * 0.55f, c1 - (c1 - c0) * 0.1f, top + cae * 0.82f)
+        drawRect(t.c(P.PAPEL), et.topLeft, et.size)
+        drawRect(t.c(P.TINTA).copy(alpha = 0.4f), et.topLeft, et.size, style = Stroke(0.5f * u))
+        for (q in 0 until 2) drawLine(t.c(P.TINTA).copy(alpha = 0.5f), Offset(et.left + et.width * 0.12f, et.top + et.height * (0.38f + 0.3f * q)), Offset(et.right - et.width * (0.2f + 0.2f * q), et.top + et.height * (0.38f + 0.3f * q)), 0.5f * u)
+        drawPath(hoja, t.s(0.3f), style = Stroke(0.5f * u))
         // El amonites que hace de pisapapeles: la espira con sus costillas, en su piedra.
-        val c = Offset(x0 + (x1 - x0) * 0.42f, apoyo - w * 0.024f)
+        val c = Offset(x0 + (x1 - x0) * 0.32f, top - w * 0.028f)
         val r = w * 0.032f
-        drawOval(t.s(0.4f), Offset(c.x - r * 0.9f, apoyo - w * 0.012f), Size(r * 2.2f, w * 0.014f))
+        drawOval(t.s(0.4f), Offset(c.x - r * 0.9f, top - w * 0.008f), Size(r * 2.2f, w * 0.012f))
         drawCircle(t.c(mezcla(P.PIEDRA, P.KRAFT, 0.35f)), r, c)
         clipPath(Path().apply { addOval(Rect(c.x - r, c.y - r, c.x + r, c.y + r)) }) {
             cilindroBotanico(Rect(c.x - r, c.y - r, c.x + r, c.y + r), t, -1f, 1.1f)

@@ -151,14 +151,14 @@ internal object ObraEstanteBotanico {
         val s0 = (techo * 0.7f + r.height * 0.13f + 1f) / fr.height
         val s1 = (techo * 0.7f + r.height * 0.23f + 1f) / fr.height
         if (!s.a.oscuro) {
-            val c = tc.c(P.SALVIA, -0.16f)
+            val c = tc.c(mezcla(P.SALVIA, P.SALVIA_OSC, 0.4f), -0.12f)
             val sombra = tc.s(1f).copy(alpha = 1f)
             val luz = mezcla(c, tc.c(P.SALVIA_LUZ, -0.08f), 0.35f)
             drawRect(Brush.verticalGradient(0f to mezcla(c, sombra, 0.5f), s0 to mezcla(c, sombra, 0.5f), s0 + 0.001f to mezcla(c, sombra, 0.24f),
                 s1 to mezcla(c, sombra, 0.24f), s1 + 0.001f to c, 0.58f to c, 0.6f to luz, 0.9f to luz, 0.93f to c, 1f to c,
                 startY = fr.top, endY = fr.bottom), fr.topLeft, fr.size)
         } else {
-            drawRect(s.aLoAncho(fr.left, fr.right, r.center.y) { it.c(P.SALVIA, -0.16f) }, fr.topLeft, fr.size)
+            drawRect(s.aLoAncho(fr.left, fr.right, r.center.y) { it.c(mezcla(P.SALVIA, P.SALVIA_OSC, 0.4f), -0.12f) }, fr.topLeft, fr.size)
             drawRect(tc.s(0.5f), Offset(r.left, r.top + techo * 0.7f), Size(r.width, r.height * 0.13f))
             drawRect(tc.s(0.24f), Offset(r.left, r.top + techo * 0.7f + r.height * 0.13f), Size(r.width, r.height * 0.1f))
         }
@@ -309,7 +309,9 @@ internal object ObraEstanteBotanico {
         val w = size.width; val u = density
         val bocel = r.top + r.height * 0.62f
         val x0 = r.left - 1f; val x1 = r.right + 1f
-        drawRect(s.aLoAncho(x0, x1, r.center.y, true) { it.c(P.ROBLE, 0.02f) }, Offset(x0, r.top - 1f), Size(x1 - x0, bocel - r.top + 1f))
+        // El fondo de toda la tabla, de píxel entero arriba y abajo, y encima las dos caras del bocel: así sus bordes, que caen a
+        // medio píxel, no dejan asomar el fondo.
+        drawRect(s.aLoAncho(x0, x1, r.center.y, true) { it.c(P.ROBLE, 0.02f) }, Offset(x0, r.top - 1f), Size(x1 - x0, r.height + 2f))
         drawRect(s.aLoAncho(x0, x1, r.center.y, true) { it.c(P.ROBLE_LUZ, 0f) }, Offset(x0, bocel), Size(x1 - x0, (r.bottom - bocel) * 0.45f))
         drawRect(s.aLoAncho(x0, x1, r.center.y, true) { it.c(P.ROBLE_OSC, 0f) }, Offset(x0, bocel + (r.bottom - bocel) * 0.45f), Size(x1 - x0, (r.bottom - bocel) * 0.55f + 1f))
         // De noche, el filo de la lumbre en el canto (más donde más alumbra).

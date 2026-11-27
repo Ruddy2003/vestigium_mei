@@ -254,8 +254,8 @@ internal object HuecosEstanteBotanico {
     // ---------------------------------------------------------------- las piedras y el martillo
 
     /**
-     * Las piedras del viaje: una losa de pizarra con un helecho fósil, apoyada contra la pared; delante, una geoda partida con sus
-     * cristales y dos cantos; el martillo de geólogo apoyado de pie al lado.
+     * Las piedras del viaje: una losa de pizarra con un helecho fósil, apoyada contra la pared; delante, un racimo de cristales en
+     * prismas (una drusa de cuarzo) y dos cantos; el martillo de geólogo apoyado de pie al lado.
      */
     private fun DrawScope.piedras(a: Float, b: Float, y: Float, h: Float, s: SitioBotanico, sem: Int) {
         val w = size.width; val u = density
@@ -279,7 +279,7 @@ internal object HuecosEstanteBotanico {
             drawPath(poligonoBotanico(cab.left, cab.top, cab.left - h * 0.06f, mt.y - h * 0.008f, cab.left - h * 0.06f, mt.y + h * 0.008f, cab.left, cab.bottom), t.c(P.HIERRO, -0.05f))
         }
         // La losa de pizarra con el helecho fósil, apaisada y rota por un canto, apoyada de lado contra la pared, detrás.
-        val lb = Rect(cx - h * 0.46f, y - h * 0.5f, cx + h * 0.2f, y)
+        val lb = Rect(cx - h * 0.58f, y - h * 0.5f, cx + h * 0.08f, y)
         rotate(-9f, Offset(lb.right, lb.bottom)) {
             val losa = poligonoBotanico(lb.left, lb.bottom, lb.left + lb.width * 0.02f, lb.top + lb.height * 0.32f, lb.left + lb.width * 0.16f, lb.top + lb.height * 0.06f,
                 lb.left + lb.width * 0.38f, lb.top + lb.height * 0.14f, lb.left + lb.width * 0.52f, lb.top, lb.right - lb.width * 0.06f, lb.top + lb.height * 0.1f,
@@ -292,37 +292,40 @@ internal object HuecosEstanteBotanico {
                 // Las capas de la pizarra y el helecho fósil, más claro que la piedra.
                 for (j in 0 until 4) drawLine(t.s(0.25f), Offset(lb.left, lb.top + lb.height * (0.22f + 0.2f * j)), Offset(lb.right, lb.top + lb.height * (0.17f + 0.2f * j)), 0.6f * u)
                 drawRect(t.c(mezcla(P.PIZARRA, P.PIEDRA, 0.5f), 0.06f), Offset(lb.left, lb.top), Size(lb.width * 0.5f, lb.height * 0.16f))
-                frondaBotanico(Offset(lb.left + lb.width * 0.1f, lb.bottom - lb.height * 0.3f), lb.width * 0.78f, -14f, t.c(mezcla(P.PIZARRA, P.CUARZO, 0.45f)), 1.1f * u, 13)
-                frondaBotanico(Offset(lb.left + lb.width * 0.3f, lb.bottom - lb.height * 0.12f), lb.width * 0.45f, -34f, t.c(mezcla(P.PIZARRA, P.CUARZO, 0.32f)), 0.9f * u, 9)
+                // El helecho fósil: tres frondas que se abren en abanico desde un mismo pie, curvadas como en la planta viva.
+                val pieF = Offset(lb.left + lb.width * 0.2f, lb.bottom - lb.height * 0.1f)
+                val fosil = t.c(mezcla(P.PIZARRA, P.CUARZO, 0.42f))
+                frondaBotanico(pieF, lb.height * 0.78f, -72f, fosil, 1f * u, 12)
+                frondaBotanico(pieF, lb.height * 0.88f, -48f, fosil, 1f * u, 12)
+                frondaBotanico(pieF, lb.height * 0.6f, -24f, t.c(mezcla(P.PIZARRA, P.CUARZO, 0.3f)), 0.9f * u, 10)
             }
             drawPath(losa, t.b(0.3f), style = Stroke(0.7f * u))
         }
-        // La geoda partida: la cáscara de piedra y, dentro, los cristales de amatista.
+        // La drusa: una piedra de base, irregular, y encima un racimo de cristales de cuarzo con un tinte de amatista, cada uno
+        // un prisma con su punta, su cara de luz y su cara de sombra, de alturas y ladeos distintos.
         contactoBotanico(Offset(gc.x + w * 0.01f, y), gr2 * 2.4f, h * 0.06f, t, 0.48f)
-        val cascara = Path().apply {
-            moveTo(gc.x - gr2, y)
-            cubicTo(gc.x - gr2 * 1.1f, gc.y - gr2 * 0.6f, gc.x - gr2 * 0.4f, gc.y - gr2 * 1.1f, gc.x + gr2 * 0.2f, gc.y - gr2 * 1.05f)
-            cubicTo(gc.x + gr2 * 0.9f, gc.y - gr2 * 0.9f, gc.x + gr2 * 1.15f, gc.y - gr2 * 0.1f, gc.x + gr2, y)
-            close()
-        }
-        drawPath(cascara, t.c(P.PIEDRA, -0.05f))
-        clipPath(cascara) {
-            cilindroBotanico(Rect(gc.x - gr2 * 1.1f, gc.y - gr2 * 1.1f, gc.x + gr2 * 1.15f, y), t, hacia, 1f)
-            // La cara partida, de frente: el anillo de ágata y los cristales hacia dentro.
-            val cara = Rect(gc.x - gr2 * 0.82f, gc.y - gr2 * 0.82f, gc.x + gr2 * 0.85f, y + gr2 * 0.3f)
-            drawOval(t.c(mezcla(P.CUARZO, P.PIEDRA, 0.3f), 0.05f), cara.topLeft, cara.size)
-            val dentro = cara.deflate(gr2 * 0.14f)
-            drawOval(t.c(P.AMATISTA, -0.1f), dentro.topLeft, dentro.size)
-            for (j in 0 until 16) {
-                val an = 3.3f + 2.9f * j / 15f
-                val p0 = Offset(dentro.center.x + dentro.width * 0.5f * cos(an), dentro.center.y + dentro.height * 0.5f * sin(an))
-                val p1 = Offset(dentro.center.x + dentro.width * 0.2f * cos(an), dentro.center.y + dentro.height * 0.2f * sin(an))
-                val col = if (j % 2 == 0) mezcla(P.AMATISTA, P.CUARZO, 0.45f) else P.AMATISTA
-                drawPath(poligonoBotanico(p0.x - gr2 * 0.07f, p0.y, p0.x + gr2 * 0.07f, p0.y, p1.x, p1.y), t.c(col, 0.04f))
+        val roca = poligonoBotanico(gc.x - gr2 * 1.05f, y, gc.x - gr2 * 0.95f, y - gr2 * 0.45f, gc.x - gr2 * 0.5f, y - gr2 * 0.7f, gc.x + gr2 * 0.1f, y - gr2 * 0.62f,
+            gc.x + gr2 * 0.7f, y - gr2 * 0.75f, gc.x + gr2 * 1.05f, y - gr2 * 0.4f, gc.x + gr2 * 1.1f, y)
+        drawPath(roca, t.c(P.PIEDRA, -0.08f))
+        drawPath(poligonoBotanico(gc.x - gr2 * 1.05f, y, gc.x - gr2 * 0.95f, y - gr2 * 0.45f, gc.x - gr2 * 0.5f, y - gr2 * 0.7f, gc.x - gr2 * 0.3f, y), t.b(0.25f))
+        drawPath(poligonoBotanico(gc.x + gr2 * 0.5f, y, gc.x + gr2 * 0.7f, y - gr2 * 0.75f, gc.x + gr2 * 1.05f, y - gr2 * 0.4f, gc.x + gr2 * 1.1f, y), t.s(0.28f))
+        val claro = mezcla(P.CUARZO, P.AMATISTA, 0.35f)
+        val sombra = mezcla(P.AMATISTA, P.PIZARRA, 0.3f)
+        // (dx desde el centro, alto, ancho, ladeo en grados), de atrás adelante.
+        listOf(floatArrayOf(-0.35f, 1.15f, 0.26f, -16f), floatArrayOf(0.4f, 1.3f, 0.28f, 12f), floatArrayOf(0.05f, 1.75f, 0.32f, -3f),
+            floatArrayOf(-0.62f, 0.8f, 0.22f, -30f), floatArrayOf(0.72f, 0.85f, 0.22f, 28f), floatArrayOf(-0.12f, 0.95f, 0.24f, 8f)).forEach { (dx, al, an, g) ->
+            val b0 = Offset(gc.x + gr2 * dx, y - gr2 * 0.55f)
+            rotate(g, b0) {
+                val pa = gr2 * an / 2; val pl = gr2 * al
+                val cuerpo = poligonoBotanico(b0.x - pa, b0.y, b0.x - pa, b0.y - pl * 0.72f, b0.x, b0.y - pl, b0.x + pa, b0.y - pl * 0.72f, b0.x + pa, b0.y)
+                drawPath(Path().apply { addPath(cuerpo, Offset(1.2f * u, 1f * u)) }, t.s(0.3f))
+                drawPath(cuerpo, t.c(claro, 0.04f))
+                drawPath(poligonoBotanico(b0.x, b0.y, b0.x, b0.y - pl, b0.x + pa, b0.y - pl * 0.72f, b0.x + pa, b0.y), t.c(sombra, -0.05f))
+                drawPath(poligonoBotanico(b0.x - pa, b0.y - pl * 0.72f, b0.x, b0.y - pl, b0.x, b0.y - pl * 0.78f), t.b(0.5f))
+                drawLine(t.b(0.45f), Offset(b0.x - pa * 0.55f, b0.y - pl * 0.1f), Offset(b0.x - pa * 0.55f, b0.y - pl * 0.66f), 0.7f * u)
             }
-            destelloBotanico(Offset(dentro.left + dentro.width * 0.3f, dentro.top + dentro.height * 0.25f), 1.4f * u, t)
         }
-        drawPath(cascara, t.s(0.4f), style = Stroke(0.8f * u))
+        destelloBotanico(Offset(gc.x + gr2 * 0.02f, y - gr2 * 2.15f), 1.3f * u, t)
         // Los dos cantos rodados, delante: uno de pizarra y otro claro con su veta.
         listOf(Triple(gc.x + gr2 * 1.25f, h * 0.09f, P.PIZARRA), Triple(gc.x - gr2 * 1.25f, h * 0.07f, mezcla(P.PIEDRA, P.CRUDO, 0.5f))).forEachIndexed { j, (x, r, col) ->
             if (x < a || x > b) return@forEachIndexed
@@ -335,7 +338,7 @@ internal object HuecosEstanteBotanico {
                 if (j == 1) drawLine(t.c(P.CUARZO), Offset(pr.left, pr.center.y + r * 0.2f), Offset(pr.right, pr.center.y - r * 0.3f), 1.2f * u)
             }
         }
-        // Una etiqueta de la colecta pegada a la geoda, con su renglón.
+        // Una etiqueta de la colecta pegada a la piedra, con su renglón.
         val et = Rect(gc.x + gr2 * 0.3f, y - h * 0.07f, gc.x + gr2 * 0.95f, y - h * 0.025f)
         drawRect(t.c(P.PAPEL, -0.05f), et.topLeft, et.size)
         drawLine(t.c(P.TINTA).copy(alpha = 0.55f), Offset(et.left + et.width * 0.15f, et.center.y), Offset(et.right - et.width * 0.2f, et.center.y), 0.6f * u)
