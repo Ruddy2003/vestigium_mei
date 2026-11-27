@@ -177,16 +177,18 @@ internal object CoronaEstanteDistopia {
             val bastidor = Path().apply { addOval(Rect(P(cx, cy), S(rt))) }
             planosDistopia(bastidor, lt.c(P.ESMALTE), lt, hacia, 0.2f, 0.26f)
             drawArc(lt.b(0.6f), 200f, 70f, false, P(cx - rt, cy - rt), Size(S(rt * 2), S(rt * 2)), style = Stroke(1.2f * u))
-            // El volante del tambor, de fundición: la llanta, cinco radios y el cubo de acero (se ve el hueco oscuro entre los radios).
+            // El volante del tambor, de fundición: la llanta, seis radios finos y parejos (girados: ninguno de pie ni tumbado, para
+            // que no formen una cruz) y el cubo de acero; entre los radios, el hueco oscuro.
             val c0 = P(cx, cy)
             drawCircle(mezcla(lt.c(P.ESMALTE), ParedEstanteDistopia.honda(g), 0.55f), S(rt * 0.7f), c0)
             val radios = Path()
-            for (i in 0 until 5) {
-                val a = (i * 72f - 54f) * 3.1416f / 180f
+            for (i in 0 until 6) {
+                val a = (i * 60f + 15f) * 3.1416f / 180f
                 val dir = Offset(cos(a), sin(a)); val n = Offset(-dir.y, dir.x)
                 val p0 = c0 + dir * S(rt * 0.16f); val p1 = c0 + dir * S(rt * 0.64f)
-                radios.moveTo(p0.x + n.x * S(rt * 0.07f), p0.y + n.y * S(rt * 0.07f)); radios.lineTo(p1.x + n.x * S(rt * 0.045f), p1.y + n.y * S(rt * 0.045f))
-                radios.lineTo(p1.x - n.x * S(rt * 0.045f), p1.y - n.y * S(rt * 0.045f)); radios.lineTo(p0.x - n.x * S(rt * 0.07f), p0.y - n.y * S(rt * 0.07f)); radios.close()
+                val g0 = S(rt * 0.038f)
+                radios.moveTo(p0.x + n.x * g0, p0.y + n.y * g0); radios.lineTo(p1.x + n.x * g0, p1.y + n.y * g0)
+                radios.lineTo(p1.x - n.x * g0, p1.y - n.y * g0); radios.lineTo(p0.x - n.x * g0, p0.y - n.y * g0); radios.close()
             }
             drawPath(corridoDistopia(radios, -hacia * 1f * u, 1.2f * u), lt.s(0.4f))
             drawPath(radios, lt.c(P.ACERO))

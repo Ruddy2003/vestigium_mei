@@ -35,6 +35,9 @@ internal object PieEstanteDistopia {
         val piso = y0 + 0.075f * w
         // Debajo de la última balda, la fila de la junta, de píxel entero.
         drawRect(g.luz(w * 0.5f, y0, 0.03f).c(P.ACERO_OSC), Offset(0f, floor(y0)), Size(w, 2f))
+        // Debajo de todo el pie, el suelo entero de píxel entero: entre el zócalo y las losetas, y entre una fila de losetas y la
+        // siguiente (que caen a medio píxel), no asoma el fondo.
+        drawRect(g.luz(w * 0.5f, (piso + h) / 2, 0.01f).c(P.LINO_OSC), Offset(0f, floor(y0) + 1f), Size(w, h - floor(y0) - 1f))
         zocalo(g, y0, piso)
         suelo(g, piso)
         // De noche, el resplandor de la estufa en el suelo y en el zócalo.
@@ -253,7 +256,9 @@ internal object PieEstanteDistopia {
         rotate(-8f, Offset(et.center.x, et.top)) {
             drawRect(l.s(0.35f), et.topLeft + Offset(1.4f * u, 1.6f * u), et.size)
             drawRect(l.c(P.MANILA), et.topLeft, et.size)
-            drawRect(l.c(P.CARTEL), Offset(et.left, et.top + et.height * 0.4f), Size(et.width, et.height * 0.2f))
+            drawRect(l.c(P.CARTEL), Offset(et.left, et.top + et.height * 0.3f), Size(et.width, 0.8f * u))
+            drawPath(renglonesDistopia(Rect(et.left + et.width * 0.12f, et.top + et.height * 0.46f, et.right - et.width * 0.12f, et.bottom - et.height * 0.12f), 0.0022f * w, 0.007f * w, 8555),
+                l.c(P.BAQUELITA).copy(alpha = 0.45f))
             drawCircle(l.c(P.CARTON), 1.4f * u, Offset(et.center.x, et.top + 2.4f * u))
         }
     }

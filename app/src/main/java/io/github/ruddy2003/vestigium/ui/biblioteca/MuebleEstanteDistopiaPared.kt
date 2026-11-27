@@ -38,10 +38,12 @@ internal object ParedEstanteDistopia {
         if (r.width < 1f || r.height < 1f) return
         val franjas = ceil(r.height / maxOf(1f, paso)).toInt().coerceIn(1, 400)
         val alto = r.height / franjas
+        // Debajo, el rectángulo entero de un solo color: donde dos franjas se tocan a medio píxel no asoma el fondo.
+        drawRect(g.luz(r.center.x, r.center.y, delante, mancha).c(color), r.topLeft, r.size)
         for (i in 0 until franjas) {
             val y = r.top + alto * (i + 0.5f)
             val cols = List(muestras) { j -> g.luz(r.left + r.width * j / (muestras - 1f), y, delante, mancha).c(color) }
-            drawRect(Brush.horizontalGradient(cols, r.left, r.right), Offset(r.left, r.top + alto * i), Size(r.width, alto + 0.6f))
+            drawRect(Brush.horizontalGradient(cols, r.left, r.right), Offset(r.left, r.top + alto * i), Size(r.width, minOf(alto + 1.2f, r.bottom - r.top - alto * i)))
         }
     }
 

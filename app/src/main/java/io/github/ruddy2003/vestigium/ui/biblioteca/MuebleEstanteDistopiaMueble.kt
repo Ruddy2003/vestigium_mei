@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontWeight
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaDistopia as P
@@ -286,7 +286,7 @@ internal object MuebleDistopia {
         }
         // El cable de la lámpara, que baja por el costado izquierdo desde arriba, grapado de trecho en trecho.
         val xc = 0.013f * w
-        val gancho = g.lampara.y - 0.075f * w
+        val gancho = g.lampara.y - 0.075f * 1.15f * w
         if (gancho > y0) {
             val lc = g.luz(xc, (y0 + gancho) / 2, 0.045f)
             drawLine(lc.s(0.35f), Offset(xc + 1.2f * u, y0), Offset(xc + 1.2f * u, gancho), 1.6f * u)
@@ -317,39 +317,41 @@ internal object MuebleDistopia {
             mancha(c, w * 0.26f, P.BOMBILLA.copy(alpha = 0.26f * arde))
             mancha(c, w * 0.09f, P.BOMBILLA.copy(alpha = 0.5f * arde))
         }
-        val gancho = Offset(c.x, c.y - 0.075f * w)
-        // El gancho en S, atornillado al costado.
-        drawCircle(l.c(P.HIERRO), 1.8f * u, gancho - Offset(0f, 0.006f * w))
-        drawArc(l.c(P.HIERRO), 180f, 180f, false, Offset(gancho.x - 0.006f * w, gancho.y - 0.004f * w), Size(0.012f * w, 0.012f * w), style = Stroke(1.4f * u))
-        // El mango de baquelita, con su aro de colgar.
-        val mango = Rect(c.x - 0.009f * w, c.y - 0.068f * w, c.x + 0.009f * w, c.y - 0.03f * w)
-        drawCircle(l.c(P.ACERO_LUZ), 0.006f * w, Offset(c.x, mango.top - 0.002f * w), style = Stroke(1.3f * u))
-        drawRoundRect(l.s(0.4f), mango.topLeft + Offset(1.4f * u, 1.6f * u), mango.size, CornerRadius(3f * u))
-        drawRoundRect(Brush.horizontalGradient(listOf(l.c(mezcla(P.BAQUELITA, P.MADERA, 0.4f)), l.c(P.BAQUELITA), l.c(P.BAQUELITA)), mango.left, mango.right), mango.topLeft, mango.size, CornerRadius(3f * u))
-        drawLine(l.b(0.5f), Offset(mango.left + 1.4f * u, mango.top + 2f * u), Offset(mango.left + 1.4f * u, mango.bottom - 2f * u), 0.8f * u)
-        for (i in 0 until 3) drawLine(l.s(0.4f), Offset(mango.left, mango.top + mango.height * (0.25f + 0.2f * i)), Offset(mango.right, mango.top + mango.height * (0.25f + 0.2f * i)), 0.7f * u)
-        // La bombilla, de pera, dentro de la jaula.
-        val jaula = Rect(c.x - 0.022f * w, c.y - 0.03f * w, c.x + 0.022f * w, c.y + 0.045f * w)
-        val vidrio = if (arde > 0f) mezcla(P.BOMBILLA, Color.White, 0.5f) else l.c(mezcla(P.HUESO, P.ACERO_LUZ, 0.4f))
-        val pera = cerradaDistopia(listOf(Offset(c.x - 0.006f * w, jaula.top + 0.004f * w), Offset(c.x + 0.006f * w, jaula.top + 0.004f * w), Offset(c.x + 0.015f * w, c.y + 0.016f * w),
-            Offset(c.x, jaula.bottom - 0.006f * w), Offset(c.x - 0.015f * w, c.y + 0.016f * w)))
-        drawPath(pera, vidrio)
-        if (arde > 0f) drawCircle(Color.White, 0.006f * w, Offset(c.x, c.y + 0.012f * w))
-        else {
-            drawPath(bordeDistopia(pera, 0.004f * w, 0f), l.b(0.5f))
-            drawPath(bordeDistopia(pera, -0.005f * w, -0.002f * w), l.s(0.3f))
+        scale(1.15f, 1.15f, c) {
+            val gancho = Offset(c.x, c.y - 0.075f * w)
+            // El gancho en S, atornillado al costado.
+            drawCircle(l.c(P.HIERRO), 1.8f * u, gancho - Offset(0f, 0.006f * w))
+            drawArc(l.c(P.HIERRO), 180f, 180f, false, Offset(gancho.x - 0.006f * w, gancho.y - 0.004f * w), Size(0.012f * w, 0.012f * w), style = Stroke(1.4f * u))
+            // El mango de baquelita, con su aro de colgar.
+            val mango = Rect(c.x - 0.009f * w, c.y - 0.068f * w, c.x + 0.009f * w, c.y - 0.03f * w)
+            drawCircle(l.c(P.ACERO_LUZ), 0.006f * w, Offset(c.x, mango.top - 0.002f * w), style = Stroke(1.3f * u))
+            drawRoundRect(l.s(0.4f), mango.topLeft + Offset(1.4f * u, 1.6f * u), mango.size, CornerRadius(3f * u))
+            drawRoundRect(Brush.horizontalGradient(listOf(l.c(mezcla(P.BAQUELITA, P.MADERA, 0.4f)), l.c(P.BAQUELITA), l.c(P.BAQUELITA)), mango.left, mango.right), mango.topLeft, mango.size, CornerRadius(3f * u))
+            drawLine(l.b(0.5f), Offset(mango.left + 1.4f * u, mango.top + 2f * u), Offset(mango.left + 1.4f * u, mango.bottom - 2f * u), 0.8f * u)
+            for (i in 0 until 3) drawLine(l.s(0.4f), Offset(mango.left, mango.top + mango.height * (0.25f + 0.2f * i)), Offset(mango.right, mango.top + mango.height * (0.25f + 0.2f * i)), 0.7f * u)
+            // La bombilla, de pera, dentro de la jaula.
+            val jaula = Rect(c.x - 0.022f * w, c.y - 0.03f * w, c.x + 0.022f * w, c.y + 0.045f * w)
+            val vidrio = if (arde > 0f) mezcla(P.BOMBILLA, Color.White, 0.5f) else l.c(mezcla(P.HUESO, P.ACERO_LUZ, 0.4f))
+            val pera = cerradaDistopia(listOf(Offset(c.x - 0.006f * w, jaula.top + 0.004f * w), Offset(c.x + 0.006f * w, jaula.top + 0.004f * w), Offset(c.x + 0.015f * w, c.y + 0.016f * w),
+                Offset(c.x, jaula.bottom - 0.006f * w), Offset(c.x - 0.015f * w, c.y + 0.016f * w)))
+            drawPath(pera, vidrio)
+            if (arde > 0f) drawCircle(Color.White, 0.006f * w, Offset(c.x, c.y + 0.012f * w))
+            else {
+                drawPath(bordeDistopia(pera, 0.004f * w, 0f), l.b(0.5f))
+                drawPath(bordeDistopia(pera, -0.005f * w, -0.002f * w), l.s(0.3f))
+            }
+            // La jaula: los alambres de arriba abajo, curvados, y los dos aros. En un solo camino.
+            val alambres = Path()
+            for (i in 0..5) {
+                val f = i / 5f
+                val x = jaula.left + jaula.width * f
+                alambres.moveTo(c.x + (x - c.x) * 0.55f, jaula.top)
+                alambres.quadraticTo(x + (x - c.x) * 0.35f, c.y + 0.008f * w, c.x + (x - c.x) * 0.5f, jaula.bottom)
+            }
+            drawPath(alambres, (if (arde > 0f) mezcla(P.ACERO_OSC, P.BOMBILLA, 0.35f) else l.c(P.HIERRO)), style = Stroke(1f * u))
+            drawOval(l.c(P.ACERO_LUZ), Offset(jaula.left + jaula.width * 0.2f, jaula.top - 0.003f * w), Size(jaula.width * 0.6f, 0.007f * w), style = Stroke(1.6f * u))
+            drawOval(l.c(P.ACERO_LUZ), Offset(jaula.left + jaula.width * 0.24f, jaula.bottom - 0.004f * w), Size(jaula.width * 0.52f, 0.007f * w), style = Stroke(1.6f * u))
+            if (arde > 0f) drawPath(alambres, P.BOMBILLA.copy(alpha = 0.5f), style = Stroke(0.5f * u))
         }
-        // La jaula: los alambres de arriba abajo, curvados, y los dos aros. En un solo camino.
-        val alambres = Path()
-        for (i in 0..5) {
-            val f = i / 5f
-            val x = jaula.left + jaula.width * f
-            alambres.moveTo(c.x + (x - c.x) * 0.55f, jaula.top)
-            alambres.quadraticTo(x + (x - c.x) * 0.35f, c.y + 0.008f * w, c.x + (x - c.x) * 0.5f, jaula.bottom)
-        }
-        drawPath(alambres, (if (arde > 0f) mezcla(P.ACERO_OSC, P.BOMBILLA, 0.35f) else l.c(P.HIERRO)), style = Stroke(1f * u))
-        drawOval(l.c(P.ACERO_LUZ), Offset(jaula.left + jaula.width * 0.2f, jaula.top - 0.003f * w), Size(jaula.width * 0.6f, 0.007f * w), style = Stroke(1.6f * u))
-        drawOval(l.c(P.ACERO_LUZ), Offset(jaula.left + jaula.width * 0.24f, jaula.bottom - 0.004f * w), Size(jaula.width * 0.52f, 0.007f * w), style = Stroke(1.6f * u))
-        if (arde > 0f) drawPath(alambres, P.BOMBILLA.copy(alpha = 0.5f), style = Stroke(0.5f * u))
     }
 }
