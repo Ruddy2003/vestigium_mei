@@ -4,7 +4,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -165,7 +164,7 @@ internal object CoronaEstanteDistopia {
             drawRect(lc.s(0.22f), panel.topLeft, Size(panel.width, 1.2f * u))
             drawRect(lc.s(0.16f), panel.topLeft, Size(1.2f * u, panel.height))
             drawRect(lc.b(0.3f), Offset(panel.left, panel.bottom - 1f * u), Size(panel.width, 1f * u))
-            listOf(panel.topLeft, Offset(panel.right, panel.top), Offset(panel.left, panel.bottom), panel.bottomRight).forEachIndexed { i, p ->
+            listOf(panel.topLeft, Offset(panel.right, panel.top), Offset(panel.left, panel.bottom), panel.bottomRight).forEach { p ->
                 drawCircle(lc.c(P.HIERRO), 1.1f * u, p + Offset(if (p.x < panel.center.x) 3f * u else -3f * u, if (p.y < panel.center.y) 3f * u else -3f * u))
             }
             // La moldura del zócalo del cuerpo y las patas de goma.
