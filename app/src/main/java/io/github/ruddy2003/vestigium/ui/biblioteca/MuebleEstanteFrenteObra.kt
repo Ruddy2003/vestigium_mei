@@ -86,10 +86,6 @@ internal object ObraEstanteFrente {
         }
     }
 
-    /** Una figura [p] (dentro de [r]) pintada de [c] con la luz de su centro, lisa y opaca. */
-    private fun DrawScope.figura(p: Path, r: Rect, c: Color, f: Float, a: AireFrente, cerca: (Offset) -> Float, frio: (Offset) -> Float, dia: Float = 0.3f) =
-        drawPath(p, en(c, f, r.center.x, r.center.y, a, cerca, frio, dia))
-
     /** El pincel de [franjaV], para pintar con él una figura cualquiera sin recortarla (recortar con un camino es caro). */
     private fun DrawScope.pincelV(r: Rect, c: Color, f: Float, ys: FloatArray, a: AireFrente, cerca: (Offset) -> Float, frio: (Offset) -> Float, dia: Float = 0.3f): Brush {
         val x = r.center.x
