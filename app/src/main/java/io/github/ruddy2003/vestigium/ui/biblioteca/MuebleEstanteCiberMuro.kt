@@ -54,6 +54,8 @@ internal fun DrawScope.coronaCiber(g: MarcoCiber) {
 private fun DrawScope.paredArribaCiber(g: MarcoCiber) {
     val u = density; val w = g.w
     val hasta = g.apoyo
+    // La pared llega hasta el pie de la corona: asoma a los lados del remate.
+    val fin = g.ch + 1f
     val pantalla = Offset(w * MuebleEstanteCiber.PANT_X, w * MuebleEstanteCiber.PANT_Y)
     // El degradado radial alrededor de la pantalla: cada parada, el color de la pared a esa distancia (hacia arriba y a la derecha).
     val paradas = Array(7) { i ->
@@ -61,7 +63,7 @@ private fun DrawScope.paredArribaCiber(g: MarcoCiber) {
         val p = pantalla + Offset(w * 1.05f * f * 0.8f, -w * 1.05f * f * 0.6f)
         f to g.t(p).c(PARED, 0.8f)
     }
-    drawRect(Brush.radialGradient(*paradas, center = pantalla, radius = w * 1.05f), Offset.Zero, Size(w, hasta))
+    drawRect(Brush.radialGradient(*paradas, center = pantalla, radius = w * 1.05f), Offset.Zero, Size(w, fin))
     pinceladas(Rect(0f, 0f, w, hasta), NOCHE, 6101, 44, u, 0.16f)
     pinceladas(Rect(0f, 0f, w, hasta), CIAN, 6102, 12, u, 0.03f)
     // La pintura despareja: parches de otra mano de pintura, más claros y más oscuros, y una grieta fina que baja del techo.
@@ -95,8 +97,12 @@ private fun DrawScope.paredArribaCiber(g: MarcoCiber) {
     }
 }
 
+/** Dónde caen las cumbres del banderín (en fracción de su largo) y su alto en puntos. */
+private val CUMBRES_CIBER = floatArrayOf(0.1f, 0.34f, 0.6f, 0.86f)
+private val ALTOS_CIBER = floatArrayOf(4.6f, 6.4f, 3.8f, 5.4f)
+
 /**
- * El banderín: una tira de papel continuo impresa con una escena de puntos (lomas, estrellas y una luna creciente, sin letras),
+ * El banderín: una tira de papel continuo impresa con una escena de puntos (una sierra de montes y estrellas, sin letras),
  * con sus márgenes de arrastre y los agujeros, las líneas de corte entre hojas, combada entre los tres trozos de cinta que la
  * sostienen. La tinta es la de la cinta de la impresora: un gris azulado, más gastado a la derecha.
  */
@@ -133,29 +139,34 @@ private fun DrawScope.banderinCiber(g: MarcoCiber) {
             while (yy < y0 + cae(xc) + alto) { drawLine(tc.s(0.35f), Offset(xc, yy), Offset(xc, yy + 1.6f * u), 0.6f * u); yy += 3.6f * u }
             xc += w * 0.24f
         }
-        // La escena de puntos: cada punto, un cuadrito de la cabeza de agujas, grande para que se lea de lejos; las sombras de las
-        // lomas, a medio tono (un punto sí y otro no). Un solo trazo por tinta.
-        val celda = w * 0.0105f
-        val filas = 6
-        val ytop = y0 + margen * 1.15f
-        val cols = ((x1 - x0 - 2f * w * 0.008f) / celda).toInt().coerceIn(0, 200)
+        // La escena de puntos: una sierra de montes rellena a medio tono (un punto sí y otro no), con su perfil y el suelo
+        // enteros, y estrellas de un punto encima. Cada punto, un cuadrito de la cabeza de agujas, grande para que se lea de
+        // lejos. Sin luna ni letras: una media luna de cuadritos se leería como una «C». Un solo trazo por tinta.
+        val celda = w * 0.0092f
+        val filas = 7
+        val ytop = y0 + margen * 1.1f
+        val cols = ((x1 - x0 - 2f * w * 0.008f) / celda).toInt().coerceIn(0, 240)
         val llenos = Path(); val tenues = Path()
-        val lunaC = (cols * 0.74f).toInt(); val lunaF = 2
         for (c in 0 until cols) {
             val xx = x0 + w * 0.008f + c * celda
             val yb = cae(xx)
-            val loma = (1.6f + 0.9f * sin(c * 0.17f) + 0.7f * sin(c * 0.43f + 1.1f)).toInt().coerceIn(1, 3)
+            // Cuatro cumbres de distinto alto, con laderas de pendiente desigual, sobre una loma baja.
+            var sierra = 1.6f + 0.6f * sin(c * 0.3f)
+            for (j in 0 until 4) {
+                val pc = cols * CUMBRES_CIBER[j]; val alto = ALTOS_CIBER[j]
+                val pend = if (c < pc) 0.34f + 0.1f * j else 0.46f - 0.06f * j
+                sierra = maxOf(sierra, alto - Math.abs(c - pc) * pend)
+            }
+            val monte = sierra.toInt().coerceIn(1, 6)
             for (f in 0 until filas) {
                 val yy = ytop + yb + f * celda
                 val desdeAbajo = filas - f
-                val dentroLoma = desdeAbajo <= loma
-                val borde = desdeAbajo == loma
-                val dl = (c - lunaC).toFloat(); val df = (f - lunaF).toFloat()
-                val enLuna = dl * dl + df * df <= 5.2f && (dl - 1.2f) * (dl - 1.2f) + (df + 0.7f) * (df + 0.7f) > 3.6f
-                val estrella = !dentroLoma && f < 3 && kotlin.math.abs(c - lunaC) > 3 && azar(6110, c * 13 + f) > 0.93f
+                val dentro = desdeAbajo <= monte
+                val perfil = desdeAbajo == monte || desdeAbajo == 1
+                val estrella = !dentro && desdeAbajo > monte + 1 && azar(6110, c * 13 + f) > 0.955f
                 when {
-                    enLuna || estrella || borde -> llenos.addRect(Rect(xx, yy, xx + celda * 0.82f, yy + celda * 0.82f))
-                    dentroLoma && (c + f) % 2 == 0 -> tenues.addRect(Rect(xx, yy, xx + celda * 0.82f, yy + celda * 0.82f))
+                    perfil || estrella -> llenos.addRect(Rect(xx, yy, xx + celda * 0.82f, yy + celda * 0.82f))
+                    dentro && (c + f) % 2 == 0 -> tenues.addRect(Rect(xx, yy, xx + celda * 0.82f, yy + celda * 0.82f))
                 }
             }
         }

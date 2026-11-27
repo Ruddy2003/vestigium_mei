@@ -100,6 +100,8 @@ private fun DrawScope.armarioCiber(g: MarcoCiber) {
     val x0 = g.x0; val x1 = g.x1
     // El zócalo y las patas.
     val z0 = y1; val z1 = g.zocalo
+    // El hueco bajo el armario, detrás del zócalo metido: oscuro, de costado a costado (no deja ver el fondo).
+    drawRect(g.t(w * 0.5f, z0).c(mezcla(NEGRO, NOCHE, 0.5f), 0.6f), Offset(g.ml, z0 - 1f), Size(g.mr - g.ml, maxOf(g.suelo, z1) - z0 + 2f))
     bandaCiber(g.ml + w * 0.014f, g.mr - w * 0.014f, z0 - 1f, z1, NEGRO, g, 1.1f)
     drawRect(g.t(w * 0.3f, z0).b(0.3f), Offset(g.ml + w * 0.014f, z0), Size(g.mr - g.ml - w * 0.028f, 0.8f * u))
     listOf(g.ml + w * 0.01f, g.mr - w * 0.05f).forEach { x ->

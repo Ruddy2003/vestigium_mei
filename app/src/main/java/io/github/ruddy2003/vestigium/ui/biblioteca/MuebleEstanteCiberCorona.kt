@@ -53,6 +53,9 @@ internal fun DrawScope.remateCiber(g: MarcoCiber) {
     val vuelo = w * 0.011f
     val ap = g.apoyo; val ch = g.ch
     drawRect(NOCHE.copy(alpha = 0.5f), Offset(x1 + vuelo, ap + 3f * u), Size(w * 0.014f, ch - ap))
+    // Debajo de las bandas del remate, la chapa de un solo tono: las juntas entre bandas que caen a medio píxel no dejan ver
+    // el fondo.
+    drawRect(g.t(w * 0.3f, (ap + ch) / 2).c(mezcla(CHAPA, BEIS_OSC, 0.3f)), Offset(x0 - vuelo, g.apoyoAtras), Size(x1 - x0 + 2 * vuelo, ch + 1f - g.apoyoAtras))
     // La tapa vista desde arriba: chapa algo más clara, el canto de atrás en sombra, rayas y el cerco de la taza.
     bandaCiber(x0 - vuelo, x1 + vuelo, g.apoyoAtras, ap, CHAPA, g, 0.88f)
     drawRect(NOCHE.copy(alpha = 0.45f), Offset(x0 - vuelo, g.apoyoAtras), Size(x1 - x0 + 2 * vuelo, 1.6f * u))
