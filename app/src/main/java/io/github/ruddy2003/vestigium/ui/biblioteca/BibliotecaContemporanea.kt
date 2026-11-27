@@ -5838,7 +5838,6 @@ object EstanteDeco : DisenoBiblioteca {
  */
 object EstanteBotanico : DisenoBiblioteca {
     private val HIERRO = Color(0xFF24382C)
-    private val FONDO = Color(0xFF56705B)
     private val PARED = Color(0xFFCFC7AA)
     private val VIDRIO = Color(0xFFDDEDE2)
     private val ROBLE = Color(0xFF8A6A42)
@@ -6210,13 +6209,11 @@ object EstanteBotanico : DisenoBiblioteca {
 
     // ---------------------------------------------------------------- la libreta de momentos
 
-    /** El cartón oliva de la carpeta del herbario, la cinta de algodón, la lata verde del vasculum y la luz del farol. */
-    private val CARTON = Color(0xFF6E7A4E)
-    private val CINTA_ALGODON = Color(0xFFEFE2C0)
+    /** La lata verde del vasculum y la luz del farol (del buzón). */
     private val LATA = Color(0xFF4E6B4A)
     private val FAROL_CAMPO = Color(0xFFFFD98A)
 
-    override val altoLibreta: Dp = 256.dp
+    override val altoLibreta: Dp = MuebleLibretaBotanico.ALTO
 
     /** Una hoja simple con su nervio: de [base] hacia el ángulo [a] (grados), de [largo]. */
     private fun DrawScope.hojaSimple(base: Offset, a: Float, largo: Float, color: Color, nervio: Color) {
@@ -6248,168 +6245,13 @@ object EstanteBotanico : DisenoBiblioteca {
         }
     }
 
-    /**
-     * El herbario de momentos sobre la mesa de campo de roble, en el invernadero: detrás, los vidrios esmerilados con sus
-     * parteluces de hierro verde y la sombra de las hojas de afuera. A la izquierda, la prensa de plantas (dos rejillas de
-     * listones con sus correas, abultada de pliegos) y el farol de campo; a la derecha, el vasculum de lata verde con su
-     * correa, la lupa y una etiqueta suelta. El herbario es una carpeta de cartón oliva con la ventana donde se ve un helecho
-     * prensado, la etiqueta del nombre y la cuenta, y la cinta de algodón anudada en lazo; engorda con las hojas y por los
-     * cantos asoman hojas prensadas (una cada 12 hojas, hasta 9). Al abrirse, el lazo se deshace y la tapa se abate hacia
-     * delante sobre su canto de abajo: dentro, el pliego con la fronda montada con tiras de goma y su etiqueta de herbario. En
-     * modo oscuro, el invernadero de noche: alumbran el farol (el único degradado) y unas luciérnagas.
-     */
-    override fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        val (suelta, abre) = tiemposLibreta(e.abierto, 0.3f)
-        val lleno = llenoLibreta(e.hojas)
-        fun c(x: Color) = if (oscuro) mezcla(t(x, true, false), Color(0xFF070A08), 0.45f) else x
-        fun cp(x: Color) = if (oscuro) mezcla(x, Color(0xFF070A08), 0.3f) else x
-        // Los vidrios del invernadero, con la sombra de las hojas de afuera y los parteluces.
-        val mesaY = h * 0.5f
-        drawRect(c(VIDRIO), Offset.Zero, Size(w, mesaY))
-        for (k in 0 until 9) frondaPrensada(Offset(w * (0.05f + 0.12f * k), mesaY + 10 * u), (50f + 40f * azar(150, k)) * u, -20f + 40f * azar(151, k), c(HELECHO).copy(alpha = 0.18f))
-        var x = 0f
-        while (x <= w) { drawRect(c(HIERRO), Offset(x - 2 * u, 0f), Size(4 * u, mesaY)); x += w / 4 }
-        drawRect(c(HIERRO), Offset(0f, mesaY * 0.45f), Size(w, 3 * u))
-        for (k in 0 until 14) drawCircle(Color.White.copy(alpha = 0.35f), (0.8f + 1.2f * azar(152, k)) * u, Offset(w * azar(153, k), mesaY * 0.9f * azar(154, k)))
-        // La mesa de campo de roble.
-        drawRect(c(ROBLE), Offset(0f, mesaY), Size(w, h - mesaY))
-        vetas(Rect(0f, mesaY, w, h), c(ROBLE_VETA).copy(alpha = 0.6f), 155, densidad = 0.9f)
-        drawRect(c(ROBLE_LUZ), Offset(0f, mesaY), Size(w, 2.5f * u))
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(0f, mesaY + 2.5f * u), Size(w, 3 * u))
-        // La prensa de plantas, a la izquierda: dos rejillas de listones, los pliegos y las correas.
-        val pr = Rect(w * 0.015f, h * 0.56f, w * 0.2f, h * 0.9f)
-        drawRect(Color.Black.copy(alpha = 0.2f), pr.topLeft + Offset(3 * u, 4 * u), pr.size)
-        for (k in 0 until 6) drawRect(c(if (k % 2 == 0) PAPEL else mezcla(PAPEL, TIERRA, 0.2f)), Offset(pr.left + 2 * u, pr.bottom - 3 * u + k * 1.8f * u), Size(pr.width - 4 * u, 1.8f * u))
-        listOf(0.25f, 0.5f, 0.75f).forEach { f -> drawRect(c(ROBLE_LUZ), Offset(pr.left, pr.top + pr.height * f - 2 * u), Size(pr.width, 4 * u)) }
-        listOf(0.2f, 0.5f, 0.8f).forEach { f -> drawRect(c(ROBLE), Offset(pr.left + pr.width * f - 2 * u, pr.top), Size(4 * u, pr.height)) }
-        drawRect(c(ROBLE_VETA), pr.topLeft, pr.size, style = Stroke(2.5f * u))
-        listOf(0.36f, 0.64f).forEach { f -> drawRect(c(Color(0xFF5A3A22)), Offset(pr.left - 2 * u, pr.top + pr.height * f - 3 * u), Size(pr.width + 4 * u, 6 * u))
-            drawRect(c(LATON), Offset(pr.right - 10 * u, pr.top + pr.height * f - 4 * u), Size(6 * u, 8 * u), style = Stroke(1.2f * u)) }
-        // El farol de campo, sobre la mesa detrás de la prensa.
-        val fa = Offset(w * 0.11f, h * 0.36f)
-        drawArc(c(HIERRO), 180f, 180f, false, Offset(fa.x - 6 * u, fa.y - 26 * u), Size(12 * u, 10 * u), style = Stroke(1.4f * u))
-        drawRect(c(HIERRO), Offset(fa.x - 9 * u, fa.y - 21 * u), Size(18 * u, 4 * u))
-        drawRoundRect(if (oscuro) FAROL_CAMPO.copy(alpha = 0.7f) else c(VIDRIO).copy(alpha = 0.8f), Offset(fa.x - 8 * u, fa.y - 17 * u), Size(16 * u, 24 * u), CornerRadius(6 * u))
-        drawPath(Path().apply { moveTo(fa.x, fa.y + 2 * u); quadraticTo(fa.x - 3 * u, fa.y - 3 * u, fa.x, fa.y - 9 * u); quadraticTo(fa.x + 3 * u, fa.y - 3 * u, fa.x, fa.y + 2 * u) },
-            if (oscuro) Color(0xFFFFF4C8) else c(OTONO))
-        listOf(-8f, 8f).forEach { dx -> drawLine(c(HIERRO), Offset(fa.x + dx * u, fa.y - 17 * u), Offset(fa.x + dx * u, fa.y + 7 * u), 1.2f * u) }
-        drawRect(c(HIERRO), Offset(fa.x - 10 * u, fa.y + 7 * u), Size(20 * u, 5 * u))
-        // A la derecha: el vasculum de lata con su correa, la lupa y una etiqueta suelta.
-        val va = Rect(w * 0.8f, h * 0.54f, w * 0.99f, h * 0.7f)
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(va.left + 3 * u, va.bottom), Size(va.width, 4 * u))
-        drawRoundRect(c(LATA), va.topLeft, va.size, CornerRadius(va.height / 2))
-        drawRect(c(mezcla(LATA, Color.White, 0.2f)), Offset(va.left + va.height * 0.4f, va.top + va.height * 0.18f), Size(va.width - va.height * 0.8f, 3 * u))
-        drawRect(c(HIERRO), Offset(va.left + va.width * 0.3f, va.top), Size(va.width * 0.4f, va.height), style = Stroke(1 * u))
-        drawPath(Path().apply { moveTo(va.left + 6 * u, va.center.y); quadraticTo(va.center.x, va.top - 26 * u, va.right - 6 * u, va.center.y) }, c(Color(0xFF5A3A22)), style = Stroke(2.4f * u))
-        val lu = Offset(w * 0.86f, h * 0.84f)
-        drawLine(c(ROBLE_VETA), lu + Offset(9 * u, 9 * u), lu + Offset(24 * u, 20 * u), 4 * u)
-        drawCircle(c(LATON), 12 * u, lu, style = Stroke(2.2f * u))
-        drawCircle(c(VIDRIO).copy(alpha = 0.4f), 11 * u, lu)
-        drawArc(Color.White.copy(alpha = 0.5f), 200f, 60f, false, Offset(lu.x - 8 * u, lu.y - 8 * u), Size(16 * u, 16 * u), style = Stroke(1.4f * u))
-        rotate(-12f, Offset(w * 0.06f, h * 0.95f)) { drawRect(c(PAPEL), Offset(w * 0.03f, h * 0.92f), Size(26 * u, 12 * u)); drawLine(c(TINTA).copy(alpha = 0.4f), Offset(w * 0.03f + 4 * u, h * 0.92f + 6 * u), Offset(w * 0.03f + 20 * u, h * 0.92f + 6 * u), 0.7f * u) }
-        // La luz del farol y las luciérnagas.
-        if (oscuro) {
-            drawRect(Brush.radialGradient(listOf(FAROL_CAMPO.copy(alpha = 0.34f), FAROL_CAMPO.copy(alpha = 0.1f), Color.Transparent), Offset(fa.x, fa.y - 5 * u), w * 0.85f))
-            for (k in 0 until 7) {
-                val p = Offset(w * azar(156, k), h * 0.4f * azar(157, k) + 6 * u)
-                drawCircle(LUCIERNAGA.copy(alpha = 0.25f), 4 * u, p); drawCircle(LUCIERNAGA, 1.4f * u, p)
-            }
-        }
-        // El herbario.
-        val ancho = w * 0.56f; val alto = minOf(ancho * 0.7f, h * 0.53f)
-        val r = Rect(w * 0.23f, h * 0.33f, w * 0.23f + ancho, h * 0.33f + alto)
-        val g = (3f + 13f * lleno) * u
-        val bisagra = r.bottom
-        rotate(-1.5f, r.center) {
-            drawRect(Color.Black.copy(alpha = if (oscuro) 0.4f else 0.22f), r.topLeft + Offset(5 * u, 5 * u + g), r.size)
-            // Las hojas prensadas que asoman por los cantos.
-            val n = (1 + e.hojas / 12).coerceAtMost(9)
-            for (k in 0 until n) {
-                val col = c(listOf(HELECHO, HOJA_CLARA, OTONO, MUSGO, BEGONIA)[(k + e.semilla.and(7)) % 5])
-                if (k % 2 == 0) hojaSimple(Offset(r.right - 8 * u, r.top + alto * (0.15f + 0.09f * k)), -15f + 30f * azar(e.semilla, 160 + k), (16f + 8f * azar(e.semilla, 170 + k)) * u, col, c(TINTA).copy(alpha = 0.3f))
-                else hojaSimple(Offset(r.left + ancho * (0.15f + 0.08f * k), r.top + 8 * u), -100f + 30f * azar(e.semilla, 160 + k), (14f + 8f * azar(e.semilla, 170 + k)) * u, col, c(TINTA).copy(alpha = 0.3f))
-            }
-            drawRect(c(mezcla(CARTON, Color.Black, 0.3f)), r.topLeft + Offset(0f, g), r.size)
-            cantoLibreta(r, g * 0.85f, c(PAPEL), c(ROBLE_VETA).copy(alpha = 0.4f))
-            // Por dentro: el pliego con la fronda montada y su etiqueta de herbario.
-            if (abre > 0.01f) {
-                drawRect(cp(PAPEL), r.topLeft, r.size)
-                val fb = Offset(r.left + ancho * 0.4f, r.bottom - alto * 0.12f)
-                frondaPrensada(fb, alto * 0.72f, 12f, c(HELECHO))
-                listOf(0.3f, 0.6f).forEach { f -> drawRect(c(PAPEL).copy(alpha = 0.9f), Offset(fb.x - 8 * u + alto * 0.72f * f * 0.21f, fb.y - alto * 0.72f * f - 2 * u), Size(16 * u, 4 * u)) }
-                val et = Rect(r.right - ancho * 0.36f, r.bottom - alto * 0.3f, r.right - 8 * u, r.bottom - 8 * u)
-                drawRect(c(TINTA).copy(alpha = 0.6f), et.topLeft, et.size, style = Stroke(0.8f * u))
-                for (k in 0 until 3) drawLine(c(TINTA).copy(alpha = 0.4f), Offset(et.left + 5 * u, et.top + (6 + k * 7) * u), Offset(et.right - (5 + k * 8) * u, et.top + (6 + k * 7) * u), 0.7f * u)
-            }
-            // La tapa de cartón, que se abate hacia delante sobre su canto de abajo.
-            val sy = 1f - abre
-            if (sy > 0.02f) scale(1f, sy, Offset(r.center.x, bisagra)) {
-                drawRect(c(CARTON), r.topLeft, r.size)
-                for (k in 0 until 60) drawCircle(Color.Black.copy(alpha = 0.07f), 0.7f * u, Offset(r.left + ancho * azar(158, k), r.top + alto * azar(159, k)))
-                drawRect(c(mezcla(CARTON, Color.Black, 0.25f)), Offset(r.left, r.bottom - 7 * u), Size(ancho, 7 * u))
-                // La ventana con el helecho prensado.
-                val ve = Rect(r.left + ancho * 0.06f, r.top + alto * 0.1f, r.left + ancho * 0.3f, r.top + alto * 0.84f)
-                drawRect(cp(PAPEL), ve.topLeft, ve.size)
-                drawRect(c(mezcla(CARTON, Color.Black, 0.4f)), ve.topLeft, ve.size, style = Stroke(1.6f * u))
-                frondaPrensada(Offset(ve.center.x, ve.bottom - 6 * u), ve.height * 0.82f, 6f, c(HELECHO))
-                // La etiqueta del nombre y la cuenta.
-                val et = Rect(r.left + ancho * 0.35f, r.top + alto * 0.12f, r.right - ancho * 0.04f, r.top + alto * 0.5f)
-                drawRect(Color.Black.copy(alpha = 0.2f), et.topLeft + Offset(1 * u, 1.5f * u), et.size)
-                drawRect(cp(PAPEL), et.topLeft, et.size)
-                drawRect(c(HIERRO).copy(alpha = 0.7f), et.deflate(3 * u).topLeft, et.deflate(3 * u).size, style = Stroke(0.8f * u))
-                drawRect(c(HIERRO).copy(alpha = 0.7f), et.deflate(4.6f * u).topLeft, et.deflate(4.6f * u).size, style = Stroke(0.4f * u))
-                textoEn(medidor, e.nombre, Rect(et.left + 8 * u, et.top + 5 * u, et.right - 8 * u, et.top + et.height * 0.58f), letra, c(TINTA), 13f, peso = FontWeight.Bold, minimo = 7f)
-                textoEn(medidor, e.cuenta, Rect(et.left + 8 * u, et.top + et.height * 0.58f, et.right - 8 * u, et.bottom - 5 * u), letra, c(HELECHO), 9.5f, minimo = 6f)
-                if (abre > 0f) drawRect(Color.Black.copy(alpha = 0.4f * abre), r.topLeft, r.size)
-            }
-            if (abre > 0.01f && sy > 0.02f) drawRect(Color.Black.copy(alpha = 0.15f), Offset(r.left, r.top + alto * abre - 12 * u * sin(PI.toFloat() * abre)), Size(ancho, 12 * u * sin(PI.toFloat() * abre)))
-            // La cinta de algodón alrededor, con su lazo: al abrir se deshace.
-            val queda = 1f - suelta
-            if (queda > 0f) {
-                val cy = r.top + alto * 0.66f + suelta * 14 * u
-                drawRect(c(CINTA_ALGODON).copy(alpha = queda), Offset(r.left - 2 * u, cy - 2.5f * u), Size(ancho + 4 * u, 5 * u))
-                val nudo = Offset(r.left + ancho * 0.72f, cy)
-                listOf(-1f, 1f).forEach { s ->
-                    drawPath(Path().apply { moveTo(nudo.x, nudo.y); quadraticTo(nudo.x + s * 14 * u, nudo.y - 14 * u, nudo.x + s * 16 * u, nudo.y - 2 * u); quadraticTo(nudo.x + s * 10 * u, nudo.y + 2 * u, nudo.x, nudo.y) },
-                        c(CINTA_ALGODON).copy(alpha = queda), style = Stroke(2.6f * u))
-                    drawLine(c(CINTA_ALGODON).copy(alpha = queda), nudo, nudo + Offset(s * 9 * u, 16 * u), 2.6f * u)
-                }
-                drawCircle(c(mezcla(CINTA_ALGODON, Color.Black, 0.12f)).copy(alpha = queda), 3 * u, nudo)
-            }
-        }
-    }
+    /** El herbario de momentos en el caballete del gabinete (ver [MuebleLibretaBotanico]). */
+    override fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleLibretaBotanico) { libreta(e, medidor, oscuro) }
 
-    /**
-     * La pestaña del día es una etiqueta de herbario de cartulina, de esquinas cortadas arriba, con su ojal y el cordel: la
-     * letra de la semana junto al ojal, el día grande y, abajo, una hoja prensada en el color del ánimo (sin ánimo, solo su
-     * contorno a lápiz). La hoja se inclina un poco según la semilla.
-     */
-    override fun DrawScope.pestana(e: EstadoPestana, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, false)
-        val r = Rect(4 * u, 4 * u, w - 4 * u, h - 3 * u)
-        val s = 7 * u
-        val forma = Path().apply { moveTo(r.left + s, r.top); lineTo(r.right - s, r.top); lineTo(r.right, r.top + s); lineTo(r.right, r.bottom); lineTo(r.left, r.bottom); lineTo(r.left, r.top + s); close() }
-        translate(1 * u, 1.4f * u) { drawPath(forma, Color.Black.copy(alpha = 0.22f)) }
-        drawPath(forma, c(if ((e.semilla and 1) == 0) PAPEL else mezcla(PAPEL, OTONO, 0.25f)))
-        drawPath(forma, c(ROBLE_VETA).copy(alpha = 0.5f), style = Stroke(0.7f * u))
-        val ojal = Offset(r.center.x, r.top + 5 * u)
-        drawCircle(c(LATON), 2.6f * u, ojal); drawCircle(c(FONDO), 1.2f * u, ojal)
-        drawLine(c(CINTA_ALGODON), ojal, Offset(ojal.x + 6 * u, 0f), 1 * u)
-        textoEn(medidor, e.semana, Rect(r.left + 2 * u, r.top + 2 * u, r.left + 12 * u, r.top + 11 * u), letra, c(TINTA).copy(alpha = 0.7f), 7.5f, minimo = 5f)
-        textoEn(medidor, e.dia, Rect(r.left + 2 * u, r.top + 11 * u, r.right - 2 * u, r.top + 31 * u), letra, c(TINTA), 18f, peso = FontWeight.Bold, minimo = 9f)
-        drawLine(c(TINTA).copy(alpha = 0.3f), Offset(r.left + 5 * u, r.top + 33 * u), Offset(r.right - 5 * u, r.top + 33 * u), 0.6f * u)
-        val base = Offset(r.left + 8 * u, r.bottom - 8 * u)
-        val giro = -14f - 10f * azar(e.semilla, 3)
-        if (e.tono != null) hojaSimple(base, giro, 22 * u, e.tono, c(TINTA).copy(alpha = 0.35f))
-        else rotate(giro, base) {
-            drawPath(Path().apply { moveTo(base.x, base.y); quadraticTo(base.x + 11 * u, base.y - 7 * u, base.x + 22 * u, base.y); quadraticTo(base.x + 11 * u, base.y + 7 * u, base.x, base.y); close() },
-                c(TINTA).copy(alpha = 0.45f), style = Stroke(0.8f * u))
-        }
-    }
+    /** El día del índice: un pliego en miniatura del herbario (ver [IndiceLibretaBotanico]). */
+    override fun DrawScope.pestana(e: EstadoPestana, medidor: TextMeasurer, oscuro: Boolean) =
+        with(IndiceLibretaBotanico) { pestana(e, medidor, oscuro) }
 
     /** El mes en una etiqueta larga de herbario: papel crema con doble filete verde, una ramita en cada punta. */
     override fun DrawScope.rotuloMes(texto: String, medidor: TextMeasurer, oscuro: Boolean) {
