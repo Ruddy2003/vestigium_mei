@@ -107,7 +107,11 @@ internal object VolumenEstanteFrente {
         val x = if (hacia > 0f) cuerpo.right - 1.4f * u else cuerpo.left
         drawRect(if (rojo > 0f) P.FOCO.copy(alpha = (0.85f * rojo).coerceIn(0f, 1f)) else a.filo(0.7f * k), Offset(x, cuerpo.top), Size(1.4f * u, cuerpo.height))
         if (rojo > 0.2f) drawRect(P.FOCO.copy(alpha = 0.16f * rojo), Offset(cuerpo.left, cuerpo.top), Size(cuerpo.width, cuerpo.height * 0.35f))
-        if (kv > 0.08f) drawRect(a.filoVidrio(0.75f * kv), Offset(cuerpo.right - 1.2f * u, cuerpo.top), Size(1.2f * u, cuerpo.height))
+        if (kv > 0.08f) {
+            drawRect(a.filoVidrio(0.75f * kv), Offset(cuerpo.right - 1.2f * u, cuerpo.top), Size(1.2f * u, cuerpo.height))
+            // La cabeza, que mira arriba, hacia el vidrio: su filo frío.
+            if (a.dormida) drawRect(a.filoVidrio((1.1f * kv).coerceAtMost(0.85f)), Offset(cuerpo.left + 1f * u, cuerpo.top), Size(cuerpo.width - 2f * u, 1.3f * u))
+        }
     }
 
     /** Las líneas de la trama de una lona, de [y0] a [y1] cada [paso], en un solo camino (un solo trazo, no uno por hilo). */
@@ -334,109 +338,133 @@ internal object VolumenEstanteFrente {
     // ---------------------------------------------------------------- la valija de lona
 
     /**
-     * La valija de lona de los despachos: blanda y panzona (más cuanto más escribiste), angosta arriba y ancha abajo, del color
-     * del ánimo, con su trama y sus arrugas; la solapa cosida de borde curvo que cae sobre ella y echa su sombra, la tarjeta del
-     * día en su portaetiquetas remachado, la correa de cuero con su hebilla de cromo y los ojales de las esquinas.
+     * La valija de correo de la red, de lona del color del ánimo: el asa de cuero arriba en sus dos anillas, el cuerpo blando y algo
+     * caído de un lado, con el fuelle abultado del costado, sus costuras y las cantoneras de cuero de abajo; la solapa ribeteada de
+     * cuero con la tarjeta del día en su portaetiquetas remachado, y una o dos correas que bajan de debajo de la solapa a sus
+     * hebillas de cromo. Por semilla: a qué lado cae, una o dos correas, el asa levantada o tumbada, un remiendo.
      */
     fun DrawScope.valija(v: Volumen, medidor: TextMeasurer, a: AireFrente, k: Float, kv: Float, hacia: Float, material: Color?) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla
         val l = Luz(a, k, kv)
-        alrededor(a, hacia, h * 0.2f)
         val t = tinte(material, P.LONA, l, (azar(s, 4) - 0.5f) * 0.12f)
-        // La bolsa: angosta arriba, panzona y ancha abajo, de lados blandos.
-        val panza = 0.01f + 0.03f * v.lleno
-        val arriba = h * 0.05f
+        val cuero = l.c(P.CUERO); val cueroLuz = l.c(P.CUERO_LUZ); val cueroOsc = l.c(mezcla(P.CUERO, P.SOMBRA, 0.45f))
+        val caeIzq = azar(s, 16) > 0.5f
+        val cae = h * (0.025f + 0.025f * azar(s, 17))
+        val arriba = h * 0.12f
+        val yi = arriba + (if (caeIzq) cae else 0f); val yd = arriba + (if (caeIzq) 0f else cae)
+        alrededor(a, hacia, arriba)
+        // El asa de cuero, levantada (o tumbada a un lado), en sus dos anillas de cromo.
+        val tumbada = azar(s, 18) > 0.6f
+        val a0 = Offset(w * 0.3f, yi + (yd - yi) * 0.3f); val a1 = Offset(w * 0.7f, yi + (yd - yi) * 0.7f)
+        val asa = Path().apply {
+            moveTo(a0.x, a0.y)
+            if (tumbada) cubicTo(a0.x - w * 0.02f, a0.y - h * 0.05f, a1.x + w * 0.12f, a1.y - h * 0.06f, a1.x, a1.y)
+            else cubicTo(a0.x - w * 0.04f, 0.6f * u, a1.x + w * 0.04f, 0.6f * u, a1.x, a1.y)
+        }
+        drawPath(asa, a.sombra(0.4f), style = Stroke(3.2f * u, cap = StrokeCap.Round))
+        drawPath(asa, cuero, style = Stroke(2.6f * u, cap = StrokeCap.Round))
+        drawPath(asa, cueroLuz.copy(alpha = 0.7f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
+        listOf(a0, a1).forEach { o -> drawCircle(l.c(P.CROMO), 1.8f * u, o, style = Stroke(1f * u)) }
+        // La bolsa: blanda, más ancha abajo, caída de un lado, con las esquinas de abajo redondas.
+        val panza = 0.015f + 0.03f * v.lleno
         val bolsa = Path().apply {
-            moveTo(w * 0.14f, arriba)
-            lineTo(w * 0.86f, arriba)
-            cubicTo(w * 0.9f, h * 0.3f, w * (1.0f + panza), h * 0.6f, w * (0.97f + panza), h * 0.86f)
-            quadraticTo(w * 0.95f, h, w * 0.78f, h)
-            lineTo(w * 0.22f, h)
-            quadraticTo(w * 0.05f, h, w * (0.03f - panza), h * 0.86f)
-            cubicTo(w * (0.0f - panza), h * 0.6f, w * 0.1f, h * 0.3f, w * 0.14f, arriba)
+            moveTo(w * 0.07f, yi)
+            lineTo(w * 0.93f, yd)
+            cubicTo(w * (0.97f + panza), yd + h * 0.2f, w * (1f + panza), h * 0.6f, w * (0.98f + panza * 0.5f), h * 0.86f)
+            quadraticTo(w * 0.97f, h, w * 0.8f, h)
+            lineTo(w * 0.2f, h)
+            quadraticTo(w * 0.03f, h, w * (0.02f - panza * 0.5f), h * 0.86f)
+            cubicTo(w * (0f - panza), h * 0.6f, w * (0.03f - panza), yi + h * 0.2f, w * 0.07f, yi)
             close()
         }
         drawPath(bolsa, t.cara)
-        clipRect(w * 0.08f, arriba, w * 0.92f, h - 1.5f * u) {
-            redondoFrente(Rect(w * 0.02f, 0f, w * 0.98f, h), t.cara, t.claro, t.hondo, hacia, 0.9f)
-            // La panza: un claro blando abajo, del lado de la luz.
-            drawOval(a.claro(0.18f), Offset(w * (if (hacia < 0f) 0.1f else 0.48f), h * 0.6f), Size(w * 0.42f, h * 0.26f))
-            // La trama de la lona, en un solo trazo.
-            drawPath(trama(w, arriba, h, 1.8f * u), t.hondo.copy(alpha = 0.15f), style = Stroke(0.5f * u))
-            // Los pliegues blandos de la panza: la lona se comba de lado a lado (su sombra abajo, su luz arriba), y el fuelle de
-            // los costados.
-            listOf(0.7f to 0.05f, 0.84f to 0.04f).forEachIndexed { j, (f, cae) ->
-                val y0 = h * (f + 0.03f * azar(s, 30 + j))
-                val p = Path().apply { moveTo(w * 0.04f, y0 - h * 0.02f); quadraticTo(w * (0.45f + 0.1f * azar(s, 34 + j)), y0 + h * cae, w * 0.96f, y0 - h * 0.03f) }
-                drawPath(p, t.hondo.copy(alpha = 0.55f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
-                translate(0f, -1.6f * u) { drawPath(p, t.claro.copy(alpha = 0.5f), style = Stroke(1f * u, cap = StrokeCap.Round)) }
+        clipRect(w * 0.05f, minOf(yi, yd), w * 0.95f, h - 1.2f * u) {
+            redondoFrente(Rect(w * 0.02f, 0f, w * 0.98f, h), t.cara, t.claro, t.hondo, hacia, 0.85f)
+            // La trama de la lona.
+            drawPath(trama(w, arriba, h, 1.8f * u), t.hondo.copy(alpha = 0.14f), style = Stroke(0.5f * u))
+            // El fuelle del costado de la sombra: una banda abultada más honda, con su pliegue.
+            val fx = if (hacia < 0f) w * 0.84f else w * 0.06f
+            val fuelle = Path().apply {
+                moveTo(fx, h * 0.3f); quadraticTo(fx + w * 0.05f, h * 0.62f, fx + w * 0.01f, h * 0.98f)
+                lineTo(fx + w * 0.11f, h * 0.98f); quadraticTo(fx + w * 0.14f, h * 0.6f, fx + w * 0.1f, h * 0.3f); close()
             }
-            listOf(0.11f, 0.89f).forEach { f ->
-                val x = w * f
-                drawPath(Path().apply { moveTo(x, h * 0.5f); quadraticTo(x + (if (f < 0.5f) -1f else 1f) * w * 0.04f, h * 0.75f, x, h * 0.96f) }, t.hondo.copy(alpha = 0.45f), style = Stroke(1f * u))
-            }
-            // La costura de abajo.
-            drawPath(Path().apply { moveTo(w * 0.12f, h - 3.4f * u); lineTo(w * 0.88f, h - 3.4f * u) }, t.hondo.copy(alpha = 0.75f),
-                style = Stroke(0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.6f * u, 1.2f * u))))
+            drawPath(fuelle, t.hondo.copy(alpha = 0.55f))
+            drawPath(Path().apply { moveTo(fx + w * 0.05f, h * 0.34f); quadraticTo(fx + w * 0.1f, h * 0.64f, fx + w * 0.06f, h * 0.96f) }, t.claro.copy(alpha = 0.45f), style = Stroke(0.8f * u))
+            // La panza, abajo, que se comba con su luz.
+            drawOval(a.claro(0.16f), Offset(w * (if (hacia < 0f) 0.12f else 0.46f), h * 0.66f), Size(w * 0.4f, h * 0.2f))
             // Un remiendo de otra lona, en algunas.
-            if (azar(s, 12) > 0.6f) {
-                val rx = w * (0.12f + 0.35f * azar(s, 13))
-                val rp = Rect(rx, h * 0.76f, rx + w * 0.34f, h * 0.88f)
+            if (azar(s, 12) > 0.62f) {
+                val rx = w * (0.18f + 0.3f * azar(s, 13))
+                val rp = Rect(rx, h * 0.8f, rx + w * 0.3f, h * 0.92f)
                 drawRect(l.c(mezcla(P.LONA, P.SOMBRA, 0.25f)), rp.topLeft, rp.size)
                 drawRect(t.hondo.copy(alpha = 0.6f), rp.topLeft, rp.size, style = Stroke(0.7f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.2f * u, 1f * u))))
             }
         }
-        drawPath(bolsa, t.hondo.copy(alpha = 0.6f), style = Stroke(0.8f * u))
-        // La solapa cosida, de borde curvo, que cae por delante; con su sombra en la bolsa.
-        val sb = h * (0.5f + 0.04f * azar(s, 14))
+        // Las costuras de los costados y de abajo.
+        val costura = Path().apply {
+            moveTo(w * 0.1f, yi + h * 0.04f); quadraticTo(w * 0.04f, h * 0.6f, w * 0.12f, h - 3f * u); lineTo(w * 0.88f, h - 3f * u)
+            quadraticTo(w * 0.96f, h * 0.6f, w * 0.9f, yd + h * 0.04f)
+        }
+        drawPath(costura, t.hondo.copy(alpha = 0.7f), style = Stroke(0.7f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.5f * u, 1.1f * u))))
+        drawPath(bolsa, t.hondo.copy(alpha = 0.65f), style = Stroke(0.8f * u))
+        // Las cantoneras de cuero de las esquinas de abajo, con su remache.
+        listOf(true, false).forEach { izq ->
+            val x0 = if (izq) w * 0.02f else w * 0.98f
+            val sx = if (izq) 1f else -1f
+            val esq = Path().apply {
+                moveTo(x0, h * 0.82f); quadraticTo(x0 + sx * w * 0.01f, h - 0.5f * u, x0 + sx * w * 0.2f, h - 0.5f * u)
+                lineTo(x0 + sx * w * 0.24f, h - h * 0.05f); quadraticTo(x0 + sx * w * 0.06f, h - h * 0.06f, x0 + sx * w * 0.07f, h * 0.82f); close()
+            }
+            drawPath(esq, if ((izq && hacia < 0f) || (!izq && hacia > 0f)) cueroLuz else cueroOsc)
+            drawCircle(l.c(P.CROMO), 0.9f * u, Offset(x0 + sx * w * 0.1f, h - h * 0.04f))
+        }
+        // La solapa, ribeteada de cuero, de esquinas redondas, con su sombra en la bolsa.
+        val sb = h * (0.52f + 0.04f * azar(s, 14))
+        val ri = sb + (if (caeIzq) cae * 0.5f else 0f); val rd = sb + (if (caeIzq) 0f else cae * 0.5f)
         val solapa = Path().apply {
-            moveTo(w * 0.1f, arriba - 1f * u); lineTo(w * 0.9f, arriba - 1f * u)
-            cubicTo(w * 0.93f, h * 0.25f, w * 0.97f, sb - h * 0.08f, w * 0.82f, sb - h * 0.02f)
-            quadraticTo(w * 0.5f, sb + h * 0.04f, w * 0.18f, sb - h * 0.02f)
-            cubicTo(w * 0.03f, sb - h * 0.08f, w * 0.07f, h * 0.25f, w * 0.1f, arriba - 1f * u); close()
+            moveTo(w * 0.06f, yi - 1f * u); lineTo(w * 0.94f, yd - 1f * u)
+            lineTo(w * 0.95f, rd - w * 0.16f); quadraticTo(w * 0.95f, rd, w * 0.78f, rd)
+            lineTo(w * 0.22f, ri); quadraticTo(w * 0.05f, ri, w * 0.05f, ri - w * 0.16f); close()
         }
         translate(0.6f * u, 2.6f * u) { drawPath(solapa, a.sombra(0.5f)) }
-        drawPath(solapa, mezcla(t.cara, t.claro, 0.18f))
-        clipRect(w * 0.12f, arriba, w * 0.88f, sb - h * 0.06f) {
-            redondoFrente(Rect(w * 0.06f, 0f, w * 0.94f, h), mezcla(t.cara, t.claro, 0.18f), t.claro, t.hondo, hacia, 0.75f)
-            drawPath(trama(w, arriba, sb, 1.8f * u), t.hondo.copy(alpha = 0.13f), style = Stroke(0.5f * u))
+        drawPath(solapa, mezcla(t.cara, t.claro, 0.15f))
+        clipRect(w * 0.1f, minOf(yi, yd), w * 0.9f, maxOf(ri, rd) - h * 0.05f) {
+            redondoFrente(Rect(w * 0.06f, 0f, w * 0.94f, h), mezcla(t.cara, t.claro, 0.15f), t.claro, t.hondo, hacia, 0.7f)
+            drawPath(trama(w, arriba, sb, 1.8f * u), t.hondo.copy(alpha = 0.12f), style = Stroke(0.5f * u))
         }
-        drawRect(a.claro(0.2f), Offset(w * 0.1f, arriba - 1f * u), Size(w * 0.8f, 1.6f * u))
-        // El doblez de arriba, donde la solapa da la vuelta.
-        drawRect(t.hondo.copy(alpha = 0.35f), Offset(w * 0.1f, arriba + 1.2f * u), Size(w * 0.8f, 1f * u))
-        drawPath(Path().apply {
-            moveTo(w * 0.15f, arriba + 3f * u); cubicTo(w * 0.12f, h * 0.25f, w * 0.12f, sb - h * 0.1f, w * 0.22f, sb - h * 0.055f)
-            quadraticTo(w * 0.5f, sb - h * 0.005f, w * 0.78f, sb - h * 0.055f); cubicTo(w * 0.88f, sb - h * 0.1f, w * 0.88f, h * 0.25f, w * 0.85f, arriba + 3f * u)
-        }, t.hondo.copy(alpha = 0.65f), style = Stroke(0.7f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.4f * u, 1.1f * u))))
-        // Los ojales de cromo de las esquinas de arriba.
-        listOf(w * 0.17f, w * 0.83f).forEach { x ->
-            drawCircle(l.c(P.CROMO_OSC), 1.6f * u, Offset(x, arriba + 2.4f * u))
-            drawCircle(l.c(Color(0xFF1C1B18)), 0.8f * u, Offset(x, arriba + 2.4f * u))
-        }
+        drawPath(solapa, cuero, style = Stroke(2f * u))
+        drawPath(solapa, cueroLuz.copy(alpha = 0.6f), style = Stroke(0.6f * u))
         // La tarjeta del día en su portaetiquetas remachado, en la solapa.
-        val eh = minOf(sb - h * 0.18f, 29f * u)
-        val et = Rect(w * 0.13f, arriba + h * 0.07f, w * 0.87f, arriba + h * 0.07f + eh)
+        val eh = minOf(sb - arriba - h * 0.08f, 29f * u)
+        val ey = minOf(yi, yd) + h * 0.045f
+        val et = Rect(w * 0.13f, ey, w * 0.87f, ey + eh)
         drawRect(a.sombra(0.4f), Offset(et.left + 0.8f * u, et.top + 1.2f * u), et.size)
         drawRect(l.c(P.CROMO_OSC), et.inflate(0.9f * u).topLeft, et.inflate(0.9f * u).size)
         drawRect(l.etiqueta(P.MANILA), et.topLeft, et.size)
         drawRect(a.claro(0.3f), et.topLeft, Size(et.width, 0.8f * u))
         diaYMes(v, medidor, Rect(et.left + 0.5f * u, et.top + 0.5f * u, et.right - 0.5f * u, et.bottom - 0.5f * u), a.tinta(k))
         listOf(et.left + 0.4f * u, et.right - 0.4f * u).forEach { x -> drawCircle(l.c(P.CROMO), 1f * u, Offset(x, et.top + 1.6f * u)) }
-        // La correa de cuero que baja de la solapa a la hebilla de cromo.
-        val cx = w * (0.46f + 0.08f * azar(s, 15))
-        val cw = minOf(w * 0.26f, 7.4f * u)
-        val co = Rect(cx - cw / 2, sb - h * 0.06f, cx + cw / 2, sb + h * 0.2f)
-        drawRect(a.sombra(0.45f), Offset(co.left + 1f * u, co.top + 1f * u), co.size)
-        redondoFrente(co, l.c(P.CUERO), l.c(P.CUERO_LUZ), l.c(mezcla(P.CUERO, P.SOMBRA, 0.5f)), hacia, 0.8f)
-        drawLine(a.sombra(0.4f), Offset(co.left, co.top + 2f * u), Offset(co.right, co.top + 2f * u), 0.7f * u)
-        val hb = Rect(co.left - 1.6f * u, co.top + h * 0.05f, co.right + 1.6f * u, co.top + h * 0.13f)
-        drawRect(a.sombra(0.4f), Offset(hb.left + 0.8f * u, hb.top + 1f * u), hb.size, style = Stroke(1.3f * u))
-        drawRect(l.c(P.CROMO), hb.topLeft, hb.size, style = Stroke(1.3f * u))
-        drawLine(l.c(P.CROMO_LUZ), Offset(hb.center.x, hb.top), Offset(hb.center.x, hb.bottom), 0.9f * u)
-        drawLine(a.brillo(0.6f, k), Offset(hb.left, hb.top), Offset(hb.right, hb.top), 0.6f * u)
-        if (v.noche) luna(Offset(w * (if (cx > w * 0.5f) 0.26f else 0.74f), sb + h * 0.17f), minOf(w * 0.12f, 4.2f * u), a)
+        // Las correas que salen de debajo de la solapa y bajan a sus hebillas.
+        val dos = w > 36f * u && azar(s, 15) > 0.35f
+        val xs = if (dos) listOf(w * 0.3f, w * 0.7f) else listOf(w * (0.46f + 0.08f * azar(s, 19)))
+        val cw = minOf(w * (if (dos) 0.16f else 0.24f), 6.4f * u)
+        xs.forEach { cx ->
+            val yTop = ri + (rd - ri) * (cx / w) - 2f * u
+            val co = Rect(cx - cw / 2, yTop, cx + cw / 2, yTop + h * 0.25f)
+            drawRect(a.sombra(0.45f), Offset(co.left + 1f * u, co.top + 1.4f * u), co.size)
+            redondoFrente(co, cuero, cueroLuz, cueroOsc, hacia, 0.8f)
+            drawLine(cueroOsc, Offset(co.left + 0.8f * u, co.top), Offset(co.left + 0.8f * u, co.bottom), 0.5f * u)
+            val hb = Rect(co.left - 1.6f * u, co.top + h * 0.1f, co.right + 1.6f * u, co.top + h * 0.17f)
+            drawRect(a.sombra(0.4f), Offset(hb.left + 0.8f * u, hb.top + 1f * u), hb.size, style = Stroke(1.3f * u))
+            drawRect(l.c(P.CROMO), hb.topLeft, hb.size, style = Stroke(1.3f * u))
+            drawLine(l.c(P.CROMO_LUZ), Offset(hb.center.x, hb.top), Offset(hb.center.x, hb.bottom), 0.9f * u)
+            drawLine(a.brillo(0.6f, k), Offset(hb.left, hb.top), Offset(hb.right, hb.top), 0.6f * u)
+            // La punta de la correa, que sobra por debajo de la hebilla.
+            drawRect(cueroOsc, Offset(co.left + cw * 0.15f, co.bottom - 0.5f * u), Size(cw * 0.7f, h * 0.035f))
+        }
+        if (v.noche) luna(Offset(w * (if (dos) 0.5f else if (xs[0] > w * 0.5f) 0.26f else 0.74f), sb + h * 0.24f), minOf(w * 0.12f, 4.2f * u), a)
         filos(Rect(w * 0.05f, arriba, w * 0.95f, h), a, k, kv, hacia)
     }
 }

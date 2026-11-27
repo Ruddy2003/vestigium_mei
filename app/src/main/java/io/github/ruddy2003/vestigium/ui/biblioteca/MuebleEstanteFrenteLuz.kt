@@ -22,7 +22,7 @@ import kotlin.math.pow
  * verdosa de los sillares con su humedad, su musgo y sus raíces; la chapa esmaltada color hueso de la consola y su sombra verde
  * gris; la consola oscura de verde casi negro; el cromo gastado, la baquelita y el cobre del tubo; el hormigón del piso y la
  * franja de peligro; la cinta de papel de las etiquetas; el verde turquesa del vidrio grabado y el ámbar de los pilotos. Dos
- * temperaturas: lo frío es la piedra, la consola, el vidrio y la noche; lo cálido, la cúpula, los pilotos, el óxido y la estufa.
+ * temperaturas: lo frío es la piedra, la consola, el vidrio y la noche; lo cálido, la cúpula, los pilotos, el óxido y las válvulas.
  */
 internal object PaletaFrente {
     /** La piedra de los sillares (la del Ideario), su junta en sombra, la humedad, el musgo y las raíces. */
@@ -101,11 +101,11 @@ internal object PaletaFrente {
     val SOMBRA_GUARDIA = Color(0xFF34284E)
     /** Hacia donde se apaga lo que queda lejos de las lámparas bajadas: un pardo violáceo hondo (oscurece, no tiñe de rosa). */
     val HONDO_GUARDIA = Color(0xFF2A2230)
-    /** La luz de la cúpula (la del Ideario), su corazón, el foco rojo, la estufa y su brasa. */
+    /** La luz de la cúpula (la del Ideario), su corazón, el aplique rojo, el naranja de las válvulas encendidas y su brasa. */
     val LAMPARA = Color(0xFFFFE3B4)
     val FUEGO = Color(0xFFFFF4DE)
     val FOCO = Color(0xFFFF4A2E)
-    val ESTUFA = Color(0xFFFF7A2E)
+    val VALVULA = Color(0xFFFF8436)
     val BRASA = Color(0xFFE4502A)
 
     val LETRA: FontFamily = LetraExtra.chivoMono
@@ -113,7 +113,7 @@ internal object PaletaFrente {
 
 /**
  * El aire del momento en el estante de Frente: de día (la base con las lámparas encendidas, la luz de la cúpula de arriba a la
- * izquierda), de noche (el modo oscuro: la base en penumbra verde; arden la cúpula, el foco rojo de un hueco y la estufa del
+ * izquierda), de noche (el modo oscuro: la base en penumbra verde; arden la cúpula, el aplique rojo de un hueco y el cargador del
  * pie, y el vidrio grabado brilla en turquesa) y en los Sueños ([noche]: el turno de guardia en claro, la base dormida en
  * oscuro). De noche cada color va de su hondo (oscuro, de su tono, con el aire de la noche) a su color según cuánta luz le llega
  * ([cerca], de 0 a 1), con el calor de la cúpula encima; el frío del vidrio ([vidrio], de 0 a 1) lo pinta de turquesa. En el
@@ -162,7 +162,7 @@ internal class AireFrente(val oscuro: Boolean, val noche: Boolean, val cuerpo: B
     }
 
     /**
-     * El color de [c] con la luz que le llega: [cerca] la cálida (la cúpula, el foco, la estufa), [vidrio] la fría del vidrio
+     * El color de [c] con la luz que le llega: [cerca] la cálida (la cúpula, el aplique, el cargador), [vidrio] la fría del vidrio
      * grabado. De día, tal cual; al turno de guardia, más tibio.
      */
     fun luz(c: Color, cerca: Float, vidrio: Float = 0f): Color {
@@ -170,14 +170,19 @@ internal class AireFrente(val oscuro: Boolean, val noche: Boolean, val cuerpo: B
         if (!oscuro) return if (noche) guardia(c, k) else c
         val base = mezcla(mezcla(hundido(c), encendido(c, k), (1.1f * k.toDouble().pow(1.5).toFloat()).coerceAtMost(0.94f)), p.LAMPARA, 0.1f * k)
         val f = vidrio.coerceIn(0f, 1f)
-        return if (f > 0.01f) mezcla(base, mezcla(hundido(c), alVidrio(c), 0.85f), (0.7f * f.toDouble().pow(1.3).toFloat()).coerceAtMost(0.62f) * (1f - 0.6f * k)) else base
+        if (f <= 0.01f) return base
+        val q = if (noche) (1.05f * f.toDouble().pow(1.05).toFloat()).coerceAtMost(0.78f) else (0.7f * f.toDouble().pow(1.3).toFloat()).coerceAtMost(0.62f)
+        return mezcla(base, mezcla(hundido(c), alVidrio(c), if (noche) 0.95f else 0.85f), q * (1f - 0.6f * k))
     }
 
     /**
-     * Al turno de guardia (Sueños claros), con las lámparas bajadas: tibio cerca de la cúpula y de la estufa ([k] alto) y, lejos,
-     * más bajo y hacia el violeta de la sombra.
+     * Al turno de guardia (Sueños claros), con las lámparas bajadas: tibio solo donde llega la cúpula o el cargador ([k] alto);
+     * lejos, el color propio (la piedra sigue gris), más bajo y con un punto de violeta.
      */
-    private fun guardia(c: Color, k: Float): Color = mezcla(mezcla(alaGuardia(c), p.HONDO_GUARDIA, 0.34f * (1f - k)), p.GUARDIA, 0.1f * k)
+    private fun guardia(c: Color, k: Float): Color {
+        val q = k.coerceIn(0f, 1f)
+        return mezcla(mezcla(mezcla(c, alaGuardia(c), q), p.HONDO_GUARDIA, 0.3f * (1f - q)), p.GUARDIA, 0.12f * q * q)
+    }
 
     /** De día, más claro (positivo) o más hondo (negativo); de noche, como [luz]; al turno de guardia, con su luz [cerca]. */
     fun dia(c: Color, f: Float, cerca: Float = 1f, vidrio: Float = 0f): Color {
@@ -217,7 +222,7 @@ internal class AireFrente(val oscuro: Boolean, val noche: Boolean, val cuerpo: B
      */
     fun animo(t: Color, cerca: Float, vidrio: Float = 0f): Color {
         val k = cerca.coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(alaGuardia(t), p.HONDO_GUARDIA, 0.24f * (1f - k)) else t
+        if (!oscuro) return if (noche) mezcla(mezcla(t, alaGuardia(t), k), p.HONDO_GUARDIA, 0.22f * (1f - k)) else t
         val apagado = mezcla(Color(t.red * 0.2f, t.green * 0.22f, t.blue * 0.21f, t.alpha), hondo, 0.25f)
         val enc = mezcla(t, aLaLampara(t), 0.5f)
         val base = mezcla(apagado, enc, (1.15f * k.toDouble().pow(1.5).toFloat()).coerceAtMost(1f))
@@ -231,7 +236,7 @@ internal class AireFrente(val oscuro: Boolean, val noche: Boolean, val cuerpo: B
      */
     fun etiqueta(c: Color, cerca: Float, vidrio: Float = 0f): Color {
         val k = cerca.coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(alaGuardia(c), p.HONDO_GUARDIA, 0.22f * (1f - k)) else c
+        if (!oscuro) return if (noche) mezcla(mezcla(c, alaGuardia(c), k), p.HONDO_GUARDIA, 0.2f * (1f - k)) else c
         val lejos = Color(c.red * 0.36f, c.green * 0.32f, c.blue * 0.23f, c.alpha)
         val alumbrado = Color((c.red * 1.02f).coerceAtMost(1f), c.green * 0.93f, c.blue * 0.72f, c.alpha)
         val base = mezcla(lejos, alumbrado, k.toDouble().pow(1.7).toFloat().coerceAtMost(1f))

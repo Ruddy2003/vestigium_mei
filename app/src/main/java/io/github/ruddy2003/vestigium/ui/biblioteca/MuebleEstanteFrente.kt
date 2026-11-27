@@ -52,8 +52,8 @@ internal object CapaFrente {
  * consola: la capota curva con sus molduras redondas, el friso de consola oscura con sus pilotos, los costados gruesos de canto
  * redondo, las repisas de chapa doblada con su labio y su portaetiquetas, y el zócalo de consola oscura con sus rejillas. Por
  * detrás de cada casillero, la piedra en sombra. Arriba, la radio de maleta, el vidrio grabado, las latas de microfilm y la
- * cúpula colgada; al pie, la estufa eléctrica, la caja de equipo y el rollo de cable. De noche arden la cúpula, el foco rojo de
- * un hueco y la estufa, y el vidrio brilla en turquesa. La paleta y la luz están en [PaletaFrente] y [AireFrente]; la pared y la
+ * cúpula colgada; al pie, el cargador de válvulas, la caja de equipo y el rollo de cable. De noche arden la cúpula, el aplique
+ * rojo de un hueco y las válvulas del cargador, y el vidrio brilla en turquesa. La paleta y la luz están en [PaletaFrente] y [AireFrente]; la pared y la
  * piedra, en [MuroEstanteFrente]; el mueble, en [ObraEstanteFrente]; el bodegón, en [CoronaEstanteFrente]; lo de los huecos, en
  * [HuecosEstanteFrente]; el pie, en [PieEstanteFrente]; las entradas, en [VolumenEstanteFrente].
  */
@@ -82,7 +82,7 @@ internal object MuebleEstanteFrente {
     fun alto(semilla: Int, palabras: Int): Float = when (clase(semilla)) {
         0 -> 0.83f + 0.07f * azar(semilla, 1)
         1 -> 0.87f + 0.08f * azar(semilla, 1)
-        else -> 0.75f + 0.08f * azar(semilla, 1)
+        else -> 0.8f + 0.08f * azar(semilla, 1)
     }
 
     // ---------------------------------------------------------------- la luz
@@ -93,9 +93,9 @@ internal object MuebleEstanteFrente {
     /** Dónde brilla el vidrio grabado (el centro del panel). */
     const val VIDRIO_X = 0.79f
     const val VIDRIO_Y = 0.32f
-    /** Dónde arde la estufa: a lo ancho, y a lo alto en fracción del pie (desde su borde de arriba). */
-    const val ESTUFA_X = 0.17f
-    const val ESTUFA_Y = 0.6f
+    /** Dónde brillan las válvulas del cargador del pie: a lo ancho, y a lo alto en fracción del pie (desde su borde de arriba). */
+    const val CARGADOR_X = 0.13f
+    const val CARGADOR_Y = 0.66f
     /** El ancho con que un volumen pasa su repisa a anchos del mueble (no sabe cuánto mide el estante): el de un teléfono. */
     const val ANCHO_NOMINAL = 380f
     /** Una repisa con su tabla, en dp. */
@@ -107,7 +107,7 @@ internal object MuebleEstanteFrente {
     /** En la base: dónde acaba el zócalo y empieza el suelo, en fracción de su alto. */
     const val ZOCALO = 0.3f
     /** El foco de un hueco, colgado de la tabla de arriba: a qué alto de su repisa alumbra (en fracción del hueco, desde abajo). */
-    const val FOCO_Y = 0.76f
+    const val FOCO_Y = 0.84f
 
     /** La luz de la cúpula en el cuerpo: cuánta llega (de 1 a 0) a un punto a [dx] y [dy] de su boca, en anchos. */
     fun cupula(dx: Float, dy: Float): Float =
@@ -117,8 +117,8 @@ internal object MuebleEstanteFrente {
     fun cupulaArriba(dx: Float, dy: Float, suenos: Boolean): Float =
         if (suenos) 0.03f else (1.5f * exp(-3.3f * sqrt(dx * dx + dy * dy * 1.1f))).coerceIn(0.03f, 1f)
 
-    /** La luz de la estufa del pie: naranja y baja, para las repisas de abajo; en los Sueños, más baja. */
-    fun estufa(dx: Float, dy: Float, suenos: Boolean): Float =
+    /** La luz de las válvulas del cargador del pie: naranja y baja, para las repisas de abajo; en los Sueños, más baja. */
+    fun cargador(dx: Float, dy: Float, suenos: Boolean): Float =
         ((if (suenos) 0.8f else 1.45f) * exp(-2.5f * sqrt(dx * dx * 1.2f + dy * dy * 1.3f))).coerceIn(0f, 1f)
 
     /** La luz del foco rojo de un hueco: corta, para sus vecinos, el fondo y el canto de la tabla de arriba. */
@@ -126,7 +126,7 @@ internal object MuebleEstanteFrente {
 
     /** El resplandor frío del vidrio grabado: corto de noche; en los Sueños oscuros, la luz que manda. */
     fun vidrio(dx: Float, dy: Float, suenos: Boolean): Float =
-        if (suenos) (0.95f * exp(-3.6f * sqrt(dx * dx * 0.9f + dy * dy * 0.8f))).coerceIn(0f, 1f)
+        if (suenos) (1.25f * exp(-2.7f * sqrt(dx * dx * 0.9f + dy * dy * 0.8f))).coerceIn(0f, 1f)
         else (0.75f * exp(-4.2f * sqrt(dx * dx + dy * dy))).coerceIn(0f, 1f)
 
     /** El foco de hueco que más alumbra ([x], [y]) entre [focos] (x, y, x, y… en anchos). */
@@ -138,18 +138,18 @@ internal object MuebleEstanteFrente {
     }
 
     /**
-     * Cuánta luz cálida llega a ([x], [y]) (anchos): la cúpula (si no está [apagada], como en los Sueños oscuros), la estufa a la
-     * altura [yEstufa] (más baja en los [suenos]) y los [focos] de los huecos.
+     * Cuánta luz cálida llega a ([x], [y]) (anchos): la cúpula (si no está [apagada], como en los Sueños oscuros), el cargador a
+     * la altura [yCargador] (más bajo en los [suenos]) y los [focos] de los huecos.
      */
-    fun calor(x: Float, y: Float, yEstufa: Float, suenos: Boolean, focos: FloatArray, apagada: Boolean = suenos): Float {
+    fun calor(x: Float, y: Float, yCargador: Float, suenos: Boolean, focos: FloatArray, apagada: Boolean = suenos): Float {
         val kc = if (apagada) 0f else cupula(x - CUPULA_X, y - CUPULA_Y)
-        val ke = estufa(x - ESTUFA_X, y - yEstufa, suenos)
+        val ke = cargador(x - CARGADOR_X, y - yCargador, suenos)
         val kf = focoMayor(x, y, focos) * (if (suenos) 0.6f else 1f)
         return (1f - (1f - kc) * (1f - ke) * (1f - kf)).coerceIn(0.03f, 1f)
     }
 
-    /** Dónde arde la estufa, a lo alto y en anchos, en un estante de [repisas] repisas (lo usa cada volumen). */
-    fun yEstufaNominal(repisas: Int): Float = CORONA + repisas * FILA / ANCHO_NOMINAL + BASE * ESTUFA_Y
+    /** Dónde brilla el cargador, a lo alto y en anchos, en un estante de [repisas] repisas (lo usa cada volumen). */
+    fun yCargadorNominal(repisas: Int): Float = CORONA + repisas * FILA / ANCHO_NOMINAL + BASE * CARGADOR_Y
 
     /**
      * Dónde va el foco del hueco de cada repisa (en x del lienzo), o -1 si no lleva. Alumbra en los huecos con sitio, nunca en
@@ -177,7 +177,7 @@ internal object MuebleEstanteFrente {
         val ch = d.corona.bottom
         val b = d.base
         val apoyo = ch - w * CAPOTA
-        val yE = (b.top + b.height * ESTUFA_Y) / w
+        val yE = (b.top + b.height * CARGADOR_Y) / w
         val suenos = noche
         // Los focos de los huecos: se apuntan para que cada volumen sepa cuánta luz le dan.
         val centros = FloatArray(d.repisas.size) { -1f }
@@ -249,12 +249,12 @@ internal object MuebleEstanteFrente {
         val fx = LADO + v.centro * (1f - 2 * LADO)
         val fy = CORONA + (v.repisa + 0.5f) * FILA / ANCHO_NOMINAL
         val focos = if (a.lumbre) LucesHuecoFrente.focos(v.repisas, oscuro, v.noche) else FloatArray(0)
-        val yEn = yEstufaNominal(v.repisas)
+        val yEn = yCargadorNominal(v.repisas)
         val k = if (a.lumbre) calor(fx, fy, yEn, v.noche, focos, a.dormida) else 1f
         val kv = if (a.oscuro) vidrio(fx - VIDRIO_X, fy - VIDRIO_Y, a.dormida) else 0f
         // De qué lado le llega la luz: de día, de la cúpula (izquierda); de noche, de la luz que más alumbra.
         val kc = if (a.dormida) 0f else cupula(fx - CUPULA_X, fy - CUPULA_Y)
-        val ke = estufa(fx - ESTUFA_X, fy - yEn, v.noche)
+        val ke = cargador(fx - CARGADOR_X, fy - yEn, v.noche)
         var kf = 0f; var xf = fx
         var i = 0
         while (i + 1 < focos.size) { val e = foco(fx - focos[i], fy - focos[i + 1]); if (e > kf) { kf = e; xf = focos[i] }; i += 2 }
@@ -263,7 +263,7 @@ internal object MuebleEstanteFrente {
             a.dormida && kv > maxOf(ke, kf) -> if (fx < VIDRIO_X) 1f else -1f
             kf >= kc && kf >= ke -> if (xf >= fx) 1f else -1f
             kc >= ke -> if (fx < CUPULA_X) 1f else -1f
-            else -> if (fx < ESTUFA_X) 1f else -1f
+            else -> if (fx < CARGADOR_X) 1f else -1f
         }
         val kd = if (a.oscuro) maxOf(k, 0.06f) else k
         val material = materialFrente(v.tono, oscuro)

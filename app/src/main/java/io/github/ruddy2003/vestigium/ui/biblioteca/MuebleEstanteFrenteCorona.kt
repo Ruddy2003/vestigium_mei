@@ -49,6 +49,48 @@ internal object CoronaEstanteFrente {
         latas(w, apoyo, ch, a, cerca, frio)
         taza(Offset(w * 0.875f, apoyo + w * 0.004f), w * 0.05f, a, cerca, frio)
         cupula(w, a, cerca)
+        filoFrio(w, apoyo - w * M.PISA, apoyo, a, frio)
+    }
+
+    /**
+     * El filo frío que el vidrio grabado deja en lo que tiene cerca, de noche (en los Sueños oscuros, donde es la luz que manda, más
+     * vivo y más lejos): el canto de la radio y de su tapa, la tulipa apagada, las latas, la taza y la cara de arriba de la capota,
+     * apagándose hacia abajo y hacia la izquierda.
+     */
+    private fun DrawScope.filoFrio(w: Float, apoyo: Float, pisa: Float, a: AireFrente, frio: (Offset) -> Float) {
+        val u = density
+        if (!a.oscuro) return
+        val f = if (a.dormida) 1f else 0.45f
+        fun c(p: Offset, m: Float = 1f) = P.VIDRIO_TRAZO.copy(alpha = (frio(p) * 1.2f * f * m).coerceIn(0f, 0.7f))
+        // El charco frío del vidrio en la cara de arriba de la capota, bajo el panel.
+        val pc = Offset(w * 0.79f, apoyo + w * 0.012f)
+        drawOval(Brush.radialGradient(listOf(P.VIDRIO_TRAZO.copy(alpha = 0.32f * f), P.VIDRIO_TRAZO.copy(alpha = 0f)), pc, w * 0.28f), Offset(pc.x - w * 0.28f, apoyo), Size(w * 0.56f, w * 0.024f))
+        // El canto de delante de la capota, a lo ancho, más vivo del lado del vidrio.
+        for (i in 0 until 8) {
+            val x0 = w * (0.3f + 0.0875f * i)
+            drawRect(c(Offset(x0 + w * 0.04f, apoyo + w * 0.024f), 0.8f), Offset(x0, apoyo + w * 0.024f + 0.6f * u), Size(w * 0.0875f + 1f, 1.1f * u))
+        }
+        // La radio: el canto derecho de la caja, el de arriba y el de la tapa.
+        val caja = Rect(w * 0.11f, pisa - w * 0.165f, w * 0.56f, pisa + w * 0.004f)
+        drawLine(c(Offset(caja.right, caja.center.y)), Offset(caja.right - 0.7f * u, caja.top + 6f * u), Offset(caja.right - 0.7f * u, caja.bottom - 6f * u), 1.2f * u)
+        val tapaArriba = Offset(caja.right - w * 0.03f, caja.top - w * 0.142f)
+        drawLine(c(tapaArriba, 0.8f), Offset(caja.right - w * 0.014f - 0.6f * u, caja.top - 3f * u), Offset(tapaArriba.x - 0.6f * u, tapaArriba.y + 3f * u), 1.1f * u)
+        // El dial: su bisel, del lado del vidrio.
+        val dc = Offset(caja.left + w * 0.018f + (caja.width - w * 0.036f) * 0.17f, caja.center.y)
+        val dr = (caja.height - w * 0.032f) * 0.4f * 1.1f
+        drawArc(c(dc, 0.8f), -70f, 110f, false, Offset(dc.x - dr, dc.y - dr), Size(dr * 2, dr * 2), style = Stroke(1.2f * u))
+        // La tulipa apagada: su borde del lado del vidrio.
+        val cx = w * M.CUPULA_X; val boca = w * M.CUPULA_Y; val rx = w * 0.072f; val alto = w * 0.064f
+        drawArc(c(Offset(cx + rx, boca - alto * 0.5f), 0.9f), -80f, 80f, false, Offset(cx - rx, boca - alto), Size(rx * 2, alto * 2), style = Stroke(1.4f * u))
+        // Las latas: el canto derecho de cada una y la tapa de arriba.
+        val ancho = w * 0.16f; val altoL = w * 0.026f; val lx = w * 0.655f
+        for (i in 0 until 3) {
+            val dx = (azar(611, i) - 0.5f) * w * 0.03f
+            val der = lx + ancho / 2 + dx
+            val y0 = pisa - (i + 1) * altoL
+            drawLine(c(Offset(der, y0)), Offset(der - 0.7f * u, y0 + 1f * u), Offset(der - 0.7f * u, y0 + altoL), 1.3f * u)
+        }
+        drawArc(c(Offset(lx, pisa - 3 * altoL)), 180f, 180f, false, Offset(lx - ancho / 2, pisa - 3 * altoL - altoL * 0.45f), Size(ancho, altoL * 0.9f), style = Stroke(1.1f * u))
     }
 
     // ---------------------------------------------------------------- la carta estelar

@@ -37,7 +37,7 @@ internal object MuroEstanteFrente {
     // ---------------------------------------------------------------- la piedra de la corona
 
     /** Los colores de la piedra a la luz del momento, a [k] de la luz. */
-    private fun piedra(a: AireFrente, k: Float, c: Color) = if (a.oscuro) a.luz(c, k) else a.dia(c, 0f)
+    private fun piedra(a: AireFrente, k: Float, c: Color) = if (a.oscuro) a.luz(c, k) else c
 
     /**
      * La pared de arriba, en [r]: el muro de sillares, el charco de luz de la cúpula, el resplandor del vidrio de noche, las
@@ -60,9 +60,9 @@ internal object MuroEstanteFrente {
                 // de la derecha, arriba, queda más hondo.
                 val c = Offset(lamp.x + w * 0.04f, lamp.y + w * 0.1f)
                 val luz = if (a.noche) P.GUARDIA else Color(0xFFFFF0D2)
-                drawOval(Brush.radialGradient(0f to luz.copy(alpha = if (a.noche) 0.34f else 0.38f), 0.45f to luz.copy(alpha = if (a.noche) 0.12f else 0.14f),
+                drawOval(Brush.radialGradient(0f to luz.copy(alpha = if (a.noche) 0.46f else 0.38f), 0.45f to luz.copy(alpha = if (a.noche) 0.14f else 0.14f),
                     1f to luz.copy(alpha = 0f), center = c, radius = w * 0.46f), Offset(c.x - w * 0.46f, c.y - w * 0.46f), Size(w * 0.92f, w * 0.92f))
-                drawRect(Brush.radialGradient(0f to Color.Transparent, 0.55f to Color.Transparent, 1f to a.sombra(if (a.noche) 0.2f else 0.22f),
+                drawRect(Brush.radialGradient(0f to Color.Transparent, 0.5f to Color.Transparent, 1f to (if (a.noche) mezcla(P.SOMBRA, P.SOMBRA_GUARDIA, 0.4f).copy(alpha = 0.3f) else a.sombra(0.22f)),
                     center = c, radius = w * 0.95f), r.topLeft, r.size)
             } else {
                 // De noche, el halo tibio de la cúpula (apagada en los Sueños), el resplandor del vidrio y, lejos, la penumbra.
@@ -128,13 +128,13 @@ internal object MuroEstanteFrente {
         val alto = (MuebleEstanteFrente.FILA * u).toInt().coerceAtLeast(8)
         val img = ImageBitmap(ancho, alto)
         val k = if (a.oscuro) 0.2f else 1f
-        val base = if (a.oscuro) a.luz(P.PIEDRA, k) else mezcla(a.dia(P.PIEDRA, 0f), P.SOMBRA, 0.42f)
-        val junta = if (a.oscuro) a.luz(P.PIEDRA_SOMBRA, k * 0.7f) else mezcla(a.dia(P.PIEDRA_SOMBRA, 0f), P.SOMBRA, 0.42f)
-        val musgo = if (a.oscuro) a.luz(P.MUSGO, k) else mezcla(a.dia(P.MUSGO, 0f), P.SOMBRA, 0.3f)
+        val base = if (a.oscuro) a.luz(P.PIEDRA, k) else mezcla(P.PIEDRA, P.SOMBRA, 0.42f)
+        val junta = if (a.oscuro) a.luz(P.PIEDRA_SOMBRA, k * 0.7f) else mezcla(P.PIEDRA_SOMBRA, P.SOMBRA, 0.42f)
+        val musgo = if (a.oscuro) a.luz(P.MUSGO, k) else mezcla(P.MUSGO, P.SOMBRA, 0.3f)
         val humedad = if (a.oscuro) Color(0xFF020906).copy(alpha = 0.6f) else P.HUMEDAD.copy(alpha = 0.55f)
         CanvasDrawScope().draw(Density(u), LayoutDirection.Ltr, Canvas(img), Size(ancho.toFloat(), alto.toFloat())) {
             sillares(ancho.toFloat(), alto.toFloat(), 7, base, junta, musgo, humedad, if (a.oscuro) 0.35f else 0.85f)
-            val hondo = if (!a.oscuro && a.noche) mezcla(P.SOMBRA, P.SOMBRA_GUARDIA, 0.35f) else a.hondo
+            val hondo = if (!a.oscuro && a.noche) mezcla(P.SOMBRA, P.SOMBRA_GUARDIA, 0.15f) else a.hondo
             val hueco = MuebleEstanteFrente.ALTO_REPISA.value * u
             drawRect(Brush.verticalGradient(listOf(hondo.copy(alpha = if (a.oscuro) 0.13f else 0.16f), hondo.copy(alpha = if (a.oscuro) 0.58f else 0.6f)), 0f, hueco),
                 Offset.Zero, Size(ancho.toFloat(), alto.toFloat()))

@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontWeight
 import io.github.ruddy2003.vestigium.ui.ideario.azar
@@ -123,25 +124,38 @@ internal object ObraEstanteFrente {
         val forma = Path().apply { addRoundRect(RoundRect(labio, CornerRadius(rad * 0.7f), CornerRadius(rad * 0.7f), CornerRadius.Zero, CornerRadius.Zero)) }
         clipPath(forma) {
             val alto = labio.height
-            franjaHSuave(Rect(labio.left, labio.top, labio.right, labio.top + alto * 0.16f), P.HUESO_LUZ, 0.1f, a, cerca, frio, 0.5f)
-            franjaHSuave(Rect(labio.left, labio.top + alto * 0.16f, labio.right, labio.top + alto * 0.45f), P.HUESO, 0.06f, a, cerca, frio, 0.45f)
-            franjaHSuave(Rect(labio.left, labio.top + alto * 0.45f, labio.right, labio.top + alto * 0.78f), P.HUESO, -0.02f, a, cerca, frio, 0.35f)
-            franjaHSuave(Rect(labio.left, labio.top + alto * 0.78f, labio.right, labio.bottom + 1f), P.HUESO_OSC, -0.05f, a, cerca, frio, 0.25f)
+            // El canto curvo: la luz de arriba, el brillo que corre por la curva y la panza que se va a la sombra.
+            franjaHSuave(Rect(labio.left, labio.top, labio.right, labio.top + alto * 0.14f), P.HUESO_LUZ, 0.14f, a, cerca, frio, 0.55f)
+            franjaHSuave(Rect(labio.left, labio.top + alto * 0.14f, labio.right, labio.top + alto * 0.38f), P.HUESO_LUZ, 0.02f, a, cerca, frio, 0.5f)
+            franjaHSuave(Rect(labio.left, labio.top + alto * 0.38f, labio.right, labio.top + alto * 0.62f), P.HUESO, -0.03f, a, cerca, frio, 0.35f)
+            franjaHSuave(Rect(labio.left, labio.top + alto * 0.62f, labio.right, labio.top + alto * 0.84f), P.HUESO_OSC, -0.1f, a, cerca, frio, 0.22f)
+            franjaHSuave(Rect(labio.left, labio.top + alto * 0.84f, labio.right, labio.bottom + 1f), P.HUESO_OSC, -0.3f, a, cerca, frio, 0.1f)
+            // El brillo de la curva, más vivo del lado de la cúpula.
+            drawRect(Brush.horizontalGradient(listOf(a.brillo(0.75f, cerca(Offset(w * 0.2f, labio.top))), a.brillo(0.2f, cerca(Offset(w * 0.8f, labio.top)))), labio.left, labio.right),
+                Offset(labio.left, labio.top + alto * 0.24f), Size(labio.width, 1.3f * u))
             // Las esquinas, más hondas: la curva da la vuelta.
-            drawRect(Brush.horizontalGradient(0f to a.sombra(0.3f), 0.05f to Color.Transparent, 0.95f to Color.Transparent, 1f to a.sombra(0.4f), startX = labio.left, endX = labio.right), labio.topLeft, labio.size)
-            // La humedad que baja desde arriba y la pintura saltada.
+            drawRect(Brush.horizontalGradient(0f to a.sombra(0.35f), 0.05f to Color.Transparent, 0.95f to Color.Transparent, 1f to a.sombra(0.45f), startX = labio.left, endX = labio.right), labio.topLeft, labio.size)
+            // La humedad que baja desde arriba.
             for (j in 0 until 4) {
                 val x = labio.left + w * (0.1f + 0.8f * azar(311, j))
                 val largo = labio.height * (0.5f + 0.5f * azar(313, j))
                 val an = (1.4f + 2.6f * azar(315, j)) * u
                 drawRect(Brush.verticalGradient(listOf(a.sombra(0.16f), Color.Transparent), labio.top, labio.top + largo), Offset(x - an / 2, labio.top), Size(an, largo))
             }
-            for (j in 0 until 7) {
-                val x = labio.left + w * azar(317, j); val y = labio.top + labio.height * (0.25f + 0.6f * azar(319, j))
-                val sz = (1.6f + 3.2f * azar(323, j)) * u
-                drawPath(contornoIrregular(Rect(x, y, x + sz, y + sz * 0.6f), 900 + j, 6, 0.3f), en(P.ACERO, 0f, x, y, a, cerca, frio).copy(alpha = 0.7f))
+            // El esmalte saltado, como en la consola del Ideario: el acero oscuro, el óxido alrededor y el canto claro del esmalte,
+            // más en las esquinas y en el canto de arriba, donde se golpea.
+            val saltados = listOf(0.015f to 0.3f, 0.06f to 0.55f, 0.97f to 0.4f, 0.93f to 0.7f, 0.22f to 0.2f, 0.41f to 0.65f, 0.58f to 0.25f, 0.74f to 0.5f, 0.86f to 0.18f, 0.32f to 0.8f)
+            saltados.forEachIndexed { j, (fx, fy) ->
+                val x = labio.left + w * fx; val y = labio.top + alto * fy
+                val sz = (2.2f + 4.2f * azar(323, j)) * u
+                val p = contornoIrregular(Rect(x - sz / 2, y - sz * 0.3f, x + sz / 2, y + sz * 0.3f), 900 + j, 7, 0.3f)
+                if (j % 3 == 0) drawOval(en(P.OXIDO, 0f, x, y, a, cerca, frio).copy(alpha = 0.3f), Offset(x - sz * 0.8f, y - sz * 0.45f), Size(sz * 1.6f, sz * 0.9f))
+                translate(0f, 0.7f * u) { drawPath(p, a.claro(0.5f)) }
+                drawPath(p, en(P.ACERO, -0.1f, x, y, a, cerca, frio))
             }
         }
+        // La línea de sombra bajo el labio, en la primera moldura.
+        drawLine(a.sombra(0.65f), Offset(labio.left + 1f * u, labio.bottom + 0.6f * u), Offset(labio.right - 1f * u, labio.bottom + 0.6f * u), 1.4f * u)
         drawLine(a.brillo(0.8f, cerca(Offset(w * 0.2f, labio.top))), Offset(labio.left + rad * 0.6f, labio.top + 1f * u), Offset(labio.right - rad * 0.6f, labio.top + 1f * u), 1.1f * u, StrokeCap.Round)
         // Las dos molduras redondas, como anillos de la consola, y el filete de cromo.
         var y = labio.bottom
@@ -207,7 +221,7 @@ internal object ObraEstanteFrente {
         // La piedra, con el hondo del nicho ya pintado en la baldosa: su borde de arriba, en el de este casillero.
         with(MuroEstanteFrente) { piedraEn(r, af, k * 137f * u, r.top) }
         // De noche, la piedra ya viene hundida en la baldosa: solo se enciende donde llega una luz (el lado de la cúpula, el del
-        // vidrio, el de la estufa), con un resplandor que se apaga hacia el otro lado.
+        // vidrio, el del cargador), con un resplandor que se apaga hacia el otro lado.
         if (a.oscuro) {
             val y = r.top + r.height * 0.45f
             val kI = cerca(Offset(r.left, y)); val kD = cerca(Offset(r.right, y)); val vD = frio(Offset(r.right, y))
@@ -309,6 +323,12 @@ internal object ObraEstanteFrente {
             tornilloFrente(c, 1.9f * u, a, kk, 20f + 61f * (k + i), frio(c))
         }
         drawRect(a.sombra(0.5f), Offset(r.left, r.bottom - 0.9f * u), Size(r.width, 0.9f * u))
+        // En los Sueños oscuros, el filo frío del vidrio en el canto del labio, más vivo del lado del vidrio.
+        if (a.dormida) for (i in 0 until 6) {
+            val x0 = r.left + r.width * i / 6f
+            val kv = frio(Offset(x0 + r.width / 12f, r.top))
+            if (kv > 0.06f) drawRect(a.filoVidrio((1.2f * kv).coerceAtMost(0.8f)), Offset(x0, r.top + 0.4f * u), Size(r.width / 6f + 1f, 1.2f * u))
+        }
     }
 
     // ---------------------------------------------------------------- los costados
