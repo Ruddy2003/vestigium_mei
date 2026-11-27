@@ -5953,15 +5953,78 @@ object EstanteBotanico : DisenoBiblioteca {
         }
     }
 
+    /** La sombra con color de la tapa (el violeta hondo de los muebles). */
+    private val SOMBRA_TAPA = Color(0xFF2A2436)
+
+    /** El filo de luz en los cantos que miran a la luz: de día, crema (la ventana); de noche y en el sueño, el frío de la luna. */
+    private fun filoTapa(oscuro: Boolean, noche: Boolean, al: Float): Color =
+        if (oscuro || noche) PaletaBotanico.LUNA_RAS.copy(alpha = al * (if (noche) 0.9f else 0.6f)) else Color(0xFFFFF1D2).copy(alpha = al * 0.8f)
+
+    /**
+     * Donde descansa el cuaderno: el tablero de roble del gabinete con su canto, y la sombra con color debajo y hacia el lado
+     * contrario a la luz (de día y en el sueño, la ventana y la luna, arriba a la izquierda: a la derecha; de noche, la vela, a la
+     * derecha: a la izquierda). De noche, el tablero se enciende del lado de la vela y se hunde en el verde petróleo del otro.
+     */
+    private fun DrawScope.apoyoTapa(cu: Rect, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val P = PaletaBotanico
+        val y0 = cu.bottom - 6f * u; val y1 = h - 4.5f * u
+        val roble = when { noche -> mezcla(P.ROBLE, P.NOCHE, 0.55f); oscuro -> mezcla(P.ROBLE, P.NOCHE, 0.5f); else -> P.ROBLE }
+        if (oscuro && !noche) {
+            drawRect(Brush.horizontalGradient(listOf(mezcla(roble, P.NOCHE, 0.5f), roble, mezcla(P.ROBLE, P.LLAMA, 0.2f)), 0f, w), Offset(0f, y0), Size(w, y1 - y0))
+            drawRect(Brush.horizontalGradient(listOf(mezcla(roble, P.NOCHE, 0.65f), mezcla(roble, P.NOCHE, 0.3f), mezcla(P.ROBLE_OSC, P.LLAMA, 0.15f)), 0f, w), Offset(0f, y1), Size(w, h - y1))
+        } else {
+            drawRect(roble, Offset(0f, y0), Size(w, y1 - y0))
+            drawRect(mezcla(roble, P.ROBLE_OSC, 0.6f), Offset(0f, y1), Size(w, h - y1))
+        }
+        drawRect(if (oscuro || noche) P.LUNA_RAS.copy(alpha = 0.22f) else Color(0xFFFFF1D2).copy(alpha = 0.5f), Offset(0f, y1), Size(w, 0.9f * u))
+        // La sombra en la pared de atrás y en el tablero.
+        val haciaIzq = oscuro && !noche
+        val dx = if (haciaIzq) -4f * u else 4f * u
+        drawRoundRect(SOMBRA_TAPA.copy(alpha = if (oscuro || noche) 0.4f else 0.22f), cu.topLeft + Offset(dx, 5 * u), cu.size, CornerRadius(3 * u))
+        val sx0 = if (haciaIzq) cu.left - 10f * u else cu.left + 6f * u
+        val sx1 = if (haciaIzq) cu.right - 6f * u else cu.right + 5f * u
+        drawRect(Brush.horizontalGradient(listOf(Color.Transparent, SOMBRA_TAPA.copy(alpha = if (oscuro || noche) 0.45f else 0.28f), SOMBRA_TAPA.copy(alpha = if (oscuro || noche) 0.45f else 0.28f), Color.Transparent), sx0, sx1),
+            Offset(sx0, y0), Size(sx1 - sx0, (y1 - y0) * 0.8f))
+    }
+
+    /** La vela chica de la noche, en su palmatoria de latón junto al canto: su llama, su halo y el filo cálido en lo que la mira. */
+    private fun DrawScope.velaTapa(cu: Rect, a: Float) {
+        val u = density
+        val w = size.width; val h = size.height
+        val P = PaletaBotanico
+        val margen = (w - cu.right - 1f * u - w * 0.024f).coerceAtLeast(6f * u)
+        val x = w - margen * 0.45f
+        val cw = minOf(5.5f * u, margen * 0.42f)
+        val top = h * 0.6f; val pie = h - 5.5f * u
+        val llama = Offset(x, top - 5f * u)
+        drawCircle(Brush.radialGradient(listOf(P.LLAMA.copy(alpha = 0.32f), P.LLAMA.copy(alpha = 0.1f), Color.Transparent), llama, 34f * u), 34f * u, llama)
+        // El filo cálido en el canto de la tapa que la mira (al abrirse, se va con ella).
+        if (a < 0.05f) drawRect(P.LLAMA.copy(alpha = 0.55f), Offset(cu.right - 1.2f * u, cu.top + 4f * u), Size(1.2f * u, cu.height - 8f * u))
+        // La palmatoria: el platillo de latón.
+        drawOval(mezcla(P.LATON_OSC, P.NOCHE, 0.3f), Offset(x - cw * 1.4f, pie - 2.6f * u), Size(cw * 2.8f, 5f * u))
+        drawOval(mezcla(P.LATON, P.LLAMA, 0.2f), Offset(x - cw * 1.3f, pie - 3.2f * u), Size(cw * 2.6f, 4f * u))
+        // La vela de cera, con la luz de su llama arriba.
+        drawRect(mezcla(P.CRUDO, P.NOCHE, 0.35f), Offset(x - cw / 2, top), Size(cw, pie - 2f * u - top))
+        drawRect(mezcla(P.CRUDO, P.LLAMA, 0.35f), Offset(x - cw / 2, top), Size(cw * 0.45f, pie - 2f * u - top))
+        drawRect(P.LLAMA.copy(alpha = 0.5f), Offset(x - cw / 2, top), Size(cw, 3f * u))
+        drawLine(Color(0xFF1A120A), Offset(x, top), Offset(x, top - 2f * u), 0.7f * u)
+        drawOval(P.LLAMA, Offset(llama.x - 2f * u, llama.y - 5f * u), Size(4f * u, 8f * u))
+        drawOval(P.FUEGO, Offset(llama.x - 1f * u, llama.y - 2.6f * u), Size(2f * u, 4.4f * u))
+    }
+
     override fun DrawScope.tapa(e: EstadoTapa, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         val w = size.width; val h = size.height
         val a = e.abierto.coerceIn(0f, 1f)
-        fun c(x: Color) = t(x, oscuro, e.noche)
+        // En el sueño, la misma pieza con la luna mandando: menos hundida que antes (no un velo) y con su luz fría desde arriba a la izquierda.
+        fun c(x: Color) = if (e.noche) mezcla(t(x, oscuro, false), NOCHE, 0.36f) else t(x, oscuro, false)
+        val tinta = t(TINTA, oscuro, e.noche)
         val tela = c(TELAS[(e.semilla and 0x7fffffff) % TELAS.size])
         val cu = Rect(w * 0.025f, h * 0.09f, w * 0.935f, h * 0.95f)
         val bisagra = cu.left + w * 0.065f
-        drawRoundRect(Color.Black.copy(alpha = 0.2f), cu.topLeft + Offset(3 * u, 5 * u), cu.size, CornerRadius(3 * u))
+        apoyoTapa(cu, oscuro, e.noche)
         // Las hojas prensadas entre las páginas, que asoman por arriba (más cuanto más escribiste), y una fronda de helecho por el canto.
         val lleno = (e.palabras / 800f).coerceIn(0f, 1f)
         val hojas = 1 + (lleno * 3).toInt()
@@ -5992,12 +6055,14 @@ object EstanteBotanico : DisenoBiblioteca {
         val sx = 1f - a
         if (sx > 0.02f) scale(sx, 1f, Offset(bisagra, cu.center.y)) {
             drawRoundRect(tela, cu.topLeft, cu.size, CornerRadius(3 * u))
+            if (e.noche) drawRoundRect(Brush.linearGradient(listOf(PaletaBotanico.LUNA_RAS.copy(alpha = 0.16f), Color.Transparent), cu.topLeft, cu.center), cu.topLeft, cu.size, CornerRadius(3 * u))
             // La trama de la tela, en los dos sentidos.
             var k = cu.left
             while (k < cu.right) { drawLine(Color.White.copy(alpha = 0.04f), Offset(k, cu.top), Offset(k, cu.bottom), 0.5f * u); k += 2.2f * u }
             var q = cu.top
             while (q < cu.bottom) { drawLine(Color.Black.copy(alpha = 0.05f), Offset(cu.left, q), Offset(cu.right, q), 0.5f * u); q += 2.2f * u }
-            drawRect(Color.Black.copy(alpha = 0.18f), Offset(cu.right - 4 * u, cu.top), Size(4 * u, cu.height))
+            drawRect(SOMBRA_TAPA.copy(alpha = 0.3f), Offset(cu.right - 4 * u, cu.top), Size(4 * u, cu.height))
+            drawRect(filoTapa(oscuro, e.noche, 0.5f), Offset(cu.left, cu.top), Size(cu.width, 1.2f * u))
             // Las filas de hormigas estampadas en seco, arriba y abajo.
             var xx = bisagra + 14 * u
             while (xx < w * 0.83f) {
@@ -6031,18 +6096,18 @@ object EstanteBotanico : DisenoBiblioteca {
             val papel = papelTapa(oscuro, e.noche)
             drawRect(Color.Black.copy(alpha = 0.25f), et.topLeft + Offset(1.2f * u, 1.8f * u), et.size)
             drawRect(papel, et.topLeft, et.size)
-            drawRect(c(TINTA).copy(alpha = 0.6f), et.deflate(2.5f * u).topLeft, et.deflate(2.5f * u).size, style = Stroke(0.8f * u))
-            drawRect(c(TINTA).copy(alpha = 0.4f), et.deflate(4.5f * u).topLeft, et.deflate(4.5f * u).size, style = Stroke(0.5f * u))
-            textoEn(medidor, "CUADERNO DE CAMPO", Rect(et.left + 22 * u, h * 0.19f, et.right - 22 * u, h * 0.265f), letra, c(TINTA).copy(alpha = 0.8f), 9f,
+            drawRect(tinta.copy(alpha = 0.6f), et.deflate(2.5f * u).topLeft, et.deflate(2.5f * u).size, style = Stroke(0.8f * u))
+            drawRect(tinta.copy(alpha = 0.4f), et.deflate(4.5f * u).topLeft, et.deflate(4.5f * u).size, style = Stroke(0.5f * u))
+            textoEn(medidor, "CUADERNO DE CAMPO", Rect(et.left + 22 * u, h * 0.19f, et.right - 22 * u, h * 0.265f), letra, tinta.copy(alpha = 0.8f), 9f,
                 peso = FontWeight.SemiBold, espaciado = 1.6f, minimo = 6f)
             listOf(et.left + 14 * u to -30f, et.right - 14 * u to 30f).forEach { (x, g) ->
                 hojaPrensada(Offset(x, h * 0.25f), h * 0.055f, h * 0.02f, g, c(HELECHO).copy(alpha = 0.8f), papel.copy(alpha = 0.5f))
             }
-            drawLine(c(TINTA).copy(alpha = 0.4f), Offset(et.left + et.width * 0.2f, h * 0.285f), Offset(et.right - et.width * 0.2f, h * 0.285f), 0.6f * u)
-            drawLine(c(TINTA).copy(alpha = 0.4f), Offset(et.left + et.width * 0.2f, h * 0.69f), Offset(et.right - et.width * 0.2f, h * 0.69f), 0.6f * u)
-            textoEn(medidor, e.fecha, Rect(et.left + 8 * u, h * 0.7f, et.right - 8 * u, h * 0.778f), letra, c(TINTA), 10.5f, peso = FontWeight.SemiBold, minimo = 6f)
+            drawLine(tinta.copy(alpha = 0.4f), Offset(et.left + et.width * 0.2f, h * 0.285f), Offset(et.right - et.width * 0.2f, h * 0.285f), 0.6f * u)
+            drawLine(tinta.copy(alpha = 0.4f), Offset(et.left + et.width * 0.2f, h * 0.69f), Offset(et.right - et.width * 0.2f, h * 0.69f), 0.6f * u)
+            textoEn(medidor, e.fecha, Rect(et.left + 8 * u, h * 0.7f, et.right - 8 * u, h * 0.778f), letra, tinta, 10.5f, peso = FontWeight.SemiBold, minimo = 6f)
             if (e.palabras > 0 && !e.vacio) {
-                textoEn(medidor, palabrasTapa(e.palabras), Rect(et.left + 8 * u, h * 0.782f, et.right - 8 * u, h * 0.845f), letra, c(TINTA).copy(alpha = 0.7f), 9f, minimo = 6f)
+                textoEn(medidor, palabrasTapa(e.palabras), Rect(et.left + 8 * u, h * 0.782f, et.right - 8 * u, h * 0.845f), letra, tinta.copy(alpha = 0.7f), 9f, minimo = 6f)
             }
             if (a > 0f) drawRoundRect(Color.Black.copy(alpha = 0.35f * a), cu.topLeft, cu.size, CornerRadius(3 * u))
         }
@@ -6052,7 +6117,8 @@ object EstanteBotanico : DisenoBiblioteca {
         }
         // El lomo, más oscuro, con su pespunte.
         drawRect(tela, cu.topLeft, Size(bisagra - cu.left, cu.height))
-        drawRect(Color.Black.copy(alpha = 0.28f), cu.topLeft, Size(bisagra - cu.left, cu.height))
+        drawRect(SOMBRA_TAPA.copy(alpha = 0.34f), cu.topLeft, Size(bisagra - cu.left, cu.height))
+        drawRect(filoTapa(oscuro, e.noche, 0.6f), cu.topLeft, Size(1.3f * u, cu.height))
         var py = cu.top + 4 * u
         while (py < cu.bottom - 4 * u) { drawLine(c(PAPEL).copy(alpha = 0.4f), Offset(bisagra - 3 * u, py), Offset(bisagra - 3 * u, py + 2.5f * u), 0.6f * u); py += 5 * u }
         drawLine(Color.Black.copy(alpha = 0.35f), Offset(bisagra, cu.top), Offset(bisagra, cu.bottom), 1 * u)
@@ -6078,9 +6144,10 @@ object EstanteBotanico : DisenoBiblioteca {
             drawRect(c(LATON).copy(alpha = suelto), Offset(lp.left, lp.top - h * 0.03f), Size(lp.width, h * 0.03f))
             drawRoundRect(c(BARRO).copy(alpha = suelto), Offset(lp.left, lp.top - h * 0.065f), Size(lp.width, h * 0.04f), CornerRadius(1.5f * u))
             drawPath(Path().apply { moveTo(lp.left, lp.bottom); lineTo(lp.right, lp.bottom); lineTo(lp.center.x, lp.bottom + h * 0.08f); close() }, c(ROBLE_LUZ).copy(alpha = suelto))
-            drawPath(Path().apply { moveTo(lp.center.x - lp.width * 0.18f, lp.bottom + h * 0.055f); lineTo(lp.center.x + lp.width * 0.18f, lp.bottom + h * 0.055f); lineTo(lp.center.x, lp.bottom + h * 0.08f); close() }, c(TINTA).copy(alpha = suelto))
+            drawPath(Path().apply { moveTo(lp.center.x - lp.width * 0.18f, lp.bottom + h * 0.055f); lineTo(lp.center.x + lp.width * 0.18f, lp.bottom + h * 0.055f); lineTo(lp.center.x, lp.bottom + h * 0.08f); close() }, tinta.copy(alpha = suelto))
             listOf(0.3f, 0.68f).forEach { f -> drawRect(c(OTONO).copy(alpha = suelto), Offset(cu.right - 3 * u, h * f), Size(lp.right - cu.right + 4 * u, h * 0.05f)) }
         }
+        if (oscuro && !e.noche) velaTapa(cu, a)
         // De noche vuelan luciérnagas alrededor del cuaderno.
         if (e.noche) clipRect {
             listOf(0.05f to 0.2f, 0.16f to 0.97f, 0.62f to 0.05f, 0.9f to 0.05f, 0.99f to 0.93f, 0.08f to 0.7f, 0.4f to 0.98f).forEachIndexed { j, (fx, fy) ->
