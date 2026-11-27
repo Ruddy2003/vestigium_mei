@@ -1462,9 +1462,18 @@ object EstanteCiber : DisenoBiblioteca {
         // El plástico beige pide relieves oscuros; los demás, claros.
         val relieve = if (i == 5) Color.Black else Color.White
         val d = Rect(w * 0.02f, h * 0.03f, w * 0.98f, h * 0.97f)
-        // De noche, el resplandor del monitor cae sobre la mesa, detrás del disquete (el único degradado).
-        if (e.noche) mancha(Offset(w * 0.28f, 0f), w * 0.6f, FOSFORO.copy(alpha = 0.16f))
-        drawRoundRect(Color.Black.copy(alpha = 0.4f), d.topLeft + Offset(3 * u, 4 * u), d.size, CornerRadius(4 * u))
+        // Donde descansa: la chapa beis de la estantería, en penumbra, con su canto de delante y su filo. La luz fría (el fósforo; en
+        // el sueño, la luna) llega de arriba a la izquierda; la cálida (el ámbar del monitor del suelo), de la derecha.
+        val fria = if (e.noche) Color(0xFFB4C8FF) else FOSFORO
+        val calida = Color(0xFFFFB45E)
+        val sombraTapa = PaletaCiber.NOCHE
+        drawRect(mezcla(Color(0xFF8A8166), sombraTapa, 0.62f))
+        if (e.noche) mancha(Offset(w * 0.28f, 0f), w * 0.6f, fria.copy(alpha = 0.2f))
+        drawRect(mezcla(Color(0xFF8A8166), sombraTapa, 0.45f), Offset(0f, h * 0.975f), Size(w, h * 0.025f))
+        drawRect(calida.copy(alpha = 0.25f), Offset(w * 0.5f, h * 0.975f), Size(w * 0.5f, 0.8f * u))
+        drawRect(fria.copy(alpha = 0.3f), Offset(0f, h * 0.975f), Size(w * 0.5f, 0.8f * u))
+        // La sombra del disquete, con color: corrida abajo y a la derecha, lejos de la luz fría.
+        drawRoundRect(sombraTapa.copy(alpha = 0.55f), d.topLeft + Offset(4 * u, 5 * u), d.size, CornerRadius(4 * u))
         // El cuerpo de plástico, con la esquina cortada arriba a la derecha.
         val ch = h * 0.075f; val rd = 3.5f * u
         val forma = Path().apply {
@@ -1477,14 +1486,19 @@ object EstanteCiber : DisenoBiblioteca {
             var x = d.left + 2 * u
             while (x < d.right) { drawLine(relieve.copy(alpha = 0.03f), Offset(x, d.top), Offset(x, d.bottom), 0.6f * u); x += 2.4f * u }
             drawRect(relieve.copy(alpha = 0.07f), d.topLeft, Size(d.width, h * 0.03f))
-            drawRect(Color.Black.copy(alpha = 0.25f), Offset(d.left, d.bottom - h * 0.025f), Size(d.width, h * 0.025f))
-            // De noche, el reflejo del tubo cruza el plástico.
+            drawRect(sombraTapa.copy(alpha = 0.35f), Offset(d.left, d.bottom - h * 0.025f), Size(d.width, h * 0.025f))
+            // El reflejo de la luz fría cruza el plástico (en el sueño, el de la luna, más ancho); el lado derecho, cálido.
             if (e.noche) {
-                drawLine(FOSFORO.copy(alpha = 0.08f), Offset(d.left + d.width * 0.02f, d.bottom), Offset(d.left + d.width * 0.2f, d.top), 16 * u)
-                drawLine(FOSFORO.copy(alpha = 0.05f), Offset(d.left + d.width * 0.12f, d.bottom), Offset(d.left + d.width * 0.3f, d.top), 5 * u)
+                drawLine(fria.copy(alpha = 0.1f), Offset(d.left + d.width * 0.02f, d.bottom), Offset(d.left + d.width * 0.2f, d.top), 16 * u)
+                drawLine(fria.copy(alpha = 0.07f), Offset(d.left + d.width * 0.12f, d.bottom), Offset(d.left + d.width * 0.3f, d.top), 5 * u)
             }
+            drawRect(calida.copy(alpha = if (e.noche) 0.05f else 0.1f), Offset(d.right - w * 0.04f, d.top), Size(w * 0.04f, d.height))
         }
         drawPath(forma, relieve.copy(alpha = 0.16f), style = Stroke(1 * u))
+        // Los cantos: el filo frío arriba y a la izquierda, el cálido a la derecha.
+        drawLine(fria.copy(alpha = 0.45f), Offset(d.left + rd, d.top + 0.5f * u), Offset(d.right - ch, d.top + 0.5f * u), 1f * u)
+        drawLine(fria.copy(alpha = 0.3f), Offset(d.left + 0.5f * u, d.top + rd), Offset(d.left + 0.5f * u, d.bottom - rd), 1f * u)
+        drawLine(calida.copy(alpha = if (e.noche) 0.25f else 0.5f), Offset(d.right - 0.5f * u, d.top + ch), Offset(d.right - 0.5f * u, d.bottom - rd), 1f * u)
         // El hueco del obturador y, en medio, la ranura por la que se ve el disco magnético.
         val hueco = Rect(w * 0.18f, d.top, w * 0.84f, h * 0.42f)
         drawRect(Color.Black.copy(alpha = 0.32f), hueco.topLeft, hueco.size)
@@ -1503,13 +1517,14 @@ object EstanteCiber : DisenoBiblioteca {
         // El obturador de metal, que al abrirse se corre a la derecha y descubre el disco.
         val dx = (a * 1.6f).coerceAtMost(1f) * w * 0.26f
         val obt = Rect(w * 0.3f + dx, d.top, w * 0.56f + dx, h * 0.4f)
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(obt.left + 1.5f * u, obt.top), Size(obt.width, obt.height + 1.5f * u))
+        drawRect(sombraTapa.copy(alpha = 0.45f), Offset(obt.left + 1.5f * u, obt.top), Size(obt.width, obt.height + 1.5f * u))
         drawRect(c(METAL), obt.topLeft, obt.size)
         var my = obt.top + 3 * u
         while (my < obt.bottom - 2 * u) { drawLine(Color.White.copy(alpha = 0.1f), Offset(obt.left, my), Offset(obt.right, my), 0.5f * u); my += 2.2f * u }
         drawRect(Color.White.copy(alpha = 0.4f), obt.topLeft, Size(obt.width, 1.4f * u))
         drawRect(Color.Black.copy(alpha = 0.22f), Offset(obt.left, obt.bottom - 1.6f * u), Size(obt.width, 1.6f * u))
-        drawRect(Color.Black.copy(alpha = 0.15f), Offset(obt.right - 1.2f * u, obt.top), Size(1.2f * u, obt.height))
+        drawRect(calida.copy(alpha = if (e.noche) 0.2f else 0.4f), Offset(obt.right - 1.2f * u, obt.top), Size(1.2f * u, obt.height))
+        drawRect(fria.copy(alpha = 0.3f), Offset(obt.left, obt.top), Size(1f * u, obt.height))
         // El rebaje del obturador y su pestaña estampada.
         drawRect(Color.Black.copy(alpha = 0.12f), Offset(obt.left + obt.width * 0.08f, obt.top + obt.height * 0.22f), Size(obt.width * 0.14f, obt.height * 0.56f))
         drawRect(Color.White.copy(alpha = 0.2f), Offset(obt.left + obt.width * 0.08f, obt.top + obt.height * 0.78f), Size(obt.width * 0.14f, 0.8f * u))
@@ -1536,7 +1551,7 @@ object EstanteCiber : DisenoBiblioteca {
         // La etiqueta: arriba, la franja impresa con la orden del editor; abajo, la fecha y las palabras a bolígrafo.
         val et = Rect(w * 0.1f, h * 0.445f, w * 0.9f, h * 0.955f)
         val papel = etiquetaTapa(oscuro, e.noche)
-        drawRect(Color.Black.copy(alpha = 0.25f), et.topLeft + Offset(0.8f * u, 1.2f * u), et.size)
+        drawRect(sombraTapa.copy(alpha = 0.4f), et.topLeft + Offset(0.8f * u, 1.2f * u), et.size)
         drawRect(papel, et.topLeft, et.size)
         val banda = Rect(et.left, et.top, et.right, h * 0.525f)
         drawRect(c(FOSFORO_TENUE), banda.topLeft, banda.size)
@@ -1551,8 +1566,9 @@ object EstanteCiber : DisenoBiblioteca {
         if (e.palabras > 0 && !e.vacio) {
             textoEn(medidor, palabrasTapa(e.palabras), Rect(et.left + et.width * 0.66f, h * 0.86f, et.right - 6 * u, h * 0.94f), Letra.codigo, c(BOLIGRAFO).copy(alpha = 0.85f), 9.5f, minimo = 6f)
         }
-        // De noche, la etiqueta recibe el fósforo del tubo en el borde de arriba.
-        if (e.noche) drawRect(FOSFORO.copy(alpha = 0.12f), Offset(et.left, et.top), Size(et.width, 1.4f * u))
+        // La etiqueta recibe la luz fría en el borde de arriba y la cálida en el de la derecha.
+        drawRect(fria.copy(alpha = if (e.noche) 0.2f else 0.12f), Offset(et.left, et.top), Size(et.width, 1.4f * u))
+        drawRect(calida.copy(alpha = if (e.noche) 0.15f else 0.3f), Offset(et.right - 1.2f * u, et.top), Size(1.2f * u, et.height))
     }
 
     // ---------------------------------------------------------------- la página y el escritor
