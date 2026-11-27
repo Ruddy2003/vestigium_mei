@@ -443,14 +443,12 @@ internal object MuroEstanteNavidad {
         drawLine(a.dia(P.CARMIN, 0f, k), gancho, c - Offset(0f, r), 1.3f * u)
         drawOval(a.sombra(0.28f), Offset(c.x - r * 0.7f, c.y - r * 0.6f), Size(r * 2.1f, r * 2f))
         drawCircle(a.dia(P.NARANJA, 0f, k), r, c)
-        // La cinta que la cruza y el lazo de arriba.
-        drawLine(a.dia(P.CARMIN, 0f, k), c - Offset(0f, r), c + Offset(0f, r), r * 0.28f)
-        drawArc(a.dia(mezcla(P.CARMIN, P.TINTA, 0.3f), 0f, k), 0f, 180f, false, Offset(c.x - r * 0.95f, c.y - r * 0.35f), Size(r * 1.9f, r * 0.7f), style = Stroke(r * 0.22f))
+        // La cinta que la rodea de arriba abajo, ladeada (una sola vuelta), y el lazo de arriba.
+        drawArc(a.dia(P.CARMIN, 0f, k), -90f, 180f, false, Offset(c.x - r * 0.35f, c.y - r), Size(r * 0.7f, r * 2f), style = Stroke(r * 0.24f))
         listOf(-1f, 1f).forEach { l -> drawOval(a.dia(P.CARMIN, 0f, k), Offset(c.x + l * r * 0.4f - r * 0.25f, c.y - r * 1.3f), Size(r * 0.5f, r * 0.34f)) }
         // Los clavos de especia, en hileras.
         for (fila in -2..2) for (j in -2..2) {
-            if (j == 0) continue
-            val p = Offset(c.x + j * r * 0.34f, c.y + fila * r * 0.34f)
+            val p = Offset(c.x + j * r * 0.34f - r * 0.12f, c.y + fila * r * 0.34f)
             if ((p - c).getDistance() < r * 0.85f) drawCircle(a.dia(P.PINO_OSC, -0.2f, k), r * 0.07f, p)
         }
         // El claro y la sombra de la naranja.

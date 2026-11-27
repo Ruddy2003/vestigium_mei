@@ -399,10 +399,10 @@ internal object VolumenEstanteNavidad {
                 var j = 0
                 while (y < fin + 4f * u && j < 80) {
                     var x = (if (j % 2 == 0) 0f else 1.8f * u)
-                    while (x < w + 2f * u) { punto.addOval(Rect(x, y, x + 2.6f * u, y + 3.2f * u)); x += 3.6f * u }
+                    while (x < w + 2f * u) { punto.moveTo(x, y); punto.lineTo(x + 1.3f * u, y + 2.4f * u); punto.lineTo(x + 2.6f * u, y); x += 3.6f * u }
                     y += 3f * u; j++
                 }
-                drawPath(punto, t.hondo.copy(alpha = 0.3f), style = Stroke(0.6f * u))
+                drawPath(punto, t.hondo.copy(alpha = 0.3f), style = Stroke(0.7f * u))
                 val rayas = Math.floorMod(s ushr 4, 3)
                 val rayaCol = if (claroDe(t.base)) (if (rojizo(t.base)) P.FILETE else P.CARMIN) else P.LANA_CREMA
                 if (rayas > 0) for (q in 0 until rayas + 1) {

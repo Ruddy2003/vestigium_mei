@@ -59,9 +59,9 @@ internal object PaletaNavidad {
     val LATON_LUZ = Color(0xFFF1D68E)
     val LATON_OSC = Color(0xFF7C5C22)
     /** El cobre del molde y del hervidor. */
-    val COBRE = Color(0xFFBF6C38)
-    val COBRE_LUZ = Color(0xFFF2B27A)
-    val COBRE_OSC = Color(0xFF6B3216)
+    val COBRE = Color(0xFFAE5530)
+    val COBRE_LUZ = Color(0xFFEAA070)
+    val COBRE_OSC = Color(0xFF5E2812)
     /** El abeto: sus agujas en tres verdes y lo hondo entre las ramas. */
     val ABETO = Color(0xFF2E5C3A)
     val ABETO_LUZ = Color(0xFF5F8C55)

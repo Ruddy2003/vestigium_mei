@@ -25,7 +25,7 @@ internal object ObraEstanteNavidad {
     private val P = PaletaNavidad
 
     /** Cuántos tramos lleva lo que se pinta a lo ancho: de noche la luz cambia de un tramo a otro sin escalón. */
-    private fun tramos(a: AireNavidad, ancho: Float, w: Float) = if (a.lumbre) (ancho / (w * 0.03f)).toInt().coerceIn(2, 48) else 1
+    private fun tramos(a: AireNavidad, ancho: Float, w: Float) = if (a.lumbre) (ancho / (w * 0.045f)).toInt().coerceIn(2, 32) else 1
 
     /** La pintura saltada en un canto: asoma el pino, con el borde de la pintura en sombra. */
     private fun DrawScope.gastado(p: Offset, r: Float, semilla: Int, a: AireNavidad, k: Float) {
@@ -206,8 +206,9 @@ internal object ObraEstanteNavidad {
             val kk = cerca(Offset((x0 + x1) / 2, r.center.y))
             val luna = lunaCuerpoNavidad(a, (x0 + x1) / 2 / w, r.center.y / w) * 0.6f
             fun c(col: Color, f: Float) = a.dia(col, f, kk).let { if (luna > 0f) a.sol(col, it, luna) else it }
+            // Debajo, la cara a todo el alto (así, donde una banda acaba a medio píxel, asoma la cara y no el fondo).
+            drawRect(c(P.ALMAGRE, 0f), Offset(x0, r.top - 1f), Size(x1 - x0, r.height + 2f))
             drawRect(c(P.ALMAGRE_LUZ, -0.06f), Offset(x0, r.top - 1f), Size(x1 - x0, nariz - r.top + 1f))
-            drawRect(c(P.ALMAGRE, 0f), Offset(x0, nariz), Size(x1 - x0, cara1 - nariz))
             drawRect(c(P.ALMAGRE_OSC, -0.1f), Offset(x0, cara1), Size(x1 - x0, r.bottom - cara1 + 1f))
         }
         val kc = cerca(r.center)
@@ -238,7 +239,7 @@ internal object ObraEstanteNavidad {
     /** El costado [r] ([izq]: el de la izquierda): el larguero con su filete verde, su canto, el gastado y lo colgado. */
     fun DrawScope.costado(r: Rect, izq: Boolean, d: DisposicionEstante, a: AireNavidad, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
-        val tramosV = (r.height / (w * 0.05f)).toInt().coerceIn(1, 120).let { if (a.lumbre) it else 1 }
+        val tramosV = (r.height / (w * 0.075f)).toInt().coerceIn(1, 80).let { if (a.lumbre) it else 1 }
         for (t in 0 until tramosV) {
             val y0 = r.top + r.height * t / tramosV - 1f; val y1 = r.top + r.height * (t + 1) / tramosV + 1f
             val kk = cerca(Offset(r.center.x, (y0 + y1) / 2))

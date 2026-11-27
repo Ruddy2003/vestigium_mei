@@ -1,12 +1,15 @@
 package io.github.ruddy2003.vestigium.ui.biblioteca
 
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
@@ -15,11 +18,15 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 /**
  * Lo que hay en los huecos libres de las repisas del estante de Navidad ([MuebleEstanteNavidad]): grupos de dos o tres cosas de la
  * casa, solapadas y distintas de un hueco a otro. La caja de esferas de vidrio con la tapa apoyada y el carrete de cinta; la jarra
- * de loza con ramas y las naranjas con clavos; los ovillos de lana con las agujas; el fajo de cartas atado con cinta y las piñas.
+ * de loza con ramas y las naranjas con clavos; los ovillos de lana con las agujas; el fajo de cartas atado con cinta y las piñas;
+ * los platos buenos de canto con el paño doblado; los mitones de lana colgados de un clavito.
  * Donde hay sitio (nunca en dos repisas seguidas ni en la primera), la palmatoria con su vela: de noche, la luz de en medio.
  */
 internal object HuecosEstanteNavidad {
     private val P = PaletaNavidad
+
+    /** Con qué grupo empieza el hueco de cada repisa (así no se repiten de una repisa a la siguiente). */
+    private val ORDEN = intArrayOf(0, 5, 2, 4, 1, 3)
 
     /** La luz de lo que está en [p]: la del momento y, de noche, desde la luz que más alumbra. */
     private fun luzEn(p: Offset, a: AireNavidad, cerca: (Offset) -> Float, xLuz: Float): LuzNavidad {
@@ -53,17 +60,19 @@ internal object HuecosEstanteNavidad {
             x = xVela + w * 0.075f
         }
         // Uno o dos grupos, según el sitio; cambia de un hueco a otro.
-        var g = Math.floorMod(k * 3 + (if (xVela >= 0f) 1 else 0), 4)
+        var g = ORDEN[Math.floorMod(k, ORDEN.size)]
         var vueltas = 0
         while (x1 - x > w * 0.12f && vueltas < 3) {
             val usado = when (g) {
                 0 -> esferas(x, x1, piso, alto, a, cerca, xVela)
                 1 -> jarraConRamas(x, x1, piso, alto, a, cerca, xVela)
                 2 -> labor(x, x1, piso, alto, a, cerca, xVela)
-                else -> cartas(x, x1, piso, alto, a, cerca, xVela)
+                3 -> cartas(x, x1, piso, alto, a, cerca, xVela)
+                4 -> platos(x, x1, piso, alto, a, cerca, xVela)
+                else -> mitones(x, x1, piso, alto, a, cerca, xVela)
             }
             x += usado + w * 0.03f
-            g = (g + 1) % 4
+            g = (g + 2) % 6
             vueltas++
         }
         // En lo que sobra, una piña suelta.
@@ -206,6 +215,94 @@ internal object HuecosEstanteNavidad {
             return ancho + w * 0.1f
         }
         return ancho + w * 0.02f
+    }
+
+    /**
+     * Los platos buenos de loza, de canto contra el fondo (el de delante con su filete verde y su corona de acebo pintada), y el
+     * paño doblado delante, con sus rayas rojas.
+     */
+    private fun DrawScope.platos(x0: Float, x1: Float, piso: Float, alto: Float, a: AireNavidad, cerca: (Offset) -> Float, xLuz: Float): Float {
+        val w = size.width; val u = density
+        val r = minOf(alto * 0.36f, (x1 - x0) * 0.42f)
+        val c0 = Offset(x0 + r * 1.05f, piso - r * 1.02f)
+        for (i in 0 until 3) {
+            val c = c0 + Offset(r * 0.14f * (2 - i), -r * 0.04f * (2 - i))
+            val l = luzEn(c, a, cerca, xLuz)
+            val ov = Rect(c.x - r, c.y - r, c.x + r, c.y + r)
+            drawOval(l.sombra(0.3f), ov.topLeft + Offset(-l.hacia * r * 0.18f, r * 0.08f), ov.size)
+            drawOval(l.c(P.LOZA, -0.05f * (2 - i)), ov.topLeft, ov.size)
+            drawOval(l.c(P.FILETE), ov.deflate(r * 0.08f).topLeft, ov.deflate(r * 0.08f).size, style = Stroke(r * 0.05f))
+            if (i == 2) {
+                val fondo = ov.deflate(r * 0.3f)
+                drawOval(l.c(P.LOZA, -0.12f), fondo.topLeft, fondo.size)
+                val hojas = Path(); val bayas = Path()
+                for (j in 0 until 10) {
+                    val an = j * 0.628f
+                    val p = Offset(c.x + r * 0.5f * kotlin.math.cos(an), c.y + r * 0.5f * kotlin.math.sin(an))
+                    hojas.addOval(Rect(p.x - r * 0.07f, p.y - r * 0.04f, p.x + r * 0.07f, p.y + r * 0.04f))
+                    if (j % 2 == 0) bayas.addOval(Rect(Offset(c.x + r * 0.38f * kotlin.math.cos(an + 0.3f), c.y + r * 0.38f * kotlin.math.sin(an + 0.3f)), r * 0.045f))
+                }
+                drawPath(hojas, l.c(P.FILETE_LUZ))
+                drawPath(bayas, l.c(P.CARMIN))
+                drawArc(l.sombra(0.2f), 200f, 140f, false, fondo.topLeft, fondo.size, style = Stroke(r * 0.06f))
+                drawArc(l.brillo(0.6f), 150f, 70f, false, ov.deflate(r * 0.02f).topLeft, ov.deflate(r * 0.02f).size, style = Stroke(1.4f * u))
+            }
+        }
+        // El paño doblado, tumbado delante: tres capas de lino con sus rayas rojas en el canto.
+        val pano = Rect(x0 + r * 0.5f, piso - w * 0.04f, x0 + r * 2.3f, piso)
+        val lp = luzEn(pano.center, a, cerca, xLuz)
+        drawRect(lp.sombra(0.4f), Offset(pano.left + w * 0.006f, pano.bottom - w * 0.006f), Size(pano.width, w * 0.008f))
+        drawRoundRect(lp.c(P.LANA_CREMA), pano.topLeft, pano.size, CornerRadius(w * 0.008f))
+        for (j in 1..2) drawLine(lp.sombra(0.3f), Offset(pano.left + w * 0.004f, pano.top + pano.height * j / 3f), Offset(pano.right - w * 0.004f, pano.top + pano.height * j / 3f), 0.9f * u)
+        listOf(0.18f, 0.24f, 0.3f).forEach { f -> drawRect(lp.c(P.CARMIN), Offset(pano.left + pano.width * f, pano.top), Size(pano.width * 0.025f, pano.height)) }
+        drawRect(lp.claro(0.35f), pano.topLeft, Size(pano.width, 1.2f * u))
+        return r * 2.4f
+    }
+
+    /**
+     * Los mitones de lana atados con su cordón, colgados de un clavito y caídos uno sobre otro: el rojo y el verde, de punto, con
+     * su puño crema y el pulgar; y dos piñas al pie.
+     */
+    private fun DrawScope.mitones(x0: Float, x1: Float, piso: Float, alto: Float, a: AireNavidad, cerca: (Offset) -> Float, xLuz: Float): Float {
+        val w = size.width; val u = density
+        val ancho = w * 0.075f
+        val clavo = Offset(x0 + ancho * 1.1f, piso - alto * 0.86f)
+        val l0 = luzEn(clavo, a, cerca, xLuz)
+        clavoNavidad(clavo, 1.8f * u, a, l0.k)
+        listOf(P.LANA_ROJA to -1f, P.LANA_VERDE to 1f).forEachIndexed { i, (col, s0) ->
+            val top = Offset(clavo.x + s0 * ancho * 0.45f, clavo.y + alto * (0.18f + 0.06f * i))
+            val l = luzEn(top + Offset(0f, alto * 0.2f), a, cerca, xLuz)
+            drawLine(l.c(P.LANA_CREMA, -0.1f), clavo, top, 1.3f * u)
+            rotate(s0 * 6f, top) {
+                val cuerpo = Path().apply {
+                    moveTo(top.x - ancho * 0.42f, top.y)
+                    lineTo(top.x + ancho * 0.42f, top.y)
+                    lineTo(top.x + ancho * 0.46f, top.y + alto * 0.32f)
+                    cubicTo(top.x + ancho * 0.48f, top.y + alto * 0.5f, top.x - ancho * 0.48f, top.y + alto * 0.5f, top.x - ancho * 0.46f, top.y + alto * 0.32f)
+                    close()
+                }
+                val pulgar = Path().apply { addOval(Rect(top.x + s0 * ancho * 0.5f - ancho * 0.16f, top.y + alto * 0.1f, top.x + s0 * ancho * 0.5f + ancho * 0.16f, top.y + alto * 0.28f)) }
+                drawPath(corridoNavidad(cuerpo, -l.hacia * w * 0.01f, w * 0.008f), l.sombra(0.3f))
+                drawPath(pulgar, l.c(col, -0.1f))
+                drawPath(cuerpo, l.c(col))
+                clipPath(cuerpo) {
+                    val punto = Path()
+                    var yy = top.y + alto * 0.1f; var j = 0
+                    while (yy < top.y + alto * 0.5f && j < 40) { var xx = top.x - ancho * 0.5f + (if (j % 2 == 0) 0f else 1.6f * u); while (xx < top.x + ancho * 0.5f) { punto.moveTo(xx, yy); punto.lineTo(xx + 1.2f * u, yy + 2.2f * u); punto.lineTo(xx + 2.4f * u, yy); xx += 3.4f * u }; yy += 2.8f * u; j++ }
+                    drawPath(punto, l.c(mezcla(col, P.TINTA, 0.35f)).copy(alpha = 0.4f), style = Stroke(0.6f * u))
+                    drawRect(l.c(P.LANA_CREMA), Offset(top.x - ancho, top.y), Size(ancho * 2f, alto * 0.08f))
+                    drawRect(l.c(P.LANA_CREMA), Offset(top.x - ancho, top.y + alto * 0.24f), Size(ancho * 2f, alto * 0.025f))
+                    drawRect(l.sombra(0.25f), Offset(top.x + ancho * 0.12f * (-l.hacia) - ancho * 0.1f, top.y), Size(ancho * 0.4f, alto * 0.5f))
+                }
+                drawPath(cuerpo, l.c(mezcla(col, P.TINTA, 0.4f)).copy(alpha = 0.6f), style = Stroke(0.9f * u))
+            }
+        }
+        if (x1 - x0 > ancho * 2.4f + w * 0.05f) {
+            val c = Offset(x0 + ancho * 2.4f, piso - w * 0.026f)
+            pinaNavidad(c, w * 0.022f, w * 0.028f, -10f, luzEn(c, a, cerca, xLuz))
+            return ancho * 2.4f + w * 0.03f
+        }
+        return ancho * 2.2f
     }
 
     /** La llama de la vela de un hueco, encima de todo (de noche y al ocaso de los Sueños), con su halo en el fondo del hueco. */

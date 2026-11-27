@@ -112,8 +112,11 @@ internal object CoronaEstanteNavidad {
                         val p = Offset(mt * mt * s0.x + 2 * mt * t * c0.x + t * t * e0.x, mt * mt * s0.y + 2 * mt * t * c0.y + t * t * e0.y)
                         val l = w * (0.011f + 0.008f * azar(9721 + i, j * 20 + q))
                         for (lado0 in listOf(-1f, 1f)) {
-                            val dx = (f * 0.55f + lado0 * 0.45f) * l
-                            val dy = l * (0.55f + 0.25f * azar(9722 + i, j * 20 + q))
+                            val z = j * 40 + q * 2 + (if (lado0 > 0f) 1 else 0)
+                            if (azar(9725 + i, z) < 0.18f) continue
+                            val gir = (azar(9726 + i, z) - 0.5f) * 0.7f
+                            val dx = (f * 0.55f + lado0 * (0.3f + 0.3f * azar(9727 + i, z)) + gir) * l
+                            val dy = l * (0.45f + 0.4f * azar(9722 + i, z))
                             val luzLado = (if (nocheVela) f else -f) + lado0 * 0.2f * (if (nocheVela) 1f else -1f) + (azar(9723 + i, j * 20 + q) - 0.5f) * 0.4f
                             val lit = if (m != null && !a.oscuro) m.toca(p.x / w, p.y / w, ManchaNavidad.FRENTE) else 0f
                             val dest = when {
@@ -402,11 +405,12 @@ internal object CoronaEstanteNavidad {
                     quadraticTo(xa + (pie.x - xa) * 0.3f, pie.y - alto * 0.7f, xa, ala.top); close()
                 }
                 val luzG = (f0 + f1) / 2f
+                // El metal pulido: gajos claros y hondos alternados, con el reflejo hondo del cuarto en los de la sombra.
                 val col = when {
-                    luzG < 0.3f -> l.c(P.COBRE_LUZ)
-                    luzG > 0.75f -> l.c(P.COBRE_OSC)
+                    i == 1 -> l.c(P.COBRE_LUZ)
+                    luzG > 0.7f -> l.c(mezcla(P.COBRE_OSC, P.TINTA, 0.3f))
                     i % 2 == 0 -> l.c(P.COBRE)
-                    else -> l.c(mezcla(P.COBRE, P.COBRE_OSC, 0.4f))
+                    else -> l.c(mezcla(P.COBRE_OSC, P.COBRE, 0.35f))
                 }
                 drawPath(g, col)
                 drawPath(g, l.sombra(0.25f), style = Stroke(0.7f * u))

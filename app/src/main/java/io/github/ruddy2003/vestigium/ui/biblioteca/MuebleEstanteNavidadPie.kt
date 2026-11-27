@@ -53,7 +53,7 @@ internal object PieEstanteNavidad {
         drawRect(a.sombra(0.16f), Offset(0f, suelo + (h - suelo) * 0.16f), Size(w, (h - suelo) * 0.14f))
         // De día, la luz de la ventana que llega al suelo desde la izquierda.
         if (!a.lumbre) drawRect(a.claro(0.08f), Offset(0f, suelo + (h - suelo) * 0.3f), Size(w * 0.5f, h - suelo))
-        alfombra(Offset(w * 0.55f, suelo + (h - suelo) * 0.74f), w * 0.37f, (h - suelo) * 0.33f, a, cerca)
+        jarapa(suelo, h, a, cerca)
         // De noche, la lumbre de la cocina pinta el suelo de naranja (solo hasta donde llega).
         if (a.oscuro) {
             val fu = Offset(w * MuebleEstanteNavidad.LUMBRE_X, b.top + b.height * MuebleEstanteNavidad.LUMBRE_Y)
@@ -63,35 +63,50 @@ internal object PieEstanteNavidad {
     }
 
     /**
-     * La alfombra trenzada de trapo, ovalada y vista en el suelo: muchas vueltas finas de trenza en rojo, ladrillo, crudo, verde y
-     * ocre (sin franjas anchas: no es una diana), cada una con sus cabos oblicuos, su sombra y el borde gastado.
+     * La jarapa: la alfombra de trapo tejida a rayas, tendida en el suelo y vista en perspectiva, cortada por abajo: franjas de
+     * distinto ancho en rojo, crudo, verde, ocre y pardo, con la trama del tejido, su sombra y los flecos del canto de atrás.
      */
-    private fun DrawScope.alfombra(c: Offset, rx: Float, ry: Float, a: AireNavidad, cerca: (Offset) -> Float) {
-        val u = density
-        val k = cerca(c)
-        drawOval(a.sombra(0.4f), Offset(c.x - rx * 1.01f, c.y - ry + ry * 0.12f), Size(rx * 2.02f, ry * 2f))
-        val tonos = listOf(mezcla(P.LANA_ROJA, P.CORTEZA, 0.3f), P.LANA_ROJA, mezcla(P.LATON, P.CORTEZA, 0.35f), mezcla(P.LANA_VERDE, P.CORTEZA, 0.2f), P.LANA_ROJA,
-            mezcla(P.LANA_CREMA, P.LATON, 0.45f), mezcla(P.LANA_ROJA, P.CORTEZA, 0.45f), P.LANA_VERDE, mezcla(P.LANA_ROJA, P.LATON, 0.3f), mezcla(P.LANA_VERDE, P.CORTEZA, 0.35f),
-            P.LANA_ROJA, mezcla(P.LATON, P.CORTEZA, 0.3f))
-        val n = tonos.size
-        tonos.forEachIndexed { i, col ->
-            val f = 1f - i / n.toFloat()
-            val r = Rect(c.x - rx * f, c.y - ry * f, c.x + rx * f, c.y + ry * f)
-            drawOval(a.dia(mezcla(col, P.CORTEZA, 0.12f), 0f, k), r.topLeft, r.size)
-            // La trenza: cabos oblicuos a lo largo de la vuelta, alternando la inclinación.
-            val tr = Path()
-            val cabos = (60 * f).toInt().coerceIn(8, 80)
-            val e = 1f - 0.5f / n
-            for (j in 0 until cabos) {
-                val an = 6.283f * j / cabos
-                val p = Offset(c.x + rx * f * e * kotlin.math.cos(an), c.y + ry * f * e * kotlin.math.sin(an))
-                val s0 = if (j % 2 == 0) 1f else -1f
-                tr.moveTo(p.x - rx * 0.012f, p.y - s0 * ry * 0.025f); tr.lineTo(p.x + rx * 0.012f, p.y + s0 * ry * 0.025f)
+    private fun DrawScope.jarapa(suelo: Float, h: Float, a: AireNavidad, cerca: (Offset) -> Float) {
+        val w = size.width; val u = density
+        val y0 = suelo + (h - suelo) * 0.36f
+        val y1 = h + 2f
+        // Los bordes en perspectiva: más ancha cuanto más cerca.
+        fun izq(y: Float) = w * 0.3f - (y - y0) / (h - y0) * w * 0.06f
+        fun der(y: Float) = w * 0.9f + (y - y0) / (h - y0) * w * 0.06f
+        val forma = poligonoNavidad(izq(y0), y0, der(y0), y0, der(y1), y1, izq(y1), y1)
+        drawPath(corridoNavidad(forma, w * 0.008f, -w * 0.004f), a.sombra(0.4f))
+        val tonos = listOf(P.LANA_ROJA, P.LANA_CREMA, P.LANA_VERDE, P.LANA_CREMA, mezcla(P.LATON, P.CORTEZA, 0.3f), P.LANA_ROJA, mezcla(P.LANA_CREMA, P.CARTULINA, 0.4f),
+            mezcla(P.LANA_ROJA, P.CORTEZA, 0.45f), P.LANA_VERDE, P.LANA_CREMA, P.LANA_ROJA)
+        val anchos = floatArrayOf(0.14f, 0.05f, 0.08f, 0.04f, 0.1f, 0.16f, 0.05f, 0.09f, 0.08f, 0.05f, 0.2f)
+        val total = anchos.sum()
+        clipPath(forma) {
+            var y = y0
+            tonos.forEachIndexed { i, col ->
+                // Las franjas se ensanchan hacia quien mira.
+                val f0 = (y - y0) / (y1 - y0)
+                val alto = (y1 - y0) * anchos[i] / total * (0.7f + 0.6f * f0)
+                val k = cerca(Offset(w * 0.6f, y + alto / 2))
+                drawRect(a.dia(mezcla(col, P.CORTEZA, 0.1f), 0f, k), Offset(0f, y), Size(w, alto + 1f))
+                y += alto
             }
-            drawPath(tr, a.dia(mezcla(col, P.TINTA, 0.4f), 0f, k).copy(alpha = 0.55f), style = Stroke(1.1f * u))
-            drawOval(a.sombra(0.18f), r.topLeft, r.size, style = Stroke(0.8f * u))
+            // La trama: puntadas cortas a lo alto, en filas, y el bulto de los trapos.
+            val trama = Path()
+            var yy = y0 + 2f * u; var j = 0
+            while (yy < y1 && j < 80) {
+                var x = izq(yy) + (if (j % 2 == 0) 0f else 2f * u)
+                while (x < der(yy)) { trama.moveTo(x, yy); trama.lineTo(x, yy + 1.8f * u); x += 4f * u }
+                yy += 4.4f * u; j++
+            }
+            drawPath(trama, a.sombra(0.16f), style = Stroke(0.8f * u))
+            drawRect(a.claro(0.12f), Offset(0f, y0), Size(w * 0.55f, y1 - y0))
         }
-        drawOval(a.claro(0.1f), Offset(c.x - rx * 0.9f, c.y - ry * 0.9f), Size(rx * 1.2f, ry * 0.8f))
+        // Los flecos del canto de atrás.
+        val flecos = Path()
+        var x = izq(y0) + 2f * u
+        var j = 0
+        while (x < der(y0) && j < 120) { flecos.moveTo(x, y0); flecos.lineTo(x + (azar(9970, j) - 0.5f) * 2f * u, y0 - w * (0.01f + 0.006f * azar(9971, j))); x += 2.6f * u; j++ }
+        drawPath(flecos, a.dia(P.LANA_CREMA, -0.1f, cerca(Offset(w * 0.6f, y0))), style = Stroke(1f * u, cap = StrokeCap.Round))
+        drawLine(a.sombra(0.3f), Offset(izq(y0), y0), Offset(der(y0), y0), 1.2f * u)
     }
 
     /** Lo que hay en el suelo: la cocina de hierro con el hervidor, el cesto de leña y el taburete con la labor. */
@@ -161,6 +176,38 @@ internal object PieEstanteNavidad {
             mancha(rej.center, w * 0.045f, P.FUEGO.copy(alpha = 0.45f * f))
             drawRect(P.LUMBRE.copy(alpha = 0.5f * f), Offset(pu.left - w * 0.008f, pu.bottom + w * 0.004f), Size(pu.width + w * 0.016f, 1.4f * u))
         }
+        // El friso de fundición bajo la tapa: una banda con su fila de botones en relieve.
+        val fr0 = tapa1 + w * 0.006f; val fr1 = tapa1 + w * 0.022f
+        drawRect(a.dia(P.HIERRO_LUZ, -0.25f, k), Offset(-1f, fr0), Size(x1 - w * 0.02f, fr1 - fr0))
+        for (i in 0 until 9) {
+            val c = Offset(w * (0.015f + 0.031f * i), (fr0 + fr1) / 2)
+            drawCircle(a.dia(P.HIERRO_LUZ, 0.05f, k), w * 0.0045f, c)
+            drawCircle(a.sombra(0.4f), w * 0.0045f, c + Offset(0.6f * u, 0.8f * u), style = Stroke(0.6f * u))
+        }
+        // El marco de níquel de la puerta del fogón, y el cajón de la ceniza debajo, cortado por el borde.
+        drawRect(a.dia(P.VIDRIO_PLATA, -0.25f, k), pu.inflate(w * 0.008f).topLeft, pu.inflate(w * 0.008f).size, style = Stroke(w * 0.005f))
+        drawRect(a.brillo(0.5f, k), Offset(pu.left - w * 0.008f, pu.top - w * 0.008f), Size(pu.width + w * 0.016f, 1f * u))
+        val ceniza = Rect(pu.left, pu.bottom + w * 0.03f, pu.right, h + 2f)
+        drawRect(a.dia(P.HIERRO, -0.1f, k), ceniza.topLeft, ceniza.size)
+        drawRect(a.dia(P.VIDRIO_PLATA, -0.3f, k), ceniza.topLeft, ceniza.size, style = Stroke(w * 0.004f))
+        drawRect(a.dia(P.LATON, 0f, k), Offset(ceniza.center.x - w * 0.025f, ceniza.top + w * 0.012f), Size(w * 0.05f, w * 0.008f))
+        // El canto redondeado de la esquina, con su brillo azulado de hierro pulido.
+        drawRect(a.dia(mezcla(P.HIERRO_LUZ, P.VIDRIO_AZUL, 0.3f), 0.05f, k), Offset(x1 - w * 0.006f, tapa1), Size(w * 0.006f, h - tapa1))
+        // El paño de vichy colgado de la barra, a la izquierda (el del mantel del Ideario).
+        val pa = Rect(w * 0.0f, by - w * 0.004f, w * 0.05f, by + w * 0.075f)
+        val tela = poligonoNavidad(pa.left - 2f, pa.top, pa.right, pa.top, pa.right + w * 0.004f, pa.bottom - w * 0.006f, pa.left - 2f, pa.bottom)
+        val kp = maxOf(k, if (a.oscuro) 0.3f else 0f)
+        drawPath(corridoNavidad(tela, w * 0.006f, w * 0.006f), a.sombra(0.4f))
+        clipPath(tela) {
+            drawRect(a.dia(P.PAPEL, -0.05f, kp), pa.topLeft, pa.size)
+            val paso = w * 0.009f
+            var xx = pa.left
+            while (xx < pa.right) { drawRect(a.dia(P.CARMIN, 0f, kp).copy(alpha = 0.6f), Offset(xx, pa.top), Size(paso, pa.height)); xx += paso * 2 }
+            var yy = pa.top
+            while (yy < pa.bottom) { drawRect(a.dia(P.CARMIN, 0f, kp).copy(alpha = 0.6f), Offset(pa.left, yy), Size(pa.width, paso)); yy += paso * 2 }
+            drawRect(a.sombra(0.25f), Offset(pa.right - pa.width * 0.3f, pa.top), Size(pa.width * 0.3f, pa.height))
+        }
+        drawLine(a.luz(P.LATON, maxOf(k, 0.3f)), Offset(pa.left, by), Offset(pa.right + w * 0.01f, by), w * 0.009f, StrokeCap.Round)
         hervidor(Offset(w * 0.165f, tapa0 + w * 0.012f), w * 0.12f, a, cerca)
     }
 
@@ -278,10 +325,10 @@ internal object PieEstanteNavidad {
             val paso = ancho * 0.045f
             while (y < pie.y && j < 60) {
                 var x = pie.x - ancho * 0.55f + (if (j % 2 == 0) 0f else paso / 2)
-                while (x < pie.x + ancho * 0.55f) { trama.addOval(Rect(x, y - 1.2f * u, x + paso * 0.7f, y + 1.2f * u)); x += paso }
+                while (x < pie.x + ancho * 0.55f) { trama.moveTo(x + 1.2f * u, y); trama.lineTo(x + paso * 0.7f - 1.2f * u, y); x += paso }
                 y += 3.2f * u; j++
             }
-            drawPath(trama, l.c(mezcla(P.PINO, P.PINO_OSC, 0.25f)))
+            drawPath(trama, l.c(mezcla(P.PINO, P.PINO_OSC, 0.25f)), style = Stroke(2.4f * u, cap = StrokeCap.Round))
             drawRect(l.sombra(0.3f), Offset(pie.x + ancho * 0.2f, boca), Size(ancho * 0.4f, alto))
             drawRect(l.claro(0.25f), Offset(pie.x - ancho * 0.5f, boca), Size(ancho * 0.12f, alto))
         }
