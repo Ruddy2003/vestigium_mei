@@ -27,6 +27,9 @@ import kotlin.math.sqrt
  * lo cálido es el roble, el latón, el cuero y la lumbre; lo frío, la salvia, el vidrio, las hojas y la noche verde petróleo.
  */
 internal object PaletaBotanico {
+    /** El enlucido de debajo de la pintura (donde se desconchó) y el ladrillo que asoma. */
+    val ENLUCIDO = Color(0xFFCDBB9A)
+    val LADRILLO = Color(0xFFA0644A)
     /** La pared verde salvia (la del Ideario): su cara, su luz, su sombra y lo hondo de los casilleros. */
     val SALVIA = Color(0xFFA3B08F)
     val SALVIA_LUZ = Color(0xFFC4CCAA)
@@ -45,6 +48,7 @@ internal object PaletaBotanico {
     val LATON_OSC = Color(0xFF7E6428)
     /** El papel, la cartulina de las etiquetas (de valor medio), el kraft, la tinta y el lacre. */
     val PAPEL = Color(0xFFF1E9D2)
+    val SECANTE = Color(0xFFE4D8BC)
     val CARTULINA = Color(0xFFD6C397)
     val CARTULINA_OSC = Color(0xFFA88F62)
     val KRAFT = Color(0xFFAE8B58)
@@ -90,7 +94,7 @@ internal object PaletaBotanico {
     val HIERRO = Color(0xFF3E403C)
     /** La noche del gabinete (verde petróleo, la del Ideario), la del cuerpo de la librería y la de los Sueños. */
     val NOCHE = Color(0xFF0B1C1D)
-    val NOCHE_CUERPO = Color(0xFF16180F)
+    val NOCHE_CUERPO = Color(0xFF0F1A14)
     val NOCHE_SUENOS = Color(0xFF0A1A21)
     /** La llama del quinqué (la del Ideario), su corazón, la luna y su roce frío. */
     val LLAMA = Color(0xFFFFC56E)
@@ -159,7 +163,7 @@ internal class TonoBotanico(val a: AireBotanico, val k: Float, val sol: Float, v
     /** El color propio hundido: oscuro, de su mismo tono (no gris), con el aire de la noche. */
     private fun hundido(c: Color): Color {
         val n = hondo
-        val f = if (cuerpo) 0.17f else 0.13f
+        val f = if (cuerpo) 0.2f else 0.13f
         return Color(c.red * f + n.red * 0.8f, c.green * f + n.green * 0.8f, c.blue * f + n.blue * 0.8f, c.alpha)
     }
 

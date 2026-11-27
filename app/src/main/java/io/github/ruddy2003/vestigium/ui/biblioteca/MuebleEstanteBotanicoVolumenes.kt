@@ -342,11 +342,15 @@ internal object VolumenEstanteBotanico {
         }
         clipPath(cuerpo) {
             clipPath(monton) {
-                drawRect(cara, Offset(0f, nivel - 4f * u), Size(w, h - nivel + 4f * u))
+                drawRect(mezcla(cara, hondo, 0.55f), Offset(0f, nivel - 4f * u), Size(w, h - nivel + 4f * u))
                 semillas(u)
-                translate(-25f * u * azar(s, 6), -50f * u * azar(s, 7)) {
-                    drawPath(semillas, mezcla(cara, hondo, 0.55f), style = Stroke(0.7f * u))
-                    drawPath(brillos, claro.copy(alpha = 0.75f))
+                val ox = -25f * u * azar(s, 6); val oy = -50f * u * azar(s, 7)
+                // Cada semilla: su sombra en la de abajo, su cara, su canto y su brillo.
+                translate(ox + 0.5f * u, oy + 0.8f * u) { drawPath(semillas, hondo) }
+                translate(ox, oy) {
+                    drawPath(semillas, cara)
+                    drawPath(semillas, mezcla(cara, hondo, 0.6f), style = Stroke(0.5f * u))
+                    drawPath(brillos, claro.copy(alpha = 0.8f))
                 }
                 // La luz de un lado y la sombra del otro, en el montón.
                 redondoSombra(Rect(0f, nivel, w, h), t, hacia)

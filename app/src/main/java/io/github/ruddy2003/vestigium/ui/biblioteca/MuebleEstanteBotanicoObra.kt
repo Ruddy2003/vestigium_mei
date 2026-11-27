@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.TextMeasurer
 import io.github.ruddy2003.vestigium.ui.ideario.azar
@@ -162,6 +163,31 @@ internal object ObraEstanteBotanico {
         }
         val cv = Offset(r.left + r.width * (0.3f + 0.5f * azar(9404, k)), r.top + r.height * (0.38f + 0.2f * azar(9405, k)))
         drawCircle(s.t(cv).s(0.4f), 1.1f * u, cv)
+        // Un desconchón en algunos: la pintura saltada deja ver el enlucido, y en el medio, el ladrillo.
+        if (azar(9420, k) > 0.45f) {
+            val dc = Offset(r.left + r.width * (0.15f + 0.7f * azar(9421, k)), r.top + r.height * (0.42f + 0.2f * azar(9422, k)))
+            val dr = w * (0.026f + 0.014f * azar(9423, k))
+            val td = s.t(dc)
+            // Una mancha redondeada y despareja (curvas entre puntos a distinto radio), más ancha que alta.
+            val pts = Array(7) { j ->
+                val an = j * 0.8976f
+                val e = dr * (0.75f + 0.4f * azar(9424 + k, j))
+                Offset(dc.x + e * kotlin.math.cos(an) * 1.35f, dc.y + e * kotlin.math.sin(an) * 0.75f)
+            }
+            val forma = Path()
+            val m0 = Offset((pts[6].x + pts[0].x) / 2, (pts[6].y + pts[0].y) / 2)
+            forma.moveTo(m0.x, m0.y)
+            for (j in 0 until 7) { val a0 = pts[j]; val b0 = pts[(j + 1) % 7]; forma.quadraticTo(a0.x, a0.y, (a0.x + b0.x) / 2, (a0.y + b0.y) / 2) }
+            forma.close()
+            drawPath(Path().apply { addPath(forma, Offset(-1.2f * u, -1.2f * u)) }, td.s(0.4f))
+            drawPath(Path().apply { addPath(forma, Offset(1f * u, 1f * u)) }, td.b(0.3f))
+            drawPath(forma, td.c(mezcla(P.ENLUCIDO, P.SALVIA_OSC, 0.45f), -0.14f))
+            clipPath(forma) {
+                drawRect(td.c(mezcla(P.LADRILLO, P.SALVIA_OSC, 0.25f), -0.15f), Offset(dc.x - dr * 0.6f, dc.y - dr * 0.25f), Size(dr * 1.3f, dr * 0.45f))
+                drawLine(td.c(P.ENLUCIDO, -0.2f), Offset(dc.x - dr, dc.y), Offset(dc.x + dr, dc.y), 0.8f * u)
+                drawLine(td.c(P.ENLUCIDO, -0.2f), Offset(dc.x + dr * 0.1f, dc.y - dr * 0.25f), Offset(dc.x + dr * 0.1f, dc.y + dr * 0.2f), 0.8f * u)
+            }
+        }
         // Una mancha de humedad o de cola, vieja.
         val mx = r.left + r.width * azar(9406, k)
         drawOval(tc.s(0.08f), Offset(mx, r.top + r.height * (0.3f + 0.3f * azar(9407, k))), Size(w * 0.09f, w * 0.05f))
