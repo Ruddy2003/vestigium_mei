@@ -21,11 +21,11 @@ private class FormasPestanaBotanico(val w: Float, val h: Float, u: Float) {
     val banda = Rect(tarjeta.left, tarjeta.top, tarjeta.right, tarjeta.top + 11f * u)
     val cajaSemana = Rect(banda.left + 2f * u, banda.top + 1f * u, banda.right - 9f * u, banda.bottom - 0.5f * u)
     val cajaDia = Rect(tarjeta.left + 1f * u, banda.bottom + 1f * u, tarjeta.right - 1f * u, banda.bottom + 22f * u)
-    /** Donde nace la hoja (abajo a la izquierda) y hacia dónde va (a la derecha, algo arriba). */
-    val base = Offset(tarjeta.left + 7f * u, tarjeta.bottom - 6f * u)
+    /** Donde nace la hoja (abajo a la izquierda) y hacia dónde va (a la derecha, algo arriba): llena el ancho de la mitad de abajo. */
+    val base = Offset(tarjeta.left + 2.5f * u, tarjeta.bottom - 6.5f * u)
     /** La hoja prensada, con la base en el origen y la punta hacia la derecha. */
     val hoja = Path().apply {
-        val l = 25f * u; val a = 6.4f * u
+        val l = 34f * u; val a = 7.6f * u
         moveTo(0f, 0f)
         cubicTo(l * 0.25f, -a * 1.1f, l * 0.7f, -a * 0.9f, l, 0f)
         cubicTo(l * 0.7f, a * 0.8f, l * 0.25f, a * 1.05f, 0f, 0f)
@@ -100,14 +100,14 @@ internal object IndiceLibretaBotanico {
         if (tinte != null) {
             // La hoja prensada del color del ánimo, algo girada según la semilla, y la tira engomada que la sujeta.
             val c = if (oscuro) mezcla(tinte, Color.Black, 0.18f) else tinte
-            val giro = -12f - 14f * ((e.semilla ushr 3) and 7) / 7f
+            val giro = -8f - 8f * ((e.semilla ushr 3) and 7) / 7f
             translate(f.base.x, f.base.y) {
                 rotate(giro, Offset.Zero) {
                     translate(0.8f * u, 1.1f * u) { drawPath(f.hoja, sombra) }
                     drawPath(f.hoja, c)
-                    drawLine(mezcla(c, Color.Black, 0.35f), Offset(-2f * u, 0f), Offset(22f * u, 0f), 0.7f * u)
-                    drawLine(mezcla(c, Color.White, 0.3f), Offset(5f * u, -1.6f * u), Offset(14f * u, -2.6f * u), 0.6f * u)
-                    drawRect(if (oscuro) mezcla(P.KRAFT, Color.Black, 0.2f) else P.KRAFT, Offset(3f * u, -2.4f * u), Size(4.4f * u, 4.8f * u))
+                    drawLine(mezcla(c, Color.Black, 0.35f), Offset(-2f * u, 0f), Offset(30f * u, 0f), 0.8f * u)
+                    drawLine(mezcla(c, Color.White, 0.3f), Offset(7f * u, -2.2f * u), Offset(20f * u, -3.4f * u), 0.7f * u)
+                    drawRect(if (oscuro) mezcla(P.KRAFT, Color.Black, 0.2f) else P.KRAFT, Offset(4f * u, -2.8f * u), Size(5f * u, 5.6f * u))
                 }
             }
         } else {

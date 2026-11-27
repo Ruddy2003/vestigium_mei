@@ -39,6 +39,7 @@ internal object RinconLibretaBotanico {
         caballete(s, l)
         maceta(s, l)
         hiedra(s, l)
+        manojo(s, l)
         ramita(s, l)
         tintero(s, l)
         quinque(s, l)
@@ -224,23 +225,27 @@ internal object RinconLibretaBotanico {
     private fun DrawScope.maceta(s: SitioLibretaBotanico, l: LuzLibretaBotanico) {
         val U = s.U; val u = density
         val m = s.maceta
-        val t = l.t(Offset(m.x, m.y - 14f * U))
-        val top = m.y - 26f * U
-        val cuerpo = poligonoBotanico(m.x - 15f * U, top + 5f * U, m.x + 15f * U, top + 5f * U, m.x + 11f * U, m.y, m.x - 11f * U, m.y)
-        contactoBotanico(Offset(m.x + 4f * U, m.y), 32f * U, 6f * U, t, 0.42f)
-        if (!l.oscuro) translate(10f * U, 4f * U) { drawPath(cuerpo, t.s(0.14f)) }
+        val t = l.t(Offset(m.x, m.y - 18f * U))
+        val top = m.y - 36f * U
+        val cuerpo = poligonoBotanico(m.x - 21f * U, top + 7f * U, m.x + 21f * U, top + 7f * U, m.x + 15f * U, m.y, m.x - 15f * U, m.y)
+        contactoBotanico(Offset(m.x + 5f * U, m.y), 44f * U, 7f * U, t, 0.42f)
+        if (!l.oscuro) translate(12f * U, 5f * U) { drawPath(cuerpo, t.s(0.14f)) }
         drawPath(cuerpo, t.c(P.TERRACOTA, -0.02f))
         clipPath(cuerpo) {
-            drawRect(t.b(0.22f), Offset(m.x - 15f * U, top), Size(9f * U, 30f * U))
-            drawRect(t.s(0.26f), Offset(m.x + 4f * U, top), Size(12f * U, 30f * U))
-            drawRect(t.s(0.12f), Offset(m.x - 15f * U, m.y - 6f * U), Size(30f * U, 6f * U))
+            drawRect(t.b(0.22f), Offset(m.x - 21f * U, top), Size(12f * U, 40f * U))
+            drawRect(t.b(0.3f), Offset(m.x - 14f * U, top), Size(2.4f * U, 40f * U))
+            drawRect(t.s(0.26f), Offset(m.x + 5f * U, top), Size(17f * U, 40f * U))
+            drawRect(t.s(0.12f), Offset(m.x - 21f * U, m.y - 8f * U), Size(42f * U, 8f * U))
+            // El salitre blanquecino del barro, en una banda despareja.
+            drawRect(t.c(mezcla(P.TERRACOTA, P.CRUDO, 0.45f)).copy(alpha = 0.35f), Offset(m.x - 21f * U, top + 14f * U), Size(42f * U, 2.6f * U))
         }
         // El borde de la maceta y la tierra.
-        drawRect(t.c(P.TERRACOTA, 0.04f), Offset(m.x - 16.5f * U, top), Size(33f * U, 6f * U))
-        drawRect(t.b(0.35f), Offset(m.x - 16.5f * U, top), Size(33f * U, 1f * u))
-        drawRect(t.s(0.3f), Offset(m.x - 16.5f * U, top + 6f * U - 1f * u), Size(33f * U, 1f * u))
-        drawOval(t.c(mezcla(P.NOGAL_OSC, P.TINTA, 0.3f)), Offset(m.x - 14f * U, top - 1.6f * U), Size(28f * U, 3.6f * U))
-        if (l.oscuro) drawLine(P.LUNA_RAS.copy(alpha = 0.4f), Offset(m.x - 15f * U, top + 6f * U), Offset(m.x - 11f * U, m.y), 1f * u)
+        drawRect(t.c(P.TERRACOTA, 0.04f), Offset(m.x - 23f * U, top), Size(46f * U, 8f * U))
+        drawRect(t.b(0.35f), Offset(m.x - 23f * U, top), Size(46f * U, 1f * u))
+        drawRect(t.s(0.3f), Offset(m.x - 23f * U, top + 8f * U - 1f * u), Size(46f * U, 1.2f * u))
+        drawRect(t.s(0.24f), Offset(m.x + 8f * U, top), Size(15f * U, 8f * U))
+        drawOval(t.c(mezcla(P.NOGAL_OSC, P.TINTA, 0.3f)), Offset(m.x - 20f * U, top - 2f * U), Size(40f * U, 4.6f * U))
+        if (l.oscuro) drawLine(P.LUNA_RAS.copy(alpha = 0.4f), Offset(m.x - 21f * U, top + 8f * U), Offset(m.x - 15f * U, m.y), 1f * u)
     }
 
     /** Una hoja de hiedra: cinco lóbulos en punta, el seno del pecíolo, su lado en sombra y los nervios claros. */
@@ -276,19 +281,19 @@ internal object RinconLibretaBotanico {
     private fun DrawScope.hiedra(s: SitioLibretaBotanico, l: LuzLibretaBotanico) {
         val w = size.width; val U = s.U; val u = density
         val m = s.maceta
-        val caX = m.x + 3f * U
+        val caX = m.x + 4f * U
         val tc = l.t(Offset(caX, 90f * U))
         // La caña de bambú, con sus nudos y las ataduras de rafia.
         drawLine(tc.s(0.15f), Offset(caX + 8f * U, s.molduraAbajo + 6f * U), Offset(caX + 10f * U, m.y - 24f * U), 2.6f * U)
-        drawLine(tc.c(P.PAJA, -0.08f), Offset(caX, s.molduraAbajo), Offset(caX + 1f * U, m.y - 27f * U), 2.6f * U)
-        drawLine(tc.b(0.45f), Offset(caX - 0.8f * U, s.molduraAbajo), Offset(caX + 0.2f * U, m.y - 27f * U), 0.7f * u)
-        for (j in 1 until 6) { val y = s.molduraAbajo + (m.y - 27f * U - s.molduraAbajo) * j / 6f; drawLine(tc.c(P.PAJA, -0.25f), Offset(caX - 1.6f * U, y), Offset(caX + 1.8f * U, y), 0.9f * u) }
+        drawLine(tc.c(P.PAJA, -0.08f), Offset(caX, s.molduraAbajo), Offset(caX + 1f * U, m.y - 37f * U), 2.6f * U)
+        drawLine(tc.b(0.45f), Offset(caX - 0.8f * U, s.molduraAbajo), Offset(caX + 0.2f * U, m.y - 37f * U), 0.7f * u)
+        for (j in 1 until 6) { val y = s.molduraAbajo + (m.y - 37f * U - s.molduraAbajo) * j / 6f; drawLine(tc.c(P.PAJA, -0.25f), Offset(caX - 1.6f * U, y), Offset(caX + 1.8f * U, y), 0.9f * u) }
         // Los tallos: uno que sube enroscado por la caña, otro que corre por la moldura y dos que cuelgan.
         val sube = ArrayList<Offset>()
         val pasos = 14
         for (j in 0..pasos) {
             val f = j / pasos.toFloat()
-            val y = m.y - 26f * U + (s.molduraAbajo + 2f * U - (m.y - 26f * U)) * f
+            val y = m.y - 36f * U + (s.molduraAbajo + 2f * U - (m.y - 36f * U)) * f
             sube += Offset(caX + 3.6f * U * kotlin.math.sin(f * 11f), y)
         }
         val fin = minOf(s.cx - 30f * U, w * 0.55f)
@@ -320,8 +325,48 @@ internal object RinconLibretaBotanico {
             hojaHiedra(c, r, g, t.c(col), t)
         }
         // Las ataduras de rafia a la caña.
-        listOf(0.3f, 0.62f).forEach { f -> val y = s.molduraAbajo + (m.y - 27f * U - s.molduraAbajo) * f
+        listOf(0.3f, 0.62f).forEach { f -> val y = s.molduraAbajo + (m.y - 37f * U - s.molduraAbajo) * f
             drawLine(tc.c(mezcla(P.PAJA, P.CRUDO, 0.5f)), Offset(caX - 2.4f * U, y), Offset(caX + 2.8f * U, y + 1.2f * U), 1.2f * u) }
+    }
+
+    /**
+     * El manojo de lavanda puesto a secar, boca abajo, colgado de un clavo de la moldura a la derecha: el cordel, el atado de
+     * bramante y los tallos que se abren hacia abajo con sus espigas moradas; con su sombra en la pared (de día).
+     */
+    private fun DrawScope.manojo(s: SitioLibretaBotanico, l: LuzLibretaBotanico) {
+        val w = size.width; val U = s.U; val u = density
+        val x = maxOf(w - 36f * U, s.tapa.right + s.atras.x + 28f * U)
+        val atado = Offset(x, s.molduraAbajo + 14f * U)
+        val t = l.t(Offset(x, 48f * U))
+        val tallos = Path(); val puntas = ArrayList<Pair<Offset, Float>>()
+        for (j in 0 until 11) {
+            val an = 1.5708f + (j - 5f) * 0.075f + (azar(9660, j) - 0.5f) * 0.05f
+            val largo = (44f + 12f * azar(9661, j)) * U
+            val fin = Offset(atado.x + largo * kotlin.math.cos(an), atado.y + largo * kotlin.math.sin(an))
+            tallos.moveTo(atado.x, atado.y); tallos.lineTo(fin.x, fin.y)
+            puntas += fin to an
+        }
+        if (!l.oscuro) translate(8f * U, 5f * U) { drawPath(tallos, t.s(0.16f), style = Stroke(1.6f * U)) }
+        drawPath(tallos, t.c(mezcla(P.HOJA_CLARA, P.PAJA, 0.4f), -0.06f), style = Stroke(0.9f * U))
+        // Las espigas: granos morados en hilera a lo largo de la punta de cada tallo.
+        puntas.forEachIndexed { j, (p, an) ->
+            val dx = kotlin.math.cos(an); val dy = kotlin.math.sin(an)
+            val col = t.c(mezcla(P.AMATISTA, P.INDIGO, 0.15f + 0.2f * azar(9662, j)))
+            for (q in 0 until 6) {
+                val k = (q / 6f) * 14f * U
+                val c = Offset(p.x - dx * k, p.y - dy * k)
+                if (!l.oscuro && q % 2 == 0) drawCircle(t.s(0.14f), 1.6f * U, c + Offset(6f * U, 4f * U))
+                drawCircle(col, (1.6f - q * 0.1f) * U, c + Offset(if (q % 2 == 0) 0.8f * U else -0.8f * U, 0f))
+            }
+            drawCircle(t.b(0.3f), 0.6f * U, p - Offset(0.6f * U, 0.6f * U))
+        }
+        // El cordel al clavo, el atado de bramante y el clavo.
+        drawLine(t.c(P.BRAMANTE, -0.1f), Offset(x, s.molduraAbajo - 1f * U), atado, 0.9f * u)
+        clavoBotanico(Offset(x, s.molduraAbajo - 1.6f * U), 1.6f * U, t)
+        val nudo = Rect(atado.x - 4.5f * U, atado.y - 2f * U, atado.x + 4.5f * U, atado.y + 6f * U)
+        drawRect(t.c(P.BRAMANTE), nudo.topLeft, nudo.size)
+        for (q in 0 until 3) drawLine(t.s(0.35f), Offset(nudo.left, nudo.top + nudo.height * (0.3f + 0.25f * q)), Offset(nudo.right, nudo.top + nudo.height * (0.3f + 0.25f * q)), 0.6f * u)
+        drawRect(t.b(0.4f), nudo.topLeft, Size(nudo.width * 0.3f, nudo.height))
     }
 
     // ---------------------------------------------------------------- lo de la mesa

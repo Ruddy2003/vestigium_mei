@@ -58,14 +58,22 @@ internal class SitioLibretaBotanico(val w: Float, val h: Float, u: Float, hojas:
     /** Cuánto engorda: de 0 (un pliego) a 1 (240 o más); rápido al principio y cada vez más despacio. */
     val lleno = sqrt((hojas.coerceIn(1, 240) - 1) / 239f)
     /** El grueso de los pliegos y adónde corre de la tapa de delante a la de atrás: arriba y a la derecha (se mira un poco desde ahí). */
-    val grueso = (7f + 21f * lleno) * U
+    val grueso = (12f + 18f * lleno) * U
     val atras = Offset(grueso * 0.7f, -grueso * 0.38f)
     /** La tapa de delante: pisa la repisa. */
     val tapa = Rect(cx - 100f * U, repisa - 1f * U - 146f * U, cx + 96f * U, repisa - 1f * U)
     /** El lomo de piel, a la izquierda (lo que envuelve la tapa). */
     val lomo = 19f * U
     /** La etiqueta pegada con el nombre y la cuenta. */
-    val etiqueta = Rect(tapa.left + 40f * U, tapa.top + 22f * U, tapa.right - 20f * U, tapa.top + 84f * U)
+    val etiqueta = Rect(tapa.left + 34f * U, tapa.top + 14f * U, tapa.right - 24f * U, tapa.top + 66f * U)
+    /** Cuánto se ladea la carpeta en el caballete (grados, sobre su esquina de abajo a la izquierda): no queda del todo de frente. */
+    val ladeo = 1.2f
+    /**
+     * El pliego de herbario que está de pie delante de la carpeta, en la repisa, apoyado en ella: abajo a la izquierda y a la
+     * derecha, y arriba a la izquierda y a la derecha (algo corrido a la derecha: se recuesta). Del orden de la mitad del alto de la
+     * carpeta, y siempre debajo de la etiqueta.
+     */
+    val pliego = floatArrayOf(cx + 16f * U, repisa - 1f * U, cx + 66f * U, repisa - 1f * U, cx + 69f * U, repisa - 71f * U, cx + 20f * U, repisa - 71f * U)
     /** Las dos cintas de algodón del canto de la derecha (a qué alto) y la pinza del caballete arriba. */
     val cinta1 = tapa.top + 44f * U
     val cinta2 = tapa.bottom - 38f * U
