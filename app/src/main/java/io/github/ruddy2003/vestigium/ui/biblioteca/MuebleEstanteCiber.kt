@@ -60,6 +60,8 @@ internal object PaletaCiber {
     /** El fósforo ámbar del monitor del suelo y la luz que echa. */
     val FOSFORO_AMBAR = Color(0xFFFFA22E)
     val AMBAR_LUZ = Color(0xFFFFA445)
+    /** La luz verde del panel de pilotos del costado izquierdo. */
+    val VERDE_LUZ = Color(0xFF5CF59A)
     /** La luna del salvapantallas (los Sueños) y el azul hondo de su fondo. */
     val LUNA = Color(0xFFB4C8FF)
     val AZUL_SALVA = Color(0xFF0B1E58)
@@ -89,12 +91,12 @@ internal object PaletaCiber {
  */
 internal class AireCiber(val noche: Boolean) {
     private val p = PaletaCiber
-    /** El color de cada luz: la pantalla, la regleta y el monitor ámbar. */
-    val colores: Array<Color> = if (noche) arrayOf(p.LUNA, p.ROJO, p.AMBAR_LUZ) else arrayOf(p.CIAN_LUZ, p.ROJO, p.AMBAR_LUZ)
+    /** El color de cada luz: la pantalla, la regleta, el monitor ámbar y el panel de pilotos. */
+    val colores: Array<Color> = if (noche) arrayOf(p.LUNA, p.ROJO, p.AMBAR_LUZ, p.VERDE_LUZ) else arrayOf(p.CIAN_LUZ, p.ROJO, p.AMBAR_LUZ, p.VERDE_LUZ)
     /** La fuerza de cada una. */
-    val fuerzas: FloatArray = if (noche) floatArrayOf(0.95f, 0.45f, 0.18f) else floatArrayOf(1.4f, 1.2f, 0.88f)
+    val fuerzas: FloatArray = if (noche) floatArrayOf(0.95f, 0.45f, 0.18f, 0.35f) else floatArrayOf(1.4f, 1.2f, 0.88f, 0.8f)
     /** Cuánto tiñe cada luz lo que toca (el cian, poco: el beis sigue siendo beis; el rojo y el ámbar, más). */
-    private val tintes: FloatArray = if (noche) floatArrayOf(0.32f, 0.55f, 0.42f) else floatArrayOf(0.2f, 0.55f, 0.4f)
+    private val tintes: FloatArray = if (noche) floatArrayOf(0.32f, 0.55f, 0.42f, 0.5f) else floatArrayOf(0.2f, 0.55f, 0.4f, 0.5f)
 
     /** Lo hondo de un color: oscuro pero de su mismo tono, apenas hacia la noche azul del cuarto (el beis, a un pardo azulado). */
     fun hondo(c: Color): Color = if (noche) Color(c.red * 0.08f + 0.022f, c.green * 0.09f + 0.04f, c.blue * 0.1f + 0.12f, c.alpha)
@@ -133,7 +135,7 @@ internal class TonoCiber(val a: AireCiber, val k: Float, val l: Color, val tn: F
  * cuarto), la regleta (un charco corto) y el monitor ámbar del suelo (sube más que se abre). [regY] y [ambY]: la altura de la
  * regleta y la del monitor ámbar, en anchos.
  */
-internal fun lucesCiber(fx: Float, fy: Float, a: AireCiber, regY: Float, ambY: Float, k: FloatArray) {
+internal fun lucesCiber(fx: Float, fy: Float, a: AireCiber, regY: Float, ambY: Float, pilY: Float, k: FloatArray) {
     val m = MuebleEstanteCiber
     // Cada charco cae como una campana: fuerte cerca, deprisa a media distancia y casi nada lejos (entre dos charcos, lo hondo).
     val dx0 = fx - m.PANT_X; val dy0 = (fy - m.PANT_Y) * (if (fy > m.PANT_Y) 0.82f else 1.2f)
@@ -143,16 +145,19 @@ internal fun lucesCiber(fx: Float, fy: Float, a: AireCiber, regY: Float, ambY: F
     k[1] = a.fuerzas[1] * exp(-(dx1 * dx1 + dy1 * dy1) / (0.21f * 0.21f))
     val dx2 = fx - m.AMB_X; val dy2 = (fy - ambY) * (if (fy < ambY) 0.7f else 1.1f)
     k[2] = a.fuerzas[2] * exp(-(dx2 * dx2 + dy2 * dy2) / (0.34f * 0.34f))
+    // El panel de pilotos del costado izquierdo, a media altura: un charco verde corto que entra un poco en las repisas.
+    val dx3 = (fx - m.PIL_X) * 0.8f; val dy3 = fy - pilY
+    k[3] = a.fuerzas[3] * exp(-(dx3 * dx3 + dy3 * dy3) / (0.19f * 0.19f))
 }
 
 /** El tono en ([fx], [fy]) en anchos del mueble. */
-internal fun tonoCiber(fx: Float, fy: Float, a: AireCiber, regY: Float, ambY: Float): TonoCiber {
-    val k = FloatArray(3)
-    lucesCiber(fx, fy, a, regY, ambY, k)
+internal fun tonoCiber(fx: Float, fy: Float, a: AireCiber, regY: Float, ambY: Float, pilY: Float): TonoCiber {
+    val k = FloatArray(4)
+    lucesCiber(fx, fy, a, regY, ambY, pilY, k)
     var suma = 0f; var r = 0f; var g = 0f; var b = 0f; var tn = 0f; var lado = 0f
     val m = MuebleEstanteCiber
-    val xs = floatArrayOf(m.PANT_X, m.REG_X, m.AMB_X)
-    for (i in 0 until 3) {
+    val xs = floatArrayOf(m.PANT_X, m.REG_X, m.AMB_X, m.PIL_X)
+    for (i in 0 until 4) {
         val ki = k[i]; if (ki <= 0f) continue
         val col = a.colores[i]
         suma += ki; r += col.red * ki; g += col.green * ki; b += col.blue * ki; tn += a.tinte(i) * ki
@@ -184,10 +189,25 @@ internal class MarcoCiber(val w: Float, val h: Float, val ch: Float, val x0: Flo
     /** La regleta y el monitor ámbar, en anchos. */
     val regY: Float get() = (ch + fila * (filaReglaCiber(n) + 0.18f)) / w
     val ambY: Float get() = fondo / w + m.AMB_DY
+    /** El panel de pilotos del costado izquierdo, en anchos. */
+    val pilY: Float get() = (ch + (fondo - ch) * m.PIL_F) / w
 
-    fun t(p: Offset): TonoCiber = tonoCiber(p.x / w, p.y / w, a, regY, ambY)
-    fun t(x: Float, y: Float): TonoCiber = tonoCiber(x / w, y / w, a, regY, ambY)
+    fun t(p: Offset): TonoCiber = tonoCiber(p.x / w, p.y / w, a, regY, ambY, pilY)
+    fun t(x: Float, y: Float): TonoCiber = tonoCiber(x / w, y / w, a, regY, ambY, pilY)
     fun c(col: Color, p: Offset, mas: Float = 1f): Color = t(p).c(col, mas)
+
+    /**
+     * El tono de lo que hay en los huecos: lejos de las luces no baja de un mínimo, con la luz fría que rebota del fósforo, para que
+     * cada cosa se lea con su filo aunque esté en lo hondo.
+     */
+    fun th(x: Float, y: Float): TonoCiber {
+        val t = t(x, y)
+        val piso = 0.3f
+        if (t.k >= piso) return t
+        val f = 1f - t.k / piso
+        return TonoCiber(a, piso, mezcla(t.l, a.colores[0], f), t.tn + (0.32f - t.tn) * f, t.hacia)
+    }
+    fun th(p: Offset): TonoCiber = th(p.x, p.y)
 }
 
 /** En qué repisa va la regleta del costado (arriba de ella), de [n]. */
@@ -203,6 +223,10 @@ internal fun lugarVolumenCiber(repisa: Int, centro: Float, alto: Float = 0.55f):
 internal fun regNominalCiber(repisas: Int): Float {
     val m = MuebleEstanteCiber
     return m.CORONA + (filaReglaCiber(repisas) + 0.18f) * m.FILA / m.ANCHO_NOMINAL
+}
+internal fun pilNominalCiber(repisas: Int): Float {
+    val m = MuebleEstanteCiber
+    return m.CORONA + repisas * m.FILA / m.ANCHO_NOMINAL * m.PIL_F
 }
 internal fun ambNominalCiber(repisas: Int): Float {
     val m = MuebleEstanteCiber
@@ -395,6 +419,9 @@ internal object MuebleEstanteCiber {
     val REG_X = 0.955f
     /** El monitor ámbar del suelo: su x y la altura de su pantalla bajo la última tabla, en anchos. */
     val AMB_X = 0.14f
+    /** El panel de pilotos del costado izquierdo: su x y la fracción del cuerpo (de la corona a la última tabla) donde va. */
+    val PIL_X = 0.047f
+    val PIL_F = 0.7f
     val AMB_DY = 0.24f
     /** El ancho con que un volumen pasa su repisa a anchos del mueble: el de un teléfono. */
     val ANCHO_NOMINAL = 400f
@@ -442,6 +469,7 @@ internal object MuebleEstanteCiber {
             huecoLibreCiber(k, r, oc, g, usados)
         }
         costadosCiber(g, d.tablas)
+        pilotosLadoCiber(g)
         d.tablas.forEachIndexed { k, r -> tablaCiber(k, r, k == d.tablas.size - 1, g) }
         d.placas.forEach { p -> rotuloCiber(p, medidor, g) }
         reglaCiber(g)

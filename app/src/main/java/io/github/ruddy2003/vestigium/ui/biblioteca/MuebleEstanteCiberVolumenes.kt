@@ -88,7 +88,11 @@ private class LuzVolumenCiber(val a: AireCiber, val t: TonoCiber) {
      */
     fun animo(col: Color, mas: Float = 1f): Color {
         val k = (t.k * mas).coerceIn(0f, 1.3f)
-        val apagado = mezcla(Color(col.red * 0.26f, col.green * 0.26f, col.blue * 0.28f, col.alpha), a.hondo(col), 0.35f)
+        // Lejos se hunde en valor pero conserva el matiz: el color oscurecido, algo más saturado, apenas hacia la noche del cuarto.
+        val oscuro = Color(col.red * 0.36f, col.green * 0.36f, col.blue * 0.38f, col.alpha)
+        val gris = 0.3f * oscuro.red + 0.59f * oscuro.green + 0.11f * oscuro.blue
+        fun sat(x: Float) = (gris + (x - gris) * 1.35f).coerceIn(0f, 1f)
+        val apagado = mezcla(Color(sat(oscuro.red), sat(oscuro.green), sat(oscuro.blue), col.alpha), a.hondo(col), 0.15f)
         val lit = t.c(col, mas)
         val vivo = mezcla(col, lit, 0.4f)
         return mezcla(apagado, vivo, (0.08f + 1.15f * k.pow(1.25f)).coerceAtMost(0.97f))
@@ -194,7 +198,7 @@ internal fun DrawScope.volumenCiber(v: Volumen, medidor: TextMeasurer) {
     if (size.width < 4f || size.height < 4f) return
     val a = AireCiber(v.noche)
     val p = lugarVolumenCiber(v.repisa, v.centro)
-    val t = tonoCiber(p.x, p.y, a, regNominalCiber(v.repisas), ambNominalCiber(v.repisas))
+    val t = tonoCiber(p.x, p.y, a, regNominalCiber(v.repisas), ambNominalCiber(v.repisas), pilNominalCiber(v.repisas))
     val l = LuzVolumenCiber(a, t)
     val tinte = tenidoCiber(v.tono)
     when (MuebleEstanteCiber.clase(v.semilla)) {

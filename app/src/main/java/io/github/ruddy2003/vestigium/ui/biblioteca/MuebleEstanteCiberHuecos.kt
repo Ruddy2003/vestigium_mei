@@ -83,7 +83,7 @@ private fun DrawScope.grupoCiber(cual: Int, z: Rect, alto: Float, g: MarcoCiber,
 /** Un manual de anillas tumbado: el lomo de vinilo de [col] con su portaetiquetas sin texto y el agujero del dedo. */
 private fun DrawScope.manualTumbadoCiber(r: Rect, col: Color, g: MarcoCiber) {
     val u = density; val w = g.w
-    val t = g.t(r.center)
+    val t = g.th(r.center)
     val tapa = poligonoCiber(r.left, r.top, r.left + w * 0.008f, r.top - w * 0.01f, r.right + w * 0.004f, r.top - w * 0.01f, r.right, r.top)
     drawPath(tapa, t.c(mezcla(col, Color.White, 0.08f)))
     drawRoundRect(t.c(col), r.topLeft, r.size, CornerRadius(r.height * 0.3f))
@@ -99,7 +99,7 @@ private fun DrawScope.modemTelefonoCiber(z: Rect, alto: Float, g: MarcoCiber, s:
     val u = density; val w = g.w
     val ancho = minOf(z.width, w * 0.24f)
     val x0 = z.left + (z.width - ancho) * 0.3f
-    val t = g.t(x0 + ancho / 2, z.bottom - alto * 0.3f)
+    val t = g.th(x0 + ancho / 2, z.bottom - alto * 0.3f)
     contactoCiber(Offset(x0 + ancho / 2, z.bottom), ancho * 1.1f, w * 0.012f, t, 0.6f)
     val gm = alto * 0.12f
     manualTumbadoCiber(Rect(x0, z.bottom - gm, x0 + ancho, z.bottom), mezcla(PARED, NEGRO, 0.3f), g)
@@ -107,7 +107,7 @@ private fun DrawScope.modemTelefonoCiber(z: Rect, alto: Float, g: MarcoCiber, s:
     // El módem: la caja beis vista un poco desde arriba, la franja de los pilotos.
     val mb = z.bottom - 2 * gm - w * 0.012f
     val mr = Rect(x0 + ancho * 0.04f, mb - alto * 0.16f, x0 + ancho * 0.96f, mb)
-    val tm = g.t(mr.center)
+    val tm = g.th(mr.center)
     drawPath(poligonoCiber(mr.left, mr.top, mr.left + w * 0.008f, mr.top - w * 0.01f, mr.right + w * 0.004f, mr.top - w * 0.01f, mr.right, mr.top), tm.c(mezcla(BEIS, Color.White, 0.06f)))
     drawRect(tm.c(BEIS), mr.topLeft, mr.size)
     clipRect(mr.left, mr.top, mr.right, mr.bottom) { planosCiber(mr, tm, 0.9f) }
@@ -121,7 +121,7 @@ private fun DrawScope.modemTelefonoCiber(z: Rect, alto: Float, g: MarcoCiber, s:
     val tb = mr.top - w * 0.008f
     val tw = ancho * 0.62f
     val tx = x0 + ancho * 0.1f
-    val tt = g.t(tx + tw / 2, tb - alto * 0.15f)
+    val tt = g.th(tx + tw / 2, tb - alto * 0.15f)
     contactoCiber(Offset(tx + tw / 2, tb + w * 0.002f), tw * 1.05f, w * 0.01f, tt, 0.6f)
     val base = poligonoCiber(tx, tb, tx + tw * 0.08f, tb - alto * 0.2f, tx + tw * 0.92f, tb - alto * 0.2f, tx + tw, tb)
     drawPath(base, tt.c(mezcla(PAPEL, BEIS, 0.5f)))
@@ -165,7 +165,7 @@ private fun DrawScope.soldadorCiber(z: Rect, alto: Float, g: MarcoCiber, s: Int)
     val pw = minOf(z.width * 0.55f, w * 0.14f)
     val px = z.left + z.width * 0.38f
     val placa = Rect(px, z.bottom - alto * 0.78f, px + pw, z.bottom - w * 0.004f)
-    val tp = g.t(placa.center)
+    val tp = g.th(placa.center)
     rotate(5f, Offset(placa.left, placa.bottom)) {
         drawRect(NOCHE.copy(alpha = 0.4f), placa.translate(w * 0.012f, -w * 0.004f).topLeft, placa.size)
         drawRect(tp.c(mezcla(PAPEL, Color.White, 0.2f)), placa.topLeft, placa.size)
@@ -194,7 +194,7 @@ private fun DrawScope.soldadorCiber(z: Rect, alto: Float, g: MarcoCiber, s: Int)
     // El soporte: la base de hierro, la bandeja con la esponja y la espiral, y el soldador tendido en ella.
     val bx = z.left + z.width * 0.02f
     val bw = minOf(z.width * 0.42f, w * 0.12f)
-    val tb = g.t(bx + bw / 2, z.bottom - alto * 0.2f)
+    val tb = g.th(bx + bw / 2, z.bottom - alto * 0.2f)
     contactoCiber(Offset(bx + bw / 2, z.bottom), bw * 1.2f, w * 0.012f, tb, 0.6f)
     val base = Rect(bx, z.bottom - alto * 0.1f, bx + bw, z.bottom)
     drawRoundRect(tb.c(mezcla(NEGRO, ACERO_OSC, 0.3f)), base.topLeft, base.size, CornerRadius(w * 0.004f))
@@ -215,7 +215,7 @@ private fun DrawScope.soldadorCiber(z: Rect, alto: Float, g: MarcoCiber, s: Int)
     drawLine(tb.c(ACERO), m0 + (m1 - m0) * 0.45f, m1, w * 0.005f, StrokeCap.Round)
     // El carrete de estaño, delante a la derecha.
     val cc = Offset(z.right - minOf(z.width * 0.12f, w * 0.03f), z.bottom - w * 0.022f)
-    val tc = g.t(cc)
+    val tc = g.th(cc)
     contactoCiber(Offset(cc.x, z.bottom), w * 0.06f, w * 0.008f, tc, 0.55f)
     drawCircle(tc.c(mezcla(ROJO, NEGRO, 0.4f)), w * 0.022f, cc)
     drawCircle(tc.c(ACERO, 1.1f), w * 0.016f, cc)
@@ -229,7 +229,7 @@ private fun DrawScope.casetesCiber(z: Rect, alto: Float, g: MarcoCiber, s: Int) 
     val gw = minOf(z.width * 0.66f, w * 0.17f)
     val gx = z.left + z.width * 0.02f
     val gr = Rect(gx, z.bottom - alto * 0.26f, gx + gw, z.bottom)
-    val t = g.t(gr.center)
+    val t = g.th(gr.center)
     contactoCiber(Offset(gr.center.x, z.bottom), gw * 1.1f, w * 0.012f, t, 0.6f)
     drawRect(t.c(NEGRO), gr.topLeft, gr.size)
     clipRect(gr.left, gr.top, gr.right, gr.bottom) { planosCiber(gr, t, 0.8f) }
@@ -249,7 +249,7 @@ private fun DrawScope.casetesCiber(z: Rect, alto: Float, g: MarcoCiber, s: Int) 
     for (j in 0 until 3) {
         val dx = gw * 0.04f * (azar(6410 + s, j) - 0.5f) * 2f
         val c = Rect(gr.left + gw * 0.06f + dx, y - alto * 0.07f, gr.left + gw * 0.06f + dx + cw, y)
-        val tc = g.t(c.center)
+        val tc = g.th(c.center)
         drawRect(NOCHE.copy(alpha = 0.35f), c.translate(1.2f * u, 1.4f * u).topLeft, c.size)
         drawRect(tc.c(mezcla(PAPEL, BEIS, 0.4f)).copy(alpha = 0.9f), c.topLeft, c.size)
         drawRect(tc.c(listOf(Color(0xFF2F5E9E), ROJO, mezcla(NOTA, BEIS_OSC, 0.3f))[Math.floorMod(s + j, 3)], 0.9f), Offset(c.left + cw * 0.05f, c.top + c.height * 0.2f), Size(cw * 0.9f, c.height * 0.45f))
@@ -259,7 +259,7 @@ private fun DrawScope.casetesCiber(z: Rect, alto: Float, g: MarcoCiber, s: Int) 
     // El joystick: la base cuadrada negra, el bastón y la bola roja; el botón rojo de disparo.
     val jx = minOf(z.right - w * 0.045f, gr.right + w * 0.04f)
     val jb = Rect(jx - w * 0.04f, z.bottom - alto * 0.14f, jx + w * 0.04f, z.bottom)
-    val tj = g.t(jb.center)
+    val tj = g.th(jb.center)
     contactoCiber(Offset(jx, z.bottom), w * 0.1f, w * 0.012f, tj, 0.6f)
     drawRoundRect(tj.c(NEGRO), jb.topLeft, jb.size, CornerRadius(w * 0.006f))
     drawPath(poligonoCiber(jb.left, jb.top, jb.left + w * 0.006f, jb.top - w * 0.008f, jb.right - w * 0.006f, jb.top - w * 0.008f, jb.right, jb.top), tj.c(mezcla(NEGRO, ACERO_OSC, 0.3f)))
@@ -281,7 +281,7 @@ private fun DrawScope.cajasLataCiber(z: Rect, alto: Float, g: MarcoCiber, s: Int
     val bw = minOf(z.width * 0.6f, w * 0.15f)
     val bx = z.left + z.width * 0.04f
     val c1 = Rect(bx, z.bottom - alto * 0.24f, bx + bw, z.bottom)
-    val t = g.t(c1.center)
+    val t = g.th(c1.center)
     contactoCiber(Offset(c1.center.x, z.bottom), bw * 1.1f, w * 0.012f, t, 0.6f)
     drawRect(t.c(mezcla(BEIS, BEIS_OSC, 0.3f)), c1.topLeft, c1.size)
     clipRect(c1.left, c1.top, c1.right, c1.bottom) { planosCiber(c1, t, 0.9f) }
@@ -291,7 +291,7 @@ private fun DrawScope.cajasLataCiber(z: Rect, alto: Float, g: MarcoCiber, s: Int
     // La de arriba, más chica, con la tapa abierta y los disquetes de 3½ de pie.
     val bw2 = bw * 0.78f
     val c2 = Rect(bx + bw * 0.08f, c1.top - alto * 0.2f, bx + bw * 0.08f + bw2, c1.top - w * 0.002f)
-    val t2 = g.t(c2.center)
+    val t2 = g.th(c2.center)
     val tapa = poligonoCiber(c2.left + w * 0.004f, c2.top + c2.height * 0.2f, c2.left + w * 0.01f, c2.top - alto * 0.18f, c2.right - w * 0.004f, c2.top - alto * 0.18f, c2.right, c2.top + c2.height * 0.2f)
     drawPath(tapa, t2.c(mezcla(NEGRO, CAFE, 0.35f)).copy(alpha = 0.72f))
     drawPath(tapa, t2.b(0.45f), style = Stroke(0.8f * u))
@@ -309,7 +309,7 @@ private fun DrawScope.cajasLataCiber(z: Rect, alto: Float, g: MarcoCiber, s: Int
     val lx = minOf(z.right - w * 0.024f, c1.right + w * 0.03f)
     val la = w * 0.038f; val ll = alto * 0.3f
     val lr = Rect(lx - la / 2, z.bottom - ll, lx + la / 2, z.bottom)
-    val tl = g.t(lr.center)
+    val tl = g.th(lr.center)
     contactoCiber(Offset(lx, z.bottom), la * 1.5f, w * 0.008f, tl, 0.6f)
     drawRect(tl.c(ACERO), lr.topLeft, lr.size)
     clipRect(lr.left, lr.top, lr.right, lr.bottom) {
@@ -328,7 +328,7 @@ private fun DrawScope.manualesRatonCiber(z: Rect, alto: Float, g: MarcoCiber, s:
     val mw = minOf(z.width * 0.2f, w * 0.045f)
     val mx = z.left + z.width * 0.62f
     val pie = Rect(mx, z.bottom - alto * 0.82f, mx + mw, z.bottom)
-    val tp = g.t(pie.center)
+    val tp = g.th(pie.center)
     rotate(-7f, Offset(pie.left, pie.bottom)) {
         drawRect(NOCHE.copy(alpha = 0.4f), pie.translate(w * 0.01f, 0f).topLeft, pie.size)
         drawRoundRect(tp.c(listOf(Color(0xFF2F5E9E), mezcla(BEIS, BEIS_OSC, 0.4f), mezcla(ROJO, NEGRO, 0.5f))[Math.floorMod(s, 3)]), pie.topLeft, pie.size, CornerRadius(mw * 0.2f))
@@ -342,7 +342,7 @@ private fun DrawScope.manualesRatonCiber(z: Rect, alto: Float, g: MarcoCiber, s:
     val tx = z.left + z.width * 0.02f
     val gm = alto * 0.11f
     val cols = listOf(mezcla(PARED, NEGRO, 0.3f), mezcla(BEIS, BEIS_OSC, 0.5f), mezcla(Color(0xFF3F8A5A), NEGRO, 0.4f))
-    contactoCiber(Offset(tx + tw / 2, z.bottom), tw * 1.1f, w * 0.012f, g.t(tx + tw / 2, z.bottom), 0.6f)
+    contactoCiber(Offset(tx + tw / 2, z.bottom), tw * 1.1f, w * 0.012f, g.th(tx + tw / 2, z.bottom), 0.6f)
     var y = z.bottom
     for (j in 0 until 3) {
         val dx = w * 0.006f * (if (j == 1) -1f else if (j == 2) 0.7f else 0f)
@@ -351,7 +351,7 @@ private fun DrawScope.manualesRatonCiber(z: Rect, alto: Float, g: MarcoCiber, s:
     }
     // El ratón de bola encima, con su cable que cae por el canto.
     val rc = Offset(tx + tw * 0.55f, y + w * 0.006f)
-    val tr = g.t(rc)
+    val tr = g.th(rc)
     val rat = Path().apply {
         moveTo(rc.x - w * 0.028f, rc.y)
         cubicTo(rc.x - w * 0.028f, rc.y - w * 0.028f, rc.x + w * 0.028f, rc.y - w * 0.028f, rc.x + w * 0.028f, rc.y)
@@ -368,7 +368,7 @@ private fun DrawScope.manualesRatonCiber(z: Rect, alto: Float, g: MarcoCiber, s:
 /** Un gancho del tablero perforado con unos alicates colgados o un rollo de cable, y su sombra en el tablero. */
 private fun DrawScope.ganchoCiber(g: MarcoCiber, c: Offset, k: Int) {
     val u = density; val w = g.w
-    val t = g.t(c)
+    val t = g.th(c)
     drawLine(NOCHE.copy(alpha = 0.5f), c + Offset(w * 0.006f, w * 0.004f), c + Offset(w * 0.006f, w * 0.03f), 2f * u)
     drawLine(t.c(ACERO), c, c + Offset(0f, w * 0.026f), 2f * u, StrokeCap.Round)
     drawLine(t.c(ACERO), c + Offset(0f, w * 0.026f), c + Offset(w * 0.008f, w * 0.022f), 2f * u, StrokeCap.Round)

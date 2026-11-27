@@ -109,16 +109,17 @@ internal fun DrawScope.casilleroCiber(k: Int, r: Rect, g: MarcoCiber) {
 private fun DrawScope.charcosCasilleroCiber(r: Rect, g: MarcoCiber) {
     val w = g.w
     val m = MuebleEstanteCiber
-    val k = FloatArray(3)
+    val k = FloatArray(4)
     val donde = arrayOf(
         Offset((w * m.PANT_X).coerceIn(r.left, r.right), r.top + r.height * 0.55f),
         Offset(r.right - r.width * 0.1f, r.top + r.height * 0.5f),
         Offset((w * m.AMB_X).coerceIn(r.left, r.right) + r.width * 0.05f, r.top + r.height * 0.6f),
+        Offset(r.left + r.width * 0.06f, r.top + r.height * 0.5f),
     )
-    for (i in 0 until 3) {
+    for (i in 0 until 4) {
         if (g.a.fuerzas[i] <= 0f) continue
         val p = donde[i]
-        lucesCiber(p.x / w, p.y / w, g.a, g.regY, g.ambY, k)
+        lucesCiber(p.x / w, p.y / w, g.a, g.regY, g.ambY, g.pilY, k)
         val ki = k[i]
         if (ki < 0.22f) continue
         mancha(p, r.height * (0.7f + 0.9f * ki), g.a.colores[i].copy(alpha = ((if (i == 0) 0.3f else 0.38f) * ki).coerceAtMost(0.4f)))
@@ -289,4 +290,31 @@ internal fun DrawScope.reglaCiber(g: MarcoCiber) {
         }
     }
     listOf(r.top + w * 0.006f, r.bottom - w * 0.008f).forEach { y -> remacheCiber(Offset(r.center.x, y), 1.6f * u, t) }
+}
+
+/**
+ * El panel de pilotos atornillado de pie en el costado izquierdo, a media altura (el de la línea del módem): la caja negra con su
+ * columna de pilotos verdes y uno ámbar, el resplandor corto que echan y el cable que sube por el costado.
+ */
+internal fun DrawScope.pilotosLadoCiber(g: MarcoCiber) {
+    val u = density; val w = g.w
+    if (g.fondo - g.ch < w * 0.25f) return
+    val cy = g.pilY * w
+    val r = Rect(g.ml + w * 0.006f, cy - w * 0.06f, g.x0 - w * 0.008f, cy + w * 0.06f)
+    if (r.width < 2f) return
+    val t = g.t(r.center)
+    // El cable que sube por el costado, por detrás del panel.
+    val cab = Path().apply { moveTo(r.center.x, r.top); cubicTo(r.center.x - w * 0.008f, r.top - w * 0.08f, r.center.x + w * 0.006f, r.top - w * 0.16f, r.center.x - w * 0.002f, r.top - w * 0.26f) }
+    drawPath(cab, NOCHE.copy(alpha = 0.5f), style = Stroke(2.6f * u))
+    drawPath(cab, t.c(NEGRO), style = Stroke(1.8f * u))
+    drawPath(cab, t.b(0.3f), style = Stroke(0.5f * u))
+    drawRoundRect(NOCHE.copy(alpha = 0.55f), r.translate(w * 0.005f, w * 0.006f).topLeft, r.size, CornerRadius(w * 0.005f))
+    columnaCiber(r.left, r.right, r.top, r.bottom, mezcla(NEGRO, PARED, 0.2f), g, 1.2f, n = 4)
+    drawRect(t.b(0.5f), r.topLeft, Size(r.width, 0.9f * u))
+    drawRect(t.b(0.3f), r.topLeft, Size(0.9f * u, r.height))
+    val col = g.a.colores[3]
+    mancha(r.center, w * 0.11f, col.copy(alpha = if (g.a.noche) 0.12f else 0.24f))
+    val leds = listOf(PaletaCiber.VERDE, PaletaCiber.VERDE, PaletaCiber.AMBAR, PaletaCiber.VERDE)
+    leds.forEachIndexed { j, c -> pilotoCiber(Offset(r.center.x, r.top + r.height * (0.2f + 0.2f * j)), 1.7f * u, c, j != 2 || !g.a.noche, t) }
+    listOf(r.top + 2.5f * u, r.bottom - 2.5f * u).forEach { y -> remacheCiber(Offset(r.center.x, y), 1.2f * u, t) }
 }
