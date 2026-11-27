@@ -34,7 +34,6 @@ import io.github.ruddy2003.vestigium.ui.Pagina
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.TrazosFrente
 import io.github.ruddy2003.vestigium.ui.ideario.azar
-import io.github.ruddy2003.vestigium.ui.ideario.contornoIrregular
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.sombraSuave
@@ -43,7 +42,6 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 // =====================================================================
 //  Frente exterior
@@ -95,20 +93,12 @@ object EstanteFrente : DisenoBiblioteca {
     /** La sala con las luces bajas (modo oscuro) y el petróleo de la madrugada (de noche). */
     private val SALA = Color(0xFF121518)
     private val NOCHE = Color(0xFF0B1519)
-    /** La penumbra verdosa de la base en modo oscuro y el verde casi negro de la madrugada. */
-    private val PENUMBRA = Color(0xFF0E1614)
-    private val MADRUGADA = Color(0xFF07110D)
     /** Las ruinas que esconden la base: la piedra (a la luz y en sombra), la raíz, el musgo, el cobre y el hormigón de la losa. */
     private val PIEDRA = TrazosFrente.PIEDRA
     private val PIEDRA_SOMBRA = TrazosFrente.PIEDRA_SOMBRA
     private val RAIZ = TrazosFrente.RAIZ
     private val MUSGO = TrazosFrente.MUSGO
     private val COBRE = TrazosFrente.COBRE
-    private val LOSA = Color(0xFFA3A69B)
-    private val HUMEDAD = Color(0xFF34402F)
-    /** La consola oscura, de verde casi negro, y su canto donde le da la luz. */
-    private val CONSOLA = TrazosFrente.CONSOLA_OSCURA
-    private val CONSOLA_LUZ = Color(0xFF34453F)
     /** El vidrio grabado: el trazo iluminado por el canto y el vidrio mismo (en penumbra y a la luz). */
     private val VIDRIO = TrazosFrente.VIDRIO
     private val VIDRIO_LUZ = TrazosFrente.VIDRIO_LUZ
@@ -129,17 +119,6 @@ object EstanteFrente : DisenoBiblioteca {
         var r = c
         if (oscuro) r = mezcla(r, SALA, 0.44f)
         if (noche) r = mezcla(r, NOCHE, 0.5f)
-        return r
-    }
-
-    /**
-     * El color del lugar (la piedra, la losa, el piso, las raíces y el vidrio de la base): en modo oscuro, la base en su
-     * penumbra verdosa; de noche, además, el verde casi negro de la madrugada.
-     */
-    private fun lugar(c: Color, oscuro: Boolean, noche: Boolean): Color {
-        var r = c
-        if (oscuro) r = mezcla(r, PENUMBRA, 0.6f)
-        if (noche) r = mezcla(r, MADRUGADA, 0.5f)
         return r
     }
 
@@ -194,22 +173,6 @@ object EstanteFrente : DisenoBiblioteca {
     private fun DrawScope.afin(a: Float, b: Float, c: Float, d: Float, tx: Float, ty: Float, bloque: DrawScope.() -> Unit) {
         withTransform({ transform(Matrix(floatArrayOf(a, b, 0f, 0f, c, d, 0f, 0f, 0f, 0f, 1f, 0f, tx, ty, 0f, 1f))) }) { bloque() }
     }
-
-    /**
-     * Una tapa que se levanta sobre la bisagra de atrás (en [y0], arriba de la tapa cerrada, de alto [alto]), vista desde
-     * delante y un poco desde arriba: con [angulo] (radianes) el canto libre sube; [alza] es cuánto más se ve lo vertical que lo
-     * hondo. Mientras se ve por fuera dibuja [fuera] en las coordenadas de la tapa cerrada; cuando ya pasó, [dentro] en esas
-     * mismas coordenadas, con el canto libre arriba. El número que reciben (0 a 1) es cuánto se ve de canto, para oscurecerla.
-     */
-    private fun DrawScope.levantar(y0: Float, alto: Float, angulo: Float, alza: Float, fuera: DrawScope.(Float) -> Unit, dentro: DrawScope.(Float) -> Unit) {
-        val s = cos(angulo) - alza * sin(angulo)
-        val canto = (1f - abs(s) / maxOf(1f, alza)).coerceIn(0f, 1f)
-        if (s >= 0f) afin(1f, 0f, 0f, s, 0f, y0 - y0 * s) { fuera(canto) }
-        else afin(1f, 0f, 0f, -s, 0f, y0 + s * alto + y0 * s) { dentro(canto) }
-    }
-
-    /** El grosor del cartucho según sus bloques: crece rápido con los primeros y luego despacio, de 3 a 20 dp. */
-    private fun grosor(hojas: Int, u: Float): Float = (3f + 1.25f * sqrt(hojas.coerceAtLeast(0).toFloat())).coerceAtMost(20f) * u
 
     /** La pestaña [k] de las cinco: exactamente una quinta parte del ancho [w] (ahí se toca). */
     private fun quinta(k: Int, w: Float, arriba: Float, abajo: Float): Rect = Rect(w * k / 5f, arriba, w * (k + 1) / 5f, abajo)
@@ -267,22 +230,6 @@ object EstanteFrente : DisenoBiblioteca {
         drawLine(mango, c, punta, alto * 0.13f, StrokeCap.Round)
         drawCircle(mango, alto * 0.11f, punta)
         drawCircle(Color.White.copy(alpha = 0.25f), alto * 0.04f, Offset(punta.x - alto * 0.03f, punta.y - alto * 0.03f))
-    }
-
-    /** Una perilla de baquelita con su falda de cromo estriada y la raya que marca hacia dónde está ([giro], en grados). */
-    private fun DrawScope.perilla(c: Offset, r: Float, giro: Float, falda: Color, mango: Color) {
-        val u = density
-        drawCircle(Color.Black.copy(alpha = 0.3f), r * 1.3f, Offset(c.x + 0.8f * u, c.y + 1.2f * u))
-        drawCircle(falda, r * 1.3f, c)
-        for (k in 0 until 24) {
-            val a = k * PI.toFloat() / 12f
-            drawLine(mezcla(falda, Color.Black, 0.3f), Offset(c.x + cos(a) * r * 1.06f, c.y + sin(a) * r * 1.06f), Offset(c.x + cos(a) * r * 1.27f, c.y + sin(a) * r * 1.27f), 0.5f * u)
-        }
-        drawCircle(mango, r, c)
-        drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.24f), Color.Transparent), Offset(c.x - r * 0.3f, c.y - r * 0.35f), r), r, c)
-        val a = Math.toRadians(giro.toDouble())
-        drawLine(mezcla(falda, Color.White, 0.4f), Offset(c.x + cos(a).toFloat() * r * 0.25f, c.y + sin(a).toFloat() * r * 0.25f),
-            Offset(c.x + cos(a).toFloat() * r * 0.86f, c.y + sin(a).toFloat() * r * 0.86f), maxOf(0.8f * u, r * 0.14f), StrokeCap.Round)
     }
 
     /** La rejilla de un altavoz: el marco redondeado y sus ranuras horizontales. */
@@ -507,46 +454,6 @@ object EstanteFrente : DisenoBiblioteca {
         }
     }
 
-    /**
-     * Los cascos del radiooperador: el arco de la diadema y las dos copas de baquelita con su almohadilla, y el cable rizado
-     * que sale de la copa izquierda y baja hasta [fin]. [c] es el centro de la diadema y [r] su radio.
-     */
-    private fun DrawScope.cascos(c: Offset, r: Float, fin: Offset, baquelita: Color, cromo: Color) {
-        val u = density
-        // El cable rizado: una espiral aplastada a lo largo de la recta hasta [fin].
-        val inicio = Offset(c.x - r * 0.95f, c.y + r * 0.55f)
-        val dx = fin.x - inicio.x; val dy = fin.y - inicio.y
-        val largo = sqrt(dx * dx + dy * dy).coerceAtLeast(1f)
-        val ex = dx / largo; val ey = dy / largo
-        val vueltas = (largo / (3.2f * u)).toInt().coerceIn(6, 120)
-        val cable = Path().apply {
-            moveTo(inicio.x, inicio.y)
-            for (i in 1..vueltas * 6) {
-                val f = i / (vueltas * 6f)
-                val ang = f * vueltas * 2f * PI.toFloat()
-                val amp = 2.2f * u
-                val x = inicio.x + dx * f - ey * sin(ang) * amp + ex * cos(ang) * amp * 0.6f
-                val y = inicio.y + dy * f + ex * sin(ang) * amp + ey * cos(ang) * amp * 0.6f
-                lineTo(x, y)
-            }
-        }
-        drawPath(cable, Color.Black.copy(alpha = 0.3f), style = Stroke(1.4f * u))
-        drawPath(cable, baquelita, style = Stroke(0.9f * u))
-        // La diadema y sus dos barras de cromo.
-        drawArc(Color.Black.copy(alpha = 0.3f), 180f, 180f, false, Offset(c.x - r + 0.8f * u, c.y - r + 1.2f * u), Size(r * 2, r * 2), style = Stroke(r * 0.16f, cap = StrokeCap.Round))
-        drawArc(baquelita, 180f, 180f, false, Offset(c.x - r, c.y - r), Size(r * 2, r * 2), style = Stroke(r * 0.16f, cap = StrokeCap.Round))
-        drawArc(Color.White.copy(alpha = 0.2f), 200f, 60f, false, Offset(c.x - r, c.y - r), Size(r * 2, r * 2), style = Stroke(r * 0.04f))
-        listOf(-1f, 1f).forEach { s ->
-            val x = c.x + s * r
-            drawLine(cromo, Offset(x, c.y), Offset(x, c.y + r * 0.3f), r * 0.07f)
-            val copa = Rect(x - r * 0.24f, c.y + r * 0.22f, x + r * 0.24f, c.y + r * 0.92f)
-            drawRoundRect(Color.Black.copy(alpha = 0.3f), copa.topLeft + Offset(0.8f * u, 1.2f * u), copa.size, CornerRadius(r * 0.22f))
-            drawRoundRect(baquelita, copa.topLeft, copa.size, CornerRadius(r * 0.22f))
-            drawRoundRect(Color.White.copy(alpha = 0.16f), Offset(copa.left + r * 0.06f, copa.top + r * 0.06f), Size(copa.width * 0.3f, copa.height * 0.7f), CornerRadius(r * 0.1f))
-            drawCircle(cromo, r * 0.07f, copa.center)
-        }
-    }
-
     /** El borde de la consola en penumbra: el velo parejo y, desde [luz], el círculo donde se lee, entibiado con [tinte]. */
     private fun DrawScope.penumbra(luz: Offset, tinte: Color, velo: Float, orilla: Float) {
         val radio = maxOf(size.width, size.height) * 0.85f
@@ -554,75 +461,6 @@ object EstanteFrente : DisenoBiblioteca {
         drawRect(Brush.radialGradient(0f to Color.Transparent, 0.42f to Color.Black.copy(alpha = 0.05f), 0.76f to Color.Black.copy(alpha = orilla * 0.6f),
             1f to Color.Black.copy(alpha = orilla), center = luz, radius = radio))
         drawRect(Brush.radialGradient(listOf(tinte.copy(alpha = 0.1f), Color.Transparent), center = luz, radius = radio * 0.55f))
-    }
-
-    /** El brillo de las raíces: cálido, de las lámparas, de día; de noche, el filo verde que les deja el vidrio. */
-    private fun raizLuz(oscuro: Boolean, noche: Boolean): Color =
-        if (oscuro || noche) VIDRIO_TRAZO.copy(alpha = if (noche) 0.16f else 0.12f) else Color(0xFFC9BC94).copy(alpha = 0.32f)
-
-    /**
-     * Una consola oscura en [r]: el cuerpo de verde casi negro, más claro arriba donde le da la luz, con su sombra en el muro,
-     * el filo de luz del canto, la mugre de los años y el contorno.
-     */
-    private fun DrawScope.consolaOscura(r: Rect, radio: Float, oscuro: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, false)
-        sombraSuave(r, radio, 5 * u, if (oscuro) 0.45f else 0.3f)
-        drawRoundRect(Brush.verticalGradient(listOf(c(CONSOLA_LUZ), c(CONSOLA), c(mezcla(CONSOLA, Color.Black, 0.3f))), r.top, r.bottom), r.topLeft, r.size, CornerRadius(radio))
-        drawLine(Color.White.copy(alpha = if (oscuro) 0.07f else 0.22f), Offset(r.left + radio, r.top + 0.8f * u), Offset(r.right - radio, r.top + 0.8f * u), 0.7f * u)
-        for (k in 0 until 4) {
-            val x = r.left + r.width * azar(r.left.toInt(), k)
-            drawLine(Color.White.copy(alpha = if (oscuro) 0.02f else 0.05f), Offset(x, r.top + r.height * 0.15f), Offset(x + 0.4f * u, r.top + r.height * (0.3f + 0.4f * azar(r.top.toInt(), k))), (1 + 2 * azar(7, k)) * u, StrokeCap.Round)
-        }
-        drawRoundRect(Color.Black.copy(alpha = 0.55f), r.topLeft, r.size, CornerRadius(radio), style = Stroke(0.6f * u))
-    }
-
-    /**
-     * La carta estelar grabada en un panel de vidrio de la base, en [r]: el riel oscuro de arriba con el rótulo grabado, el
-     * vidrio iluminado por el canto con sus trazos, sus estrellas, los mundos unidos por la ruta de salto y el blanco marcado
-     * en rojo; abajo, el pie oscuro. En la penumbra, el vidrio alumbra la piedra de alrededor.
-     */
-    private fun DrawScope.cartaVidrio(r: Rect, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, false)
-        val riel = Rect(r.left - 2 * u, r.top, r.right + 2 * u, r.top + 9 * u)
-        val pie = Rect(r.left - 3 * u, r.bottom - 6 * u, r.right + 3 * u, r.bottom)
-        val v = Rect(r.left, riel.bottom, r.right, pie.top)
-        if (oscuro) mancha(v.center, v.width * 0.85f, VIDRIO_TRAZO.copy(alpha = 0.1f))
-        drawRect(Color.Black.copy(alpha = 0.25f), v.topLeft + Offset(1.6f * u, 2 * u), v.size)
-        drawRect(if (oscuro) mezcla(VIDRIO, PENUMBRA, 0.2f) else mezcla(HUESO_OSC, VIDRIO_LUZ, 0.28f), v.topLeft, v.size)
-        val trazo = if (oscuro) VIDRIO_TRAZO else mezcla(VIDRIO_LUZ, VIDRIO_TRAZO, 0.3f)
-        clipRect(v.left, v.top, v.right, v.bottom) {
-            drawRect(Brush.verticalGradient(listOf(Color.Transparent, VIDRIO_TRAZO.copy(alpha = if (oscuro) 0.2f else 0.25f)), v.bottom - v.height * 0.5f, v.bottom),
-                Offset(v.left, v.bottom - v.height * 0.5f), Size(v.width, v.height * 0.5f))
-            with(TrazosFrente) { trazosVidrio(v, trazo, 0.5f * u, if (oscuro) 0.28f else 0.3f, 23, 0) }
-            for (k in 0 until 34) drawCircle(trazo.copy(alpha = 0.35f + 0.5f * azar(17, k)), (0.4f + 0.6f * azar(19, k)) * u,
-                Offset(v.left + v.width * azar(23, k), v.top + v.height * azar(29, k)))
-            val mundos = (0 until 5).map { k -> Offset(v.left + v.width * (0.12f + 0.19f * k), v.top + v.height * (0.25f + 0.55f * azar(31, k))) }
-            with(TrazosFrente) {
-                rutaSalto(mundos, trazo.copy(alpha = 0.3f), 2.6f * u, 3.2f * u)
-                rutaSalto(mundos, if (oscuro) VIDRIO_TRAZO else mezcla(VIDRIO_LUZ, Color.Black, 0.1f), 1.1f * u, 3.2f * u)
-            }
-            mundos.forEach { o -> drawCircle(if (oscuro) VIDRIO_TRAZO else mezcla(VIDRIO_LUZ, Color.Black, 0.1f), 1.3f * u, o) }
-            val blanco = mundos.last()
-            drawCircle(PILOTO_ROJO.copy(alpha = if (oscuro) 0.25f else 0.15f), 7 * u, blanco)
-            drawCircle(PILOTO_ROJO, 6 * u, blanco, style = Stroke(1f * u))
-            listOf(0.1f to 0.06f, 0.2f to 0.03f).forEach { (fr, a) ->
-                drawLine(Color.White.copy(alpha = if (oscuro) a * 0.6f else a * 2.2f), Offset(v.left + v.width * fr, v.bottom), Offset(v.left + v.width * (fr + 0.3f), v.top), v.width * 0.05f)
-            }
-        }
-        drawRect(VIDRIO_TRAZO.copy(alpha = if (oscuro) 0.5f else 0.45f), v.topLeft, v.size, style = Stroke(0.5f * u))
-        drawLine(VIDRIO_TRAZO.copy(alpha = if (oscuro) 0.85f else 0.65f), Offset(v.left, v.bottom - 0.4f * u), Offset(v.right, v.bottom - 0.4f * u), 0.9f * u)
-        // El riel de arriba, con el rótulo grabado, y el pie oscuro.
-        drawRoundRect(Color.Black.copy(alpha = 0.3f), riel.topLeft + Offset(0.6f * u, 1.2f * u), riel.size, CornerRadius(2 * u))
-        drawRoundRect(Brush.verticalGradient(listOf(c(CONSOLA_LUZ), c(CONSOLA)), riel.top, riel.bottom), riel.topLeft, riel.size, CornerRadius(2 * u))
-        textoEn(medidor, "CARTA ESTELAR · SECTOR 9", riel.deflate(1 * u), MONO, if (oscuro) mezcla(VIDRIO_TRAZO, PENUMBRA, 0.15f) else mezcla(VIDRIO_TRAZO, HUESO, 0.4f), 6f, espaciado = 0.6f, minimo = 3.5f)
-        drawRect(Brush.verticalGradient(listOf(c(CONSOLA_LUZ), c(CONSOLA)), pie.top, pie.bottom), pie.topLeft, pie.size)
-        drawLine(Color.White.copy(alpha = if (oscuro) 0.06f else 0.2f), Offset(pie.left, pie.top + 0.5f * u), Offset(pie.right, pie.top + 0.5f * u), 0.5f * u)
-        val rej = Rect(pie.center.x - pie.width * 0.14f, pie.top + 1.6f * u, pie.center.x + pie.width * 0.14f, pie.bottom - 1.4f * u)
-        drawRect(c(CROMO).copy(alpha = 0.7f), rej.topLeft, rej.size)
-        var x = rej.left + 1 * u
-        while (x < rej.right - 0.6f * u) { drawLine(Color.Black.copy(alpha = 0.6f), Offset(x, rej.top + 0.5f * u), Offset(x, rej.bottom - 0.5f * u), 0.5f * u); x += 1.6f * u }
     }
 
     /** La trama de la lona: hilos finos a lo largo y a lo ancho dentro de [r]. */
@@ -970,330 +808,21 @@ object EstanteFrente : DisenoBiblioteca {
     override fun tintaBoton(p: Pagina, oscuro: Boolean, noche: Boolean): Color = Color(0xFF2A1600)
 
     // =================================================================
-    //  La libreta de momentos: el cartucho de datos en la consola
+    //  La libreta de momentos: el cartucho de datos en la grabadora
     // =================================================================
 
     override val altoLibreta: Dp = 268.dp
 
-    /** El ángulo de la tapa del cartucho según cuánto se ha abierto: rápido al principio, para que a media apertura ya se vea por dentro. */
-    private fun giro(abierto: Float): Float = 0.92f * PI.toFloat() * Math.pow(abierto.coerceIn(0f, 1f).toDouble(), 0.7).toFloat()
-
-    /** Un reloj de pared de la sala, con su aro de cromo, sus marcas y sus manecillas en [hora] (0 a 12, con fracción). */
-    private fun DrawScope.reloj(o: Offset, r: Float, hora: Float, esfera: Color, aro: Color, tinta: Color) {
-        val u = density
-        drawCircle(Color.Black.copy(alpha = 0.3f), r * 1.2f, Offset(o.x + 0.8f * u, o.y + 1.2f * u))
-        drawCircle(aro, r * 1.18f, o)
-        drawCircle(esfera, r, o)
-        for (k in 0 until 12) {
-            val a = k * PI.toFloat() / 6f
-            drawLine(tinta.copy(alpha = 0.7f), Offset(o.x + cos(a) * r * (if (k % 3 == 0) 0.7f else 0.8f), o.y + sin(a) * r * (if (k % 3 == 0) 0.7f else 0.8f)), Offset(o.x + cos(a) * r * 0.92f, o.y + sin(a) * r * 0.92f), 0.7f * u)
-        }
-        val ah = (hora / 12f * 2f * PI.toFloat()) - PI.toFloat() / 2f
-        val am = ((hora % 1f) * 2f * PI.toFloat()) - PI.toFloat() / 2f
-        drawLine(tinta, o, Offset(o.x + cos(ah) * r * 0.5f, o.y + sin(ah) * r * 0.5f), 1.4f * u, StrokeCap.Round)
-        drawLine(tinta, o, Offset(o.x + cos(am) * r * 0.78f, o.y + sin(am) * r * 0.78f), 0.9f * u, StrokeCap.Round)
-        drawCircle(PILOTO_ROJO, 1.2f * u, o)
-        drawArc(Color.White.copy(alpha = 0.25f), 200f, 60f, false, Offset(o.x - r * 0.85f, o.y - r * 0.85f), Size(r * 1.7f, r * 1.7f), style = Stroke(0.8f * u))
-    }
-
     /**
-     * El puesto de radar de la base escondida en ruinas, de noche o de día. Contra el muro de sillares, bajo la losa con su tubo
-     * de cobre y las raíces que cuelgan: la torre de consola oscura con la pantalla redonda de radar y su fila de botones
-     * cuadrados, la consola oscura de los dos relojes (el de la capital y el de aquí) con su botonera, la carta estelar grabada
-     * en un panel de vidrio iluminado por el canto, con sus mundos, la ruta de salto y el blanco, y los cascos colgados de su
-     * gancho. Abajo, el panel de la consola oscura con sus palancas, sus pilotos, la frecuencia en segmentos y la perilla; sobre
-     * la mesa de la consola blanca curva, la lámpara de cúpula, la libreta de claves de un solo uso con su lápiz,
-     * los cartuchos de repuesto (más cuantos más bloques) y el cartucho de la célula: baquelita negra, la muesca de lectura,
-     * la pestaña ámbar contra escritura, las estrías, la placa de cromo y la etiqueta hueso rotulada «CARTUCHO K-7» con la
-     * cuenta. Engorda con los bloques. Al abrirse, la tapa se levanta sobre la bisagra de atrás y deja ver los dos carretes,
-     * la cinta (más cuanto más bloques) que corre por delante y la tarjeta del índice. El frente de la mesa son molduras
-     * redondas, como un mostrador anillado, con la franja de peligro al pie. En oscuro, la base se hunde en su penumbra
-     * verdosa y quedan el verde del radar y del vidrio, la lámpara y el ámbar de los pilotos sobre la mesa.
+     * El puesto de grabación de la célula, en la misma sala del Ideario y del estante: el cartucho de datos de pie en la ranura
+     * de la grabadora, sobre el pupitre de chapa hueso, con el flexo y el osciloscopio ([MuebleLibretaFrente]).
      */
-    override fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, false)
-        // Lo que queda lejos de los pilotos: en oscuro, se hunde de verdad.
-        fun f(x: Color) = if (oscuro) mezcla(c(x), Color(0xFF07090A), 0.5f) else c(x)
-        val a = e.abierto.coerceIn(0f, 1f)
-        val hoja = papel(oscuro, false)
-        val tinta = PIZARRA
-        val fondoY = h * 0.42f
-        val panelY = h * 0.52f
-        val frenteY = h * 0.85f
-        // ---- El muro de sillares de las ruinas, bajo la losa del techo, con el tubo de cobre y la sombra de la losa.
-        // Lo del lugar se hunde en la penumbra verdosa de la base; en oscuro, más lejos de los pilotos, todavía más.
-        fun l(x: Color) = if (oscuro) mezcla(lugar(x, true, false), MADRUGADA, 0.3f) else x
-        val losa = h * 0.045f
-        with(TrazosFrente) {
-            muroSillares(Rect(0f, losa, w, fondoY), 14 * u, l(mezcla(PIEDRA, HUESO_OSC, 0.2f)), l(PIEDRA_SOMBRA), HUMEDAD.copy(alpha = if (oscuro) 0.6f else 0.45f), l(MUSGO),
-                e.semilla + 5, if (oscuro) 0.35f else 0.9f)
-        }
-        drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.3f), Color.Transparent), losa, losa + 16 * u), Offset(0f, losa), Size(w, 16 * u))
-        drawRect(Brush.verticalGradient(listOf(l(mezcla(LOSA, Color.Black, 0.3f)), l(mezcla(LOSA, Color.Black, 0.1f))), 0f, losa), Offset.Zero, Size(w, losa))
-        for (k in 0 until 6) drawOval(l(HUMEDAD).copy(alpha = 0.3f), Offset(w * azar(e.semilla + 91, k), losa * azar(e.semilla + 92, k) * 0.6f),
-            Size((8 + 20 * azar(e.semilla + 93, k)) * u, (1.4f + 2f * azar(e.semilla + 94, k)) * u))
-        drawLine(Color.Black.copy(alpha = 0.45f), Offset(0f, losa), Offset(w, losa), 1 * u)
-        with(TrazosFrente) { tubo(Offset(-2 * u, losa + 2.6f * u), Offset(w + 2 * u, losa + 2.6f * u), 3.4f * u, l(COBRE), if (oscuro) 0.25f else 1f, juntas = 70 * u) }
-        listOf(0.285f, 0.535f, 0.9f).forEach { fx ->
-            val a = Rect(w * fx - 1.1f * u, losa, w * fx + 1.1f * u, losa + 5.4f * u)
-            drawRect(l(CONSOLA), a.topLeft, a.size)
-        }
-        // La torre de consola oscura con la pantalla de radar, y su fila de botones al pie.
-        val torre = Rect(w * 0.03f, losa + 6 * u, w * 0.27f, fondoY + 2 * u)
-        consolaOscura(torre, 6 * u, oscuro)
-        val rc = Offset(torre.center.x, h * 0.215f)
-        radar(rc, h * 0.1f, 300f, f(HUESO), e.semilla, if (oscuro) 1.7f else 1f)
-        for (k in 0 until 5) with(TrazosFrente) {
-            val col = listOf(PILOTO, VIDRIO_TRAZO, PANEL, PILOTO_ROJO, PILOTO)[k]
-            botonCuadrado(Offset(torre.left + torre.width * (0.2f + 0.15f * k), fondoY - 6 * u), 3.4f * u, if (oscuro) col else mezcla(col, Color.White, 0.1f), k != 2, CONSOLA, if (oscuro) 1f else 0f)
-        }
-        // La consola oscura de los dos relojes (la hora de la capital y la de aquí), con su botonera debajo.
-        val tablero = Rect(w * 0.295f, h * 0.075f, w * 0.51f, h * 0.38f)
-        consolaOscura(tablero, 5 * u, oscuro)
-        listOf(tablero.left + 4 * u, tablero.right - 4 * u).forEach { x -> listOf(tablero.top + 4 * u, tablero.bottom - 4 * u).forEach { y -> tornillo(Offset(x, y), 1.1f * u, f(CROMO)) } }
-        val capital = 12f * azar(e.semilla, 5)
-        listOf(Triple(w * 0.345f, "CAPITAL", 0f), Triple(w * 0.46f, "AQUÍ", 5f)).forEach { (x, nombre, desfase) ->
-            val o = Offset(x, h * 0.15f)
-            reloj(o, 12 * u, (capital + desfase) % 12f, c(PANEL), c(CROMO), c(PIZARRA))
-            val pl = Rect(x - 16 * u, o.y + 17 * u, x + 16 * u, o.y + 25 * u)
-            drawRoundRect(Color.Black.copy(alpha = 0.5f), pl.topLeft, pl.size, CornerRadius(1.5f * u))
-            textoEn(medidor, nombre, pl, MONO, c(HUESO), 6f, espaciado = 0.6f, minimo = 3.5f)
-        }
-        for (fila in 0 until 2) for (k in 0 until 6) with(TrazosFrente) {
-            val col = listOf(PILOTO, VIDRIO_TRAZO, PANEL, PILOTO, PILOTO_ROJO, VIDRIO_TRAZO)[(k + fila * 3) % 6]
-            botonCuadrado(Offset(tablero.left + tablero.width * (0.17f + 0.132f * k), tablero.bottom - (11 - fila * 5.4f) * u), 3.4f * u,
-                if (oscuro) col else mezcla(col, Color.White, 0.1f), azar(e.semilla + fila, k + 20) > 0.3f, CONSOLA, if (oscuro) 1f else 0f)
-        }
-        // La carta estelar grabada en un panel de vidrio, iluminado por el canto: los mundos, la ruta de salto y el blanco.
-        cartaVidrio(Rect(w * 0.55f, h * 0.075f, w * 0.88f, h * 0.38f), medidor, oscuro)
-        // Las raíces que cuelgan de la losa por delante del muro y de los tableros.
-        with(TrazosFrente) {
-            listOf(Triple(0.015f, 0.66f, 2.2f), Triple(0.05f, 0.3f, 1.3f), Triple(0.24f, 0.22f, 1.2f), Triple(0.28f, 0.46f, 1.8f), Triple(0.525f, 0.8f, 2.4f), Triple(0.545f, 0.34f, 1.3f), Triple(0.985f, 0.55f, 2f)).forEachIndexed { k, (fx, fl, g) ->
-                raiz(Offset(w * fx, losa - 1 * u), fondoY * fl, g * u, l(RAIZ), raizLuz(oscuro, false), e.semilla * 3 + k, sombra = 0.35f)
-            }
-        }
-        // Los cascos, colgados de su gancho; el cable baja hasta la consola.
-        val gancho = Offset(w * 0.935f, h * 0.1f)
-        drawLine(f(CROMO), Offset(gancho.x, gancho.y - 4 * u), gancho, 1.8f * u, StrokeCap.Round)
-        cascos(Offset(gancho.x, gancho.y + 12 * u), 11 * u, Offset(w * 0.9f, fondoY), f(BAQUELITA), f(CROMO))
+    override fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleLibretaFrente) { libreta(e, medidor, oscuro) }
 
-        // ---- El panel alto de la consola oscura, con sus palancas, sus pilotos, la frecuencia y la perilla.
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(0f, fondoY - 3 * u), Size(w, 3 * u))
-        drawRect(Brush.verticalGradient(listOf(c(CONSOLA_LUZ), c(CONSOLA), c(mezcla(CONSOLA, Color.Black, 0.3f))), fondoY, panelY), Offset(0f, fondoY), Size(w, panelY - fondoY))
-        drawLine(Color.White.copy(alpha = if (oscuro) 0.06f else 0.2f), Offset(0f, fondoY + 1 * u), Offset(w, fondoY + 1 * u), 1f * u)
-        drawLine(Color.Black.copy(alpha = 0.6f), Offset(0f, panelY), Offset(w, panelY), 1.2f * u)
-        val my = (fondoY + panelY) / 2f
-        perilla(Offset(w * 0.05f, my), (panelY - fondoY) * 0.3f, 30f, c(CROMO), c(BAQUELITA))
-        val frec = Rect(w * 0.42f, fondoY + (panelY - fondoY) * 0.2f, w * 0.58f, panelY - (panelY - fondoY) * 0.2f)
-        drawRoundRect(c(BAQUELITA), frec.inflate(1.4f * u).topLeft, frec.inflate(1.4f * u).size, CornerRadius(2.5f * u))
-        drawRoundRect(Color(0xFF1A1208), frec.topLeft, frec.size, CornerRadius(2 * u))
-        segmentos("148.30", frec.deflate(1.6f * u), PILOTO, PILOTO.copy(alpha = 0.08f), halo = oscuro)
-        listOf(0.12f, 0.18f, 0.24f, 0.3f, 0.36f, 0.64f, 0.7f, 0.76f, 0.82f, 0.88f, 0.94f).forEachIndexed { k, fx ->
-            val x = w * fx
-            if (k % 2 == 0) palanca(Offset(x, my), (panelY - fondoY) * 0.55f, azar(e.semilla, 50 + k) > 0.4f, c(CROMO), c(BAQUELITA))
-            else piloto(Offset(x, my), 2.2f * u, if (k == 5) RADAR else if (k == 7) PILOTO_ROJO else PILOTO, k != 3, c(CROMO), if (oscuro) 1.3f else 0.7f)
-        }
-
-        // ---- La mesa de la consola blanca curva, con la lámpara de cúpula al fondo, y su frente de molduras redondas, como
-        // un mostrador anillado; al pie, la franja de peligro del piso.
-        val cubierta = Path().apply { moveTo(w * 0.02f, panelY); lineTo(w * 0.98f, panelY); lineTo(w * 1.01f, frenteY); lineTo(-w * 0.01f, frenteY); close() }
-        drawRect(c(HUESO_OSC), Offset(0f, frenteY), Size(w, h - frenteY))
-        drawPath(cubierta, Brush.verticalGradient(listOf(c(HUESO_OSC), c(HUESO), c(PANEL)), panelY, frenteY))
-        val lampara = Offset(w * 0.885f, panelY + (frenteY - panelY) * 0.3f)
-        clipPath(cubierta) {
-            for (k in 0 until 30) {
-                val y = panelY + (frenteY - panelY) * azar(71, k)
-                val x = w * azar(73, k)
-                drawLine(Color.Black.copy(alpha = 0.04f + 0.04f * azar(79, k)), Offset(x, y), Offset(x + (10 + 30 * azar(83, k)) * u, y + 0.5f * u), 0.6f * u)
-            }
-            if (oscuro) mancha(Offset(w * 0.5f, frenteY - (frenteY - panelY) * 0.4f), w * 0.5f, PILOTO.copy(alpha = 0.16f))
-            mancha(Offset(lampara.x, lampara.y + 4 * u), w * 0.22f, Color(0xFFFFF4DE).copy(alpha = if (oscuro) 0.22f else 0.3f))
-        }
-        with(TrazosFrente) {
-            drawOval(Color.Black.copy(alpha = 0.25f), Offset(lampara.x - 7 * u, lampara.y - 1 * u), Size(16 * u, 3.4f * u))
-            lamparaCupula(Offset(lampara.x, lampara.y - 20 * u), 8 * u, 20 * u, c(PIZARRA), if (oscuro) mezcla(PANEL, PENUMBRA, 0.15f) else PANEL, if (oscuro) 1f else 0.55f)
-        }
-        val moldura = 5.2f * u
-        for (k in 0 until 3) {
-            val y = frenteY + k * moldura
-            drawRect(Brush.verticalGradient(listOf(c(PANEL), c(HUESO), c(mezcla(HUESO_OSC, BORDE, 0.6f))), y, y + moldura), Offset(0f, y), Size(w, moldura))
-            drawLine(Color.White.copy(alpha = if (oscuro) 0.1f else 0.55f), Offset(0f, y + 0.9f * u), Offset(w, y + 0.9f * u), 0.7f * u)
-            drawLine(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.28f), Offset(0f, y + moldura), Offset(w, y + moldura), 0.8f * u)
-        }
-        val bajo = frenteY + 3 * moldura
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(0f, bajo), Size(w, 2.5f * u))
-        listOf(0.18f, 0.5f, 0.82f).forEach { fx -> drawLine(Color.Black.copy(alpha = 0.18f), Offset(w * fx, bajo + 2.5f * u), Offset(w * fx, h), 0.6f * u) }
-        if (h - bajo > 10 * u) with(TrazosFrente) { franjaPeligro(Rect(0f, h - 5.5f * u, w, h - 1.5f * u), c(PELIGRO), c(BAQUELITA), 7 * u) }
-
-        // ---- La libreta de claves de un solo uso, con su lápiz.
-        val lc = Offset(w * 0.13f, frenteY - 30 * u)
-        rotate(-7f, lc) {
-            val lr = Rect(lc.x - 22 * u, lc.y - 20 * u, lc.x + 22 * u, lc.y + 18 * u)
-            drawRect(Color.Black.copy(alpha = 0.22f), lr.topLeft + Offset(1.5f * u, 2 * u), lr.size)
-            drawRect(hoja, lr.topLeft, lr.size)
-            drawRect(c(BAQUELITA), lr.topLeft, Size(lr.width, 5 * u))
-            for (j in 0 until 5) {
-                val y = lr.top + 10 * u + j * 6 * u
-                for (g in 0 until 3) drawLine(tinta.copy(alpha = if (j < 2) 0.18f else 0.45f), Offset(lr.left + 4 * u + g * 13 * u, y), Offset(lr.left + 14 * u + g * 13 * u, y), 1.1f * u,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.4f * u, 0.8f * u)))
-                if (j < 2) drawLine(c(AMBAR).copy(alpha = 0.6f), Offset(lr.left + 3 * u, y + 0.5f * u), Offset(lr.right - 3 * u, y - 0.5f * u), 0.7f * u)
-            }
-        }
-        rotate(18f, Offset(lc.x + 6 * u, lc.y + 4 * u)) {
-            val lx = lc.x - 18 * u; val ly = lc.y + 4 * u
-            drawRect(Color.Black.copy(alpha = 0.2f), Offset(lx + 1 * u, ly + 2 * u), Size(44 * u, 3.4f * u))
-            drawRect(c(Color(0xFF4F7A5A)), Offset(lx, ly), Size(38 * u, 3.4f * u))
-            drawRect(c(CROMO), Offset(lx - 3 * u, ly), Size(3 * u, 3.4f * u))
-            drawPath(Path().apply { moveTo(lx + 38 * u, ly); lineTo(lx + 45 * u, ly + 1.7f * u); lineTo(lx + 38 * u, ly + 3.4f * u); close() }, c(Color(0xFFE6CFA4)))
-            drawCircle(c(PIZARRA), 0.8f * u, Offset(lx + 44.4f * u, ly + 1.7f * u))
-        }
-
-        // ---- Los cartuchos de repuesto, apilados a la derecha (más cuantos más bloques).
-        val repuestos = if (e.hojas <= 0) 0 else (1 + e.hojas / 30).coerceAtMost(3)
-        for (k in 0 until repuestos) {
-            val rr = Rect(w * 0.79f, frenteY - 14 * u - (k + 1) * 9 * u, w * 0.95f, frenteY - 14 * u - k * 9 * u)
-            drawRect(Color.Black.copy(alpha = 0.25f), rr.topLeft + Offset(1 * u, 1.5f * u), rr.size)
-            drawRoundRect(c(BAQUELITA), rr.topLeft, rr.size, CornerRadius(2 * u))
-            drawRect(Color.White.copy(alpha = 0.1f), rr.topLeft, Size(rr.width, 1 * u))
-            drawRect(c(CROMO), Offset(rr.left, rr.bottom - 2.4f * u), Size(rr.width, 2.4f * u))
-            drawRect(hoja, Offset(rr.left + rr.width * 0.25f, rr.top + 1.6f * u), Size(rr.width * 0.5f, rr.height - 4.6f * u))
-            drawRect(PILOTO, Offset(rr.left + rr.width * 0.08f, rr.top + 2 * u), Size(rr.width * 0.1f, 2 * u))
-        }
-
-        // ---- El cartucho de la célula.
-        val g = grosor(e.hojas, u)
-        val ancho = w * 0.46f
-        val x0 = w * 0.27f; val x1 = x0 + ancho
-        val fy = frenteY - 10 * u
-        val hondo = h * 0.2f
-        val arriba = fy - hondo - g
-        val tapaY = fy - g
-        val cc = c(BAQUELITA)
-        val lleno = (e.hojas / 120f).coerceIn(0f, 1f)
-        sombraSuave(Rect(x0, arriba, x1, fy), 4 * u, 8 * u, if (oscuro) 0.42f else 0.3f)
-        // El canto de delante: la ventanilla de la cinta, las estrías y la placa de cromo del fondo.
-        drawRect(mezcla(cc, Color.Black, 0.2f), Offset(x0, tapaY), Size(ancho, g))
-        drawRect(Brush.verticalGradient(listOf(mezcla(c(CROMO), Color.White, 0.2f), c(CROMO), mezcla(c(CROMO), Color.Black, 0.3f)), fy - g * 0.4f, fy), Offset(x0, fy - g * 0.4f), Size(ancho, g * 0.4f))
-        val boca = Rect(x0 + ancho * 0.36f, tapaY + g * 0.12f, x1 - ancho * 0.36f, fy - g * 0.46f)
-        if (boca.height > 1f) {
-            drawRect(Color(0xFF0E0C0A), boca.topLeft, boca.size)
-            drawRect(c(Color(0xFF4A3424)), Offset(boca.left, boca.center.y - boca.height * 0.18f), Size(boca.width, boca.height * 0.36f))
-        }
-        listOf(x0 + 4 * u, x1 - 16 * u).forEach { sx ->
-            var x = sx
-            while (x < sx + 12 * u) { drawLine(Color.Black.copy(alpha = 0.5f), Offset(x, tapaY + 1 * u), Offset(x, fy - g * 0.42f), 0.8f * u); x += 2.2f * u }
-        }
-        // Lo de dentro, que se ve al levantar la tapa: la bandeja, los dos carretes con la cinta y la tarjeta del índice.
-        val angulo = giro(a)
-        if (a > 0.02f) {
-            val bandeja = Rect(x0, arriba, x1, tapaY)
-            drawRoundRect(mezcla(cc, Color.Black, 0.35f), bandeja.topLeft, bandeja.size, CornerRadius(5 * u))
-            val cy = bandeja.top + bandeja.height * 0.45f
-            val rx = ancho * 0.16f; val ry = bandeja.height * 0.32f
-            listOf(0.28f to (0.45f + 0.55f * (1f - lleno)), 0.72f to (0.45f + 0.55f * lleno)).forEach { (fx, carga) ->
-                val o = Offset(x0 + ancho * fx, cy)
-                drawOval(c(Color(0xFF4A3424)), Offset(o.x - rx * carga, o.y - ry * carga), Size(rx * 2 * carga, ry * 2 * carga))
-                drawOval(Color.Black.copy(alpha = 0.3f), Offset(o.x - rx * carga, o.y - ry * carga), Size(rx * 2 * carga, ry * 2 * carga), style = Stroke(0.6f * u))
-                drawOval(c(HUESO), Offset(o.x - rx * 0.32f, o.y - ry * 0.32f), Size(rx * 0.64f, ry * 0.64f))
-                for (j in 0 until 3) {
-                    val an = j * 2f * PI.toFloat() / 3f
-                    drawLine(c(BAQUELITA), o, Offset(o.x + cos(an) * rx * 0.3f, o.y + sin(an) * ry * 0.3f), 1f * u)
-                }
-            }
-            // La cinta que corre por delante, entre los rodillos.
-            val yc = bandeja.bottom - bandeja.height * 0.12f
-            drawLine(c(Color(0xFF4A3424)), Offset(x0 + ancho * 0.12f, yc), Offset(x1 - ancho * 0.12f, yc), 1.6f * u)
-            listOf(0.12f, 0.88f).forEach { fx -> drawCircle(c(CROMO), 2.4f * u, Offset(x0 + ancho * fx, yc)) }
-            drawCircle(c(CROMO), 3.2f * u, Offset(x0 + ancho * 0.5f, yc + 1 * u))
-            // La tarjeta del índice.
-            val ti = Rect(x0 + ancho * 0.4f, bandeja.top + bandeja.height * 0.12f, x0 + ancho * 0.6f, bandeja.top + bandeja.height * 0.4f)
-            drawRect(hoja, ti.topLeft, ti.size)
-            textoEn(medidor, "ÍNDICE", Rect(ti.left, ti.top, ti.right, ti.top + ti.height * 0.45f), MONO, tinta, 6f, minimo = 3.5f)
-            drawLine(tinta.copy(alpha = 0.4f), Offset(ti.left + 2 * u, ti.top + ti.height * 0.65f), Offset(ti.right - 2 * u, ti.top + ti.height * 0.65f), 0.6f * u)
-            drawLine(tinta.copy(alpha = 0.4f), Offset(ti.left + 2 * u, ti.top + ti.height * 0.85f), Offset(ti.right - 5 * u, ti.top + ti.height * 0.85f), 0.6f * u)
-        }
-        // La tapa, que se levanta sobre la bisagra de atrás.
-        levantar(arriba, tapaY - arriba, angulo, 1f, fuera = { sombra ->
-            val r = Rect(x0, arriba, x1, tapaY)
-            val forma = Path().apply { addRoundRect(RoundRect(r, CornerRadius(5 * u))) }
-            val muesca = Path().apply { addRect(Rect(x0 + ancho * 0.43f, arriba - 1f, x1 - ancho * 0.43f, arriba + r.height * 0.09f)) }
-            val carcasa = Path().apply { op(forma, muesca, PathOperation.Difference) }
-            drawPath(carcasa, Brush.verticalGradient(listOf(mezcla(cc, Color.White, 0.12f), cc, mezcla(cc, Color.Black, 0.15f)), r.top, r.bottom))
-            drawPath(carcasa, Color.Black.copy(alpha = 0.55f), style = Stroke(0.8f * u))
-            drawLine(Color.White.copy(alpha = 0.16f), Offset(r.left + 6 * u, r.bottom - 1 * u), Offset(r.right - 6 * u, r.bottom - 1 * u), 0.8f * u)
-            listOf(Offset(r.left + 6 * u, r.top + 6 * u), Offset(r.right - 6 * u, r.top + 6 * u), Offset(r.left + 6 * u, r.bottom - 6 * u), Offset(r.right - 6 * u, r.bottom - 6 * u)).forEach { o ->
-                tornillo(o, 1.8f * u, c(CROMO))
-            }
-            // Las estrías del agarre, a los dos lados.
-            listOf(r.left + 12 * u, r.right - 22 * u).forEach { sx ->
-                var x = sx
-                while (x < sx + 10 * u) { drawLine(Color.Black.copy(alpha = 0.5f), Offset(x, r.top + r.height * 0.25f), Offset(x, r.bottom - r.height * 0.25f), 0.8f * u); drawLine(Color.White.copy(alpha = 0.08f), Offset(x + 0.8f * u, r.top + r.height * 0.25f), Offset(x + 0.8f * u, r.bottom - r.height * 0.25f), 0.5f * u); x += 2.4f * u }
-            }
-            // La pestaña ámbar contra escritura, en su ranura.
-            val ra = Rect(r.left + ancho * 0.08f, r.top + r.height * 0.05f, r.left + ancho * 0.2f, r.top + r.height * 0.14f)
-            drawRoundRect(Color.Black.copy(alpha = 0.7f), ra.topLeft, ra.size, CornerRadius(1 * u))
-            drawRoundRect(PILOTO, Offset(ra.left + 0.8f * u, ra.top + 0.8f * u), Size(ra.width * 0.5f, ra.height - 1.6f * u), CornerRadius(0.8f * u))
-            // La flecha en relieve que dice por dónde entra.
-            val fl = Offset(r.right - ancho * 0.1f, r.top + r.height * 0.1f)
-            drawPath(Path().apply { moveTo(fl.x - 4 * u, fl.y - 3 * u); lineTo(fl.x + 3 * u, fl.y); lineTo(fl.x - 4 * u, fl.y + 3 * u); close() }, Color.White.copy(alpha = 0.14f))
-            // La etiqueta hueso rotulada.
-            val et = Rect(r.left + ancho * 0.17f, r.top + r.height * 0.19f, r.right - ancho * 0.17f, r.bottom - r.height * 0.12f)
-            drawRect(Color.Black.copy(alpha = 0.3f), et.topLeft + Offset(0.8f * u, 1.2f * u), et.size)
-            drawRect(hoja, et.topLeft, et.size)
-            val corte = et.top + et.height * 0.46f
-            emblema(Offset(et.left + 9 * u, et.top + et.height * 0.28f), 5f * u, c(AMBAR), 1f * u)
-            textoEn(medidor, "CARTUCHO K-7", Rect(et.left + 19 * u, et.top + 2 * u, et.right - 5 * u, corte - 1 * u), TITULO, tinta, 11f, espaciado = 0.8f, minimo = 5f)
-            drawLine(c(AMBAR), Offset(et.left + 4 * u, corte), Offset(et.right - 4 * u, corte), 1f * u)
-            textoEn(medidor, e.cuenta, Rect(et.left + 4 * u, corte + 1.5f * u, et.right - 4 * u, et.top + et.height * 0.76f), MONO, tinta.copy(alpha = 0.85f), 9f, minimo = 5f)
-            textoEn(medidor, e.nombre.uppercase(), Rect(et.left + 4 * u, et.top + et.height * 0.76f, et.right - 4 * u, et.bottom - 1.5f * u), MONO, c(TENUE), 6.5f, espaciado = 0.8f, minimo = 4f)
-            if (sombra > 0f) drawPath(carcasa, Color.Black.copy(alpha = 0.45f * sombra))
-        }, dentro = { sombra ->
-            // Por dentro: la baquelita con sus nervios y la almohadilla de fieltro que aprieta la cinta.
-            val r = Rect(x0, arriba, x1, tapaY)
-            drawRoundRect(mezcla(cc, Color.Black, 0.2f), r.topLeft, r.size, CornerRadius(5 * u))
-            for (k in 1 until 6) drawLine(Color.White.copy(alpha = 0.06f), Offset(r.left + ancho * k / 6f, r.top + 3 * u), Offset(r.left + ancho * k / 6f, r.bottom - 3 * u), 1.4f * u)
-            drawRect(c(Color(0xFF6B6660)), Offset(r.left + ancho * 0.38f, r.top + r.height * 0.1f), Size(ancho * 0.24f, r.height * 0.14f))
-            // La advertencia impresa por dentro de la tapa.
-            val av = Rect(r.left + ancho * 0.22f, r.top + r.height * 0.42f, r.right - ancho * 0.22f, r.top + r.height * 0.72f)
-            drawRect(c(Color(0xFFD8D0BE)), av.topLeft, av.size)
-            drawRect(c(AMBAR), av.topLeft, Size(av.width, av.height * 0.22f))
-            textoEn(medidor, "NO TOCAR LA CINTA", Rect(av.left + 3 * u, av.top + av.height * 0.26f, av.right - 3 * u, av.top + av.height * 0.62f), MONO, c(PIZARRA), 7f, espaciado = 0.6f, minimo = 3.5f)
-            textoEn(medidor, "LEJOS DE IMANES · SOLO CÉLULA K-7", Rect(av.left + 3 * u, av.top + av.height * 0.62f, av.right - 3 * u, av.bottom - 1 * u), MONO, c(TENUE), 5.5f, minimo = 3f)
-            if (sombra > 0f) drawRoundRect(Color.Black.copy(alpha = 0.4f * sombra), r.topLeft, r.size, CornerRadius(5 * u))
-        })
-    }
-
-    /**
-     * La pestaña de un día: un cartucho pequeño visto de frente, de baquelita, con su muesca; el piloto que se enciende del
-     * color del ánimo (apagado, si no hay), la letra de la semana grabada, la etiqueta hueso con el día y su franja ámbar, y
-     * las estrías de abajo.
-     */
-    override fun DrawScope.pestana(e: EstadoPestana, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, false)
-        val hoja = papel(oscuro, false)
-        val cc = c(BAQUELITA)
-        rotate(-1.5f + 3f * azar(e.semilla, 1), Offset(w / 2, h / 2)) {
-            val r = Rect(2 * u, 3 * u, w - 2 * u, h - 2 * u)
-            drawRoundRect(Color.Black.copy(alpha = 0.3f), r.topLeft + Offset(1 * u, 1.5f * u), r.size, CornerRadius(4 * u))
-            val forma = Path().apply { addRoundRect(RoundRect(r, CornerRadius(4 * u))) }
-            val muesca = Path().apply { addRect(Rect(w * 0.4f, 0f, w * 0.6f, 6.5f * u)) }
-            val carcasa = Path().apply { op(forma, muesca, PathOperation.Difference) }
-            drawPath(carcasa, Brush.horizontalGradient(listOf(mezcla(cc, Color.White, 0.14f), cc, mezcla(cc, Color.Black, 0.25f)), 0f, w))
-            drawPath(carcasa, Color.Black.copy(alpha = 0.5f), style = Stroke(0.7f * u))
-            if (e.tono != null) piloto(Offset(9 * u, 10.5f * u), 2f * u, e.tono, true, c(CROMO), 0.8f)
-            else piloto(Offset(9 * u, 10.5f * u), 2f * u, PILOTO, false, c(CROMO))
-            textoEn(medidor, e.semana.uppercase(), Rect(w * 0.5f, 6.5f * u, w - 4 * u, 14.5f * u), MONO, mezcla(HUESO, cc, 0.15f), 7.5f, minimo = 4.5f)
-            val et = Rect(5 * u, 17 * u, w - 5 * u, h - 12 * u)
-            drawRect(hoja, et.topLeft, et.size)
-            drawRect(ambar(oscuro, false), et.topLeft, Size(et.width, 3.2f * u))
-            textoEn(medidor, e.dia, Rect(et.left, et.top + 3.2f * u, et.right, et.bottom), MONO, PIZARRA, 16f, peso = FontWeight.Medium, minimo = 8f)
-            for (j in 0 until 3) drawLine(Color.Black.copy(alpha = 0.55f), Offset(8 * u, h - 9 * u + j * 2 * u), Offset(w - 8 * u, h - 9 * u + j * 2 * u), 0.8f * u)
-        }
-    }
+    /** Cada día, un cartucho chico de aluminio con la pestaña del color del ánimo ([IndiceLibretaFrente]). */
+    override fun DrawScope.pestana(e: EstadoPestana, medidor: TextMeasurer, oscuro: Boolean) =
+        with(IndiceLibretaFrente) { pestana(e, medidor, oscuro) }
 
     /** El rótulo de un ciclo: la tira de la consola con sus dos pilotos y la placa de baquelita grabada entre dos cruces de la retícula. */
     override fun DrawScope.rotuloMes(texto: String, medidor: TextMeasurer, oscuro: Boolean) {
