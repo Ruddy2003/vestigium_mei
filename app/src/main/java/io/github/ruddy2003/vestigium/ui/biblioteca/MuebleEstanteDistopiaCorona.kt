@@ -219,6 +219,16 @@ internal object CoronaEstanteDistopia {
                 saltadoDistopia(P(x, y), S(0.003f + 0.004f * azar(6421, j)), 6422 + j, ls.c(mezcla(P.HIERRO, P.ACERO, 0.3f)), ls.b(0.5f))
             }
         }
+        // De noche, el filo frío de la luz floja del sótano en los cantos de la izquierda y de arriba (lejos del flexo), para que la
+        // máquina no se pierda en lo oscuro.
+        if (g.a.oscuro) {
+            val frio = P.FRIO.copy(alpha = if (g.a.noche) 0.32f else 0.42f)
+            val cuerpoF = poligonoDistopia(listOf(P(0.19f, pie - 0.006f), P(0.522f, pie - 0.006f), P(0.515f, 0.43f), P(0.47f, 0.408f), P(0.25f, 0.408f), P(0.2f, 0.432f)))
+            drawPath(bordeDistopia(cuerpoF, 1.8f * u, 1.4f * u), frio)
+            drawPath(bordeDistopia(Path().apply { addOval(Rect(P(cx, cy), S(rt))) }, 1.8f * u, 1.4f * u), frio)
+            drawPath(bordeDistopia(poligonoDistopia(P(0.128f, 0.33f), P(0.142f, 0.318f), P(0.3f, 0.412f), P(0.284f, 0.424f)), 1.2f * u, 1.4f * u), frio)
+            drawPath(bordeDistopia(poligonoDistopia(P(0.142f, 0.306f), P(0.156f, 0.294f), P(0.28f, 0.372f), P(0.268f, 0.386f)), 1f * u, 1.2f * u), frio)
+        }
         // La manivela: el brazo desde el cubo y el pomo de madera, por delante de todo lo demás.
         val brazo0 = P(cx, cy); val brazo1 = P(0.432f, 0.31f)
         val lm = g.luz(brazo1, 0.06f)

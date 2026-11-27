@@ -42,8 +42,8 @@ internal object PieEstanteDistopia {
         suelo(g, piso)
         // De noche, el resplandor de la estufa en el suelo y en el zócalo.
         if (g.a.estufa > 0f) {
-            mancha(Offset(g.estufa.x, h - 0.02f * w), w * 0.46f, P.RESISTENCIA.copy(alpha = 0.3f * g.a.estufa))
-            mancha(Offset(g.estufa.x, piso), w * 0.28f, P.RESISTENCIA.copy(alpha = 0.18f * g.a.estufa))
+            mancha(Offset(g.estufa.x, h - 0.02f * w), w * 0.34f, P.RESISTENCIA.copy(alpha = 0.3f * g.a.estufa))
+            mancha(Offset(g.estufa.x, piso), w * 0.22f, P.RESISTENCIA.copy(alpha = 0.18f * g.a.estufa))
         }
         cajas(g)
         saco(g)

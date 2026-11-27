@@ -64,21 +64,25 @@ internal object ParedEstanteDistopia {
         drawRect(Brush.verticalGradient(listOf(g.a.sombra(if (g.a.oscuro) 0.5f else 0.32f), g.a.sombra(0f)), 0f, w * 0.1f), Offset.Zero, Size(w, w * 0.1f))
         // De día, el tubo aclara la pared cerca de su regleta.
         if (g.a.tubo) mancha(Offset(w * 0.1f, w * 0.13f), w * 0.42f, P.LUZ_TUBO.copy(alpha = 0.5f))
-        // De noche, el halo del flexo en la pared, encima de su pantalla (lo que se le escapa por detrás).
-        if (g.a.flexo > 0f) {
-            mancha(Offset(g.flexo.x - w * 0.06f, g.flexo.y - w * 0.06f), w * 0.5f, P.FLEXO.copy(alpha = 0.13f * g.a.flexo))
-            mancha(Offset(g.flexo.x + w * 0.02f, g.flexo.y - w * 0.04f), w * 0.22f, P.FLEXO.copy(alpha = 0.16f * g.a.flexo))
-        }
+        // De noche, el halo del flexo en la pared, encima de su pantalla (lo que se le escapa por detrás): corto.
+        if (g.a.flexo > 0f) mancha(Offset(g.flexo.x + w * 0.02f, g.flexo.y - w * 0.04f), w * 0.18f, P.FLEXO.copy(alpha = 0.14f * g.a.flexo))
         raya(g, yR)
-        humedad(g)
-        listOf(Triple(0.33f, 0.24f, 0.018f), Triple(0.55f, 0.08f, 0.012f), Triple(0.03f, 0.44f, 0.015f), Triple(0.94f, 0.27f, 0.014f),
-            Triple(0.69f, 0.42f, 0.012f), Triple(0.47f, 0.17f, 0.01f)).forEachIndexed { j, (x, y, r) -> desconchon(g, x, y, r, 6120 + j * 7) }
-        tuberia(g)
-        conducto(g)
-        tuboNeumatico(g)
-        regleta(g)
-        tablilla(g)
-        enchufe(g)
+        // Lo que está en la pared (la humedad, los desconchones) y lo que cuelga de ella, por dentro y por fuera de la reja del
+        // tragaluz (en los Sueños): así la luz lo pinta a su modo y la sombra que echan le corta el paso en la pared.
+        val zona = Rect(0f, 0f, w, ch)
+        conRejaTodo(g, 0f, zona) {
+            humedad(g)
+            listOf(Triple(0.33f, 0.24f, 0.018f), Triple(0.55f, 0.08f, 0.012f), Triple(0.03f, 0.44f, 0.015f), Triple(0.94f, 0.27f, 0.014f),
+                Triple(0.69f, 0.42f, 0.012f), Triple(0.47f, 0.31f, 0.01f)).forEachIndexed { j, (x, y, r) -> desconchon(g, x, y, r, 6120 + j * 7) }
+        }
+        conRejaTodo(g, 0.03f, zona) {
+            tuberia(g)
+            conducto(g)
+            tuboNeumatico(g)
+            regleta(g)
+            tablilla(g)
+            enchufe(g)
+        }
     }
 
     /** La raya: un filete oliva dado a mano, un poco ondulado; de noche, encendido donde lo toca el halo. */
@@ -165,7 +169,7 @@ internal object ParedEstanteDistopia {
         val metal = mezcla(P.CREMA, P.ACERO, 0.6f)
         fun tramo(a: Offset, b: Offset) {
             val l = g.luz((a.x + b.x) / 2, (a.y + b.y) / 2, 0.015f)
-            drawLine(l.s(0.3f), a + Offset(1.4f * u, 1.8f * u), b + Offset(1.4f * u, 1.8f * u), gr)
+            drawLine(l.s(0.3f), a + g.arrojada(0.28f), b + g.arrojada(0.28f), gr)
             drawLine(l.c(metal), a, b, gr)
             drawLine(l.b(0.45f), a - Offset(if (a.x == b.x) gr * 0.25f else 0f, if (a.y == b.y) gr * 0.25f else 0f), b - Offset(if (a.x == b.x) gr * 0.25f else 0f, if (a.y == b.y) gr * 0.25f else 0f), 0.8f * u)
         }
@@ -178,7 +182,7 @@ internal object ParedEstanteDistopia {
         // El de la lámpara de inspección, que baja por la izquierda hasta el costado.
         tramo(Offset(0.016f * w, y), Offset(0.016f * w, 0.17f * w))
         val l = g.luz(caja.center.x, caja.center.y, 0.02f)
-        drawRect(l.s(0.35f), caja.topLeft + Offset(2f * u, 2.4f * u), caja.size)
+        drawRect(l.s(0.35f), caja.topLeft + g.arrojada(0.4f), caja.size)
         drawRect(l.c(mezcla(P.ACERO, P.CREMA, 0.25f)), caja.topLeft, caja.size)
         drawRect(l.b(0.55f), caja.topLeft, Size(caja.width, 1.2f * u))
         drawRect(l.b(0.35f), caja.topLeft, Size(1.2f * u, caja.height))
@@ -193,57 +197,82 @@ internal object ParedEstanteDistopia {
     }
 
     /**
-     * La boca del correo neumático: el tubo de acero que baja del techo, sujeto a la pared con dos abrazaderas, la campana de
-     * llegada con su tapa abatible y, debajo, la cesta de alambre con una cápsula que acaba de llegar (la misma de las entradas).
+     * La boca del correo neumático: el tubo de acero que baja del techo sujeto con dos abrazaderas, su codo, el tramo corto que
+     * vuelve hacia la izquierda y la boca de recibo, cortada a bisel, con la trampilla abierta hacia arriba; de la boca sale, a medio
+     * camino, una cápsula (la misma de las entradas: los topes oscuros y el cuerpo de esmalte); debajo, la cesta de alambre.
      */
     private fun DrawScope.tuboNeumatico(g: MarcoDistopia) {
         val w = g.w; val u = density
-        val xt = 0.578f * w; val rt = 0.019f * w
-        val y1 = 0.168f * w
+        val xt = 0.6f * w; val rt = 0.018f * w
+        val yc = 0.15f * w
+        val rc = 0.036f * w
+        val yh = yc + rc
+        val xb = 0.528f * w
         val l = g.luz(xt, 0.1f * w, 0.03f)
         val acero = mezcla(P.ACERO_OSC, P.ACERO, 0.35f)
-        // La sombra en la pared (de día, a la derecha y abajo).
+        // La silueta para la sombra en la pared.
+        val codo = Path().apply {
+            moveTo(xt, yc)
+            arcTo(Rect(xt - 2 * rc, yc - rc, xt, yc + rc), 0f, 90f, false)
+        }
         val sombra = Path().apply {
-            addRect(Rect(xt - rt, -2f, xt + rt, y1))
-            addPath(poligonoDistopia(Offset(xt - rt, y1), Offset(xt + rt, y1), Offset(xt + rt * 1.7f, y1 + 0.03f * w), Offset(xt - rt * 1.7f, y1 + 0.03f * w)))
-            addRect(Rect(xt - 0.05f * w, 0.215f * w, xt + 0.05f * w, 0.295f * w))
+            addRect(Rect(xt - rt, -2f, xt + rt, yc))
+            addRect(Rect(xb, yh - rt, xt - rc, yh + rt))
+            addRect(Rect(0.448f * w, 0.232f * w, 0.548f * w, 0.298f * w))
         }
-        drawPath(corridoDistopia(sombra, if (g.a.oscuro) 0.004f * w else 0.014f * w, if (g.a.oscuro) 0.006f * w else 0.011f * w), g.a.sombra(if (g.a.oscuro) 0.4f else 0.24f))
-        // El tubo, con su volumen de cilindro.
-        val tubo = Path().apply { addRect(Rect(xt - rt, -2f, xt + rt, y1)) }
-        cilindroDistopia(tubo, l.c(acero), l, -1f, 0.5f)
-        // La campana de llegada: se abre hacia abajo y hacia delante; la boca, oscura, vista de sesgo.
-        val campana = poligonoDistopia(Offset(xt - rt, y1 - 1f), Offset(xt + rt, y1 - 1f), Offset(xt + rt * 1.75f, y1 + 0.028f * w), Offset(xt - rt * 1.75f, y1 + 0.028f * w))
-        val lc = g.luz(xt, y1 + 0.015f * w, 0.035f)
-        cilindroDistopia(campana, lc.c(acero), lc, -1f, 0.45f)
-        drawOval(lc.c(P.ACERO_LUZ), Offset(xt - rt * 1.85f, y1 + 0.022f * w), Size(rt * 3.7f, 0.014f * w))
-        drawOval(Color(0xFF0E1012), Offset(xt - rt * 1.6f, y1 + 0.024f * w), Size(rt * 3.2f, 0.01f * w))
-        // La tapa abatible, levantada contra el tubo, con su bisagra.
-        val tapa = poligonoDistopia(Offset(xt + rt * 1.75f, y1 + 0.026f * w), Offset(xt + rt * 2.1f, y1 - 0.004f * w), Offset(xt + rt * 2.4f, y1 - 0.0f * w), Offset(xt + rt * 2.05f, y1 + 0.03f * w))
-        drawPath(tapa, lc.c(P.ACERO))
-        drawPath(bordeDistopia(tapa, 1f * u, 0f), lc.b(0.5f))
-        // Las dos abrazaderas a la pared, con sus tornillos.
-        listOf(0.05f, 0.125f).forEachIndexed { i, fy ->
-            val y = fy * w
-            val la = g.luz(xt, y, 0.035f)
-            drawRect(la.c(P.HIERRO), Offset(xt - rt - 0.012f * w, y), Size(rt * 2 + 0.024f * w, 0.01f * w))
-            drawRect(la.b(0.45f), Offset(xt - rt - 0.012f * w, y), Size(rt * 2 + 0.024f * w, 1f * u))
-            tornilloDistopia(Offset(xt - rt - 0.006f * w, y + 0.005f * w), 1.3f * u, la, 6160 + i)
-            tornilloDistopia(Offset(xt + rt + 0.006f * w, y + 0.005f * w), 1.3f * u, la, 6162 + i)
+        val d = g.arrojada(1f)
+        drawPath(corridoDistopia(sombra, d.x, d.y), l.s(if (g.a.oscuro) 0.34f else 0.22f))
+        drawPath(corridoDistopia(codo, d.x, d.y), l.s(if (g.a.oscuro) 0.34f else 0.22f), style = Stroke(2 * rt))
+        // El tubo que baja, con su volumen de cilindro.
+        cilindroDistopia(Path().apply { addRect(Rect(xt - rt, -2f, xt + rt, yc + 1f)) }, l.c(acero), l, -1f, 0.5f)
+        // El codo: el mismo tubo doblado (su lado de fuera, a la luz; el de dentro, en sombra).
+        val lc = g.luz(xt - rc * 0.5f, yc + rc * 0.5f, 0.035f)
+        drawPath(codo, lc.c(acero), style = Stroke(2 * rt))
+        drawPath(Path().apply { moveTo(xt + rt * 0.55f, yc); arcTo(Rect(xt - 2 * rc - rt * 0.55f, yc - rc - rt * 0.55f, xt + rt * 0.55f, yc + rc + rt * 0.55f), 0f, 90f, false) },
+            lc.s(0.4f), style = Stroke(rt * 0.6f))
+        drawPath(Path().apply { moveTo(xt - rt * 0.55f, yc); arcTo(Rect(xt - 2 * rc + rt * 0.55f, yc - rc + rt * 0.55f, xt - rt * 0.55f, yc + rc - rt * 0.55f), 0f, 90f, false) },
+            lc.b(0.45f), style = Stroke(rt * 0.35f))
+        // El tramo corto que vuelve hacia la izquierda, con su luz arriba y su sombra abajo.
+        val lh = g.luz((xb + xt - rc) / 2, yh, 0.04f)
+        val tramo = Rect(xb, yh - rt, xt - rc + 1f, yh + rt)
+        drawRect(Brush.verticalGradient(listOf(lh.c(mezcla(acero, P.ACERO_LUZ, 0.35f)), lh.c(acero), lh.c(mezcla(acero, P.HIERRO, 0.5f))), tramo.top, tramo.bottom), tramo.topLeft, tramo.size)
+        drawLine(lh.b(0.6f), Offset(tramo.left, tramo.top + rt * 0.35f), Offset(tramo.right, tramo.top + rt * 0.35f), 1f * u)
+        // Los collarines: en la junta del codo y antes de la boca.
+        for ((x0, vertical) in listOf(xt to true, xb + 0.018f * w to false)) {
+            val lk = g.luz(x0, yh, 0.04f)
+            if (vertical) drawRect(lk.c(P.ACERO_LUZ), Offset(xt - rt - 0.003f * w, yc - 0.012f * w), Size(2 * rt + 0.006f * w, 0.01f * w))
+            else drawRect(lk.c(P.ACERO_LUZ), Offset(x0, yh - rt - 0.003f * w), Size(0.01f * w, 2 * rt + 0.006f * w))
         }
-        // La cesta de alambre, colgada de su escuadra, con la cápsula dentro (de esmalte rojo, tumbada y asomando).
-        val c0 = Rect(xt - 0.052f * w, 0.215f * w, xt + 0.052f * w, 0.292f * w)
-        val lk = g.luz(c0.center.x, c0.center.y, 0.04f)
-        val cap = Offset(xt + 0.004f * w, 0.232f * w)
-        rotate(-14f, cap) {
-            val r = Rect(cap.x - 0.045f * w, cap.y - 0.011f * w, cap.x + 0.045f * w, cap.y + 0.011f * w)
-            val cuerpo = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(r, CornerRadius(0.011f * w))) }
-            drawPath(cuerpo, lk.c(mezcla(P.CARTEL, P.BURDEOS, 0.25f)))
-            drawRect(lk.b(0.5f), Offset(r.left + 0.01f * w, r.top + r.height * 0.18f), Size(r.width - 0.02f * w, r.height * 0.16f))
+        // La boca, cortada a bisel: el labio claro y el hueco oscuro, de sesgo; la trampilla abierta hacia arriba con su bisagra.
+        val lb = g.luz(xb, yh, 0.04f)
+        val boca = Rect(xb - 0.009f * w, yh - rt * 1.08f, xb + 0.009f * w, yh + rt * 1.08f)
+        drawOval(lb.c(P.ACERO_LUZ), boca.topLeft, boca.size)
+        drawOval(Color(0xFF0E1012), boca.deflate(0.0025f * w).topLeft, boca.deflate(0.0025f * w).size)
+        val tramp = poligonoDistopia(Offset(xb + 0.002f * w, yh - rt * 1.05f), Offset(xb - 0.02f * w, yh - rt * 2.6f), Offset(xb - 0.032f * w, yh - rt * 2.2f), Offset(xb - 0.012f * w, yh - rt * 0.8f))
+        drawPath(corridoDistopia(tramp, d.x * 0.5f, d.y * 0.5f), lb.s(0.3f))
+        drawPath(tramp, lb.c(mezcla(acero, P.ACERO_LUZ, 0.3f)))
+        drawPath(bordeDistopia(tramp, 1f * u, 1f * u), lb.b(0.5f))
+        drawCircle(lb.c(P.HIERRO), 1.6f * u, Offset(xb + 0.001f * w, yh - rt * 1.05f))
+        // La cápsula, a medio salir de la boca: tumbada y algo caída, el tope de fieltro oscuro delante y el cuerpo de esmalte rojo.
+        val lk = g.luz(xb - 0.04f * w, yh + 0.01f * w, 0.05f)
+        rotate(16f, Offset(xb, yh)) {
+            val r = Rect(xb - 0.058f * w, yh - rt * 0.82f, xb + 0.004f * w, yh + rt * 0.82f)
+            drawRoundRect(lk.c(mezcla(P.CARTEL, P.BURDEOS, 0.25f)), r.topLeft, r.size, CornerRadius(rt * 0.3f))
+            drawRect(lk.b(0.5f), Offset(r.left + 0.01f * w, r.top + r.height * 0.16f), Size(r.width - 0.01f * w, r.height * 0.14f))
             drawRect(lk.s(0.35f), Offset(r.left, r.bottom - r.height * 0.3f), Size(r.width, r.height * 0.3f))
-            for (fx in listOf(0.2f, 0.78f)) drawRoundRect(lk.c(mezcla(P.OLIVA, P.BAQUELITA, 0.55f)), Offset(r.left + r.width * fx, r.top - 0.003f * w), Size(0.008f * w, r.height + 0.006f * w), CornerRadius(1.4f * u))
-            drawRoundRect(lk.c(mezcla(P.ACERO, P.HIERRO, 0.4f)), Offset(r.left - 0.002f * w, r.top), Size(0.012f * w, r.height), CornerRadius(0.006f * w))
+            // La ventanilla con el papel enrollado dentro.
+            val ve = Rect(r.left + r.width * 0.34f, r.top + r.height * 0.3f, r.left + r.width * 0.8f, r.bottom - r.height * 0.3f)
+            drawRoundRect(lk.c(P.HUESO), ve.topLeft, ve.size, CornerRadius(ve.height / 2))
+            drawRoundRect(lk.c(P.ACERO_LUZ), ve.topLeft, ve.size, CornerRadius(ve.height / 2), style = Stroke(0.8f * u))
+            // El tope de fieltro, más ancho que el cuerpo, y la tapa pavonada.
+            val tope = Rect(r.left + 0.004f * w, r.top - rt * 0.28f, r.left + 0.015f * w, r.bottom + rt * 0.28f)
+            drawRoundRect(lk.c(mezcla(P.OLIVA, P.BAQUELITA, 0.55f)), tope.topLeft, tope.size, CornerRadius(tope.width * 0.45f))
+            drawLine(lk.b(0.3f), Offset(tope.left + 1f * u, tope.top + 2f * u), Offset(tope.left + 1f * u, tope.bottom - 2f * u), 0.7f * u)
+            drawRoundRect(lk.c(mezcla(P.ACERO, P.HIERRO, 0.45f)), Offset(r.left - 0.006f * w, r.top + r.height * 0.1f), Size(0.012f * w, r.height * 0.8f), CornerRadius(0.005f * w))
         }
+        // La cesta de alambre debajo, colgada de su escuadra.
+        val c0 = Rect(0.448f * w, 0.232f * w, 0.548f * w, 0.298f * w)
+        val lm = g.luz(c0.center.x, c0.center.y, 0.04f)
         val malla = Path()
         val cesta = poligonoDistopia(Offset(c0.left, c0.top), Offset(c0.right, c0.top), Offset(c0.right - 0.01f * w, c0.bottom), Offset(c0.left + 0.01f * w, c0.bottom))
         for (j in 0..7) {
@@ -251,13 +280,21 @@ internal object ParedEstanteDistopia {
             malla.moveTo(c0.left + c0.width * f, c0.top); malla.lineTo(c0.left + 0.01f * w + (c0.width - 0.02f * w) * f, c0.bottom)
         }
         for (f in listOf(0.45f, 1f)) { malla.moveTo(c0.left + 0.01f * w * f, c0.top + c0.height * f); malla.lineTo(c0.right - 0.01f * w * f, c0.top + c0.height * f) }
-        drawPath(cesta, lk.c(P.FONDO).copy(alpha = 0.25f))
-        drawPath(malla, lk.c(P.HIERRO), style = Stroke(1f * u))
-        drawLine(lk.c(P.HIERRO), Offset(c0.left - 1f * u, c0.top), Offset(c0.right + 1f * u, c0.top), 2f * u)
-        drawLine(lk.b(0.5f), Offset(c0.left, c0.top - 0.8f * u), Offset(c0.right, c0.top - 0.8f * u), 0.8f * u)
-        // La escuadra que la sujeta a la pared.
-        drawLine(lk.c(P.HIERRO), Offset(c0.right - 0.004f * w, c0.top), Offset(c0.right + 0.012f * w, c0.top - 0.02f * w), 1.6f * u)
-        drawLine(lk.c(P.HIERRO), Offset(c0.left + 0.004f * w, c0.top), Offset(c0.left - 0.012f * w, c0.top - 0.02f * w), 1.6f * u)
+        drawPath(cesta, lm.c(P.FONDO).copy(alpha = 0.25f))
+        drawPath(malla, lm.c(P.HIERRO), style = Stroke(1f * u))
+        drawLine(lm.c(P.HIERRO), Offset(c0.left - 1f * u, c0.top), Offset(c0.right + 1f * u, c0.top), 2f * u)
+        drawLine(lm.b(0.5f), Offset(c0.left, c0.top - 0.8f * u), Offset(c0.right, c0.top - 0.8f * u), 0.8f * u)
+        drawLine(lm.c(P.HIERRO), Offset(c0.right - 0.004f * w, c0.top), Offset(c0.right + 0.012f * w, c0.top - 0.02f * w), 1.6f * u)
+        drawLine(lm.c(P.HIERRO), Offset(c0.left + 0.004f * w, c0.top), Offset(c0.left - 0.012f * w, c0.top - 0.02f * w), 1.6f * u)
+        // Las dos abrazaderas a la pared, con sus tornillos (por delante del tubo).
+        listOf(0.045f, 0.11f).forEachIndexed { i, fy ->
+            val y = fy * w
+            val la = g.luz(xt, y, 0.035f)
+            drawRect(la.c(P.HIERRO), Offset(xt - rt - 0.012f * w, y), Size(rt * 2 + 0.024f * w, 0.01f * w))
+            drawRect(la.b(0.45f), Offset(xt - rt - 0.012f * w, y), Size(rt * 2 + 0.024f * w, 1f * u))
+            tornilloDistopia(Offset(xt - rt - 0.006f * w, y + 0.005f * w), 1.3f * u, la, 6160 + i)
+            tornilloDistopia(Offset(xt + rt + 0.006f * w, y + 0.005f * w), 1.3f * u, la, 6162 + i)
+        }
     }
 
     /** El enchufe de baquelita al pie del tubo, a la derecha, con la clavija del flexo metida y su cordón. */
@@ -266,7 +303,7 @@ internal object ParedEstanteDistopia {
         val c = Offset(0.935f * w, 0.35f * w)
         val l = g.luz(c.x, c.y, 0.02f)
         val placa = Rect(c.x - 0.022f * w, c.y - 0.018f * w, c.x + 0.022f * w, c.y + 0.026f * w)
-        drawRoundRect(l.s(0.4f), placa.topLeft + Offset(1.6f * u, 2f * u), placa.size, CornerRadius(2f * u))
+        drawRoundRect(l.s(0.4f), placa.topLeft + g.arrojada(0.3f), placa.size, CornerRadius(2f * u))
         drawRoundRect(l.c(mezcla(P.BAQUELITA, P.MADERA, 0.25f)), placa.topLeft, placa.size, CornerRadius(2f * u))
         drawRoundRect(l.b(0.5f), placa.topLeft + Offset(1f * u, 1f * u), Size(placa.width * 0.4f, 1f * u), CornerRadius(0.5f * u))
         // La clavija, redonda, y el cordón que baja y se va hacia el flexo, por detrás de lo de arriba.
@@ -294,9 +331,9 @@ internal object ParedEstanteDistopia {
             drawLine(l.s(0.3f), Offset(fx * w + 1.6f * u, 0f), Offset(fx * w + 1.6f * u, y0), 1.4f * u)
             drawLine(l.c(P.HIERRO), Offset(fx * w, 0f), Offset(fx * w, y0), 1.4f * u)
         }
-        // La sombra de la canaleta en la pared: arriba no le llega la luz del tubo.
+        // La sombra de la canaleta en la pared: de día, arriba (no le llega la luz del tubo); si no, la que echa según la luz.
         if (g.a.tubo) drawRect(Brush.verticalGradient(listOf(g.a.sombra(0f), g.a.sombra(0.22f)), y0 - 0.04f * w, y0), Offset(x0, y0 - 0.04f * w), Size(x1 - x0 + 0.02f * w, 0.04f * w))
-        else drawRect(g.a.sombra(0.3f), Offset(x0 + 0.01f * w, y1), Size(x1 - x0, 0.012f * w))
+        else drawRect(l.s(0.3f), Offset(x0, y0) + g.arrojada(0.9f), Size(x1 - x0, y1 - y0 + 0.011f * w))
         // La canaleta: su cara, su labio de abajo y las tapas de los extremos.
         drawRect(Brush.horizontalGradient(listOf(l.c(P.ACERO_LUZ), g.luz(x1, y0, 0.03f).c(P.ACERO)), x0, x1), Offset(x0, y0), Size(x1 - x0, y1 - y0))
         drawRect(l.b(0.6f), Offset(x0, y0), Size(x1 - x0, 1f * u))
@@ -332,7 +369,8 @@ internal object ParedEstanteDistopia {
         val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(tabla, CornerRadius(2.4f * u))) }
         rotate(3f, clavo) {
             // La sombra en la pared, corrida (de día, abajo a la derecha; de noche, poca).
-            drawPath(corridoDistopia(forma, 0.012f * w, 0.01f * w), l.s(if (g.a.oscuro) 0.4f else 0.26f))
+            val d = g.arrojada(0.85f)
+            drawPath(corridoDistopia(forma, d.x, d.y), l.s(if (g.a.oscuro) 0.4f else 0.26f))
             drawPath(forma, l.c(mezcla(P.KRAFT, P.CARTON, 0.4f)))
             drawRect(l.b(0.35f), tabla.topLeft + Offset(1f * u, 1f * u), Size(1.2f * u, tabla.height - 2f * u))
             drawRect(l.s(0.3f), Offset(tabla.right - 1.6f * u, tabla.top), Size(1.6f * u, tabla.height))

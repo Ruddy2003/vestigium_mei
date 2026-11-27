@@ -57,6 +57,10 @@ internal object MuebleDistopia {
         drawRect(Brush.verticalGradient(listOf(g.a.sombra(0.5f), g.a.sombra(0.1f)), y(0.13f), y(0.22f)), Offset(0f, y(0.13f)), Size(w, y(0.22f) - y(0.13f)))
         drawLine(lm.b(0.55f), Offset(0f, y(0.225f)), Offset(w, y(0.225f)), 1f * u)
         drawRect(g.a.sombra(0.3f), Offset(0f, y(0.28f)), Size(w, 1.6f * u))
+        // La sombra que el bocel y el filete echan sobre el friso (vuela por delante): franca arriba, se apaga hacia abajo.
+        drawRect(Brush.verticalGradient(listOf(g.a.sombra(if (g.a.oscuro) 0.3f else 0.34f), g.a.sombra(0f)), y(0.28f), y(0.42f)), Offset(0f, y(0.28f)), Size(w, y(0.42f) - y(0.28f)))
+        // Y la luz que recoge el canto de abajo del friso, justo encima del junquillo.
+        drawLine(lm.b(0.35f), Offset(0f, y(0.765f)), Offset(w, y(0.765f)), 0.9f * u)
         drawLine(lm.b(0.5f), Offset(0f, y(0.79f)), Offset(w, y(0.79f)), 1f * u)
         drawRect(g.a.sombra(0.4f), Offset(0f, y(0.86f)), Size(w, 1.4f * u))
         // Los dados sobre los costados: un poco salientes, con su canto a la luz, su sombra a un lado y un tornillo.
@@ -104,20 +108,34 @@ internal object MuebleDistopia {
         }
     }
 
-    /** Una rejilla de lamas prensada en la chapa: cada lama con su hueco hondo arriba y el labio de luz abajo. */
+    /**
+     * Una rejilla de lamas prensada en la chapa, en su marco rehundido: el marco con su sombra arriba a la izquierda y su luz abajo
+     * a la derecha, el fondo oscuro que se ve entre las lamas y cada lama con su canto de luz arriba y su sombra debajo.
+     */
     private fun DrawScope.rejilla(g: MarcoDistopia, r: Rect, lamas: Int) {
         val u = density
-        val paso = r.height / maxOf(1, lamas)
         val l = g.luz(r.center.x, r.center.y, 0.05f)
-        val huecos = Path(); val labios = Path()
+        val marco = r.inflate(0.008f * g.w)
+        // El marco rehundido: la chapa un paso más honda, con los bordes del escalón.
+        drawRect(mezcla(l.c(P.ACERO), l.c(P.ACERO_OSC), 0.35f), marco.topLeft, marco.size)
+        drawRect(l.s(0.4f), marco.topLeft, Size(marco.width, 1.6f * u))
+        drawRect(l.s(0.3f), marco.topLeft, Size(1.6f * u, marco.height))
+        drawRect(l.b(0.5f), Offset(marco.left, marco.bottom - 1.2f * u), Size(marco.width, 1.2f * u))
+        drawRect(l.b(0.4f), Offset(marco.right - 1.2f * u, marco.top), Size(1.2f * u, marco.height))
+        // El fondo: lo hondo de detrás de las lamas.
+        drawRect(mezcla(l.c(P.HIERRO), ParedEstanteDistopia.honda(g), 0.55f), r.topLeft, r.size)
+        val paso = r.height / maxOf(1, lamas)
+        val lamasP = Path(); val cantos = Path(); val bajos = Path()
         for (i in 0 until lamas) {
             val y = r.top + paso * i
-            huecos.addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(r.left, y + paso * 0.18f, r.right, y + paso * 0.6f), CornerRadius(paso * 0.2f)))
-            labios.addRect(Rect(r.left + paso * 0.2f, y + paso * 0.6f, r.right - paso * 0.2f, y + paso * 0.6f + 0.9f * u))
+            lamasP.addRect(Rect(r.left, y + paso * 0.42f, r.right, y + paso * 0.92f))
+            cantos.addRect(Rect(r.left, y + paso * 0.42f, r.right, y + paso * 0.42f + 1f * u))
+            bajos.addRect(Rect(r.left, y + paso * 0.92f, r.right, y + paso * 0.92f + 1.1f * u))
         }
-        drawPath(huecos, mezcla(l.c(P.HIERRO), ParedEstanteDistopia.honda(g), 0.4f))
-        drawPath(labios, l.b(0.5f))
-        if (g.a.oscuro && l.k > 0.1f) drawPath(labios, l.filo(0.6f))
+        drawPath(lamasP, l.c(mezcla(P.ACERO, P.ACERO_OSC, 0.2f)))
+        drawPath(cantos, l.b(0.6f))
+        drawPath(bajos, l.s(0.45f))
+        if (g.a.oscuro && l.k > 0.1f) drawPath(cantos, l.filo(0.6f))
     }
 
     // ---------------------------------------------------------------- las juntas
@@ -313,7 +331,7 @@ internal object MuebleDistopia {
         val l = g.luz(c.x, c.y - 0.04f * w, 0.05f)
         // El halo en el costado y en lo de alrededor.
         if (arde > 0f) {
-            mancha(c, w * 0.26f, P.BOMBILLA.copy(alpha = 0.26f * arde))
+            mancha(c, w * 0.2f, P.BOMBILLA.copy(alpha = 0.24f * arde))
             mancha(c, w * 0.09f, P.BOMBILLA.copy(alpha = 0.5f * arde))
         }
         scale(1.15f, 1.15f, c) {

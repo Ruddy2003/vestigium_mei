@@ -78,6 +78,8 @@ internal object PaletaDistopia {
     val BRASA = Color(0xFFE0401C)
     val PILOTO = Color(0xFFFF4A3A)
     val LUNA = Color(0xFFD4E0F0)
+    /** El filo frío que de noche recorta lo que queda lejos de las bombillas (la luz floja del sótano, gris azulada). */
+    val FRIO = Color(0xFF93A6B2)
     /** El aire de la noche del sótano (el gris azulado hondo del Ideario), el de los Sueños, el anochecer y su ocaso. */
     val NOCHE = Color(0xFF121A20)
     val NOCHE_SUENOS = Color(0xFF10161E)
@@ -90,7 +92,7 @@ internal object PaletaDistopia {
     /** El ánimo en esmalte de cápsula: rojo, verde gris de oficina, azul pizarra. */
     val ESMALTES = listOf(Color(0xFFB8261E), Color(0xFF93A08A), Color(0xFF285276))
     /** El ánimo en cartón de camisa: cartón rojo, manila, cartón azul. */
-    val CAMISAS = listOf(Color(0xFFA62A20), Color(0xFFC0A46C), Color(0xFF345A80))
+    val CAMISAS = listOf(Color(0xFFA62A20), Color(0xFFD2BC8C), Color(0xFF345A80))
 
     /** La letra del día (la de los rótulos del Ideario) y la del mes, a máquina. */
     val LETRA: FontFamily = LetraExtra.oswald
@@ -114,7 +116,8 @@ internal class AireDistopia(val oscuro: Boolean, val noche: Boolean) {
     /** El color en que se hunde lo que no se alumbra. */
     val hondo: Color get() = if (oscuro) (if (noche) p.NOCHE_SUENOS else p.NOCHE) else if (noche) p.ANOCHECER else SOMBRA_MUEBLE
 
-    fun en(k: Float, tinte: Color, mancha: Float, amb: Float) = LuzDistopia(this, k.coerceIn(0f, 1f), tinte, mancha.coerceIn(0f, 1f), amb.coerceIn(0f, 1f))
+    fun en(k: Float, tinte: Color, mancha: Float, amb: Float, lav: Float = 0f) =
+        LuzDistopia(this, k.coerceIn(0f, 1f), tinte, mancha.coerceIn(0f, 1f), amb.coerceIn(0f, 1f), lav.coerceIn(0f, 1f))
 
     /** El color propio de algo, hundido: oscuro, de su mismo tono (no gris), con el aire del sótano. */
     fun hundido(c: Color): Color {
@@ -139,24 +142,28 @@ internal class AireDistopia(val oscuro: Boolean, val noche: Boolean) {
 /**
  * La luz de una cosa en un sitio: [k], cuánto le llega de las bombillas (el flexo, la lámpara o la estufa) y de qué color
  * ([tinte]); [mancha], cuánto le da la reja de luz del tragaluz (el último sol en los Sueños en claro, la luna en oscuro); [amb],
- * cuánto le llega del tubo de día (1 arriba a la izquierda, menos hacia abajo a la derecha). [c] da el color de algo con esa luz,
- * [s] la sombra, [b] el plano de luz, [filo] el borde encendido por una bombilla y [frio] el de la luna.
+ * cuánto le llega del tubo de día (1 arriba a la izquierda, menos hacia abajo a la derecha); [lav], de noche y solo en la pared, la
+ * luz del flexo que rebota en el cuarto (ancha, floja y sin color: aclara la pared hacia su propio gris, como en el Ideario). [c]
+ * da el color de algo con esa luz, [s] la sombra, [b] el plano de luz, [filo] el borde encendido por una bombilla y [frio] el de la
+ * luna.
  */
-internal class LuzDistopia(val a: AireDistopia, val k: Float, val tinte: Color, val mancha: Float, val amb: Float) {
+internal class LuzDistopia(val a: AireDistopia, val k: Float, val tinte: Color, val mancha: Float, val amb: Float, val lav: Float = 0f) {
     private val p = PaletaDistopia
     val luna: Float get() = if (a.oscuro && a.noche) mancha else 0f
     val ocaso: Float get() = if (!a.oscuro && a.noche) mancha else 0f
 
     /** La misma luz con la mancha del tragaluz forzada a [v]. */
-    fun conMancha(v: Float): LuzDistopia = if (!a.noche) this else LuzDistopia(a, k, tinte, v.coerceIn(0f, 1f) * (if (a.oscuro) 0.85f else 1f), amb)
+    fun conMancha(v: Float): LuzDistopia = if (!a.noche) this else LuzDistopia(a, k, tinte, v.coerceIn(0f, 1f) * (if (a.oscuro) 0.85f else 1f), amb, lav)
 
     /** Cuánto enciende la bombilla lo que toca: casi nada lejos y de golpe cerca, para que manden los charcos. */
     private val q: Float get() = (1.1f * k * k).coerceAtMost(0.94f)
 
     fun c(col: Color): Color = when {
         a.oscuro -> {
-            val fuego = mezcla(mezcla(a.hundido(col), alFuego(col), q), tinte, 0.1f * k)
-            if (luna > 0.01f) mezcla(fuego, lunaFria(col), 0.62f * luna) else fuego
+            // Lo hundido, aclarado por el rebote del flexo en la pared hacia su propio color apagado (gris verdoso, sin amarillo).
+            val base = if (lav > 0.01f) mezcla(a.hundido(col), apagado(col), lav) else a.hundido(col)
+            val fuego = mezcla(mezcla(base, alFuego(col), q), tinte, 0.1f * k)
+            if (luna > 0.01f) mezcla(fuego, lunaFria(col), 0.7f * luna) else fuego
         }
         a.noche -> mezcla(mezcla(anochecer(col, (0.34f + 0.3f * (1f - amb) - 0.5f * ocaso).coerceIn(0.08f, 0.62f)), alOcaso(col), ocaso), tinte, 0.3f * k)
         else -> alTubo(col)
@@ -183,9 +190,18 @@ internal class LuzDistopia(val a: AireDistopia, val k: Float, val tinte: Color, 
     private fun alFuego(c: Color): Color =
         Color((c.red * tinte.red * 1.5f + 0.05f).coerceAtMost(1f), (c.green * tinte.green * 1.26f + 0.02f).coerceAtMost(1f), (c.blue * tinte.blue * 1.3f).coerceAtMost(1f), c.alpha)
 
-    /** Un color bajo la luna: virado a azul hondo, solo un paso más claro que la noche. */
+    /**
+     * Un color bajo la luna: el mismo color, virado a frío y un paso más claro que la noche (no un azul pegado encima): la pared
+     * sigue siendo pared, con sus desconchones y su humedad.
+     */
     private fun lunaFria(c: Color): Color =
-        Color((c.red * 0.22f + 0.03f).coerceAtMost(1f), (c.green * 0.4f + 0.06f).coerceAtMost(1f), (c.blue * 0.56f + 0.12f).coerceAtMost(1f), c.alpha)
+        Color((c.red * 0.29f + 0.02f).coerceAtMost(1f), (c.green * 0.35f + 0.035f).coerceAtMost(1f), (c.blue * 0.41f + 0.07f).coerceAtMost(1f), c.alpha)
+
+    /** Un color apagado por la luz floja del cuarto: su propio color a media luz, con algo del gris azulado del sótano. */
+    private fun apagado(c: Color): Color {
+        val n = a.hondo
+        return Color(c.red * 0.4f + n.red * 0.3f, c.green * 0.42f + n.green * 0.3f, c.blue * 0.42f + n.blue * 0.32f, c.alpha)
+    }
 
     /** La sombra: más franca donde da la mancha (de borde más duro). */
     fun s(alfa: Float): Color = a.sombra(if (!a.oscuro) alfa * (1f + 0.45f * ocaso) else alfa * (1f + 0.4f * luna))
@@ -283,7 +299,8 @@ internal object MuebleEstanteDistopia {
         val lleno = (palabras / 800f).coerceIn(0f, 1f)
         return when (clase(semilla)) {
             0 -> 0.82f + 0.03f * lleno + 0.09f * azar(semilla, 1)
-            1 -> 0.79f + 0.04f * lleno + 0.09f * azar(semilla, 1)
+            // La cápsula: unas largas y otras cortas (las hay de dos medidas en los tubos).
+            1 -> (if (azar(semilla, 3) < 0.35f) 0.7f else 0.8f) + 0.04f * lleno + 0.07f * azar(semilla, 1)
             else -> 0.74f + 0.05f * lleno + 0.1f * azar(semilla, 1)
         }
     }
@@ -320,9 +337,10 @@ internal object MuebleEstanteDistopia {
      * reja del tragaluz se corra hacia la luz en lo que está delante.
      */
     fun luz(a: AireDistopia, x: Float, y: Float, alto: Float, repisas: Int, delante: Float = 0f): LuzDistopia {
-        // En la pared (y en lo que cuelga de ella), además, el lavado ancho y suave que el flexo deja en todo el cuarto.
-        val kf = if (a.flexo > 0f) a.flexo * (if (delante < 0.015f) maxOf(kFlexo(x, y), lavadoFlexo(x, y)) else kFlexo(x, y)) else 0f
-        val kl = if (a.lampara > 0f) a.lampara * (1.9f * exp(-5.9f * dist(x - LAMPARA_X, (y - lamparaY(repisas)) * 0.74f))).coerceAtMost(1f) else 0f
+        val kf = if (a.flexo > 0f) a.flexo * kFlexo(x, y) else 0f
+        // En la pared (y en lo que cuelga de ella), el rebote ancho y sin color del flexo en el cuarto (no es un charco cálido).
+        val lav = if (a.flexo > 0f && a.oscuro && delante < 0.015f) a.flexo * lavadoFlexo(x, y) else 0f
+        val kl = if (a.lampara > 0f) a.lampara * (1.9f * exp(-6.6f * dist(x - LAMPARA_X, (y - lamparaY(repisas)) * 0.95f))).coerceAtMost(1f) else 0f
         val ke = if (a.estufa > 0f) a.estufa * kEstufa(x, y, alto) else 0f
         val k = (kf + kl + ke).coerceIn(0f, 1f)
         val suma = kf + kl + ke + 0.0001f
@@ -335,7 +353,7 @@ internal object MuebleEstanteDistopia {
         }
         // El tubo, fuera del cuadro arriba a la izquierda: más luz cerca, menos hacia abajo y a la derecha.
         val amb = (1.02f - 0.62f * x - 0.07f * y - 0.18f * maxOf(0f, y - 0.62f) / maxOf(0.5f, alto)).coerceIn(0.18f, 1f)
-        return a.en(k, tinte, mancha, amb)
+        return a.en(k, tinte, mancha, amb, lav)
     }
 
     /** Cuánto alumbra el flexo un punto: la pantalla manda la luz hacia abajo; lo de encima de la boca recibe mucho menos. */
@@ -344,16 +362,19 @@ internal object MuebleEstanteDistopia {
         // Hacia abajo y hacia la izquierda (adonde mira la pantalla: la multicopista y la primera repisa) llega más lejos.
         val dy = (y - FLEXO_Y) * (if (y > FLEXO_Y) 0.6f else 0.85f)
         val dx = (x - FLEXO_X) * (if (x < FLEXO_X) 0.74f else 1.05f)
-        return (1.95f * exp(-4.7f * dist(dx, dy))).coerceAtMost(1f) * tapa
+        return (1.95f * exp(-5.5f * dist(dx, dy))).coerceAtMost(1f) * tapa
     }
 
-    /** El lavado de la pared: la luz del flexo que rebota en el cuarto, ancha y floja (como el halo de la pared del Ideario). */
-    fun lavadoFlexo(x: Float, y: Float): Float = (0.8f * exp(-1.9f * dist((x - FLEXO_X) * 0.8f, (y - FLEXO_Y + 0.08f) * 0.9f))).coerceAtMost(0.8f)
+    /**
+     * El rebote del flexo en la pared: ancho y flojo, sin color (como el halo de la pared del Ideario, que aclara la pintura hacia su
+     * propio gris y no la vuelve amarilla). Se apaga hacia la izquierda y hacia arriba.
+     */
+    fun lavadoFlexo(x: Float, y: Float): Float = (0.72f * exp(-2.3f * dist((x - FLEXO_X) * 0.85f, (y - FLEXO_Y + 0.06f) * 0.95f))).coerceAtMost(0.72f)
 
     /** Cuánto alumbra la estufa un punto (sin contar si arde): un charco que sube por el zócalo y la última repisa. */
     fun kEstufa(x: Float, y: Float, alto: Float, oscuro: Boolean = true): Float {
         val dyE = (alto - y - ESTUFA_Y).coerceAtLeast(0f)
-        return ((if (oscuro) 2.1f else 1.9f) * exp(-5.4f * dist((x - ESTUFA_X) * 1.05f, dyE * 0.66f))).coerceAtMost(1f)
+        return ((if (oscuro) 2.1f else 1.9f) * exp(-6.2f * dist((x - ESTUFA_X) * 1.05f, dyE * 0.66f))).coerceAtMost(1f)
     }
 
     private fun dist(dx: Float, dy: Float) = sqrt(dx * dx + dy * dy)
@@ -454,11 +475,15 @@ internal class RejaDistopia(val ox: Float, val oy: Float, val ux: Float, val uy:
     }
 }
 
-/** El último sol de los Sueños en claro: entra bajo y largo por el tragaluz, casi tendido, con sus cuatro barrotes. */
-internal val OCASO_DISTOPIA = RejaDistopia(-0.06f, 0.11f, 0.9f, 0.24f, 0.07f, 0.17f, 5, 0.2f)
+/**
+ * El último sol de los Sueños en claro: entra bajo y largo por el tragaluz, casi tendido, con sus cuatro barrotes; cae alto, en la
+ * pared crema, por encima de lo que hay sobre la estantería (que no la toca): solo la cruza lo que cuelga de la pared (la regleta,
+ * la tablilla, el correo neumático, los tubos), que se pinta a su modo y le echa su sombra.
+ */
+internal val OCASO_DISTOPIA = RejaDistopia(-0.06f, 0.072f, 0.97f, 0.1f, 0.045f, 0.118f, 5, 0.2f)
 
-/** La luna de los Sueños en oscuro: más chica y empinada, arriba a la izquierda. */
-internal val LUNA_DISTOPIA = RejaDistopia(0.03f, 0.13f, 0.34f, 0.08f, 0.05f, 0.18f, 4, 0.22f)
+/** La luna de los Sueños en oscuro: más chica, en la pared alta entre la tablilla y el correo neumático. */
+internal val LUNA_DISTOPIA = RejaDistopia(0.165f, 0.098f, 0.27f, 0.055f, 0.03f, 0.105f, 4, 0.22f)
 
 internal fun ocasoDistopia(x: Float, y: Float): Float = OCASO_DISTOPIA.en(x, y)
 internal fun lunaDistopia(x: Float, y: Float): Float = LUNA_DISTOPIA.en(x, y)
@@ -475,8 +500,26 @@ internal class MarcoDistopia(val w: Float, val h: Float, val ch: Float, val x0: 
     fun luz(p: Offset, delante: Float = 0f, mancha: Float? = null): LuzDistopia = luz(p.x, p.y, delante, mancha)
     fun luz(x: Float, y: Float, delante: Float = 0f, mancha: Float? = null): LuzDistopia {
         val l = m.luz(a, x / w, y / w, h / w, n, delante)
-        return if (mancha == null) l else l.conMancha(mancha)
+        val forzada = mancha ?: forzar
+        return if (forzada == null) l else l.conMancha(forzada)
     }
+
+    /**
+     * La mancha del tragaluz forzada para todo lo que se pinte mientras no sea null (la usa [conRejaTodo]: 0 fuera de la reja, 1
+     * dentro), así lo que cuelga de la pared se pinta dos veces sin tener que pasar la mancha pieza por pieza.
+     */
+    var forzar: Float? = null
+
+    /**
+     * Hacia dónde cae la sombra de lo que cuelga de la pared, en píxeles, por [largo]: de día, a la derecha y abajo (el tubo); con
+     * el último sol, larga y casi tendida hacia la derecha; de noche, corta; con la luna, abajo y a la derecha.
+     */
+    fun arrojada(largo: Float): Offset = when {
+        !a.noche && !a.oscuro -> Offset(0.014f, 0.011f)
+        !a.oscuro -> Offset(0.032f, 0.008f)
+        !a.noche -> Offset(0.005f, 0.008f)
+        else -> Offset(0.012f, 0.018f)
+    } * (w * largo)
     /** De qué lado le llega la luz a un punto en píxeles. */
     fun hacia(x: Float, y: Float): Float = m.hacia(a, x / w, y / w, h / w, n)
     /** Dónde arde cada luz, en píxeles. */
@@ -507,6 +550,26 @@ internal fun DrawScope.conRejaDistopia(g: MarcoDistopia, delante: Float, zona: R
     if (b.isEmpty) return
     if (zona != null && !b.overlaps(zona)) return
     clipRect(b.left, b.top, b.right, b.bottom) { clipPath(camino) { pieza(1f) } }
+}
+
+/**
+ * Como [conRejaDistopia], pero sin pasar la mancha a [pieza]: la fija en el marco ([MarcoDistopia.forzar]) mientras pinta, para lo
+ * que cuelga de la pared (la regleta, la tablilla, los tubos, el correo neumático), que así se pinta igual por dentro y por fuera
+ * de la reja, con su luz y con la sombra que le echa a la pared.
+ */
+internal fun DrawScope.conRejaTodo(g: MarcoDistopia, delante: Float, zona: Rect, pieza: DrawScope.() -> Unit) {
+    val e = g.reja
+    if (e == null) { pieza(); return }
+    g.forzar = 0f
+    pieza()
+    val c = g.corre(delante)
+    val camino = e.camino(g.w, c.x, c.y)
+    val b = camino.getBounds()
+    if (!b.isEmpty && b.overlaps(zona)) {
+        g.forzar = 1f
+        clipRect(b.left, b.top, b.right, b.bottom) { clipPath(camino) { pieza() } }
+    }
+    g.forzar = null
 }
 
 /**
@@ -574,7 +637,8 @@ internal fun tonoDeDiaDistopia(t: Color?, oscuro: Boolean): Color? {
 internal fun materialDelAnimoDistopia(t: Color, materiales: List<Color>): Color {
     val x = enEscalaDistopia(t, TONOS_DISTOPIA.first) ?: return t
     val c = if (x < 0.5f) mezcla(materiales[0], materiales[1], x * 2) else mezcla(materiales[1], materiales[2], (x - 0.5f) * 2)
-    return vivoDistopia(c, 1.25f)
+    // Más color hacia los extremos (el rojo y el azul); el de en medio (el lino, el gris, la manila) queda como es.
+    return vivoDistopia(c, 1f + 0.25f * (kotlin.math.abs(x - 0.5f) * 2.5f).coerceAtMost(1f))
 }
 
 /** [c] con más color: se aleja de su gris (del mismo valor) en [f]; así los tonos de en medio no se lavan. */

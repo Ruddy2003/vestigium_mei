@@ -24,9 +24,9 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
  * Las entradas del estante de Distopía, tres objetos del archivo del ministerio (la clase sale de la semilla, nunca del sitio):
  * - **el archivador de palanca**: alto y rígido, de cartón forrado de tela del color del ánimo (rojo de cartel, lino gris o azul
  *   pizarra), con el canto de metal abajo, el ojal del dedo con su aro y la ventanilla del lomo con la tarjeta del día;
- * - **la cápsula del correo neumático**: el cilindro en que el expediente del día viaja por los tubos, de pie, con las tapas
- *   redondeadas, los dos aros de fieltro, el cuerpo esmaltado del color del ánimo y la tarjeta en su abrazadera; si se escribió
- *   mucho, la tapa va quitada y asoma el rollo de papel;
+ * - **la cápsula del correo neumático**: el cilindro en que el expediente del día viaja por los tubos, de pie, con un tope de
+ *   fieltro oscuro en cada extremo (más ancho que el cuerpo), la tapa de bayoneta, el cuerpo esmaltado del color del ánimo, la
+ *   tarjeta bajo su fleje y la ventanilla por la que se ve el papel enrollado; si se escribió mucho, va sin tapa y asoma el rollo;
  * - **el legajo atado**: la camisa de cartón del color del ánimo doblada sobre un fajo de papeles que asoman desiguales, atada con
  *   balduque y cerrada con un precinto de plomo; la carátula del día, pegada en la camisa.
  * El día, en Oswald a unos 16 sp, y el mes corto a máquina, en manila de valor medio; en los Sueños, una media luna de hojalata.
@@ -196,90 +196,121 @@ private fun DrawScope.archivadorDistopia(v: Volumen, tono: Color?, medidor: Text
 /** El esmalte de cuando no hay ánimo: el aluminio sin pintar. */
 private val SIN_ANIMO_ESMALTE_DISTOPIA = Color(0xFFA9ADA6)
 
+/**
+ * La cápsula del correo neumático, de pie: un tope de fieltro oscuro en cada extremo, más ancho que el cuerpo (lo que la frena en el
+ * tubo); arriba, la tapa de acero pavonado con sus dos orejetas de bayoneta; el cuerpo de esmalte del color del ánimo con la
+ * tarjeta de destino bajo su fleje y, debajo, la ventanilla por la que se ve el expediente enrollado dentro. Alguna, recostada
+ * contra la vecina; alguna, más corta; si se escribió mucho, va sin tapa y el rollo asoma por arriba.
+ */
 private fun DrawScope.capsulaDistopia(v: Volumen, tono: Color?, medidor: TextMeasurer, l: LuzDistopia, hacia: Float) {
     val u = density
     val w = size.width; val h = size.height
     val s = v.semilla
-    val an = minOf(w * (0.72f + 0.14f * azar(s, 22)), 34f * u).coerceAtLeast(minOf(w * 0.94f, 22f * u))
-    val x0 = (w - an) * (0.3f + 0.4f * azar(s, 23))
+    val giro = if (azar(s, 26) < 0.28f) (if (azar(s, 27) < 0.5f) -3.5f else 3.5f) else 0f
+    val an = minOf(w * (0.62f + 0.12f * azar(s, 22)), 27f * u).coerceAtLeast(minOf(w * 0.78f, 19f * u))
+    val topeAn = minOf(an * 1.26f, w * 0.97f)
+    val x0 = (w - an) * (if (giro > 0f) 0.3f else if (giro < 0f) 0.7f else 0.35f + 0.3f * azar(s, 23))
     val cx = x0 + an / 2
-    val abierta = v.lleno > 0.45f && azar(s, 24) < 0.7f
-    val top = h * (if (abierta) 0.1f else 0.02f)
+    val abierta = v.lleno > 0.45f && azar(s, 24) < 0.6f
+    val top = h * (if (abierta) 0.08f else 0.012f)
     val esmalteBase = tono?.let { materialDelAnimoDistopia(it, P.ESMALTES) } ?: SIN_ANIMO_ESMALTE_DISTOPIA
     val esmalte = if (tono != null) l.animo(esmalteBase) else l.c(esmalteBase)
-    val tapaAl = minOf(h * 0.12f, an * 0.62f)
-    val fieltro = l.c(mezcla(P.OLIVA, P.BAQUELITA, 0.55f))
+    val fieltro = l.c(mezcla(P.OLIVA, P.BAQUELITA, 0.6f))
     val pavonado = mezcla(P.ACERO, P.HIERRO, 0.45f)
-    // La silueta entera (para la sombra): las tapas, los aros y el cuerpo.
-    val cuerpoR = Rect(x0, top + tapaAl * 0.7f, x0 + an, h - tapaAl * 0.5f)
-    val forma = Path().apply {
-        addRoundRect(RoundRect(Rect(x0, top, x0 + an, h - 0.5f * u), CornerRadius(an * 0.48f, tapaAl)))
-    }
-    sombraDetrasDistopia(forma, l, hacia)
-    contactoDistopia(x0, x0 + an, l, hacia)
-    // Si va abierta: el rollo de papel que asoma por la boca, con su vuelta y un poco de la cinta.
-    if (abierta) {
-        val rw = an * 0.62f
-        val rollo = Rect(cx - rw / 2, h * 0.015f, cx + rw / 2, top + tapaAl)
-        drawRect(l.c(P.HUESO), rollo.topLeft, rollo.size)
-        drawRect(l.s(0.2f), Offset(if (hacia < 0f) rollo.right - rw * 0.3f else rollo.left, rollo.top), Size(rw * 0.3f, rollo.height))
-        drawOval(l.c(mezcla(P.HUESO, P.CARPETA, 0.35f)), Offset(rollo.left, rollo.top - rw * 0.12f), Size(rw, rw * 0.24f))
-        drawArc(l.s(0.35f), 180f, 300f, false, Offset(rollo.left + rw * 0.25f, rollo.top - rw * 0.06f), Size(rw * 0.5f, rw * 0.12f), style = Stroke(0.7f * u))
-        drawRect(l.c(P.CARTEL), Offset(rollo.left, rollo.top + rollo.height * 0.4f), Size(rw, 1.6f * u))
-    }
-    // El cuerpo esmaltado, con su volumen de cilindro.
-    val cuerpo = Path().apply { addRect(cuerpoR) }
-    cilindroDistopia(cuerpo, esmalte, l, hacia, 0.55f)
-    clipPath(cuerpo) {
-        // Los roces del esmalte: rayas claras a lo ancho y alguna saltadura que deja ver el aluminio.
-        for (j in 0 until 3) {
-            val y = cuerpoR.top + cuerpoR.height * (0.3f + 0.22f * azar(s, 30 + j) + 0.2f * j)
-            drawLine(l.b(0.25f), Offset(x0 + an * 0.15f, y), Offset(x0 + an * (0.45f + 0.3f * azar(s, 33 + j)), y - 0.6f * u), 0.7f * u)
+    val capAl = h * 0.06f
+    val topeAl = h * 0.085f
+    val baseAl = h * 0.035f
+    val topeA = Rect(cx - topeAn / 2, top + capAl * 0.8f, cx + topeAn / 2, top + capAl * 0.8f + topeAl)
+    val topeB = Rect(cx - topeAn / 2, h - 0.5f * u - baseAl - topeAl, cx + topeAn / 2, h - 0.5f * u - baseAl)
+    val cuerpoR = Rect(x0, topeA.bottom - 1.5f * u, x0 + an, topeB.top + 1.5f * u)
+    rotate(giro, Offset(if (giro > 0f) cx + topeAn / 2 else cx - topeAn / 2, h)) {
+        // La silueta (para la sombra en el fondo): el cuerpo, los topes y las tapas.
+        val forma = Path().apply {
+            addRect(Rect(x0, top, x0 + an, h - 0.5f * u))
+            addRoundRect(RoundRect(topeA, CornerRadius(topeAl * 0.45f)))
+            addRoundRect(RoundRect(topeB, CornerRadius(topeAl * 0.45f)))
         }
-        saltadoDistopia(Offset(x0 + an * (0.25f + 0.5f * azar(s, 36)), cuerpoR.top + cuerpoR.height * (0.62f + 0.2f * azar(s, 37))), an * 0.09f, s + 38, l.c(P.ACERO_LUZ), l.b(0.4f))
+        sombraDetrasDistopia(forma, l, hacia)
+        contactoDistopia(cx - topeAn / 2, cx + topeAn / 2, l, hacia)
+        // Si va abierta: el rollo de papel que asoma por la boca, con su vuelta.
+        if (abierta) {
+            val rw = an * 0.64f
+            val rollo = Rect(cx - rw / 2, h * 0.012f, cx + rw / 2, topeA.top + topeAl * 0.4f)
+            drawRect(l.c(P.HUESO), rollo.topLeft, rollo.size)
+            drawRect(l.s(0.2f), Offset(if (hacia < 0f) rollo.right - rw * 0.3f else rollo.left, rollo.top), Size(rw * 0.3f, rollo.height))
+            drawOval(l.c(mezcla(P.HUESO, P.CARPETA, 0.35f)), Offset(rollo.left, rollo.top - rw * 0.12f), Size(rw, rw * 0.24f))
+            drawArc(l.s(0.35f), 180f, 300f, false, Offset(rollo.left + rw * 0.25f, rollo.top - rw * 0.06f), Size(rw * 0.5f, rw * 0.12f), style = Stroke(0.7f * u))
+        }
+        // El cuerpo esmaltado, con su volumen de cilindro y sus roces.
+        val cuerpo = Path().apply { addRect(cuerpoR) }
+        cilindroDistopia(cuerpo, esmalte, l, hacia, 0.5f)
+        clipPath(cuerpo) {
+            for (j in 0 until 2) {
+                val y = cuerpoR.top + cuerpoR.height * (0.15f + 0.65f * azar(s, 30 + j))
+                drawLine(l.b(0.25f), Offset(x0 + an * 0.15f, y), Offset(x0 + an * (0.45f + 0.3f * azar(s, 33 + j)), y - 0.6f * u), 0.7f * u)
+            }
+        }
+        // La tarjeta de destino, arriba del cuerpo, metida bajo su fleje de acero.
+        val eti = rectEtiquetaDistopia(x0, an, cuerpoR.top + 3.4f * u)
+        drawRect(l.s(0.4f), eti.topLeft + Offset(-hacia * 1.2f * u, 1.4f * u), eti.size)
+        tarjetaDistopia(v, medidor, l, eti, raya = false)
+        val fleje = Rect(x0 - 0.6f * u, eti.top - 2.2f * u, x0 + an + 0.6f * u, eti.top + 1.2f * u)
+        drawRect(Brush.verticalGradient(listOf(l.c(P.ACERO_LUZ), l.c(P.ACERO)), fleje.top, fleje.bottom), fleje.topLeft, fleje.size)
+        drawRect(l.s(0.35f), Offset(fleje.left, fleje.bottom), Size(fleje.width, 0.9f * u))
+        // La ventanilla, debajo: el marco de acero y, tras el celuloide, el expediente enrollado (crema, con el canto de la última
+        // hoja en diagonal), un poco teñido por el vidrio.
+        val ve = Rect(cx - an * 0.24f, eti.bottom + 3.2f * u, cx + an * 0.24f, cuerpoR.bottom - 3f * u)
+        if (ve.height > 6f * u) {
+            val vent = Path().apply { addRoundRect(RoundRect(ve, CornerRadius(ve.width / 2))) }
+            drawPath(vent, l.a.hondo.copy(alpha = 0.85f))
+            clipPath(vent) {
+                val rollo = Rect(ve.left + ve.width * 0.1f, ve.top, ve.right - ve.width * 0.1f, ve.bottom)
+                cilindroDistopia(Path().apply { addRect(rollo) }, l.c(mezcla(P.HUESO, P.CARPETA, 0.15f)), l, hacia, 0.3f)
+                val hoja = Path().apply { moveTo(rollo.left, ve.top + ve.height * 0.55f); lineTo(rollo.right, ve.top + ve.height * 0.32f) }
+                drawPath(hoja, l.s(0.4f), style = Stroke(0.9f * u))
+                drawPath(Path().apply { moveTo(rollo.left, ve.top + ve.height * 0.55f + 1f * u); lineTo(rollo.right, ve.top + ve.height * 0.32f + 1f * u) }, l.b(0.4f), style = Stroke(0.6f * u))
+                drawRect(l.c(P.ACERO_LUZ).copy(alpha = 0.16f), ve.topLeft, ve.size)
+                drawRect(l.b(0.75f), Offset(if (hacia < 0f) ve.left + ve.width * 0.18f else ve.right - ve.width * 0.3f, ve.top), Size(ve.width * 0.12f, ve.height))
+            }
+            drawPath(vent, l.c(mezcla(P.ACERO_LUZ, P.ACERO, 0.3f)), style = Stroke(1.2f * u))
+        }
+        if (l.k > 0.06f) drawPath(bordeDistopia(cuerpo, -hacia * 1.4f * u, 0f), l.filo(0.75f))
+        if (l.luna > 0.05f) drawPath(bordeDistopia(cuerpo, 1.2f * u, 0f), l.frio(0.55f))
+        // Los topes de fieltro, oscuros y más anchos que el cuerpo, con su pespunte y su pelo.
+        for (t in listOf(topeA, topeB)) {
+            val tp = Path().apply { addRoundRect(RoundRect(t, CornerRadius(t.height * 0.45f))) }
+            drawPath(corridoDistopia(tp, -hacia * 1.4f * u, 1.6f * u), l.s(0.45f))
+            cilindroDistopia(tp, fieltro, l, hacia, 0.14f)
+            val pes = Path()
+            var xp = t.left + t.height * 0.4f; var jp = 0
+            while (xp < t.right - t.height * 0.4f && jp < 30) { pes.addRect(Rect(xp, t.center.y - 0.4f * u, xp + 1.4f * u, t.center.y + 0.4f * u)); xp += 2.8f * u; jp++ }
+            drawPath(pes, l.b(0.28f))
+            drawLine(l.b(0.3f), Offset(t.left + t.height * 0.4f, t.top + 0.8f * u), Offset(t.right - t.height * 0.4f, t.top + 0.8f * u), 0.7f * u)
+            drawLine(l.s(0.5f), Offset(t.left + t.height * 0.3f, t.bottom - 0.6f * u), Offset(t.right - t.height * 0.3f, t.bottom - 0.6f * u), 1f * u)
+            if (l.k > 0.06f) drawPath(bordeDistopia(tp, -hacia * 1.2f * u, 0f), l.filo(0.6f))
+        }
+        // La tapa de abajo, corta, de acero pavonado.
+        val base = Path().apply { addRoundRect(RoundRect(Rect(x0 + an * 0.06f, topeB.bottom - 1f * u, x0 + an * 0.94f, h - 0.5f * u), CornerRadius(an * 0.2f, baseAl * 0.5f))) }
+        cilindroDistopia(base, l.c(pavonado), l, hacia, 0.6f)
+        // Arriba: la tapa pavonada con sus dos orejetas de bayoneta (o, sin tapa, la boca con el rollo).
+        if (!abierta) {
+            val tapa = Rect(x0 + an * 0.04f, top, x0 + an * 0.96f, topeA.top + 1.5f * u)
+            listOf(tapa.left - an * 0.1f, tapa.right - an * 0.04f).forEach { ox ->
+                drawRoundRect(l.c(mezcla(pavonado, P.ACERO_LUZ, 0.25f)), Offset(ox, tapa.bottom - capAl * 0.72f), Size(an * 0.14f, capAl * 0.5f), CornerRadius(1.2f * u))
+            }
+            val tp = Path().apply { addRoundRect(RoundRect(tapa, CornerRadius(an * 0.24f, capAl * 0.55f))) }
+            cilindroDistopia(tp, l.c(pavonado), l, hacia, 0.7f)
+            drawLine(l.b(0.6f), Offset(tapa.left + an * 0.15f, top + 1.2f * u), Offset(tapa.right - an * 0.15f, top + 1.2f * u), 0.9f * u)
+            drawLine(l.s(0.45f), Offset(tapa.left, tapa.bottom - capAl * 0.3f), Offset(tapa.right, tapa.bottom - capAl * 0.3f), 0.8f * u)
+        } else {
+            val boca = Rect(x0 + an * 0.04f, topeA.top - capAl * 0.3f, x0 + an * 0.96f, topeA.top + capAl * 0.3f)
+            drawOval(l.c(pavonado), boca.topLeft, boca.size)
+            val rw = an * 0.64f
+            drawRect(l.c(P.HUESO), Offset(cx - rw / 2, h * 0.012f), Size(rw, boca.center.y - h * 0.012f))
+            drawRect(l.s(0.2f), Offset(if (hacia < 0f) cx + rw * 0.2f else cx - rw / 2, h * 0.012f), Size(rw * 0.3f, boca.center.y - h * 0.012f))
+        }
+        if (v.noche) mediaLunaDistopia(Offset(cx, ve.top + minOf(ve.height * 0.5f, 9f * u)), minOf(an * 0.24f, 5.6f * u), l, hacia)
     }
-    // Los dos aros de fieltro, más anchos que el cuerpo, oscuros, con su pelo.
-    for (fy in listOf(0.1f, 0.84f)) {
-        val y = cuerpoR.top + cuerpoR.height * fy - (if (fy < 0.5f) 0f else tapaAl * 0.2f)
-        val aro = Rect(x0 - an * 0.07f, y, x0 + an * 1.07f, y + h * 0.07f)
-        val ap = Path().apply { addRoundRect(RoundRect(aro, CornerRadius(aro.height * 0.45f))) }
-        drawPath(corridoDistopia(ap, -hacia * 1.4f * u, 1.6f * u), l.s(0.4f))
-        cilindroDistopia(ap, fieltro, l, hacia, 0.12f)
-        for (j in 0 until 5) drawLine(l.b(0.16f), Offset(aro.left + aro.width * (0.1f + 0.18f * j), aro.top + 1.2f * u), Offset(aro.left + aro.width * (0.13f + 0.18f * j), aro.bottom - 1.2f * u), 0.6f * u)
-        drawLine(l.s(0.45f), Offset(aro.left + 2f * u, aro.bottom), Offset(aro.right - 2f * u, aro.bottom), 1f * u)
-    }
-    // La tapa de abajo, redondeada, de acero pavonado.
-    val abajo = Path().apply { addRoundRect(RoundRect(Rect(x0, h - tapaAl - 0.5f * u, x0 + an, h - 0.5f * u), CornerRadius(an * 0.3f, tapaAl * 0.55f))) }
-    cilindroDistopia(abajo, l.c(pavonado), l, hacia, 0.6f)
-    // La tapa de arriba, de rosca, con su copete y el pestillo de bayoneta (o la boca abierta, si va sin tapa).
-    if (!abierta) {
-        // La tapa de rosca: casi plana, de cantos redondeados, con el reborde moleteado y su ranura.
-        val tapa = Path().apply { addRoundRect(RoundRect(Rect(x0, top, x0 + an, top + tapaAl * 1.15f), CornerRadius(an * 0.22f, tapaAl * 0.45f))) }
-        cilindroDistopia(tapa, l.c(pavonado), l, hacia, 0.75f)
-        drawLine(l.b(0.6f), Offset(x0 + an * 0.18f, top + 1.2f * u), Offset(x0 + an * 0.82f, top + 1.2f * u), 0.9f * u)
-        val mol = Path()
-        var xm = x0 + an * 0.08f; var jm = 0
-        while (xm < x0 + an * 0.94f && jm < 30) { mol.moveTo(xm, top + tapaAl * 0.62f); mol.lineTo(xm, top + tapaAl * 1.05f); xm += 1.8f * u; jm++ }
-        drawPath(mol, l.s(0.3f), style = Stroke(0.6f * u))
-    } else {
-        val boca = Rect(x0, top + tapaAl * 0.4f, x0 + an, top + tapaAl * 0.9f)
-        drawOval(l.c(pavonado), boca.topLeft, boca.size)
-        drawOval(l.a.hondo.copy(alpha = 0.7f), Offset(boca.left + an * 0.08f, boca.top + boca.height * 0.15f), Size(an * 0.84f, boca.height * 0.6f))
-        val rw = an * 0.62f
-        drawRect(l.c(P.HUESO), Offset(cx - rw / 2, top - h * 0.02f), Size(rw, boca.center.y - top + h * 0.02f))
-        drawRect(l.s(0.2f), Offset(if (hacia < 0f) cx + rw * 0.2f else cx - rw / 2, top - h * 0.02f), Size(rw * 0.3f, boca.center.y - top + h * 0.02f))
-    }
-    // La abrazadera con la tarjeta de destino, a media altura: la tarjeta metida bajo el fleje de acero.
-    val eti = rectEtiquetaDistopia(x0, an, cuerpoR.top + cuerpoR.height * (0.26f + 0.1f * azar(s, 40)))
-    drawRect(l.s(0.4f), eti.topLeft + Offset(-hacia * 1.2f * u, 1.4f * u), eti.size)
-    tarjetaDistopia(v, medidor, l, eti, raya = false)
-    val fleje = Rect(x0 - 0.6f * u, eti.top + eti.height * 0.0f - 2.2f * u, x0 + an + 0.6f * u, eti.top + 1.2f * u)
-    drawRect(Brush.verticalGradient(listOf(l.c(P.ACERO_LUZ), l.c(P.ACERO)), fleje.top, fleje.bottom), fleje.topLeft, fleje.size)
-    drawRect(l.s(0.35f), Offset(fleje.left, fleje.bottom), Size(fleje.width, 0.9f * u))
-    drawCircle(l.c(P.HIERRO), 1f * u, Offset(x0 + an * (if (hacia < 0f) 0.85f else 0.15f), fleje.center.y))
-    if (l.k > 0.06f) drawPath(bordeDistopia(cuerpo, -hacia * 1.4f * u, 0f), l.filo(0.75f))
-    if (l.luna > 0.05f) drawPath(bordeDistopia(cuerpo, 1.2f * u, 0f), l.frio(0.55f))
-    if (v.noche) mediaLunaDistopia(Offset(cx, eti.bottom + (cuerpoR.bottom - eti.bottom) * 0.42f), minOf(an * 0.24f, 6f * u), l, hacia)
 }
 
 // ---------------------------------------------------------------- el legajo atado
@@ -332,7 +363,7 @@ private fun DrawScope.legajoDistopia(v: Volumen, tono: Color?, medidor: TextMeas
         // Una hoja doblada por la esquina, encima de todo.
         val ex = x0 + an * (0.2f + 0.4f * azar(s, 95))
         drawPath(poligonoDistopia(Offset(ex, top - papeles * 0.6f), Offset(ex + an * 0.18f, top - papeles * 0.85f), Offset(ex + an * 0.12f, top - papeles * 0.4f)), l.c(mezcla(P.HUESO, P.CARPETA, 0.2f)))
-        planosDistopia(forma, camisa, l, hacia, 0.22f, 0.28f)
+        planosDistopia(forma, camisa, l, hacia, 0.2f, 0.34f)
         clipPath(forma) {
             // El lomo del doblez: una franja redondeada en el lado de la luz, más clara, con su pliegue.
             val lomoX = if (hacia < 0f) x0 else x0 + an * 0.86f
