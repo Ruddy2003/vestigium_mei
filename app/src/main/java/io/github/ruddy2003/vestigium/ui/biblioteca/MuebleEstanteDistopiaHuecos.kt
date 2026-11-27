@@ -34,15 +34,17 @@ internal object HuecosEstanteDistopia {
         val i = Math.floorMod(2 * k + k / 5, 5)
         if (libre > w * 0.5f) {
             val mitad = libre * 0.5f
-            grupo(orden[i], Rect(x0, r.top, x0 + mitad, r.bottom), g)
-            grupo(orden[Math.floorMod(i + 2, 5)], Rect(x0 + mitad + w * 0.012f, r.top, r.right - w * 0.026f, r.bottom), g)
+            grupo(orden[i], Rect(x0, r.top, x0 + mitad, r.bottom), g, centrado = true)
+            grupo(orden[Math.floorMod(i + 2, 5)], Rect(x0 + mitad + w * 0.012f, r.top, r.right - w * 0.026f, r.bottom), g, centrado = true)
         } else grupo(orden[i], Rect(x0, r.top, x0 + libre, r.bottom), g)
     }
 
-    private fun DrawScope.grupo(cual: Int, r: Rect, g: MarcoDistopia) {
+    /** Un grupo en su sitio [r]: pegado a las entradas o, si comparte un hueco muy ancho con otro, en medio de su mitad. */
+    private fun DrawScope.grupo(cual: Int, r: Rect, g: MarcoDistopia, centrado: Boolean = false) {
         val w = g.w
         val an = minOf(r.width, w * 0.3f)
-        val z = Rect(r.left, r.top, r.left + an, r.bottom)
+        val x0 = if (centrado) r.left + (r.width - an) * 0.5f else r.left
+        val z = Rect(x0, r.top, x0 + an, r.bottom)
         val l = g.luz(z.center.x, z.top + z.height * 0.55f, 0.05f)
         val hacia = g.hacia(z.center.x, z.center.y)
         when (cual) {
@@ -100,18 +102,24 @@ internal object HuecosEstanteDistopia {
             if (l.k > 0.06f) drawLine(l.filo(0.7f), Offset(lomo.left, lomo.top + 1f), Offset(lomo.right, lomo.top + 1f), 1f * u)
             y -= al
         }
-        // El fichero de cajón, de chapa verde oliva: el cajón algo sacado, con las fichas que asoman y sus pestañas de colores.
-        val fichas = Path()
-        val pestanas = Path()
-        val nf = 9
+        // El fichero de cajón, de chapa verde oliva, con las fichas de pie dentro: anchas como el cajón, una detrás de otra, cada
+        // una asomando un poco más, con sus pestañas (las guías de cartón) a distintas alturas y alturas.
+        val nf = 5
         for (j in 0 until nf) {
-            val fx = fichero.left + fichero.width * (0.08f + 0.84f * j / (nf - 1f))
-            val alto = z.height * (0.06f + 0.05f * azar(8001, j))
-            fichas.addRect(Rect(fx - fichero.width * 0.05f, fichero.top - alto, fx + fichero.width * 0.04f, fichero.top + 2f))
-            if (j % 3 == 1) pestanas.addRect(Rect(fx - fichero.width * 0.05f, fichero.top - alto - z.height * 0.03f, fx - fichero.width * 0.01f, fichero.top - alto + 1f))
+            val alto = z.height * (0.035f + 0.022f * (nf - 1 - j) + 0.012f * azar(8001, j))
+            val f = Rect(fichero.left + fichero.width * (0.07f + 0.012f * j), fichero.top - alto, fichero.right - fichero.width * (0.07f + 0.012f * j), fichero.top + 2f)
+            val guia = j == 1 || j == 3
+            val col = l.c(if (guia) mezcla(P.CARPETA, P.CARTON, 0.2f) else mezcla(P.HUESO, P.CARPETA, 0.15f * j))
+            drawRect(col, f.topLeft, f.size)
+            if (guia) {
+                // La pestaña de la guía, a un lado.
+                val px = f.left + f.width * (if (j == 1) 0.12f else 0.58f)
+                drawRect(col, Offset(px, f.top - z.height * 0.035f), Size(f.width * 0.26f, z.height * 0.036f))
+                drawRect(l.b(0.4f), Offset(px, f.top - z.height * 0.035f), Size(f.width * 0.26f, 0.8f * u))
+            }
+            drawRect(l.b(0.45f), f.topLeft, Size(f.width, 0.8f * u))
+            drawRect(l.s(0.28f), Offset(f.left, f.top + 0.8f * u), Size(f.width, 1.2f * u))
         }
-        drawPath(fichas, l.c(mezcla(P.HUESO, P.CARPETA, 0.25f)))
-        drawPath(pestanas, l.c(P.CARTEL))
         val caja = rr(fichero, 2f * u)
         planosDistopia(caja, l.c(mezcla(P.OLIVA, P.ACERO, 0.35f)), l, hacia, 0.18f, 0.26f)
         drawLine(l.b(0.6f), Offset(fichero.left + 1f * u, fichero.top + 1f * u), Offset(fichero.right - 1f * u, fichero.top + 1f * u), 1f * u)
@@ -252,11 +260,13 @@ internal object HuecosEstanteDistopia {
         drawRoundRect(lf.c(mezcla(P.ACERO_LUZ, P.OLIVA, 0.2f)), tapa.topLeft, tapa.size, CornerRadius(fh * 0.12f))
         drawLine(lf.b(0.7f), Offset(tapa.left + 3f * u, tapa.top + 1f * u), Offset(tapa.right - 3f * u, tapa.top + 1f * u), 1f * u)
         drawLine(lf.s(0.4f), Offset(tapa.left, tapa.bottom), Offset(tapa.right, tapa.bottom), 1.2f * u)
-        // El cierre: el alambre que pasa por encima y su gancho al frente.
-        val ce = Offset(f.center.x, tapa.bottom + fh * 0.12f)
-        drawLine(lf.c(P.HIERRO), Offset(ce.x - fw * 0.06f, tapa.top), Offset(ce.x - fw * 0.06f, ce.y), 1.2f * u)
-        drawLine(lf.c(P.HIERRO), Offset(ce.x + fw * 0.06f, tapa.top), Offset(ce.x + fw * 0.06f, ce.y), 1.2f * u)
-        drawRoundRect(lf.c(P.ACERO_LUZ), Offset(ce.x - fw * 0.09f, ce.y - 1f * u), Size(fw * 0.18f, fh * 0.12f), CornerRadius(1f * u))
+        // El asa de alambre, abatida hacia atrás sobre la tapa, y el cierre de pestillo al frente.
+        drawArc(lf.s(0.35f), 180f, 180f, false, Offset(f.left + fw * 0.14f + 1.2f * u, tapa.top - fh * 0.2f + 1.4f * u), Size(fw * 0.72f, fh * 0.4f), style = Stroke(1.3f * u))
+        drawArc(lf.c(P.HIERRO), 180f, 180f, false, Offset(f.left + fw * 0.14f, tapa.top - fh * 0.2f), Size(fw * 0.72f, fh * 0.4f), style = Stroke(1.3f * u))
+        listOf(f.left + fw * 0.14f, f.left + fw * 0.86f).forEach { x -> drawCircle(lf.c(P.HIERRO), 1.6f * u, Offset(x, tapa.top + 1f * u)) }
+        val ce = Offset(f.center.x, tapa.bottom + fh * 0.1f)
+        drawRoundRect(lf.c(P.ACERO_LUZ), Offset(ce.x - fw * 0.07f, tapa.bottom - 1f * u), Size(fw * 0.14f, fh * 0.16f), CornerRadius(1f * u))
+        drawLine(lf.s(0.4f), Offset(ce.x - fw * 0.07f, tapa.bottom + fh * 0.16f), Offset(ce.x + fw * 0.07f, tapa.bottom + fh * 0.16f), 0.8f * u)
         // Las abolladuras y el óxido de la lata vieja.
         abolladuraDistopia(Offset(f.left + fw * 0.7f, f.top + fh * 0.62f), fw * 0.12f, fh * 0.14f, lf)
         drawOval(lf.c(P.OXIDO).copy(alpha = 0.35f), Offset(f.left + fw * 0.08f, f.bottom - fh * 0.22f), Size(fw * 0.22f, fh * 0.12f))
@@ -269,21 +279,23 @@ internal object HuecosEstanteDistopia {
         val w = g.w; val u = density
         val pie = z.bottom
         val x0 = z.left
-        // La botella de tinta de un litro, detrás a la izquierda: vidrio casi negro, el tapón de baquelita y la etiqueta lisa.
-        val bw = minOf(z.width * 0.3f, w * 0.068f)
-        val bh = z.height * 0.84f
+        // El frasco de tinta de un litro, detrás a la izquierda: chato y cuadrado, de vidrio casi negro, con el hombro corto, el
+        // tapón de baquelita y la etiqueta lisa de papel.
+        val bw = minOf(z.width * 0.36f, w * 0.085f)
+        val bh = z.height * 0.62f
         val bot = Rect(x0, pie - bh, x0 + bw, pie)
         val lb = g.luz(bot.center.x, bot.center.y, 0.045f)
-        val botella = cerradaDistopia(listOf(Offset(bot.left + bw * 0.34f, bot.top + bh * 0.1f), Offset(bot.right - bw * 0.34f, bot.top + bh * 0.1f), Offset(bot.right - bw * 0.3f, bot.top + bh * 0.26f),
-            Offset(bot.right, bot.top + bh * 0.42f), Offset(bot.right, pie - 2f * u), Offset(bot.left, pie - 2f * u), Offset(bot.left, bot.top + bh * 0.42f), Offset(bot.left + bw * 0.3f, bot.top + bh * 0.26f)))
+        val botella = cerradaDistopia(listOf(Offset(bot.left + bw * 0.3f, bot.top + bh * 0.12f), Offset(bot.right - bw * 0.3f, bot.top + bh * 0.12f), Offset(bot.right - bw * 0.06f, bot.top + bh * 0.24f),
+            Offset(bot.right, bot.top + bh * 0.36f), Offset(bot.right, pie - 2f * u), Offset(bot.left, pie - 2f * u), Offset(bot.left, bot.top + bh * 0.36f), Offset(bot.left + bw * 0.06f, bot.top + bh * 0.24f)))
         sombras(botella, bot.left, bot.right, pie, lb, hacia)
-        planosDistopia(botella, lb.c(Color(0xFF243038)), lb, hacia, 0.2f, 0.3f)
-        drawRect(lb.c(mezcla(P.HUESO, P.CARPETA, 0.3f)), Offset(bot.left + 1f * u, bot.top + bh * 0.52f), Size(bw - 2f * u, bh * 0.24f))
-        drawRect(lb.c(P.FONDO), Offset(bot.left + 1f * u, bot.top + bh * 0.56f), Size(bw - 2f * u, 1f * u))
-        drawRect(lb.b(0.8f), Offset(if (hacia < 0f) bot.left + bw * 0.16f else bot.right - bw * 0.24f, bot.top + bh * 0.42f), Size(bw * 0.08f, bh * 0.08f))
-        drawRect(lb.b(0.7f), Offset(if (hacia < 0f) bot.left + bw * 0.16f else bot.right - bw * 0.24f, bot.top + bh * 0.8f), Size(bw * 0.08f, bh * 0.12f))
-        drawRoundRect(lb.c(P.BAQUELITA), Offset(bot.left + bw * 0.28f, bot.top), Size(bw * 0.44f, bh * 0.12f), CornerRadius(1.6f * u))
-        drawLine(lb.b(0.5f), Offset(bot.left + bw * 0.34f, bot.top + 1f * u), Offset(bot.right - bw * 0.34f, bot.top + 1f * u), 0.9f * u)
+        planosDistopia(botella, lb.c(Color(0xFF26323C)), lb, hacia, 0.2f, 0.3f)
+        drawRect(lb.c(mezcla(P.HUESO, P.CARPETA, 0.3f)), Offset(bot.left + 1.4f * u, bot.top + bh * 0.46f), Size(bw - 2.8f * u, bh * 0.34f))
+        drawRect(lb.c(P.CARTEL), Offset(bot.left + 1.4f * u, bot.top + bh * 0.46f), Size(bw - 2.8f * u, bh * 0.05f))
+        drawRect(lb.c(P.FONDO), Offset(bot.left + bw * 0.2f, bot.top + bh * 0.62f), Size(bw * 0.6f, 1f * u))
+        drawRect(lb.b(0.8f), Offset(if (hacia < 0f) bot.left + bw * 0.1f else bot.right - bw * 0.18f, bot.top + bh * 0.36f), Size(bw * 0.07f, bh * 0.08f))
+        drawRect(lb.b(0.7f), Offset(if (hacia < 0f) bot.left + bw * 0.1f else bot.right - bw * 0.18f, bot.top + bh * 0.84f), Size(bw * 0.07f, bh * 0.1f))
+        drawRoundRect(lb.c(P.BAQUELITA), Offset(bot.left + bw * 0.24f, bot.top), Size(bw * 0.52f, bh * 0.14f), CornerRadius(1.6f * u))
+        drawLine(lb.b(0.5f), Offset(bot.left + bw * 0.3f, bot.top + 1f * u), Offset(bot.right - bw * 0.3f, bot.top + 1f * u), 0.9f * u)
         if (lb.k > 0.06f) drawPath(bordeDistopia(botella, -hacia * 1.4f * u, 0f), lb.filo(0.7f))
         // El bloque de impresos en blanco, atado con cordel, delante.
         val iw = minOf(z.width - bw * 0.6f, w * 0.17f).coerceAtLeast(w * 0.09f)

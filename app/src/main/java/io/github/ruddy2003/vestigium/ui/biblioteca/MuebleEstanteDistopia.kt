@@ -80,7 +80,7 @@ internal object PaletaDistopia {
     val LUNA = Color(0xFFD4E0F0)
     /** El aire de la noche del sótano (el gris azulado hondo del Ideario), el de los Sueños, el anochecer y su ocaso. */
     val NOCHE = Color(0xFF121A20)
-    val NOCHE_SUENOS = Color(0xFF0E1526)
+    val NOCHE_SUENOS = Color(0xFF10161E)
     val ANOCHECER = Color(0xFF3A3352)
     val CREPUSCULO = Color(0xFFF2A070)
     val MELOCOTON = Color(0xFFF6C49C)
@@ -320,7 +320,8 @@ internal object MuebleEstanteDistopia {
      * reja del tragaluz se corra hacia la luz en lo que está delante.
      */
     fun luz(a: AireDistopia, x: Float, y: Float, alto: Float, repisas: Int, delante: Float = 0f): LuzDistopia {
-        val kf = if (a.flexo > 0f) a.flexo * kFlexo(x, y) else 0f
+        // En la pared (y en lo que cuelga de ella), además, el lavado ancho y suave que el flexo deja en todo el cuarto.
+        val kf = if (a.flexo > 0f) a.flexo * (if (delante < 0.015f) maxOf(kFlexo(x, y), lavadoFlexo(x, y)) else kFlexo(x, y)) else 0f
         val kl = if (a.lampara > 0f) a.lampara * (1.9f * exp(-5.9f * dist(x - LAMPARA_X, (y - lamparaY(repisas)) * 0.74f))).coerceAtMost(1f) else 0f
         val ke = if (a.estufa > 0f) a.estufa * kEstufa(x, y, alto) else 0f
         val k = (kf + kl + ke).coerceIn(0f, 1f)
@@ -345,6 +346,9 @@ internal object MuebleEstanteDistopia {
         val dx = (x - FLEXO_X) * (if (x < FLEXO_X) 0.74f else 1.05f)
         return (1.95f * exp(-4.7f * dist(dx, dy))).coerceAtMost(1f) * tapa
     }
+
+    /** El lavado de la pared: la luz del flexo que rebota en el cuarto, ancha y floja (como el halo de la pared del Ideario). */
+    fun lavadoFlexo(x: Float, y: Float): Float = (0.8f * exp(-1.9f * dist((x - FLEXO_X) * 0.8f, (y - FLEXO_Y + 0.08f) * 0.9f))).coerceAtMost(0.8f)
 
     /** Cuánto alumbra la estufa un punto (sin contar si arde): un charco que sube por el zócalo y la última repisa. */
     fun kEstufa(x: Float, y: Float, alto: Float, oscuro: Boolean = true): Float {

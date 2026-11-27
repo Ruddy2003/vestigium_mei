@@ -253,10 +253,14 @@ private fun DrawScope.capsulaDistopia(v: Volumen, tono: Color?, medidor: TextMea
     cilindroDistopia(abajo, l.c(pavonado), l, hacia, 0.6f)
     // La tapa de arriba, de rosca, con su copete y el pestillo de bayoneta (o la boca abierta, si va sin tapa).
     if (!abierta) {
-        val tapa = Path().apply { addRoundRect(RoundRect(Rect(x0, top, x0 + an, top + tapaAl * 1.15f), CornerRadius(an * 0.46f, tapaAl * 0.9f))) }
+        // La tapa de rosca: casi plana, de cantos redondeados, con el reborde moleteado y su ranura.
+        val tapa = Path().apply { addRoundRect(RoundRect(Rect(x0, top, x0 + an, top + tapaAl * 1.15f), CornerRadius(an * 0.22f, tapaAl * 0.45f))) }
         cilindroDistopia(tapa, l.c(pavonado), l, hacia, 0.75f)
-        for (j in 0 until 2) drawLine(l.s(0.35f), Offset(x0 + an * 0.06f, top + tapaAl * (0.78f + 0.16f * j)), Offset(x0 + an * 0.94f, top + tapaAl * (0.78f + 0.16f * j)), 0.7f * u)
-        drawCircle(l.c(P.HIERRO), minOf(an * 0.08f, 2.2f * u), Offset(x0 + an * (if (hacia < 0f) 0.76f else 0.24f), top + tapaAl * 0.55f))
+        drawLine(l.b(0.6f), Offset(x0 + an * 0.18f, top + 1.2f * u), Offset(x0 + an * 0.82f, top + 1.2f * u), 0.9f * u)
+        val mol = Path()
+        var xm = x0 + an * 0.08f; var jm = 0
+        while (xm < x0 + an * 0.94f && jm < 30) { mol.moveTo(xm, top + tapaAl * 0.62f); mol.lineTo(xm, top + tapaAl * 1.05f); xm += 1.8f * u; jm++ }
+        drawPath(mol, l.s(0.3f), style = Stroke(0.6f * u))
     } else {
         val boca = Rect(x0, top + tapaAl * 0.4f, x0 + an, top + tapaAl * 0.9f)
         drawOval(l.c(pavonado), boca.topLeft, boca.size)
@@ -346,14 +350,6 @@ private fun DrawScope.legajoDistopia(v: Volumen, tono: Color?, medidor: TextMeas
             // El cartón gastado en la cabeza y el pie, y una mancha de humedad.
             drawRect(mezcla(camisa, P.HUESO, 0.2f).copy(alpha = 0.5f), Offset(x0 - panza, top), Size(an + 2 * panza, 1.8f * u))
             drawOval(l.c(P.OXIDO).copy(alpha = 0.18f), Offset(x0 + an * (0.1f + 0.4f * azar(s, 96)), h * (0.78f + 0.08f * azar(s, 97))), Size(an * 0.5f, h * 0.1f))
-            // Los pliegues que hace el balduque al apretar.
-            val pl = Path()
-            val yb = h * (0.6f + 0.06f * azar(s, 98))
-            for (j in 0 until 3) {
-                val xp = x0 + an * (0.25f + 0.25f * j)
-                pl.moveTo(xp, yb - h * 0.08f); pl.quadraticTo(xp + an * 0.04f, yb - h * 0.03f, xp, yb)
-            }
-            drawPath(pl, l.s(0.3f), style = Stroke(1f * u))
         }
         if (l.k > 0.06f) drawPath(bordeDistopia(forma, -hacia * 1.4f * u, 0f), l.filo(0.75f))
         if (l.luna > 0.05f) drawPath(bordeDistopia(forma, 1.2f * u, 0f), l.frio(0.55f))

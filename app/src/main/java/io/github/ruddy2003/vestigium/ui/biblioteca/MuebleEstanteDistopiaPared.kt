@@ -379,8 +379,8 @@ internal object ParedEstanteDistopia {
         // La junta de las dos chapas del fondo, con sus remaches y el óxido que chorrea de alguno.
         val xj = r.left + r.width * (if (k % 2 == 0) 0.36f else 0.64f)
         val lj = g.luz(xj, r.center.y, 0f)
-        drawLine(lj.s(0.45f), Offset(xj, r.top), Offset(xj, r.bottom), 1.4f * u)
-        drawLine(lj.b(0.3f), Offset(xj + 1.4f * u, r.top), Offset(xj + 1.4f * u, r.bottom), 0.8f * u)
+        drawLine(lj.s(0.3f), Offset(xj, r.top), Offset(xj, r.bottom), 1.2f * u)
+        drawLine(lj.b(0.2f), Offset(xj + 1.2f * u, r.top), Offset(xj + 1.2f * u, r.bottom), 0.8f * u)
         for (i in 0 until 4) {
             val c = Offset(xj + 3.2f * u, r.top + r.height * (0.28f + 0.2f * i))
             if (azar(s, 40 + i) < 0.4f) drawRect(lj.c(P.OXIDO).copy(alpha = 0.32f), Offset(c.x - 0.8f * u, c.y), Size(1.6f * u, r.height * (0.06f + 0.12f * azar(s, 50 + i))))

@@ -177,18 +177,26 @@ internal object CoronaEstanteDistopia {
             val bastidor = Path().apply { addOval(Rect(P(cx, cy), S(rt))) }
             planosDistopia(bastidor, lt.c(P.ESMALTE), lt, hacia, 0.2f, 0.26f)
             drawArc(lt.b(0.6f), 200f, 70f, false, P(cx - rt, cy - rt), Size(S(rt * 2), S(rt * 2)), style = Stroke(1.2f * u))
-            // La tapa de acero del tambor, con su aro, el cubo de baquelita y los tres tornillos.
-            val tapa = Path().apply { addOval(Rect(P(cx, cy), S(rt * 0.74f))) }
-            cilindroDistopia(tapa, lt.c(P.ACERO_LUZ), lt, hacia, 0.4f)
-            drawCircle(lt.s(0.35f), S(rt * 0.74f), P(cx, cy), style = Stroke(1.4f * u))
-            drawCircle(lt.c(P.ACERO), S(rt * 0.5f), P(cx, cy), style = Stroke(1f * u))
-            drawArc(lt.b(0.8f), 190f, 80f, false, P(cx - rt * 0.7f, cy - rt * 0.7f), Size(S(rt * 1.4f), S(rt * 1.4f)), style = Stroke(1.2f * u))
-            for (i in 0 until 3) {
-                val a = (i * 120f + 30f) * 3.1416f / 180f
-                drawCircle(lt.c(P.HIERRO), 1.3f * u, P(cx + cos(a) * rt * 0.34f, cy + sin(a) * rt * 0.34f))
+            // El volante del tambor, de fundición: la llanta, cinco radios y el cubo de acero (se ve el hueco oscuro entre los radios).
+            val c0 = P(cx, cy)
+            drawCircle(mezcla(lt.c(P.ESMALTE), ParedEstanteDistopia.honda(g), 0.55f), S(rt * 0.7f), c0)
+            val radios = Path()
+            for (i in 0 until 5) {
+                val a = (i * 72f - 54f) * 3.1416f / 180f
+                val dir = Offset(cos(a), sin(a)); val n = Offset(-dir.y, dir.x)
+                val p0 = c0 + dir * S(rt * 0.16f); val p1 = c0 + dir * S(rt * 0.64f)
+                radios.moveTo(p0.x + n.x * S(rt * 0.07f), p0.y + n.y * S(rt * 0.07f)); radios.lineTo(p1.x + n.x * S(rt * 0.045f), p1.y + n.y * S(rt * 0.045f))
+                radios.lineTo(p1.x - n.x * S(rt * 0.045f), p1.y - n.y * S(rt * 0.045f)); radios.lineTo(p0.x - n.x * S(rt * 0.07f), p0.y - n.y * S(rt * 0.07f)); radios.close()
             }
-            drawCircle(lt.c(P.BAQUELITA), S(rt * 0.22f), P(cx, cy))
-            drawCircle(lt.b(0.5f), S(rt * 0.07f), P(cx - rt * 0.06f, cy - rt * 0.06f))
+            drawPath(corridoDistopia(radios, -hacia * 1f * u, 1.2f * u), lt.s(0.4f))
+            drawPath(radios, lt.c(P.ACERO))
+            drawPath(bordeDistopia(radios, hacia * 0.8f * u, 0.8f * u), lt.b(0.45f))
+            drawCircle(lt.c(P.ACERO_LUZ), S(rt * 0.7f), c0, style = Stroke(S(rt * 0.09f)))
+            drawArc(lt.b(0.85f), 190f, 80f, false, P(cx - rt * 0.7f, cy - rt * 0.7f), Size(S(rt * 1.4f), S(rt * 1.4f)), style = Stroke(1.2f * u))
+            drawArc(lt.s(0.4f), 10f, 80f, false, P(cx - rt * 0.7f, cy - rt * 0.7f), Size(S(rt * 1.4f), S(rt * 1.4f)), style = Stroke(1.2f * u))
+            drawCircle(lt.c(P.ACERO_LUZ), S(rt * 0.2f), c0)
+            drawCircle(lt.s(0.35f), S(rt * 0.2f), c0, style = Stroke(1f * u))
+            drawCircle(lt.b(0.6f), S(rt * 0.07f), P(cx - rt * 0.06f, cy - rt * 0.06f))
             // La palanca de presión, cromada, abajo a la izquierda del tambor.
             drawLine(lc.c(P.ACERO_LUZ), P(0.27f, 0.425f), P(0.245f, 0.395f), 2f * u, StrokeCap.Round)
             drawCircle(lc.c(P.BAQUELITA), S(0.007f), P(0.243f, 0.392f))
