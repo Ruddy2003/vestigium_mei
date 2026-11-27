@@ -109,10 +109,13 @@ internal class EscenaLibretaCiber(val w: Float, val h: Float, val u: Float) {
     val px0 = cx - pw / 2
     val px1 = cx + pw / 2
     val papelArriba = h * 0.075f
+    /** El borde de abajo del reverso del rizo, que cuelga delante de la hoja. */
+    val rizoBajo = papelArriba + h * 0.03f
     /** La guía de alambre del papel, justo encima de la tapa del carro. */
     val guia = capota - h * 0.018f
     val lampara = Offset(px1 + h * 0.085f, h * 0.2f)
-    val cesto = Rect(x1 + h * 0.03f, h * 0.64f, x1 + h * 0.36f, h * 0.945f)
+    /** El cesto: tan ancho como quepa entero entre la consola y el borde (de 0.2 a 0.33 del alto), arrimado a la pata. */
+    val cesto = (x1 + h * 0.03f).let { l -> Rect(l, h * 0.64f, l + (w - l - h * 0.02f).coerceIn(h * 0.2f, h * 0.33f), h * 0.945f) }
     val luz = LuzLibretaCiber(h, lampara)
 }
 
@@ -178,8 +181,8 @@ internal object MuebleLibretaCiber {
         val lh = h * 0.034f
         val sube = ab * lh * 1.6f
         val tinta = mezcla(TINTA, NOCHE, 0.15f)
-        clipRect(g.px0, g.papelArriba + h * 0.008f, g.px1, g.guia - h * 0.006f) {
-            var y = g.papelArriba + h * 0.03f - sube
+        clipRect(g.px0, g.rizoBajo + h * 0.006f, g.px1, g.guia - h * 0.006f) {
+            var y = g.rizoBajo + h * 0.016f - sube
             textoEn(medidor, e.nombre, Rect(x0, y, x1, y + lh * 1.25f), Letra.codigo, tinta, 12f, peso = FontWeight.Bold, minimo = 7f)
             y += lh * 1.3f
             val partes = e.cuenta.split(" · ")
@@ -256,7 +259,7 @@ internal object MuebleLibretaCiber {
         val u = g.u; val h = g.h
         val r = g.cesto
         val lleno = sqrt((e.hojas.coerceIn(1, 240) - 1) / 239f)
-        val alto = (h * 0.035f + h * 0.2f * lleno).coerceAtMost(r.height * 0.85f)
+        val alto = if (e.hojas <= 1) 0f else (h * 0.035f + h * 0.2f * lleno).coerceAtMost(r.height * 0.85f)
         val grueso = 3.2f * u
         var y = r.bottom - h * 0.012f - grueso
         val tope = r.bottom - h * 0.012f - alto
@@ -274,14 +277,17 @@ internal object MuebleLibretaCiber {
         // El borde de delante del cesto y sus alambres, por delante del papel.
         val tc = g.luz.t(r.center)
         val alambre = tc.c(mezcla(NEGRO, ACERO, 0.35f), 1.1f)
-        val arriba = r.top + h * 0.06f
-        drawLine(alambre, Offset(r.left, arriba), Offset(r.right, arriba), 2f * u)
-        drawLine(tc.b(0.5f), Offset(r.left, arriba - 1f * u), Offset(r.right, arriba - 1f * u), 0.7f * u)
+        val aro = Rect(r.left, r.top, r.right, r.top + h * 0.07f)
+        val arriba = aro.center.y
+        drawArc(alambre, 0f, 180f, false, aro.topLeft, aro.size, style = Stroke(2f * u))
+        drawArc(PaletaLibretaCiber.CALOR.copy(alpha = 0.75f), 20f, 110f, false, aro.topLeft.copy(y = aro.top - 1.2f * u), aro.size, style = Stroke(0.9f * u))
+        drawArc(PaletaCiber.CIAN_LUZ.copy(alpha = 0.35f), 140f, 40f, false, aro.topLeft.copy(y = aro.top - 1.2f * u), aro.size, style = Stroke(0.8f * u))
         var x = r.left + r.width * 0.06f
         var j = 0
         while (x < r.right && j < 14) {
             val xb = r.left + r.width * 0.06f + (x - r.left - r.width * 0.06f) * 0.9f + r.width * 0.04f
-            drawLine(alambre.copy(alpha = 0.85f), Offset(x, arriba), Offset(xb, r.bottom - h * 0.01f), 1.2f * u)
+            val fx = (x - r.center.x) / (r.width / 2)
+            drawLine(alambre.copy(alpha = 0.85f), Offset(x, arriba + aro.height * 0.5f * sqrt((1f - fx * fx).coerceAtLeast(0f))), Offset(xb, r.bottom - h * 0.01f), 1.2f * u)
             x += r.width / 9f; j++
         }
         drawLine(alambre, Offset(r.left + r.width * 0.06f, r.bottom - h * 0.01f), Offset(r.right - r.width * 0.02f, r.bottom - h * 0.01f), 1.6f * u)

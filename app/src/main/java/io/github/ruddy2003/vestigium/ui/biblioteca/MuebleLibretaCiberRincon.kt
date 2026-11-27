@@ -107,13 +107,21 @@ internal object RinconLibretaCiber {
         val ym = (y0 + h) / 2
         drawRect(Brush.horizontalGradient(*Array(6) { i -> val f = i / 5f; f to g.luz.t(w * f, ym).c(LINO, 0.9f) }, startX = 0f, endX = w), Offset(0f, y0), Size(w, h - y0))
         drawPath(claras, Brush.horizontalGradient(*Array(6) { i -> val f = i / 5f; f to g.luz.t(w * f, ym).c(LINO_B, 0.9f) }, startX = 0f, endX = w))
+        // El charco del flexo en el suelo, a la derecha del pie: dentro, las losetas encendidas (las claras y las oscuras se siguen
+        // distinguiendo); su borde, una elipse en perspectiva.
+        val cx0 = g.x1 - h * 0.42f; val cx1 = g.x1 + h * 0.34f
+        val charco = Path().apply { addOval(Rect(cx0, y0 + h * 0.035f, cx1, h + h * 0.08f)) }
+        clipPath(charco) {
+            drawRect(Brush.horizontalGradient(*Array(5) { i -> val f = i / 4f; f to g.luz.t(cx0 + (cx1 - cx0) * f, ym).c(LINO, 2.1f) }, startX = cx0, endX = cx1), Offset(cx0, y0), Size(cx1 - cx0, h - y0))
+            drawPath(claras, Brush.horizontalGradient(*Array(5) { i -> val f = i / 4f; f to g.luz.t(cx0 + (cx1 - cx0) * f, ym).c(LINO_B, 2.1f) }, startX = cx0, endX = cx1))
+        }
         clipRect(0f, y0, w, h) {
             pinceladas(Rect(0f, y0, w, h), NOCHE, 7110, 12, u, 0.2f)
             val juntas = Path()
             filas.forEach { yy -> juntas.moveTo(0f, yy); juntas.lineTo(w, yy) }
             for (c in -1..cols) { juntas.moveTo(xEn(c, y0), y0); juntas.lineTo(xEn(c, h), h) }
             drawPath(juntas, NOCHE.copy(alpha = 0.35f), style = Stroke(1f * u))
-            mancha(Offset(g.lampara.x - h * 0.08f, h * 0.95f), h * 0.4f, P.CALOR.copy(alpha = 0.16f))
+            mancha(Offset(g.x1 - h * 0.04f, h * 0.95f), h * 0.36f, P.CALOR.copy(alpha = 0.14f))
             drawRect(Brush.verticalGradient(listOf(NOCHE.copy(alpha = 0.5f), NOCHE.copy(alpha = 0f)), y0, y0 + h * 0.05f), Offset(0f, y0), Size(w, h * 0.05f))
         }
     }
@@ -234,6 +242,12 @@ internal object RinconLibretaCiber {
             g.x1 - h * 0.12f, g.capota + h * 0.04f), NOCHE.copy(alpha = 0.42f))
         drawPath(poligonoCiber(g.px0, g.papelArriba + h * 0.02f, g.px0 - h * 0.07f, g.papelArriba + h * 0.05f, g.px0 - h * 0.07f, g.capota, g.px0, g.capota), NOCHE.copy(alpha = 0.3f))
         drawOval(NOCHE.copy(alpha = 0.55f), Offset(g.x0 - h * 0.05f, g.suelo - h * 0.035f), Size(g.mw + h * 0.04f, h * 0.06f))
+        // Las patas y el estante bajo echan su sombra en el charco, hacia abajo y a la izquierda (el flexo queda arriba a la derecha).
+        val pa = h * 0.05f
+        val xd = g.x1 - g.mw * 0.06f - pa
+        drawPath(poligonoCiber(xd, g.suelo - h * 0.01f, xd + pa, g.suelo - h * 0.01f, xd + pa - h * 0.11f, g.h, xd - h * 0.13f, g.h), NOCHE.copy(alpha = 0.42f))
+        drawPath(poligonoCiber(g.x0 + g.mw * 0.06f, g.suelo - h * 0.005f, xd + pa, g.suelo - h * 0.005f, xd + pa - h * 0.05f, g.suelo + h * 0.03f, g.x0 + g.mw * 0.06f - h * 0.05f, g.suelo + h * 0.03f),
+            NOCHE.copy(alpha = 0.3f))
     }
 
     // ---------------------------------------------------------------- el pie
@@ -258,13 +272,29 @@ internal object RinconLibretaCiber {
         val pila = Rect(caja.left + h * 0.025f, caja.top - h * 0.03f, caja.right - h * 0.025f, caja.top + h * 0.004f)
         drawRect(tc.c(PAPEL, 0.85f), pila.topLeft, pila.size)
         drawRect(tc.c(RAYA, 0.85f), Offset(pila.left, pila.top + pila.height * 0.4f), Size(pila.width, pila.height * 0.25f))
-        val tira = Rect(g.cx - g.pw * 0.44f, g.base - 1f, g.cx + g.pw * 0.44f, pila.top + pila.height * 0.4f)
-        drawRect(tc.c(PAPEL, 0.7f), tira.topLeft, tira.size)
-        drawRect(tc.c(RAYA, 0.7f), Offset(tira.left, tira.top + tira.height * 0.35f), Size(tira.width, tira.height * 0.25f))
-        drawPoints(listOf(Offset(tira.left + h * 0.012f, tira.top + tira.height * 0.3f), Offset(tira.left + h * 0.012f, tira.top + tira.height * 0.75f),
-            Offset(tira.right - h * 0.012f, tira.top + tira.height * 0.3f), Offset(tira.right - h * 0.012f, tira.top + tira.height * 0.75f)),
-            PointMode.Points, NOCHE.copy(alpha = 0.7f), 2.2f * u, StrokeCap.Round)
-        drawRect(NOCHE.copy(alpha = 0.35f), Offset(tira.left, tira.top), Size(tira.width, h * 0.012f))
+        // La tira sube de la pila, inclinada hacia atrás, y entra por la trasera de la consola: el papel alumbrado, sus bandas, los
+        // agujeros de arrastre de los dos márgenes, el canto de la derecha encendido por el flexo y el de la izquierda, frío.
+        val ta = pila.top + pila.height * 0.4f
+        val tira = poligonoCiber(g.cx - g.pw * 0.44f, ta, g.cx + g.pw * 0.44f, ta, g.cx + g.pw * 0.4f + h * 0.03f, g.base - 1f, g.cx - g.pw * 0.48f + h * 0.03f, g.base - 1f)
+        val tt = g.luz.t(g.cx + g.pw * 0.3f, (ta + g.base) / 2)
+        drawPath(tira, Brush.horizontalGradient(listOf(tt.c(PAPEL, 0.9f), tt.c(PAPEL, 1.7f)), g.cx - g.pw * 0.44f, g.cx + g.pw * 0.44f))
+        clipPath(tira) {
+            var yb = g.base + h * 0.004f
+            var ib = 0
+            while (yb < ta) { if (ib % 2 == 0) drawRect(tt.c(RAYA, 1.5f).copy(alpha = 0.8f), Offset(g.cx - g.pw * 0.5f, yb), Size(g.pw * 1.1f, h * 0.012f)); yb += h * 0.012f; ib++ }
+            val ag = ArrayList<Offset>()
+            var ya = g.base + h * 0.008f
+            while (ya < ta) {
+                val f = (ya - g.base) / (ta - g.base)
+                ag.add(Offset(g.cx - g.pw * (0.46f - 0.02f * f) + h * 0.03f * (1f - f) + h * 0.012f, ya))
+                ag.add(Offset(g.cx + g.pw * (0.42f + 0.02f * f) + h * 0.03f * (1f - f) - h * 0.012f, ya))
+                ya += h * 0.016f
+            }
+            drawPoints(ag, PointMode.Points, NOCHE.copy(alpha = 0.75f), 2.2f * u, StrokeCap.Round)
+            drawRect(Brush.verticalGradient(listOf(NOCHE.copy(alpha = 0.45f), NOCHE.copy(alpha = 0f)), g.base, g.base + h * 0.02f), Offset(g.cx - g.pw * 0.5f, g.base), Size(g.pw * 1.1f, h * 0.02f))
+        }
+        drawLine(P.CALOR.copy(alpha = 0.7f), Offset(g.cx + g.pw * 0.44f, ta), Offset(g.cx + g.pw * 0.4f + h * 0.03f, g.base), 1.2f * u)
+        drawLine(PaletaCiber.CIAN_LUZ.copy(alpha = 0.45f), Offset(g.cx - g.pw * 0.44f, ta), Offset(g.cx - g.pw * 0.48f + h * 0.03f, g.base), 1f * u)
         // El frente de la caja: cartón con la cinta de embalar, una etiqueta sin letras y su canto.
         drawRect(Brush.horizontalGradient(*Array(4) { i -> val f = i / 3f; f to g.luz.t(caja.left + caja.width * f, caja.center.y).c(CARTON, 0.85f) }, startX = caja.left, endX = caja.right), caja.topLeft, caja.size)
         clipRect(caja.left, caja.top, caja.right, caja.bottom) {
@@ -274,17 +304,27 @@ internal object RinconLibretaCiber {
             drawRect(NOCHE.copy(alpha = 0.25f), Offset(caja.right - caja.width * 0.12f, caja.top), Size(caja.width * 0.12f, caja.height))
         }
         drawRect(tc.b(0.5f), caja.topLeft, Size(caja.width, 0.9f * u))
+        val frio = PaletaCiber.CIAN_LUZ
+        fun aFrio(x: Float) = (0.2f + 0.9f * g.luz.kFrio(Offset(x, 0f))).coerceAtMost(0.75f)
+        drawLine(frio.copy(alpha = aFrio(caja.left)), Offset(caja.left + 0.5f * u, caja.top), Offset(caja.left + 0.5f * u, caja.bottom), 1.2f * u)
+        drawLine(frio.copy(alpha = aFrio(caja.left) * 0.8f), Offset(caja.left, caja.top + 0.5f * u), Offset(caja.left + caja.width * 0.35f, caja.top + 0.5f * u), 1f * u)
         // El estante bajo: la cara de arriba y el canto, entre las patas.
         val e0 = g.estante; val e1 = g.estante + h * 0.03f
         drawRect(Brush.horizontalGradient(*Array(4) { i -> val f = i / 3f; f to g.luz.t(patas[0] + (patas[1] - patas[0]) * f, e0).c(CHAPA, 0.8f) }, startX = patas[0], endX = patas[1] + pa), Offset(patas[0], e0), Size(patas[1] + pa - patas[0], e1 - e0))
         drawRect(g.luz.t(g.cx, e0).b(0.55f), Offset(patas[0], e0), Size(patas[1] + pa - patas[0], 1f * u))
         drawRect(NOCHE.copy(alpha = 0.45f), Offset(patas[0], e1 - 1.2f * u), Size(patas[1] + pa - patas[0], 1.2f * u))
+        drawRect(Brush.horizontalGradient(listOf(frio.copy(alpha = aFrio(patas[0])), frio.copy(alpha = 0f)), patas[0], patas[0] + (patas[1] - patas[0]) * 0.5f),
+            Offset(patas[0], e0), Size((patas[1] - patas[0]) * 0.5f, 1.2f * u))
+        drawRect(Brush.horizontalGradient(listOf(frio.copy(alpha = aFrio(patas[0]) * 0.7f), frio.copy(alpha = 0f)), patas[0], patas[0] + (patas[1] - patas[0]) * 0.35f),
+            Offset(patas[0], e1 - h * 0.012f), Size((patas[1] - patas[0]) * 0.35f, 1f * u))
         // Las patas: el frente de chapa con la luz a lo alto, el canto de dentro, las ranuras, el pie nivelador y su sombra.
         patas.forEachIndexed { i, x ->
             val t = g.luz.t(x + pa / 2, (g.base + g.suelo) / 2)
             columna(g, x, x + pa, g.base - 1f, g.suelo - h * 0.02f, CHAPA, 0.85f)
             drawRect(NOCHE.copy(alpha = 0.35f), Offset(if (i == 0) x + pa * 0.78f else x, g.base), Size(pa * 0.22f, g.suelo - h * 0.02f - g.base))
             drawRect(t.b(0.5f), Offset(if (i == 0) x else x + pa * 0.8f, g.base), Size(1f * u, g.suelo - h * 0.02f - g.base))
+            if (i == 0) drawRect(frio.copy(alpha = aFrio(x)), Offset(x, g.base), Size(1.4f * u, g.suelo - h * 0.02f - g.base))
+            else drawRect(P.CALOR.copy(alpha = 0.5f), Offset(x + pa - 1.2f * u, g.base), Size(1.2f * u, g.suelo - h * 0.02f - g.base))
             val ranuras = ArrayList<Offset>()
             var y = g.base + h * 0.03f
             while (y < g.suelo - h * 0.05f) { ranuras.add(Offset(x + pa * 0.45f, y)); y += h * 0.032f }
@@ -317,7 +357,9 @@ internal object RinconLibretaCiber {
         var y = r.top + h * 0.03f
         while (y < r.bottom - h * 0.03f) { fondo.moveTo(r.left + r.width * 0.05f, y); fondo.lineTo(r.right - r.width * 0.02f, y); y += h * 0.05f }
         drawPath(fondo, alambre.copy(alpha = 0.6f), style = Stroke(1f * u))
-        drawLine(alambre, Offset(r.left + r.width * 0.04f, r.top), Offset(r.right - r.width * 0.02f, r.top), 1.6f * u)
+        val aro = Rect(r.left, r.top, r.right, r.top + h * 0.07f)
+        drawArc(alambre, 180f, 180f, false, aro.topLeft, aro.size, style = Stroke(1.8f * u))
+        drawArc(t.b(0.5f), 200f, 120f, false, aro.topLeft.copy(y = aro.top - 1f * u), aro.size, style = Stroke(0.7f * u))
     }
 
     // ---------------------------------------------------------------- la consola
@@ -450,15 +492,32 @@ internal object RinconLibretaCiber {
             // La comba: lo de la izquierda, más lejos del flexo, en sombra; arriba, la sombra del rizo.
             drawRect(Brush.horizontalGradient(listOf(NOCHE.copy(alpha = 0.22f), NOCHE.copy(alpha = 0f)), r.left, r.left + g.pw * 0.25f), r.topLeft, Size(g.pw * 0.25f, r.height))
             drawRect(g.luz.t(r.right, h * 0.25f).b(0.5f), Offset(r.right - 1.2f * u, r.top), Size(1.2f * u, r.height))
-            drawRect(Brush.verticalGradient(listOf(NOCHE.copy(alpha = 0.32f), NOCHE.copy(alpha = 0f)), top, top + h * 0.04f), r.topLeft, Size(r.width, h * 0.04f))
+            drawRect(Brush.verticalGradient(listOf(NOCHE.copy(alpha = 0.5f), NOCHE.copy(alpha = 0f)), g.rizoBajo, g.rizoBajo + h * 0.035f), Offset(r.left, g.rizoBajo), Size(r.width, h * 0.035f))
         }
-        // El rizo de arriba: el papel se enrolla hacia atrás; su cara de atrás, más oscura, y el filo de luz.
-        val rizo = Rect(g.px0 - 1f * u, top - h * 0.04f, g.px1 + 1f * u, top + h * 0.005f)
+        // El rizo de arriba: el papel se enrolla hacia delante. El lomo del rollo, alumbrado, con su brillo; colgando de él, el
+        // reverso del papel (más oscuro, sin las bandas, con los agujeros que lo atraviesan) y su borde de abajo, combado.
+        val rizo = Rect(g.px0 - 1f * u, top - h * 0.03f, g.px1 + 1f * u, top + h * 0.006f)
         val tr = g.luz.t(rizo.center)
-        drawRoundRect(tr.c(mezcla(PAPEL, BEIS, 0.25f), 1.05f), rizo.topLeft, rizo.size, CornerRadius(rizo.height / 2))
-        drawRoundRect(tr.c(mezcla(PAPEL, BEIS_OSC, 0.4f), 0.8f), Offset(rizo.left, rizo.center.y), Size(rizo.width, rizo.height / 2), CornerRadius(rizo.height / 2))
-        drawRoundRect(tr.c(RAYA, 0.9f).copy(alpha = 0.5f), Offset(rizo.left + g.pw * 0.08f, rizo.top + rizo.height * 0.2f), Size(g.pw * 0.84f, rizo.height * 0.25f), CornerRadius(rizo.height * 0.1f))
-        drawLine(tr.b(0.75f), Offset(rizo.left + rizo.height * 0.4f, rizo.top + 1.2f * u), Offset(rizo.right - rizo.height * 0.4f, rizo.top + 1.2f * u), 1.2f * u)
+        drawRoundRect(Brush.horizontalGradient(listOf(tr.c(PAPEL, 0.85f), tr.c(PAPEL, 1.25f)), rizo.left, rizo.right), rizo.topLeft, rizo.size, CornerRadius(rizo.height / 2))
+        drawLine(tr.b(0.8f), Offset(rizo.left + rizo.height * 0.4f, rizo.top + 1.4f * u), Offset(rizo.right - rizo.height * 0.4f, rizo.top + 1.4f * u), 1.2f * u)
+        val borde = Path().apply { moveTo(g.px1 + 0.5f * u, g.rizoBajo - h * 0.004f); quadraticTo(g.cx, g.rizoBajo + h * 0.008f, g.px0 - 0.5f * u, g.rizoBajo - h * 0.002f) }
+        val labio = Path().apply {
+            moveTo(g.px0 - 1f * u, rizo.center.y)
+            lineTo(g.px1 + 1f * u, rizo.center.y)
+            lineTo(g.px1 + 0.5f * u, g.rizoBajo - h * 0.004f)
+            quadraticTo(g.cx, g.rizoBajo + h * 0.008f, g.px0 - 0.5f * u, g.rizoBajo - h * 0.002f)
+            close()
+        }
+        drawPath(labio, Brush.horizontalGradient(listOf(tr.c(mezcla(PAPEL, BEIS_OSC, 0.5f), 0.6f), tr.c(mezcla(PAPEL, BEIS_OSC, 0.4f), 1.05f)), g.px0, g.px1))
+        clipPath(labio) {
+            drawRect(tr.c(RAYA, 0.7f).copy(alpha = 0.18f), Offset(g.px0, rizo.center.y + h * 0.008f), Size(g.pw, h * 0.01f))
+            val ag = ArrayList<Offset>()
+            var yr = rizo.center.y + h * 0.008f
+            while (yr < g.rizoBajo) { ag.add(Offset(g.px0 + g.pw * 0.04f, yr)); ag.add(Offset(g.px1 - g.pw * 0.04f, yr)); yr += h * 0.013f }
+            drawPoints(ag, PointMode.Points, NOCHE.copy(alpha = 0.6f), 2.2f * u, StrokeCap.Round)
+            drawRect(NOCHE.copy(alpha = 0.25f), Offset(g.px0, rizo.center.y), Size(g.pw, h * 0.008f))
+        }
+        drawPath(borde, tr.b(0.55f), style = Stroke(1f * u))
         // La guía de alambre, con sus dos rodillos.
         val tg = g.luz.t(g.cx, g.guia)
         drawLine(NOCHE.copy(alpha = 0.45f), Offset(g.px0 - h * 0.03f, g.guia + 2f * u), Offset(g.px1 + h * 0.03f, g.guia + 2f * u), 2f * u)
