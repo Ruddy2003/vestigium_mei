@@ -61,7 +61,7 @@ private fun DrawScope.paredArribaCiber(g: MarcoCiber) {
     val paradas = Array(7) { i ->
         val f = i / 6f
         val p = pantalla + Offset(w * 1.05f * f * 0.8f, -w * 1.05f * f * 0.6f)
-        f to g.t(p).c(PARED, 0.8f)
+        f to g.t(p).c(PARED, 0.55f)
     }
     drawRect(Brush.radialGradient(*paradas, center = pantalla, radius = w * 1.05f), Offset.Zero, Size(w, fin))
     pinceladas(Rect(0f, 0f, w, hasta), NOCHE, 6101, 44, u, 0.16f)
@@ -80,8 +80,7 @@ private fun DrawScope.paredArribaCiber(g: MarcoCiber) {
     drawPath(grieta, NOCHE.copy(alpha = 0.5f), style = Stroke(1.1f * u))
     translate(1f * u, 0.6f * u) { drawPath(grieta, g.t(w * 0.47f, w * 0.08f).b(0.25f), style = Stroke(0.6f * u)) }
     // El halo de la pantalla en la pared: tiñe de su color lo que tiene cerca.
-    mancha(pantalla + Offset(0f, -w * 0.04f), w * 0.46f, g.a.colores[0].copy(alpha = if (g.a.noche) 0.08f else 0.1f))
-    mancha(pantalla, w * 0.24f, g.a.colores[0].copy(alpha = if (g.a.noche) 0.08f else 0.1f))
+    mancha(pantalla, w * 0.2f, g.a.colores[0].copy(alpha = if (g.a.noche) 0.07f else 0.08f))
     // El resto de cinta y el recuadro más limpio de un cartel que ya no está, a la izquierda del banderín.
     val r = Rect(w * 0.3f, w * 0.215f, w * 0.43f, w * 0.31f)
     val t = g.t(r.center)
@@ -98,11 +97,11 @@ private fun DrawScope.paredArribaCiber(g: MarcoCiber) {
 }
 
 /** Dónde caen las cumbres del banderín (en fracción de su largo) y su alto en puntos. */
-private val CUMBRES_CIBER = floatArrayOf(0.1f, 0.34f, 0.6f, 0.86f)
-private val ALTOS_CIBER = floatArrayOf(4.6f, 6.4f, 3.8f, 5.4f)
+private val CUMBRES_CIBER = floatArrayOf(0.17f, 0.5f, 0.83f)
+private val ALTOS_CIBER = floatArrayOf(5.2f, 6.6f, 4.4f)
 
 /**
- * El banderín: una tira de papel continuo impresa con una escena de puntos (una sierra de montes y estrellas, sin letras),
+ * El banderín: una tira de papel continuo impresa con una escena de puntos (tres montes y estrellas, sin letras),
  * con sus márgenes de arrastre y los agujeros, las líneas de corte entre hojas, combada entre los tres trozos de cinta que la
  * sostienen. La tinta es la de la cinta de la impresora: un gris azulado, más gastado a la derecha.
  */
@@ -122,7 +121,7 @@ private fun DrawScope.banderinCiber(g: MarcoCiber) {
     }
     // La sombra en la pared, hacia fuera de la pantalla (abajo y a la derecha).
     translate(w * 0.012f, w * 0.01f) { drawPath(tira, NOCHE.copy(alpha = 0.42f)) }
-    val pap = Array(6) { i -> val f = i / 5f; f to g.t(x0 + (x1 - x0) * f, y0 + alto / 2).c(PAPEL, 0.9f) }
+    val pap = Array(6) { i -> val f = i / 5f; f to g.t(x0 + (x1 - x0) * f, y0 + alto / 2).c(PAPEL, 0.62f) }
     drawPath(tira, Brush.horizontalGradient(*pap, startX = x0, endX = x1))
     clipPath(tira) {
         val margen = w * 0.011f
@@ -150,11 +149,11 @@ private fun DrawScope.banderinCiber(g: MarcoCiber) {
         for (c in 0 until cols) {
             val xx = x0 + w * 0.008f + c * celda
             val yb = cae(xx)
-            // Cuatro cumbres de distinto alto, con laderas de pendiente desigual, sobre una loma baja.
-            var sierra = 1.6f + 0.6f * sin(c * 0.3f)
-            for (j in 0 until 4) {
+            // Tres montes grandes de distinto alto, con laderas de pendiente desigual, sobre una loma baja.
+            var sierra = 1.5f + 0.5f * sin(c * 0.3f)
+            for (j in 0 until 3) {
                 val pc = cols * CUMBRES_CIBER[j]; val alto = ALTOS_CIBER[j]
-                val pend = if (c < pc) 0.34f + 0.1f * j else 0.46f - 0.06f * j
+                val pend = if (c < pc) 0.24f + 0.06f * j else 0.3f - 0.04f * j
                 sierra = maxOf(sierra, alto - Math.abs(c - pc) * pend)
             }
             val monte = sierra.toInt().coerceIn(1, 6)

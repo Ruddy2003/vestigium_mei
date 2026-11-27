@@ -57,7 +57,7 @@ internal fun DrawScope.remateCiber(g: MarcoCiber) {
     // el fondo.
     drawRect(g.t(w * 0.3f, (ap + ch) / 2).c(mezcla(CHAPA, BEIS_OSC, 0.3f)), Offset(x0 - vuelo, g.apoyoAtras), Size(x1 - x0 + 2 * vuelo, ch + 1f - g.apoyoAtras))
     // La tapa vista desde arriba: chapa algo más clara, el canto de atrás en sombra, rayas y el cerco de la taza.
-    bandaCiber(x0 - vuelo, x1 + vuelo, g.apoyoAtras, ap, CHAPA, g, 0.88f)
+    bandaCiber(x0 - vuelo, x1 + vuelo, g.apoyoAtras, ap, CHAPA, g, 0.62f)
     drawRect(NOCHE.copy(alpha = 0.45f), Offset(x0 - vuelo, g.apoyoAtras), Size(x1 - x0 + 2 * vuelo, 1.6f * u))
     for (j in 0 until 8) {
         val x = x0 + (x1 - x0) * azar(6201, j)
@@ -68,8 +68,8 @@ internal fun DrawScope.remateCiber(g: MarcoCiber) {
     drawOval(g.t(cerco).c(CAFE).copy(alpha = 0.5f), Offset(cerco.x - w * 0.02f, cerco.y - (ap - g.apoyoAtras) * 0.32f), Size(w * 0.04f, (ap - g.apoyoAtras) * 0.64f), style = Stroke(1f * u))
     // El canto redondo: el filo de luz, la panza y lo de abajo, que no ve la luz.
     val c0 = ap; val c1 = ap + w * 0.028f
-    bandaCiber(x0 - vuelo, x1 + vuelo, c0, c1, CHAPA, g)
-    bandaCiber(x0 - vuelo, x1 + vuelo, c0, c0 + w * 0.009f, mezcla(CHAPA, Color.White, 0.18f), g, 1.1f)
+    bandaCiber(x0 - vuelo, x1 + vuelo, c0, c1, CHAPA, g, 0.72f)
+    bandaCiber(x0 - vuelo, x1 + vuelo, c0, c0 + w * 0.009f, mezcla(CHAPA, Color.White, 0.08f), g, 0.82f)
     drawRect(g.t(w * 0.3f, c0).b(0.7f), Offset(x0 - vuelo, c0), Size(x1 - x0 + 2 * vuelo, 1.3f * u))
     drawRect(NOCHE.copy(alpha = 0.32f), Offset(x0 - vuelo, c1 - w * 0.009f), Size(x1 - x0 + 2 * vuelo, w * 0.009f))
     drawRect(NOCHE.copy(alpha = 0.55f), Offset(x0 - vuelo, c1 - 1.2f * u), Size(x1 - x0 + 2 * vuelo, 1.2f * u))
@@ -81,7 +81,7 @@ internal fun DrawScope.remateCiber(g: MarcoCiber) {
     }
     // El friso hundido: la sombra del canto encima, la chapa, la rejilla troquelada y la placa de aluminio.
     val f0 = c1; val f1 = ch - w * 0.016f
-    bandaCiber(x0, x1, f0, f1, mezcla(CHAPA, BEIS_OSC, 0.3f), g)
+    bandaCiber(x0, x1, f0, f1, mezcla(CHAPA, BEIS_OSC, 0.3f), g, 0.8f)
     pinceladas(Rect(x0, f0, x1, f1), NOCHE, 6210, 10, u, 0.12f)
     drawRect(NOCHE.copy(alpha = 0.45f), Offset(x0, f0), Size(x1 - x0, w * 0.008f))
     rejillaFrisoCiber(g, Rect(w * 0.12f, f0 + (f1 - f0) * 0.28f, w * 0.46f, f1 - (f1 - f0) * 0.18f))
@@ -95,7 +95,7 @@ internal fun DrawScope.remateCiber(g: MarcoCiber) {
         drawArc(t.s(0.45f), 180f, 180f, false, Offset(p.x - r * 1.4f, p.y - r * 0.8f), Size(r * 2.8f, r * 1.6f), style = Stroke(0.6f * u))
     }
     // El pliegue de abajo.
-    bandaCiber(x0, x1, f1, ch + 1f, mezcla(CHAPA, Color.White, 0.04f), g)
+    bandaCiber(x0, x1, f1, ch + 1f, mezcla(CHAPA, Color.White, 0.04f), g, 0.8f)
     drawRect(g.t(w * 0.3f, f1).b(0.5f), Offset(x0, f1), Size(x1 - x0, 1f * u))
     drawRect(NOCHE.copy(alpha = 0.4f), Offset(x0, ch - 1.4f * u), Size(x1 - x0, 1.4f * u))
 }
@@ -369,7 +369,7 @@ private fun DrawScope.papelImpresoraCiber(g: MarcoCiber) {
         close()
     }
     translate(w * 0.016f, w * 0.006f) { drawPath(hoja, NOCHE.copy(alpha = 0.4f)) }
-    val pap = Array(6) { i -> val f = i / 5f; f to g.t(x0 + (x1 - x0) * f, (base + tope) / 2).c(PAPEL, 1.05f) }
+    val pap = Array(6) { i -> val f = i / 5f; f to g.t(x0 + (x1 - x0) * f, (base + tope) / 2).c(PAPEL, 0.78f) }
     drawPath(hoja, Brush.horizontalGradient(*pap, startX = x0, endX = x1))
     clipPath(hoja) {
         val margen = (x1 - x0) * 0.08f
@@ -377,7 +377,7 @@ private fun DrawScope.papelImpresoraCiber(g: MarcoCiber) {
         var y = tope + banda * 0.4f
         var i = 0
         while (y < base) {
-            if (i % 2 == 0) drawRect(g.t(x0, y).c(RAYA, 1.05f), Offset(x0 + margen, y), Size(x1 - x0 - 2 * margen + inc, banda))
+            if (i % 2 == 0) drawRect(g.t(x0, y).c(RAYA, 0.8f), Offset(x0 + margen, y), Size(x1 - x0 - 2 * margen + inc, banda))
             y += banda; i++
         }
         // Los renglones impresos: guiones de largo al azar (formas, no letras).

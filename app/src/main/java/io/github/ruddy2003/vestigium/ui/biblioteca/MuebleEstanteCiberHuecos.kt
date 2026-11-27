@@ -40,7 +40,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 /** El orden en que se reparten los grupos por repisa (que dos repisas seguidas no repitan). */
 private val ORDEN_HUECOS_CIBER = intArrayOf(2, 0, 4, 1, 3)
 
-internal fun DrawScope.huecoLibreCiber(k: Int, r: Rect, ocupado: Float, g: MarcoCiber) {
+internal fun DrawScope.huecoLibreCiber(k: Int, r: Rect, ocupado: Float, g: MarcoCiber, usados: BooleanArray) {
     val w = g.w
     val xa = ocupado + w * 0.022f
     val xb = r.right - w * 0.034f
@@ -49,15 +49,23 @@ internal fun DrawScope.huecoLibreCiber(k: Int, r: Rect, ocupado: Float, g: Marco
     val piso = r.bottom - w * 0.009f
     val alto = r.height
     clipRect(r.left, r.top, r.right, r.bottom) {
+        // El grupo de cada hueco: el siguiente del orden que todavía no salió en este estante (no se repiten hasta agotar los cinco).
+        fun elegir(desde: Int): Int {
+            for (j in 0 until 5) {
+                val c = ORDEN_HUECOS_CIBER[Math.floorMod(desde + j, 5)]
+                if (!usados[c]) { usados[c] = true; return c }
+            }
+            return ORDEN_HUECOS_CIBER[Math.floorMod(desde, 5)]
+        }
         val i = Math.floorMod(k + k / 5 + g.n, 5)
-        val primero = ORDEN_HUECOS_CIBER[i]
         if (libre > w * 0.44f) {
+            val primero = elegir(i)
             ganchoCiber(g, Offset(xa + libre * 0.5f, r.top + alto * 0.2f), k)
             grupoCiber(primero, Rect(xa, r.top, xa + libre * 0.46f, piso), alto, g, k)
-            grupoCiber(ORDEN_HUECOS_CIBER[(i + 3) % 5], Rect(xa + libre * 0.54f, r.top, xb, piso), alto, g, k + 7)
+            grupoCiber(elegir(i + 3), Rect(xa + libre * 0.54f, r.top, xb, piso), alto, g, k + 7)
         } else {
             if (libre > w * 0.26f) ganchoCiber(g, Offset(xb - libre * 0.2f, r.top + alto * 0.2f), k)
-            grupoCiber(primero, Rect(xa, r.top, xb, piso), alto, g, k)
+            grupoCiber(elegir(i), Rect(xa, r.top, xb, piso), alto, g, k)
         }
     }
 }

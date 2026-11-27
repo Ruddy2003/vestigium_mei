@@ -92,13 +92,13 @@ internal class AireCiber(val noche: Boolean) {
     /** El color de cada luz: la pantalla, la regleta y el monitor ámbar. */
     val colores: Array<Color> = if (noche) arrayOf(p.LUNA, p.ROJO, p.AMBAR_LUZ) else arrayOf(p.CIAN_LUZ, p.ROJO, p.AMBAR_LUZ)
     /** La fuerza de cada una. */
-    val fuerzas: FloatArray = if (noche) floatArrayOf(0.88f, 0.78f, 0.3f) else floatArrayOf(1.4f, 1.2f, 1.05f)
+    val fuerzas: FloatArray = if (noche) floatArrayOf(0.95f, 0.45f, 0.18f) else floatArrayOf(1.4f, 1.2f, 0.88f)
     /** Cuánto tiñe cada luz lo que toca (el cian, poco: el beis sigue siendo beis; el rojo y el ámbar, más). */
     private val tintes: FloatArray = if (noche) floatArrayOf(0.32f, 0.55f, 0.42f) else floatArrayOf(0.2f, 0.55f, 0.4f)
 
     /** Lo hondo de un color: oscuro pero de su mismo tono, apenas hacia la noche azul del cuarto (el beis, a un pardo azulado). */
-    fun hondo(c: Color): Color = if (noche) Color(c.red * 0.15f + 0.008f, c.green * 0.15f + 0.014f, c.blue * 0.17f + 0.04f, c.alpha)
-        else Color(c.red * 0.19f + 0.008f, c.green * 0.17f + 0.013f, c.blue * 0.18f + 0.034f, c.alpha)
+    fun hondo(c: Color): Color = if (noche) Color(c.red * 0.08f + 0.022f, c.green * 0.09f + 0.04f, c.blue * 0.1f + 0.12f, c.alpha)
+        else Color(c.red * 0.12f + 0.026f, c.green * 0.12f + 0.042f, c.blue * 0.13f + 0.075f, c.alpha)
 
     /** Cuánto de su color conserva algo con [k] de luz: sube deprisa cerca de la luz y cae a casi nada lejos. */
     private fun cuanto(k: Float): Float = (1.3f * k.coerceIn(0f, 1.3f).pow(1.35f)).coerceAtMost(0.97f)
@@ -117,7 +117,7 @@ internal class AireCiber(val noche: Boolean) {
     /** La sombra: la noche del cuarto, nunca negro puro. */
     fun sombra(a: Float): Color = p.NOCHE.copy(alpha = a.coerceIn(0f, 1f))
     /** El filo de luz en lo que mira a la luz: del color de la luz, aclarado; algo siempre, más cerca de ella. */
-    fun filo(a: Float, k: Float, l: Color): Color = mezcla(l, Color.White, 0.45f).copy(alpha = (a * (0.16f + 0.9f * k.coerceIn(0f, 1f))).coerceIn(0f, 1f))
+    fun filo(a: Float, k: Float, l: Color): Color = mezcla(l, Color.White, 0.45f).copy(alpha = (a * (0.06f + 0.95f * k.coerceIn(0f, 1f))).coerceIn(0f, 1f))
 }
 
 /** La luz que le toca a un punto: cuánta ([k]), de qué color ([l]), cuánto tiñe ([tn]) y de qué lado le llega ([hacia]). */
@@ -142,7 +142,7 @@ internal fun lucesCiber(fx: Float, fy: Float, a: AireCiber, regY: Float, ambY: F
     val dx1 = (fx - m.REG_X) * 1.15f; val dy1 = fy - regY
     k[1] = a.fuerzas[1] * exp(-(dx1 * dx1 + dy1 * dy1) / (0.21f * 0.21f))
     val dx2 = fx - m.AMB_X; val dy2 = (fy - ambY) * (if (fy < ambY) 0.7f else 1.1f)
-    k[2] = a.fuerzas[2] * exp(-(dx2 * dx2 + dy2 * dy2) / (0.43f * 0.43f))
+    k[2] = a.fuerzas[2] * exp(-(dx2 * dx2 + dy2 * dy2) / (0.34f * 0.34f))
 }
 
 /** El tono en ([fx], [fy]) en anchos del mueble. */
@@ -365,25 +365,25 @@ internal object MuebleEstanteCiber {
     val LADO = 0.072f
     /** La franja de pared que asoma a cada lado de la estantería, en anchos. */
     val BORDE = 0.022f
-    val ALTO_REPISA: Dp = 96.dp
+    val ALTO_REPISA: Dp = 76.dp
     val TABLA: Dp = 20.dp
     val SEPARA: Dp = 3.dp
     /** El remate, en anchos: de donde pisan las cosas al arranque de las repisas. */
     val CORNISA = 0.105f
 
-    fun ancho(palabras: Int): Dp = (40 + (palabras / 45).coerceAtMost(18)).dp
+    fun ancho(palabras: Int): Dp = (54 + (palabras / 50).coerceAtMost(16)).dp
 
-    /** Cuál de los tres es una entrada: 0, el disquete de 5¼ en su funda; 1, la caja de disquetes; 2, la bolsa de cierre. */
+    /** Cuál de los tres es una entrada: 0, el disquete de 5¼ en su funda; 1, el carrete de cinta; 2, el revistero de listados. */
     fun clase(semilla: Int): Int {
         val x = azar(semilla, 91)
-        return if (x < 0.4f) 0 else if (x < 0.7f) 1 else 2
+        return if (x < 0.38f) 0 else if (x < 0.7f) 1 else 2
     }
 
-    /** La funda con su disquete, la más alta; la caja, con su tapa; la bolsa, blanda y algo sentada. */
+    /** La funda con su disquete asomando; el carrete, redondo, tan alto como ancho cabe; el revistero, con su corte. */
     fun alto(semilla: Int, palabras: Int): Float = when (clase(semilla)) {
-        0 -> 0.85f + 0.07f * azar(semilla, 1)
-        1 -> 0.8f + 0.07f * azar(semilla, 1)
-        else -> 0.8f + 0.06f * azar(semilla, 1) + 0.03f * (palabras / 800f).coerceIn(0f, 1f)
+        0 -> 0.86f + 0.07f * azar(semilla, 1)
+        1 -> 0.85f + 0.07f * azar(semilla, 1)
+        else -> 0.86f + 0.06f * azar(semilla, 1)
     }
 
     // ---------------------------------------------------------------- la luz (en anchos del mueble, desde arriba a la izquierda)
@@ -399,7 +399,7 @@ internal object MuebleEstanteCiber {
     /** El ancho con que un volumen pasa su repisa a anchos del mueble: el de un teléfono. */
     val ANCHO_NOMINAL = 400f
     /** Una repisa con su tabla, en dp. */
-    val FILA = 116f
+    val FILA = 96f
 
     // ---------------------------------------------------------------- el estante
 
@@ -436,9 +436,10 @@ internal object MuebleEstanteCiber {
         columnaJuntaCiber(g.x0, ch, fondo, g.c(PaletaCiber.CHAPA, Offset(g.x0, (ch + fondo) / 2), 0.6f))
         columnaJuntaCiber(g.x1, ch, fondo, g.c(PaletaCiber.CHAPA, Offset(g.x1, (ch + fondo) / 2), 0.6f))
         d.repisas.forEachIndexed { k, r -> casilleroCiber(k, r, g) }
+        val usados = BooleanArray(5)
         d.repisas.forEachIndexed { k, r ->
             val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
-            huecoLibreCiber(k, r, oc, g)
+            huecoLibreCiber(k, r, oc, g, usados)
         }
         costadosCiber(g, d.tablas)
         d.tablas.forEachIndexed { k, r -> tablaCiber(k, r, k == d.tablas.size - 1, g) }
