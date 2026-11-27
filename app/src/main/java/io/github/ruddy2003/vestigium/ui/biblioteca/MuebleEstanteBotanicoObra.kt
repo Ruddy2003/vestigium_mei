@@ -5,7 +5,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ClipOp
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -148,19 +147,20 @@ internal object ObraEstanteBotanico {
         // La pared: honda arriba, en la sombra franca de la tabla y su penumbra, y un poco más viva abajo, donde le llega la luz
         // por la boca. De día, en un solo trazo (un degradado a lo alto con cortes francos); de noche, la lumbre cambia a lo ancho
         // y la sombra de la tabla va encima.
-        val s0 = (techo * 0.7f + r.height * 0.13f + 1f) / fr.height
-        val s1 = (techo * 0.7f + r.height * 0.23f + 1f) / fr.height
+        val s0 = (techo * 0.7f + r.height * 0.16f + 1f) / fr.height
+        val s1 = (techo * 0.7f + r.height * 0.26f + 1f) / fr.height
+        val pared = mezcla(P.SALVIA, P.SALVIA_OSC, 0.6f)
         if (!s.a.oscuro) {
-            val c = tc.c(mezcla(P.SALVIA, P.SALVIA_OSC, 0.4f), -0.12f)
-            val sombra = tc.s(1f).copy(alpha = 1f)
-            val luz = mezcla(c, tc.c(P.SALVIA_LUZ, -0.08f), 0.35f)
-            drawRect(Brush.verticalGradient(0f to mezcla(c, sombra, 0.5f), s0 to mezcla(c, sombra, 0.5f), s0 + 0.001f to mezcla(c, sombra, 0.24f),
-                s1 to mezcla(c, sombra, 0.24f), s1 + 0.001f to c, 0.58f to c, 0.6f to luz, 0.9f to luz, 0.93f to c, 1f to c,
+            val c = tc.c(pared, -0.16f)
+            val sombra = mezcla(tc.s(1f).copy(alpha = 1f), tc.c(P.SALVIA_HONDO, -0.3f), 0.4f)
+            val luz = mezcla(c, tc.c(P.SALVIA, -0.06f), 0.4f)
+            drawRect(Brush.verticalGradient(0f to mezcla(c, sombra, 0.62f), s0 to mezcla(c, sombra, 0.62f), s0 + 0.001f to mezcla(c, sombra, 0.3f),
+                s1 to mezcla(c, sombra, 0.3f), s1 + 0.001f to c, 0.6f to c, 0.62f to luz, 0.9f to luz, 0.93f to c, 1f to c,
                 startY = fr.top, endY = fr.bottom), fr.topLeft, fr.size)
         } else {
-            drawRect(s.aLoAncho(fr.left, fr.right, r.center.y) { it.c(mezcla(P.SALVIA, P.SALVIA_OSC, 0.4f), -0.12f) }, fr.topLeft, fr.size)
-            drawRect(tc.s(0.5f), Offset(r.left, r.top + techo * 0.7f), Size(r.width, r.height * 0.13f))
-            drawRect(tc.s(0.24f), Offset(r.left, r.top + techo * 0.7f + r.height * 0.13f), Size(r.width, r.height * 0.1f))
+            drawRect(s.aLoAncho(fr.left, fr.right, r.center.y) { it.c(pared, -0.16f) }, fr.topLeft, fr.size)
+            drawRect(tc.s(0.55f), Offset(r.left, r.top + techo * 0.7f), Size(r.width, r.height * 0.16f))
+            drawRect(tc.s(0.26f), Offset(r.left, r.top + techo * 0.7f + r.height * 0.16f), Size(r.width, r.height * 0.1f))
         }
         // El enlucido: pinceladas, una grieta en algunos y algún clavo viejo.
         pinceladas(r, if (s.a.oscuro) P.NOCHE else P.SALVIA_HONDO, 9200 + k, (r.width / (34f * u)).toInt().coerceIn(4, 24), u, 0.13f)
@@ -204,9 +204,16 @@ internal object ObraEstanteBotanico {
         // Una mancha de humedad o de cola, vieja.
         val mx = r.left + r.width * azar(9406, k)
         drawOval(tc.s(0.08f), Offset(mx, r.top + r.height * (0.3f + 0.3f * azar(9407, k))), Size(w * 0.09f, w * 0.05f))
-        // La sombra de la pilastra de la izquierda en la pared (de día; de noche, la de la luz que le toca).
-        drawRect(tc.s(0.34f), Offset(r.left + lado, r.top), Size(w * 0.05f, r.height))
-        drawRect(tc.s(0.16f), Offset(r.left + lado + w * 0.05f, r.top), Size(w * 0.03f, r.height))
+        // La sombra franca de la pilastra del lado de la luz en la pared: de día, la de la izquierda; de noche, en las repisas
+        // que alumbra el quinqué (arriba, a la derecha), la de la derecha.
+        val derecha = s.a.oscuro && r.center.y / w < MuebleEstanteBotanico.CORONA + 0.75f
+        if (!derecha) {
+            drawRect(tc.s(0.5f), Offset(r.left + lado, r.top), Size(w * 0.055f, r.height))
+            drawRect(tc.s(0.24f), Offset(r.left + lado + w * 0.055f, r.top), Size(w * 0.035f, r.height))
+        } else {
+            drawRect(tc.s(0.45f), Offset(r.right - lado - w * 0.05f, r.top), Size(w * 0.05f, r.height))
+            drawRect(tc.s(0.2f), Offset(r.right - lado - w * 0.08f, r.top), Size(w * 0.03f, r.height))
+        }
         // La cara de abajo de la tabla de arriba (un trapecio de roble en sombra).
         val kt = s.t(Offset(r.center.x, r.top), true)
         drawPath(poligonoBotanico(fr.left, fr.top, fr.right, fr.top, r.right - lado, r.top + techo, r.left + lado, r.top + techo), kt.c(P.ROBLE_OSC, -0.2f))

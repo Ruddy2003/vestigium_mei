@@ -27,8 +27,18 @@ import kotlin.math.sin
 internal object HuecosEstanteBotanico {
     private val P = PaletaBotanico
 
-    /** Lo del hueco de la repisa [k] ([r]), de [ocupado] (donde acaban los volúmenes) a [derecha] (la pilastra). */
-    fun DrawScope.hueco(k: Int, r: Rect, ocupado: Float, derecha: Float, velaX: Float, s: SitioBotanico) {
+    /** Cuántos grupos distintos hay para los huecos: los libros, el nautilo, la maceta y las piedras. */
+    const val GRUPOS = 4
+
+    /** Si el hueco de [ocupado] a [derecha] tiene sitio para algo. */
+    fun conSitio(ocupado: Float, derecha: Float, w: Float) = (derecha - w * 0.035f) - (ocupado + w * 0.02f) >= w * 0.1f
+
+    /**
+     * Lo del hueco de la repisa [k] ([r]), de [ocupado] (donde acaban los volúmenes) a [derecha] (la pilastra). [grupo] es el
+     * grupo que le toca (el estante los reparte para que no se repitan dos seguidos); si arde una palmatoria ([velaX]), ese
+     * grupo la acompaña a su derecha. En un hueco muy ancho van dos grupos distintos.
+     */
+    fun DrawScope.hueco(k: Int, r: Rect, ocupado: Float, derecha: Float, velaX: Float, grupo: Int, s: SitioBotanico) {
         val w = size.width
         val x0 = ocupado + w * 0.02f
         val x1 = derecha - w * 0.035f
@@ -38,17 +48,23 @@ internal object HuecosEstanteBotanico {
         val h = r.height
         if (velaX >= 0f) {
             palmatoria(Offset(velaX, y), h, s)
-            if (x1 - (velaX + w * 0.07f) > w * 0.2f) libros(Offset(velaX + w * 0.07f, y), minOf(w * 0.24f, x1 - velaX - w * 0.07f), h, s, k)
+            val a = velaX + w * 0.07f
+            if (x1 - a > w * 0.2f) grupo(grupo, a, x1, y, h, s, k)
             return
         }
-        val grupos = if (ancho > w * 0.5f) 2 else 1
-        for (g in 0 until grupos) {
-            val a = x0 + ancho * g / grupos; val b = x0 + ancho * (g + 1) / grupos
-            when (Math.floorMod(k * 2 + g + (k / 3), 3)) {
-                0 -> nautilo(a, b, y, h, s, k + g)
-                1 -> maceta(a, b, y, h, s, k + g)
-                else -> piedras(a, b, y, h, s, k + g)
-            }
+        if (ancho > w * 0.5f) {
+            grupo(grupo, x0, x0 + ancho / 2, y, h, s, k)
+            grupo(Math.floorMod(grupo + 2, GRUPOS), x0 + ancho / 2, x1, y, h, s, k + 1)
+        } else grupo(grupo, x0, x1, y, h, s, k)
+    }
+
+    /** Uno de los grupos, de [a] a [b]. */
+    private fun DrawScope.grupo(g: Int, a: Float, b: Float, y: Float, h: Float, s: SitioBotanico, sem: Int) {
+        when (Math.floorMod(g, GRUPOS)) {
+            0 -> libros(Offset(a, y), minOf(size.width * 0.24f, b - a), h, s, sem)
+            1 -> nautilo(a, b, y, h, s, sem)
+            2 -> maceta(a, b, y, h, s, sem)
+            else -> piedras(a, b, y, h, s, sem)
         }
     }
 

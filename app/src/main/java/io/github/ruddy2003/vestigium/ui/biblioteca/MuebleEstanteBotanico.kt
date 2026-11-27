@@ -162,7 +162,7 @@ internal object MuebleEstanteBotanico {
 
     /** La luz del quinqué en la pared y en lo de arriba: más corta, para que lo lejano se hunda. */
     fun quinqueArriba(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.75f else 1.6f) * exp(-3.8f * sqrt(dx * dx + dy * dy * 1.1f)) * pantalla(dx, dy)).coerceIn(0.02f, 1f)
+        ((if (suenos) 0.8f else 1.7f) * exp(-3.5f * sqrt(dx * dx + dy * dy * 1.1f)) * pantalla(dx, dy)).coerceIn(0.02f, 1f)
 
     /** La luz del farol del pie: baja, para las repisas de abajo. */
     fun farol(dx: Float, dy: Float, suenos: Boolean): Float =
@@ -242,7 +242,7 @@ internal object MuebleEstanteBotanico {
             pegar("c:$clave", 0, ceil(ch).toInt()) {
                 drawRect(s.t(Offset(w / 2, ch), true).c(PaletaBotanico.ROBLE_OSC), Offset.Zero, Size(w, ceil(ch) + 1f))
                 with(MuroEstanteBotanico) { pared(s, apoyo) }
-                with(CoronaEstanteBotanico) { colgado(s, apoyo) }
+                with(ColgadoEstanteBotanico) { colgado(s, apoyo) }
                 with(ObraEstanteBotanico) { cornisa(Rect(0f, apoyo, w, ch + 2f), s) }
                 with(CoronaEstanteBotanico) { encima(s, apoyo) }
                 with(MuroEstanteBotanico) { luzDeNoche(s, ch) }
@@ -253,10 +253,14 @@ internal object MuebleEstanteBotanico {
         with(ObraEstanteBotanico) {
             d.repisas.forEachIndexed { k, r -> casillero(k, r, d, s) }
         }
+        // Los grupos de los huecos, uno tras otro en el orden de las repisas: nunca el mismo dos veces seguidas.
         with(HuecosEstanteBotanico) {
+            var j = (d.repisas.size + 1) % GRUPOS
             d.repisas.forEachIndexed { k, r ->
                 val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
-                hueco(k, r, oc, d.derecha.left, xs[k], s)
+                if (!conSitio(oc, d.derecha.left, w)) return@forEachIndexed
+                hueco(k, r, oc, d.derecha.left, xs[k], j % GRUPOS, s)
+                j++
             }
         }
         with(ObraEstanteBotanico) {

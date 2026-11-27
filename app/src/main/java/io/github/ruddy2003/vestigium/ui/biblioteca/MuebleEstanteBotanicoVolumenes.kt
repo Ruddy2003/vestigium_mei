@@ -45,7 +45,7 @@ internal object VolumenEstanteBotanico {
     /** Lo que no tiene ánimo: la piel sin teñir, las semillas pardas y el lienzo crudo. */
     private val PIEL_CRUDA = Color(0xFF9A7650)
     private val SEMILLA_PARDA = Color(0xFF8A6A42)
-    private val LIENZO_CRUDO = Color(0xFFC9B68C)
+    private val LIENZO_CRUDO = Color(0xFFBEA57A)
     private val CORCHO = Color(0xFFB8925E)
 
     /** El tamaño del día, el mismo en las tres (unos 16 sp), y el del mes. */
@@ -59,10 +59,10 @@ internal object VolumenEstanteBotanico {
     /** Los colores de un tinte con la luz del momento: su cara, su claro y su hondo. */
     private class Tinte(val cara: Color, val claro: Color, val hondo: Color)
 
-    private fun tinte(ti: Color?, sin: Color, t: TonoBotanico, brillo: Float = 0.3f): Tinte {
+    private fun tinte(ti: Color?, sin: Color, t: TonoBotanico, brillo: Float = 0.3f, sombra: Float = 0.55f): Tinte {
         val m = ti ?: sin
         val claro = mezcla(m, luzMueble(1f), brillo)
-        val hondo = mezcla(m, sombraMueble(1f), 0.55f)
+        val hondo = mezcla(m, sombraMueble(1f), sombra)
         return if (ti != null) Tinte(t.animo(m), t.animo(claro), t.animo(hondo)) else Tinte(t.c(m), t.c(claro), t.c(hondo))
     }
 
@@ -92,9 +92,19 @@ internal object VolumenEstanteBotanico {
         return Brush.horizontalGradient(*paradas.toTypedArray(), startX = x0, endX = x1)
     }
 
-    /** El mes corto en español, como «nov.». */
+    /** Los meses cortos en español. */
+    private val MESES_CORTOS = listOf("ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic.")
+    private val ROMANOS = listOf("I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII")
+
+    /**
+     * El mes corto en español, como «nov.». Botánico nombra los meses con su número romano («XI» o «XI-2026»): se vuelve al
+     * número; si viene con su nombre, se toman sus tres primeras letras.
+     */
     private fun mesCorto(mes: String): String {
-        val m = mes.substringBefore(' ').trim()
+        val m = mes.trim().substringBefore(' ').substringBefore('-').trim()
+        val i = ROMANOS.indexOf(m.uppercase())
+        if (i >= 0) return MESES_CORTOS[i]
+        m.toIntOrNull()?.let { n -> if (n in 1..12) return MESES_CORTOS[n - 1] }
         return if (m.length > 4) m.take(3).lowercase() + "." else m.lowercase()
     }
 
@@ -211,6 +221,10 @@ internal object VolumenEstanteBotanico {
         val u = density
         val w = size.width; val h = size.height
         val sep = 3f * u
+        // La sombra que la entrada echa en la pared de detrás, corrida hacia donde no está la luz y un poco abajo: asoma en la
+        // rendija, por encima de las vecinas más bajas y en el hueco. De noche, tanto más marcada cuanto más cerca de la lumbre.
+        val fs = if (t.a.oscuro) fuerza * (0.3f + 0.9f * t.k).coerceAtMost(1f) else fuerza
+        drawRoundRect(t.s(0.3f * fs), Offset(-hacia * 6f * u, desde + 4f * u), Size(w, h - desde - 4f * u), CornerRadius(3f * u))
         if (hacia < 0f) drawRect(t.s(0.42f * fuerza), Offset(w, desde), Size(sep, h - desde))
         else drawRect(t.s(0.42f * fuerza), Offset(-sep, desde), Size(sep, h - desde))
         drawRect(t.s(0.5f * fuerza), Offset(-1f * u, h - 0.4f * u), Size(w + 2f * u, 2.4f * u))
@@ -466,7 +480,7 @@ internal object VolumenEstanteBotanico {
         val cuello = h * (0.33f + 0.05f * azar(s, 3))
         val fondo = h - 0.4f * u
         alrededor(t, hacia, cuello)
-        val ti2 = tinte(ti, LIENZO_CRUDO, t, 0.36f)
+        val ti2 = tinte(ti?.let { mezcla(it, P.KRAFT, 0.14f) }, LIENZO_CRUDO, t, 0.34f, 0.66f)
         // El cuerpo: del atado se abre enseguida en hombros redondos y baja en una panza ancha que se aplasta en la tabla.
         val bolsa = Path().apply {
             moveTo(x(0.36f), cuello)

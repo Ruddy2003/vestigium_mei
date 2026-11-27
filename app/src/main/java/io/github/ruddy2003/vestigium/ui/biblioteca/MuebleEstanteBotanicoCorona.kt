@@ -17,157 +17,17 @@ import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
 import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
-import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 
 /**
  * El bodegón de la corona del estante de Botánico ([MuebleEstanteBotanico]), encima de la cornisa y en la pared: la caja de Ward
  * (la vitrina de vidrio en que el naturalista trajo vivos los helechos del viaje) manda; a su lado, la pila de folios de la flora
  * con el salacot tumbado encima (el del Ideario, que allí cuelga); el microscopio de latón sobre su caja; el quinqué de pared en
- * su brazo (la misma pantalla de vidrio verde que el del Ideario); colgada de la moldura, la caja de insectos con los
- * escarabajos clavados en filas. Cada cosa con su sombra en la pared: de día a la derecha y abajo; de noche, lejos del quinqué.
+ * su brazo (la misma pantalla de vidrio verde que el del Ideario); el fajo de pliegos con su amonites. Lo que cuelga de la
+ * moldura está en [ColgadoEstanteBotanico]. Cada cosa con su sombra en la pared: de día a la derecha y abajo; de noche, lejos
+ * del quinqué.
  */
 internal object CoronaEstanteBotanico {
     private val P = PaletaBotanico
-
-    /** La sombra de algo en la pared: de día, corrida a la derecha y abajo; de noche, hacia fuera del quinqué. No baja de [hasta]. */
-    private fun DrawScope.sombraEnPared(p: Path, desde: Offset, hasta: Float, s: SitioBotanico, a: Float = 0.2f) {
-        val w = size.width
-        clipRect(0f, 0f, size.width, hasta) {
-            if (!s.a.oscuro) {
-                val dx = if (s.a.noche) 0.04f else 0.024f
-                translate(w * dx, w * (if (s.a.noche) 0.008f else 0.013f)) { drawPath(p, s.t(desde).s(a)) }
-            } else {
-                val k = s.k(desde)
-                if (k > 0.1f) {
-                    val dx = (desde.x / w - MuebleEstanteBotanico.LAMP_X).coerceIn(-0.3f, 0.3f) / 0.3f
-                    translate(w * 0.04f * dx, w * 0.012f) { drawPath(p, P.NOCHE.copy(alpha = (0.6f * k).coerceAtMost(0.5f))) }
-                }
-            }
-        }
-    }
-
-    // ---------------------------------------------------------------- lo colgado (antes que la cornisa)
-
-    /** Lo que cuelga de la pared: la caja de insectos y dos ramilletes de hierbas puestos a secar, de la moldura. */
-    fun DrawScope.colgado(s: SitioBotanico, apoyo: Float) {
-        val w = size.width
-        ramillete(w * 0.075f, w * 0.135f, s, 0)
-        ramillete(w * 0.335f, w * 0.115f, s, 1)
-        cajaInsectos(Rect(w * 0.43f, w * 0.115f, w * 0.655f, w * 0.3f), s)
-    }
-
-    /**
-     * Un ramillete de hierbas puesto a secar, boca abajo: cuelga de un clavo de la moldura por un cordel, atado con bramante, y
-     * sus tallos se abren hacia abajo con las hojas secas y las cabezuelas de flor, de [largo] de alto.
-     */
-    private fun DrawScope.ramillete(x: Float, largo: Float, s: SitioBotanico, cual: Int) {
-        val w = size.width; val u = density
-        val railY = w * (MuroEstanteBotanico.MOLDURA_Y + MuroEstanteBotanico.MOLDURA_ALTO)
-        val atado = Offset(x, railY + w * 0.03f)
-        val t = s.t(Offset(x, atado.y + largo * 0.5f))
-        val seco = if (cual == 0) mezcla(P.HOJA, P.KRAFT, 0.45f) else mezcla(P.HOJA_OSC, P.KRAFT, 0.3f)
-        val flor = if (cual == 0) Color(0xFF8A6A8E) else Color(0xFFC9A54A)
-        // Los tallos, abiertos en abanico hacia abajo, y lo que dejan en la pared.
-        val tallos = Path(); val hojas = Path(); val puntas = ArrayList<Offset>()
-        for (j in 0 until 9) {
-            val an = 1.5708f + (j - 4f) * 0.11f + (azar(9250 + cual, j) - 0.5f) * 0.08f
-            val l = largo * (0.75f + 0.25f * azar(9260 + cual, j))
-            val fin = Offset(atado.x + l * kotlin.math.cos(an), atado.y + l * kotlin.math.sin(an))
-            val c = Offset(atado.x + l * 0.5f * kotlin.math.cos(an) + (azar(9270 + cual, j) - 0.5f) * w * 0.01f, atado.y + l * 0.5f)
-            tallos.moveTo(atado.x, atado.y); tallos.quadraticTo(c.x, c.y, fin.x, fin.y)
-            puntas += fin
-            for (q in 1 until 5) {
-                val f = q / 5f
-                val p = Offset(atado.x + (fin.x - atado.x) * f, atado.y + (fin.y - atado.y) * f)
-                val lado = if ((q + j) % 2 == 0) 1f else -1f
-                val hl = largo * 0.1f * (1.1f - f * 0.4f)
-                hojas.moveTo(p.x, p.y)
-                hojas.quadraticTo(p.x + lado * hl * 0.6f, p.y + hl * 0.2f, p.x + lado * hl * 0.8f, p.y + hl * 0.75f)
-            }
-        }
-        val sombra = Path().apply { addPath(tallos); addPath(hojas) }
-        if (!s.a.oscuro) drawPath(Path().apply { addPath(sombra, Offset(w * 0.022f, w * 0.012f)) }, t.s(0.18f), style = Stroke(2.2f * u, cap = StrokeCap.Round))
-        drawPath(tallos, t.c(mezcla(seco, P.KRAFT, 0.3f), -0.05f), style = Stroke(1f * u, cap = StrokeCap.Round))
-        drawPath(hojas, t.c(seco), style = Stroke(2f * u, cap = StrokeCap.Round))
-        drawPath(hojas, t.b(0.25f), style = Stroke(0.6f * u, cap = StrokeCap.Round))
-        // Las cabezuelas de flor secas en las puntas.
-        puntas.forEachIndexed { j, p ->
-            if (j % 2 == 1) return@forEachIndexed
-            drawCircle(t.s(0.3f), 2.6f * u, p + Offset(0.8f * u, 1f * u))
-            drawCircle(t.c(flor, -0.05f), 2.4f * u, p)
-            drawCircle(t.b(0.4f), 0.9f * u, p - Offset(0.7f * u, 0.7f * u))
-        }
-        // El cordel al clavo de la moldura y el atado de bramante.
-        drawLine(t.c(P.BRAMANTE, -0.1f), Offset(x, railY - 1f * u), atado, 0.9f * u)
-        clavoBotanico(Offset(x, railY - 1.6f * u), 1.4f * u, t)
-        val nudo = Rect(atado.x - w * 0.012f, atado.y - w * 0.004f, atado.x + w * 0.012f, atado.y + w * 0.016f)
-        drawRect(t.c(P.BRAMANTE), nudo.topLeft, nudo.size)
-        for (q in 0 until 3) drawLine(t.s(0.35f), Offset(nudo.left, nudo.top + nudo.height * (0.3f + 0.25f * q)), Offset(nudo.right, nudo.top + nudo.height * (0.3f + 0.25f * q)), 0.6f * u)
-        drawRect(t.b(0.4f), nudo.topLeft, Size(nudo.width * 0.3f, nudo.height))
-    }
-    /**
-     * La caja de insectos: el marco de nogal con su vidrio, el fondo de papel, y los escarabajos clavados en tres filas, cada
-     * uno con su alfiler y su etiquetita (sin letra); cuelga de dos ganchos de la moldura por sus cordones.
-     */
-    private fun DrawScope.cajaInsectos(r: Rect, s: SitioBotanico) {
-        val w = size.width; val u = density
-        val t = s.t(r.center)
-        val railY = w * (MuroEstanteBotanico.MOLDURA_Y + MuroEstanteBotanico.MOLDURA_ALTO)
-        // Los cordones a los ganchos de la moldura y los ganchos.
-        listOf(r.left + r.width * 0.12f to r.left + r.width * 0.2f, r.right - r.width * 0.12f to r.right - r.width * 0.2f).forEach { (xb, xg) ->
-            drawLine(t.s(0.25f), Offset(xg + 1.5f * u, railY + 1.5f * u), Offset(xb + 1.5f * u, r.top + 1.5f * u), 0.8f * u)
-            drawLine(t.c(mezcla(P.BRAMANTE, P.NOGAL, 0.3f)), Offset(xg, railY), Offset(xb, r.top + 1f * u), 0.9f * u)
-            drawArc(t.c(P.LATON), 0f, 180f, false, Offset(xg - 2.2f * u, railY - 3f * u), Size(4.4f * u, 4.4f * u), style = Stroke(1.2f * u))
-            drawCircle(t.b(0.6f), 0.6f * u, Offset(xg - 1.2f * u, railY - 0.4f * u))
-        }
-        val marco = Path().apply { addRect(r) }
-        sombraEnPared(marco, r.center, size.height, s, 0.26f)
-        drawRect(t.c(P.NOGAL, 0.04f), r.topLeft, r.size)
-        val m = r.width * 0.06f
-        drawRect(t.b(0.5f), r.topLeft, Size(r.width, 1.2f * u))
-        drawRect(t.b(0.3f), r.topLeft, Size(1.2f * u, r.height))
-        drawRect(t.s(0.35f), Offset(r.right - 1.6f * u, r.top), Size(1.6f * u, r.height))
-        drawRect(t.s(0.4f), Offset(r.left, r.bottom - 1.4f * u), Size(r.width, 1.4f * u))
-        vetas(Rect(r.left, r.top, r.right, r.top + m), t.c(P.NOGAL_OSC).copy(alpha = 0.4f), 9201, 0.9f, grosor = 0.5f)
-        val f = Rect(r.left + m, r.top + m, r.right - m, r.bottom - m)
-        // El fondo: papel sobre corcho, con la sombra del marco en él (el vidrio está más adelante).
-        drawRect(t.c(mezcla(P.PAPEL, P.CARTULINA, 0.35f)), f.topLeft, f.size)
-        drawRect(t.s(0.3f), f.topLeft, Size(f.width, f.height * 0.1f))
-        drawRect(t.s(0.2f), f.topLeft, Size(f.width * 0.06f, f.height))
-        pinceladas(f, if (s.a.oscuro) P.NOCHE else P.KRAFT, 9202, 6, u, 0.12f)
-        // Los escarabajos: tres filas de cuatro, de cuerpo ovalado, con sus patas, su alfiler y su etiquetita.
-        val colores = listOf(Color(0xFF2E4A2C), Color(0xFF6A3A1E), Color(0xFF1E2622), Color(0xFF4A5A2A), Color(0xFF7A5A22), Color(0xFF2C3A4A))
-        for (fila in 0 until 3) for (col in 0 until 4) {
-            val cx = f.left + f.width * (col + 0.5f) / 4f
-            val cy = f.top + f.height * (fila + 0.42f) / 3f
-            val j = fila * 4 + col
-            val esc = (0.72f + 0.4f * azar(9210, j)) * f.width * 0.055f
-            val c = colores[(j * 5 + fila) % colores.size]
-            val tt = s.t(Offset(cx, cy))
-            // Las patas: tres por lado, abiertas.
-            for (lado in listOf(-1f, 1f)) for (q in 0 until 3) {
-                val py = cy - esc * 0.25f + esc * 0.55f * q
-                val ex = cx + lado * esc * (1.35f + 0.25f * (q % 2)); val ey = py + esc * (0.45f * (q - 1)) + esc * 0.15f
-                drawLine(tt.c(mezcla(c, P.TINTA, 0.5f)), Offset(cx + lado * esc * 0.45f, py), Offset(ex, ey), 0.6f * u)
-            }
-            drawOval(tt.s(0.3f), Offset(cx - esc * 0.6f + 1f * u, cy - esc * 0.6f + 1.4f * u), Size(esc * 1.2f, esc * 1.9f))
-            // La cabeza, el tórax y los élitros.
-            drawOval(tt.c(mezcla(c, P.TINTA, 0.35f)), Offset(cx - esc * 0.25f, cy - esc * 0.95f), Size(esc * 0.5f, esc * 0.34f))
-            drawOval(tt.c(c, 0.04f), Offset(cx - esc * 0.45f, cy - esc * 0.68f), Size(esc * 0.9f, esc * 0.5f))
-            drawOval(tt.c(c), Offset(cx - esc * 0.6f, cy - esc * 0.3f), Size(esc * 1.2f, esc * 1.5f))
-            drawLine(tt.c(mezcla(c, P.TINTA, 0.6f)), Offset(cx, cy - esc * 0.28f), Offset(cx, cy + esc * 1.15f), 0.5f * u)
-            drawOval(tt.b(0.55f), Offset(cx - esc * 0.42f, cy - esc * 0.15f), Size(esc * 0.28f, esc * 0.7f))
-            // El alfiler y la etiquetita con su renglón.
-            drawCircle(tt.c(P.LATON_LUZ), 0.8f * u, Offset(cx + esc * 0.15f, cy - esc * 0.1f))
-            val ey = cy + esc * 1.45f
-            drawRect(tt.c(P.PAPEL), Offset(cx - esc * 0.7f, ey), Size(esc * 1.4f, esc * 0.42f))
-            drawLine(tt.c(P.TINTA).copy(alpha = 0.5f), Offset(cx - esc * 0.5f, ey + esc * 0.22f), Offset(cx + esc * (0.2f + 0.3f * azar(9211, j)), ey + esc * 0.22f), 0.5f * u)
-        }
-        // El vidrio: dos reflejos en diagonal y el filo de luz.
-        drawPath(poligonoBotanico(f.left + f.width * 0.08f, f.bottom, f.left + f.width * 0.3f, f.top, f.left + f.width * 0.42f, f.top, f.left + f.width * 0.2f, f.bottom), t.b(0.16f))
-        drawPath(poligonoBotanico(f.left + f.width * 0.5f, f.bottom, f.left + f.width * 0.62f, f.top, f.left + f.width * 0.66f, f.top, f.left + f.width * 0.54f, f.bottom), t.b(0.1f))
-        drawRect(t.s(0.4f), Offset(f.left, f.top), Size(f.width, 1f * u), style = Stroke(0.6f * u))
-    }
 
     // ---------------------------------------------------------------- encima de la cornisa
 
@@ -241,12 +101,14 @@ internal object CoronaEstanteBotanico {
     }
 
     /**
-     * La caja de Ward: la bandeja de nogal con sus asas de latón, la caja de vidrio con sus montantes de nogal, el tejadillo a dos
-     * aguas con su remate, el costado de la derecha (en sombra) y, dentro, la tierra con musgo, los helechos y una palmita; el
-     * vidrio con su reflejo y las gotas de la condensación.
+     * La caja de Ward: la bandeja de nogal con sus asas de latón, la caja de vidrio con sus montantes de madera pintada (con
+     * grueso, su canto de luz y su sombra en el vidrio), el tejadillo a dos aguas con su remate, el costado de la derecha en
+     * escorzo y, dentro, la tierra con musgo, los helechos frondosos y una planta de hoja ancha; el vidrio con sus reflejos en
+     * diagonal y la condensación. De noche, el quinqué se refleja en los vidrios que lo miran y deja su filo en los montantes.
      */
     private fun DrawScope.cajaWard(r: Rect, s: SitioBotanico, apoyo: Float) {
         val w = size.width; val u = density
+        val o = s.a.oscuro
         val dv = Offset(w * 0.03f, -w * 0.018f)
         val bandeja = Rect(r.left - w * 0.008f, r.bottom - w * 0.042f, r.right + w * 0.008f, r.bottom)
         val cuerpo = Rect(r.left, r.top + r.height * 0.33f, r.right, bandeja.top)
@@ -254,82 +116,122 @@ internal object CoronaEstanteBotanico {
         val cx = r.center.x
         val t = s.t(r.center)
         val tejado = poligonoBotanico(cuerpo.left, cuerpo.top, cx, cumbre, cuerpo.right, cuerpo.top)
-        val silueta = Path().apply {
-            addPath(tejado); addRect(cuerpo); addRect(bandeja)
-            addPath(poligonoBotanico(cuerpo.right, cuerpo.top, cuerpo.right + dv.x, cuerpo.top + dv.y, cuerpo.right + dv.x, cuerpo.bottom + dv.y, cuerpo.right, cuerpo.bottom))
-        }
-        sombraEnPared(silueta, r.center, apoyo + 2f * u, s, 0.2f)
-        contactoBotanico(Offset(bandeja.center.x + w * 0.02f, apoyo), bandeja.width * 1.04f, w * 0.012f, t, 0.4f)
-        // El costado de la derecha, de vidrio, visto en escorzo: lo de dentro se ve más apagado.
         val costado = poligonoBotanico(cuerpo.right, cuerpo.top, cuerpo.right + dv.x, cuerpo.top + dv.y, cuerpo.right + dv.x, cuerpo.bottom + dv.y, cuerpo.right, cuerpo.bottom)
-        drawPath(costado, t.c(mezcla(P.SALVIA_OSC, P.HOJA, 0.4f), -0.1f))
-        drawPath(costado, t.c(P.VIDRIO).copy(alpha = 0.16f))
         val agua = poligonoBotanico(cx, cumbre, cx + dv.x, cumbre + dv.y, cuerpo.right + dv.x, cuerpo.top + dv.y, cuerpo.right, cuerpo.top)
-        drawPath(agua, t.c(mezcla(P.SALVIA, P.VIDRIO, 0.4f), -0.12f))
-        // Dentro: el aire verde del vidrio, la tierra con musgo, los helechos y la palmita.
+        val silueta = Path().apply { addPath(tejado); addRect(cuerpo); addRect(bandeja); addPath(costado); addPath(agua) }
+        sombraEnParedBotanico(silueta, r.center, apoyo + 2f * u, s, 0.26f)
+        contactoBotanico(Offset(bandeja.center.x + w * 0.025f, apoyo), bandeja.width * 1.08f, w * 0.016f, t, 0.5f)
+        // El costado de la derecha y su agua del tejado, en escorzo: lo de dentro se ve más apagado tras dos vidrios.
+        drawPath(costado, t.c(mezcla(P.SALVIA_OSC, P.HOJA_OSC, 0.45f), -0.12f))
+        drawPath(agua, t.c(mezcla(P.SALVIA_OSC, P.VIDRIO, 0.35f), -0.14f))
+        // Dentro: el aire verde del vidrio, la tierra, las plantas y el musgo.
         val dentro = Path().apply { addPath(tejado); addRect(cuerpo) }
+        val suelo = cuerpo.bottom - cuerpo.height * 0.16f
         clipPath(dentro) {
-            drawRect(t.c(mezcla(P.SALVIA, P.HOJA, 0.28f), 0.02f), Offset(cuerpo.left, cumbre), Size(cuerpo.width, cuerpo.bottom - cumbre))
-            drawRect(t.s(0.16f), Offset(cx, cumbre), Size(cuerpo.width / 2, cuerpo.bottom - cumbre))
-            val suelo = cuerpo.bottom - cuerpo.height * 0.16f
+            drawRect(Brush.verticalGradient(listOf(t.c(mezcla(P.SALVIA, P.HOJA, 0.25f), 0.06f), t.c(mezcla(P.SALVIA_OSC, P.HOJA_OSC, 0.5f), -0.05f)), cumbre, suelo),
+                Offset(cuerpo.left, cumbre), Size(cuerpo.width, suelo - cumbre))
+            drawRect(t.s(0.18f), Offset(cx + cuerpo.width * 0.1f, cumbre), Size(cuerpo.width * 0.4f, suelo - cumbre))
             drawRect(t.c(mezcla(P.NOGAL, P.TINTA, 0.3f)), Offset(cuerpo.left, suelo), Size(cuerpo.width, cuerpo.bottom - suelo))
-            // La palmita del fondo, a la derecha: sus hojas en abanico.
-            val pb = Offset(cuerpo.left + cuerpo.width * 0.74f, suelo)
-            for (j in 0 until 7) {
-                val g = -150f + 20f * j
-                frondaBotanico(pb + Offset(0f, -cuerpo.height * 0.25f), cuerpo.height * (0.42f + 0.1f * azar(9300, j)), g, t.c(mezcla(P.HOJA_OSC, P.HOJA, 0.4f), -0.05f), 1f * u, 7)
+            // Las frondas del fondo, oscuras (dan hondura), y la planta de hoja ancha a la derecha.
+            val hb = Offset(cuerpo.left + cuerpo.width * 0.3f, suelo + 2f * u)
+            listOf(-150f, -120f, -84f, -60f, -30f).forEachIndexed { j, g ->
+                frondaBotanico(hb + Offset(cuerpo.width * 0.05f * (j - 2), 0f), cuerpo.height * (0.85f + 0.2f * azar(9300, j)), g, t.c(P.HOJA_OSC, -0.08f), 2.2f * u, 11)
             }
-            drawLine(t.c(mezcla(P.NOGAL, P.HOJA, 0.4f)), pb, pb + Offset(0f, -cuerpo.height * 0.26f), 2.4f * u)
-            // Los helechos: tres grandes y uno todavía enrollado.
-            val hb = Offset(cuerpo.left + cuerpo.width * 0.34f, suelo + 2f * u)
-            frondaBotanico(hb, cuerpo.height * 1.05f, -98f, t.c(P.HOJA, 0.04f), 1.6f * u, 12)
-            frondaBotanico(hb + Offset(cuerpo.width * 0.04f, 0f), cuerpo.height * 0.85f, -58f, t.c(mezcla(P.HOJA, P.HOJA_CLARA, 0.5f), 0.04f), 1.5f * u, 11)
-            frondaBotanico(hb - Offset(cuerpo.width * 0.04f, 0f), cuerpo.height * 0.78f, -135f, t.c(mezcla(P.HOJA, P.VERDE, 0.4f)), 1.4f * u, 11)
-            frondaBotanico(hb + Offset(cuerpo.width * 0.1f, 0f), cuerpo.height * 0.6f, -40f, t.c(P.HOJA_CLARA, 0.02f), 1.2f * u, 9)
+            val pb = Offset(cuerpo.left + cuerpo.width * 0.76f, suelo)
+            listOf(Triple(-0.05f, 0.6f, -32f), Triple(0.07f, 0.66f, 26f), Triple(-0.12f, 0.42f, -58f), Triple(0.13f, 0.4f, 55f), Triple(0f, 0.8f, -4f)).forEachIndexed { j, (dx, al, g) ->
+                val c = Offset(pb.x + cuerpo.width * dx, suelo - cuerpo.height * al * 0.62f)
+                drawLine(t.c(mezcla(P.HOJA_OSC, P.NOGAL, 0.3f)), pb, c, 1.4f * u)
+                hojaBotanico(c, cuerpo.height * (0.36f + 0.06f * (j % 3)), g, t.c(if (j % 2 == 0) P.HOJA else mezcla(P.HOJA, P.HOJA_CLARA, 0.45f), 0.04f), t)
+            }
+            // Los helechos de delante, claros y frondosos, y uno todavía enrollado.
+            frondaBotanico(hb, cuerpo.height * 1.1f, -100f, t.c(mezcla(P.HOJA, P.HOJA_CLARA, 0.35f), 0.08f), 2f * u, 13)
+            frondaBotanico(hb + Offset(cuerpo.width * 0.04f, 0f), cuerpo.height * 0.95f, -62f, t.c(P.HOJA_CLARA, 0.06f), 1.9f * u, 12)
+            frondaBotanico(hb - Offset(cuerpo.width * 0.04f, 0f), cuerpo.height * 0.88f, -138f, t.c(P.HOJA, 0.04f), 1.9f * u, 12)
+            frondaBotanico(hb + Offset(cuerpo.width * 0.1f, 0f), cuerpo.height * 0.62f, -38f, t.c(mezcla(P.HOJA_CLARA, P.CRUDO, 0.2f), 0.06f), 1.6f * u, 10)
             val bc = Offset(cuerpo.left + cuerpo.width * 0.52f, suelo - cuerpo.height * 0.3f)
             drawPath(Path().apply { moveTo(bc.x - cuerpo.width * 0.02f, suelo); cubicTo(bc.x - cuerpo.width * 0.03f, suelo - cuerpo.height * 0.15f, bc.x + cuerpo.width * 0.04f, bc.y + cuerpo.height * 0.05f, bc.x + cuerpo.width * 0.02f, bc.y) },
-                t.c(P.HOJA_CLARA), style = Stroke(1.4f * u))
-            drawCircle(t.c(P.HOJA_CLARA), cuerpo.width * 0.022f, bc + Offset(cuerpo.width * 0.005f, 0f), style = Stroke(1.3f * u))
-            // El musgo en montones sobre la tierra.
-            for (j in 0 until 14) {
-                val mx = cuerpo.left + cuerpo.width * (0.03f + 0.94f * j / 13f)
-                val mr = cuerpo.width * (0.025f + 0.018f * azar(9301, j))
-                drawCircle(t.c(mezcla(P.MUSGO, P.HOJA_CLARA, 0.5f * azar(9302, j)), 0.02f), mr, Offset(mx, suelo + mr * 0.25f))
-                drawCircle(t.b(0.25f), mr * 0.45f, Offset(mx - mr * 0.3f, suelo - mr * 0.2f))
+                t.c(P.HOJA_CLARA, 0.06f), style = Stroke(1.8f * u))
+            drawCircle(t.c(P.HOJA_CLARA, 0.06f), cuerpo.width * 0.022f, bc + Offset(cuerpo.width * 0.005f, 0f), style = Stroke(1.6f * u))
+            // El musgo en montones sobre la tierra, con su luz.
+            for (j in 0 until 16) {
+                val mx = cuerpo.left + cuerpo.width * (0.02f + 0.96f * j / 15f)
+                val mr = cuerpo.width * (0.024f + 0.02f * azar(9301, j))
+                drawCircle(t.c(mezcla(P.MUSGO, P.HOJA_OSC, 0.4f * azar(9302, j))), mr, Offset(mx, suelo + mr * 0.3f))
+                drawCircle(t.c(mezcla(P.MUSGO, P.HOJA_CLARA, 0.5f), 0.04f), mr * 0.55f, Offset(mx - mr * 0.25f, suelo - mr * 0.1f))
             }
-            // El vidrio: un velo muy leve, el reflejo largo y la condensación abajo.
-            drawRect(t.c(P.VIDRIO).copy(alpha = if (s.a.oscuro) 0.06f else 0.12f), Offset(cuerpo.left, cumbre), Size(cuerpo.width, cuerpo.bottom - cumbre))
-            drawPath(poligonoBotanico(cuerpo.left + cuerpo.width * 0.06f, cuerpo.bottom, cuerpo.left + cuerpo.width * 0.2f, cuerpo.top - r.height * 0.1f,
-                cuerpo.left + cuerpo.width * 0.27f, cuerpo.top - r.height * 0.1f, cuerpo.left + cuerpo.width * 0.13f, cuerpo.bottom), t.b(0.2f))
+            // De noche, la lumbre del quinqué entra por los vidrios de la derecha y tiñe lo de dentro, más cuanto más cerca.
+            if (o) drawRect(Brush.horizontalGradient(listOf(Color.Transparent, P.LLAMA.copy(alpha = 0.07f), P.LLAMA.copy(alpha = 0.2f)), cuerpo.left, cuerpo.right + dv.x),
+                Offset(cuerpo.left, cumbre), Size(cuerpo.width, cuerpo.bottom - cumbre))
+            // Los reflejos del vidrio, en diagonal, en tres paños y en el tejado (de día, la luz de la izquierda; de noche, el
+            // quinqué, solo en los paños que lo miran).
+            val paños = listOf(0f to 0.34f, 0.34f to 0.67f, 0.67f to 1f)
+            paños.forEachIndexed { j, (a0, a1) ->
+                val x0 = cuerpo.left + cuerpo.width * a0; val pw = cuerpo.width * (a1 - a0)
+                val fuerza = if (!o) (0.26f - 0.06f * j) else 0f
+                if (fuerza > 0f) {
+                    drawPath(poligonoBotanico(x0 + pw * 0.1f, cuerpo.bottom, x0 + pw * 0.42f, cuerpo.top, x0 + pw * 0.6f, cuerpo.top, x0 + pw * 0.28f, cuerpo.bottom), t.b(fuerza))
+                    drawPath(poligonoBotanico(x0 + pw * 0.66f, cuerpo.bottom, x0 + pw * 0.86f, cuerpo.top, x0 + pw * 0.92f, cuerpo.top, x0 + pw * 0.72f, cuerpo.bottom), t.b(fuerza * 0.6f))
+                }
+            }
+            if (!o) drawPath(poligonoBotanico(cuerpo.left + cuerpo.width * 0.12f, cuerpo.top - 1f, cx - cuerpo.width * 0.12f, cumbre + (cuerpo.top - cumbre) * 0.25f, cx - cuerpo.width * 0.04f, cumbre + (cuerpo.top - cumbre) * 0.4f, cuerpo.left + cuerpo.width * 0.24f, cuerpo.top - 1f), t.b(0.28f))
+            // La condensación, abajo.
             for (j in 0 until 34) {
                 val p = Offset(cuerpo.left + cuerpo.width * azar(9303, j), cuerpo.bottom - cuerpo.height * 0.55f * azar(9304, j) * azar(9305, j))
-                drawCircle(t.b(0.55f), (0.5f + 0.8f * azar(9306, j)) * u, p)
+                drawCircle(if (o) P.LLAMA.copy(alpha = (0.5f * t.k).coerceIn(0.05f, 0.4f)) else t.b(0.6f), (0.5f + 0.8f * azar(9306, j)) * u, p)
             }
         }
-        // Los montantes de nogal: el marco, los de en medio, el alero y los del tejado.
-        val marco = t.c(P.NOGAL, 0.05f)
-        val g = 2.2f * u
+        // De noche, el quinqué se refleja en los vidrios que lo miran: un brillo largo en el paño de la derecha, otro en el agua
+        // del tejado y uno en el costado; cálidos, nítidos.
+        if (o) {
+            val kq = (t.k * 2.5f).coerceIn(0.6f, 1f)
+            val x0 = cuerpo.left + cuerpo.width * 0.67f; val pw = cuerpo.width * 0.33f
+            // En el paño del medio, más débil y más estrecho.
+            val xm = cuerpo.left + cuerpo.width * 0.34f
+            drawPath(poligonoBotanico(xm + pw * 0.62f, cuerpo.bottom - 2f * u, xm + pw * 0.76f, cuerpo.top + 2f * u, xm + pw * 0.81f, cuerpo.top + 2f * u, xm + pw * 0.67f, cuerpo.bottom - 2f * u), P.LLAMA.copy(alpha = 0.2f * kq))
+            drawPath(poligonoBotanico(x0 + pw * 0.55f, cuerpo.bottom - 2f * u, x0 + pw * 0.72f, cuerpo.top + 2f * u, x0 + pw * 0.8f, cuerpo.top + 2f * u, x0 + pw * 0.63f, cuerpo.bottom - 2f * u), P.LLAMA.copy(alpha = 0.32f * kq))
+            drawPath(poligonoBotanico(x0 + pw * 0.86f, cuerpo.top + cuerpo.height * 0.1f, x0 + pw * 0.92f, cuerpo.top + cuerpo.height * 0.1f, x0 + pw * 0.9f, cuerpo.top + cuerpo.height * 0.7f, x0 + pw * 0.84f, cuerpo.top + cuerpo.height * 0.7f), P.FUEGO.copy(alpha = 0.55f * kq))
+            drawCircle(P.FUEGO.copy(alpha = 0.85f * kq), 1.6f * u, Offset(x0 + pw * 0.88f, cuerpo.top + cuerpo.height * 0.22f))
+            drawPath(poligonoBotanico(cx + (cuerpo.right - cx) * 0.45f, cumbre + (cuerpo.top - cumbre) * 0.45f, cx + (cuerpo.right - cx) * 0.6f, cumbre + (cuerpo.top - cumbre) * 0.6f,
+                cx + (cuerpo.right - cx) * 0.58f, cumbre + (cuerpo.top - cumbre) * 0.75f, cx + (cuerpo.right - cx) * 0.43f, cumbre + (cuerpo.top - cumbre) * 0.6f), P.LLAMA.copy(alpha = 0.45f * kq))
+            drawPath(costado, P.LLAMA.copy(alpha = 0.12f * kq))
+            drawLine(P.FUEGO.copy(alpha = 0.6f * kq), Offset(cuerpo.right + dv.x * 0.5f, cuerpo.top + dv.y * 0.5f + cuerpo.height * 0.15f), Offset(cuerpo.right + dv.x * 0.5f, cuerpo.top + dv.y * 0.5f + cuerpo.height * 0.55f), 1.4f * u)
+        }
+        // Los montantes de madera pintada, con su grueso: el canto de luz, la cara y la sombra que echan en el vidrio.
+        val marco = t.c(mezcla(P.NOGAL_OSC, P.HIERRO, 0.35f), 0.04f)
+        val canto = t.c(mezcla(P.NOGAL, P.ROBLE, 0.3f), 0.1f)
+        val g = 3.4f * u
+        val filo = if (o) P.LLAMA.copy(alpha = (0.9f * (t.k * 2.5f).coerceIn(0.6f, 1f)).coerceAtMost(0.85f)) else Color.Transparent
         listOf(0f, 0.34f, 0.67f, 1f).forEach { f ->
             val x = cuerpo.left + cuerpo.width * f
-            drawRect(t.s(0.3f), Offset(x - g / 2 + 1.2f * u, cuerpo.top), Size(g, cuerpo.height))
+            drawRect(t.s(0.35f), Offset(x + g / 2, cuerpo.top), Size(1.6f * u, cuerpo.height))
             drawRect(marco, Offset(x - g / 2, cuerpo.top), Size(g, cuerpo.height))
-            drawRect(t.b(0.4f), Offset(x - g / 2, cuerpo.top), Size(0.7f * u, cuerpo.height))
+            drawRect(canto, Offset(x - g / 2, cuerpo.top), Size(g * 0.3f, cuerpo.height))
+            if (o) drawRect(filo, Offset(x + g / 2 - 1.5f * u, cuerpo.top), Size(1.5f * u, cuerpo.height))
         }
         drawLine(marco, Offset(cuerpo.left, cuerpo.top), Offset(cx, cumbre), g, StrokeCap.Round)
         drawLine(marco, Offset(cx, cumbre), Offset(cuerpo.right, cuerpo.top), g, StrokeCap.Round)
-        drawLine(marco, Offset(cuerpo.left - 1f * u, cuerpo.top), Offset(cuerpo.right + 1f * u, cuerpo.top), g * 1.3f)
-        drawLine(t.b(0.45f), Offset(cuerpo.left, cuerpo.top - g * 0.5f), Offset(cuerpo.right, cuerpo.top - g * 0.5f), 0.7f * u)
+        drawLine(canto, Offset(cuerpo.left, cuerpo.top - g * 0.3f), Offset(cx, cumbre - g * 0.3f), g * 0.3f)
+        if (o) drawLine(filo, Offset(cx, cumbre - g * 0.3f), Offset(cuerpo.right, cuerpo.top - g * 0.3f), 1.2f * u)
+        // El alero: una tabla gruesa a lo ancho, con su luz arriba y su sombra en el vidrio de abajo.
+        drawRect(t.s(0.35f), Offset(cuerpo.left, cuerpo.top + g * 0.7f), Size(cuerpo.width, 2f * u))
+        drawRect(marco, Offset(cuerpo.left - 1.5f * u, cuerpo.top - g * 0.65f), Size(cuerpo.width + 3f * u, g * 1.3f))
+        drawRect(canto, Offset(cuerpo.left - 1.5f * u, cuerpo.top - g * 0.65f), Size(cuerpo.width + 3f * u, g * 0.35f))
         drawLine(marco, Offset(cx, cumbre), Offset(cx + dv.x, cumbre + dv.y), g)
-        drawLine(t.c(P.NOGAL, -0.1f), Offset(cuerpo.right + dv.x, cuerpo.top + dv.y), Offset(cuerpo.right + dv.x, cuerpo.bottom + dv.y), g * 0.8f)
-        drawLine(t.c(P.NOGAL, -0.1f), Offset(cuerpo.right, cuerpo.top), Offset(cuerpo.right + dv.x, cuerpo.top + dv.y), g * 0.8f)
+        drawLine(marco, Offset(cuerpo.right + dv.x, cuerpo.top + dv.y), Offset(cuerpo.right + dv.x, cuerpo.bottom + dv.y), g * 0.8f)
+        drawLine(marco, Offset(cuerpo.right, cuerpo.top), Offset(cuerpo.right + dv.x, cuerpo.top + dv.y), g * 0.8f)
+        drawLine(marco, Offset(cuerpo.right, cuerpo.bottom), Offset(cuerpo.right + dv.x, cuerpo.bottom + dv.y), g * 0.8f)
+        if (o) drawLine(filo, Offset(cuerpo.right + dv.x - 1f * u, cuerpo.top + dv.y), Offset(cuerpo.right + dv.x - 1f * u, cuerpo.bottom + dv.y), 1.2f * u)
         // El remate de la cumbre: una bola de latón.
-        clavoBotanico(Offset(cx, cumbre - 2.6f * u), 2.8f * u, t)
+        clavoBotanico(Offset(cx, cumbre - 3f * u), 3.2f * u, t)
+        destelloBotanico(Offset(cx - 1f * u, cumbre - 4f * u), 1f * u, t)
         // La bandeja de nogal con su moldura y las asas de latón.
         drawRect(t.c(P.NOGAL, 0.02f), bandeja.topLeft, bandeja.size)
         drawRect(t.c(mezcla(P.NOGAL, P.ROBLE, 0.4f), 0.06f), bandeja.topLeft, Size(bandeja.width, bandeja.height * 0.3f))
         drawRect(t.b(0.5f), bandeja.topLeft, Size(bandeja.width, 1f * u))
         drawRect(t.s(0.35f), Offset(bandeja.left, bandeja.top + bandeja.height * 0.3f), Size(bandeja.width, 1f * u))
         drawRect(t.s(0.25f), Offset(bandeja.right - bandeja.width * 0.18f, bandeja.top), Size(bandeja.width * 0.18f, bandeja.height))
+        drawRect(t.s(0.45f), Offset(bandeja.left, bandeja.bottom - 1.6f * u), Size(bandeja.width, 1.6f * u))
+        if (o) drawRect(filo, Offset(bandeja.left + bandeja.width * 0.5f, bandeja.top), Size(bandeja.width * 0.5f, 1.2f * u))
         vetas(Rect(bandeja.left, bandeja.top + bandeja.height * 0.32f, bandeja.right, bandeja.bottom), t.c(P.NOGAL_OSC).copy(alpha = 0.45f), 9310, 0.8f, grosor = 0.5f)
         listOf(bandeja.left + bandeja.width * 0.12f, bandeja.right - bandeja.width * 0.2f).forEach { x ->
             val asa = Rect(x, bandeja.top + bandeja.height * 0.42f, x + bandeja.width * 0.08f, bandeja.top + bandeja.height * 0.9f)
@@ -355,7 +257,7 @@ internal object CoronaEstanteBotanico {
             y -= w * g
         }
         val todo = Path().apply { rects.forEach { addRect(it) } }
-        sombraEnPared(todo, Offset(pie.x, (y + pie.y) / 2), apoyo + 2f * u, s, 0.22f)
+        sombraEnParedBotanico(todo, Offset(pie.x, (y + pie.y) / 2), apoyo + 2f * u, s, 0.22f)
         contactoBotanico(Offset(pie.x + w * 0.01f, pie.y), w * 0.22f, w * 0.012f, s.t(pie), 0.42f)
         rects.forEachIndexed { i, r ->
             val t = s.t(r.center)
@@ -409,7 +311,7 @@ internal object CoronaEstanteBotanico {
             close()
         }
         val todo = Path().apply { addPath(ala); addPath(copa) }
-        sombraEnPared(todo, c, apoyo + 2f * u, s, 0.22f)
+        sombraEnParedBotanico(todo, c, apoyo + 2f * u, s, 0.22f)
         drawOval(t.s(0.35f), Offset(c.x - sw * 0.46f, c.y + sw * 0.03f), Size(sw * 0.95f, sw * 0.06f))
         // El ala, con su cara de abajo en sombra y el filo de luz.
         drawPath(ala, t.c(mezcla(P.CRUDO, P.KRAFT, 0.22f)))
@@ -448,7 +350,7 @@ internal object CoronaEstanteBotanico {
             addRect(caja); addRect(col); addRect(pieza); addRect(platina)
             addPath(poligonoBotanico(tuboA.x - w * 0.013f, tuboA.y, tuboA.x + w * 0.013f, tuboA.y, tuboB.x + w * 0.015f, tuboB.y, tuboB.x - w * 0.015f, tuboB.y))
         }
-        if (!s.a.oscuro) sombraEnPared(silueta, Offset(pie.x, pie.y - w * 0.1f), apoyo + 2f * u, s, 0.18f)
+        if (!s.a.oscuro) sombraEnParedBotanico(silueta, Offset(pie.x, pie.y - w * 0.1f), apoyo + 2f * u, s, 0.18f)
         contactoBotanico(Offset(pie.x + w * 0.01f, pie.y), caja.width * 1.1f, w * 0.012f, s.t(pie), 0.42f)
         // La caja de caoba con su tapa, su bocallave y su asa.
         val tc = s.t(caja.center)
@@ -535,7 +437,7 @@ internal object CoronaEstanteBotanico {
         }
         val todo = Path().apply { addRect(dep); addRect(tubo); addPath(pant); addRect(mech) }
         if (!o) {
-            sombraEnPared(todo, Offset(lx, ly), apoyo, s, 0.16f)
+            sombraEnParedBotanico(todo, Offset(lx, ly), apoyo, s, 0.16f)
             translate(w * 0.02f, w * 0.012f) { drawPath(brazo, t.s(0.22f), style = Stroke(2.6f * u)) }
         }
         // La roseta de la pared y el brazo.

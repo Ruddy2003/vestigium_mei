@@ -32,18 +32,22 @@ internal object MuroEstanteBotanico {
     const val MOLDURA_ALTO = 0.016f
 
     /**
-     * El parche de luz que entra de la izquierda en la pared, en el ocaso o con la luna: el rectángulo de una ventana que queda
-     * fuera del cuadro, tendido por el ángulo de la luz, sin montantes (el Ideario no la enseña). En un lienzo de ancho [w];
-     * [crece] lo agranda (la penumbra).
+     * El parche de luz que entra de la izquierda en la pared, en el ocaso o con la luna ([AireBotanico.parche]): el rectángulo
+     * de una ventana que queda fuera del cuadro, tendido por el ángulo de la luz, sin montantes (el Ideario no la enseña). En un
+     * lienzo de ancho [w]; [crece] lo agranda desde su centro (la penumbra).
      */
-    fun parche(w: Float, a: AireBotanico, crece: Float = 0f): Path? = when {
-        a.oscuro && a.noche -> poligonoBotanico(
-            w * (-0.05f - crece), w * (0.1f - crece), w * (0.3f + crece), w * (0.17f - crece),
-            w * (0.38f + crece), w * (0.52f + crece), w * (-0.05f - crece), w * (0.48f + crece))
-        !a.oscuro && a.noche -> poligonoBotanico(
-            w * (-0.05f - crece), w * (0.2f - crece), w * (0.62f + crece), w * (0.27f - crece),
-            w * (0.7f + crece), w * (0.5f + crece), w * (-0.05f - crece), w * (0.52f + crece))
-        else -> null
+    fun parche(w: Float, a: AireBotanico, crece: Float = 0f): Path? {
+        val q = a.parche ?: return null
+        val cx = (q[0] + q[2] + q[4] + q[6]) / 4; val cy = (q[1] + q[3] + q[5] + q[7]) / 4
+        val p = Path()
+        for (i in 0 until 4) {
+            val dx = q[2 * i] - cx; val dy = q[2 * i + 1] - cy
+            val l = kotlin.math.sqrt(dx * dx + dy * dy).coerceAtLeast(1e-4f)
+            val x = (q[2 * i] + dx / l * crece) * w; val y = (q[2 * i + 1] + dy / l * crece) * w
+            if (i == 0) p.moveTo(x, y) else p.lineTo(x, y)
+        }
+        p.close()
+        return p
     }
 
     /** La pared de la corona, de arriba hasta donde pisan las cosas ([apoyo]) y un poco más (la tapa la cubre). */
@@ -69,17 +73,19 @@ internal object MuroEstanteBotanico {
             drawRect(Brush.radialGradient(0f to k(0.02f), 0.1f to k(0.1f), 0.22f to k(0.22f), 0.4f to k(0.4f), 0.65f to k(0.66f), 1f to k(1.1f),
                 center = l + Offset(0f, w * 0.04f), radius = w * 1.1f), r.topLeft, r.size)
         }
-        // El parche del ocaso o de la luna: la misma pared con esa luz, con su penumbra.
+        // El parche del ocaso o de la luna: la misma pared con esa luz, más clara del lado de la ventana, con su penumbra.
         parche(w, a)?.let { pa ->
-            val lit = s.a.en(0.1f, 0.3f, 0.15f).let { t -> if (a.oscuro) t.c(P.SALVIA) else t.c(P.SALVIA, 0.06f) }
-            parche(w, a, 0.03f)?.let { drawPath(it, lit.copy(alpha = 0.3f)) }
-            parche(w, a, 0.012f)?.let { drawPath(it, lit.copy(alpha = 0.45f)) }
-            drawPath(pa, lit)
+            val q = a.parche!!
+            val lit0 = s.a.en(q[0] + 0.05f, q[1] + 0.05f, 0f).c(P.SALVIA)
+            val lit1 = s.a.en(q[2] - 0.05f, q[3] + 0.05f, 0f).c(P.SALVIA, -0.04f)
+            val borde = Brush.linearGradient(listOf(lit0, lit1), Offset(q[0] * w, q[1] * w), Offset(q[2] * w, q[3] * w))
+            parche(w, a, AireBotanico.BORDE * 0.6f)?.let { drawPath(it, borde, alpha = 0.45f) }
+            drawPath(pa, borde)
         }
         pinceladas(r, if (a.oscuro) P.NOCHE else P.SALVIA_OSC, 9001, 46, u, 0.1f)
         pinceladas(r, if (a.oscuro) P.NOCHE else mezcla(P.SALVIA, LUZ_MUEBLE, 0.4f), 9002, 22, u, 0.1f)
         // Grietas finas del enlucido y clavos viejos.
-        listOf(Offset(0.31f, 0.33f), Offset(0.68f, 0.06f), Offset(0.95f, 0.36f)).forEachIndexed { i, f ->
+        listOf(Offset(0.2f, 0.085f), Offset(0.68f, 0.06f), Offset(0.95f, 0.36f)).forEachIndexed { i, f ->
             val p0 = Offset(w * f.x, w * f.y)
             val t = s.t(p0)
             val g = Path().apply {

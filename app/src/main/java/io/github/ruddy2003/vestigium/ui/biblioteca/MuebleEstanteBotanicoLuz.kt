@@ -94,8 +94,8 @@ internal object PaletaBotanico {
     val HIERRO = Color(0xFF3E403C)
     /** La noche del gabinete (verde petróleo, la del Ideario), la del cuerpo de la librería y la de los Sueños. */
     val NOCHE = Color(0xFF0B1C1D)
-    val NOCHE_CUERPO = Color(0xFF0F1A14)
-    val NOCHE_SUENOS = Color(0xFF0A1A21)
+    val NOCHE_CUERPO = Color(0xFF0C1D1B)
+    val NOCHE_SUENOS = Color(0xFF0A1A1C)
     /** La llama del quinqué (la del Ideario), su corazón, la luna y su roce frío. */
     val LLAMA = Color(0xFFFFC56E)
     val FUEGO = Color(0xFFFFF0CF)
@@ -117,29 +117,59 @@ internal class AireBotanico(val oscuro: Boolean, val noche: Boolean) {
     /** Si arden las luces (de noche siempre; en los Sueños claros, recién prendidas). */
     val lumbre: Boolean get() = oscuro || noche
 
+    /**
+     * El parche de luz que entra por una ventana de la izquierda que queda fuera del cuadro (el Ideario no la enseña), en la
+     * pared y en lo que tiene delante: el del último sol en los Sueños claros, tendido y largo, y el de la luna en los oscuros,
+     * más alto y más corto. Cuatro puntos en anchos del mueble (arriba izquierda, arriba derecha, abajo derecha, abajo
+     * izquierda), o null si no hay.
+     */
+    val parche: FloatArray? get() = when {
+        oscuro && noche -> LUNA_Q
+        noche -> OCASO_Q
+        else -> null
+    }
+
     /** Cuánto le llega de la luz de día (o del ocaso, o de la luna) a un punto, en anchos del mueble. */
-    fun luzDia(x: Float, y: Float): Float = when {
-        oscuro && noche -> {
-            // La luna entra por la izquierda, alta: la pared de arriba a la izquierda y el costado de ese lado; lejos, nada.
-            val dx = x + 0.06f; val dy = (y - 0.3f) * 0.6f
-            (1.3f - sqrt(dx * dx + dy * dy) / 0.34f).coerceIn(0f, 1f)
-        }
-        oscuro -> 0f
-        // El último sol, bajo: entra casi rasante por la izquierda, en una franja, y se apaga hacia la derecha.
-        noche -> {
-            val fx = ((0.62f - x) / 0.42f).coerceIn(0f, 1f)
-            val fy = (((y - 0.12f) / 0.1f).coerceIn(0f, 1f)) * (((1.4f - y) / 0.4f).coerceIn(0f, 1f))
-            fx * fx * (3f - 2f * fx) * fy
-        }
-        else -> {
-            val dx = x - 0.02f; val dy = y * 0.62f
-            exp(-1.35f * sqrt(dx * dx + dy * dy))
-        }
+    fun luzDia(x: Float, y: Float): Float {
+        val q = parche
+        if (q != null) return dentro(q, x, y, BORDE)
+        if (oscuro) return 0f
+        val dx = x - 0.02f; val dy = y * 0.62f
+        return exp(-1.35f * sqrt(dx * dx + dy * dy))
     }
 
     /** El tono de algo que está en ([x], [y]) (anchos), con la lumbre [k] que le llega; [arriba]: sobre la pantalla verde. */
     fun en(x: Float, y: Float, k: Float, cuerpo: Boolean = false, arriba: Boolean = false): TonoBotanico =
         TonoBotanico(this, k.coerceIn(0f, 1f), luzDia(x, y), cuerpo, arriba)
+
+    companion object {
+        /**
+         * El último sol: entra bajo por la izquierda y cae en la pared de la corona, la cornisa y lo alto de la librería; su borde
+         * de la derecha, tendido, se quiebra en la moldura, la cornisa y los objetos.
+         */
+        val OCASO_Q = floatArrayOf(-0.06f, 0.17f, 0.7f, 0.25f, 0.5f, 1.02f, -0.06f, 1.1f)
+        /**
+         * La luna: el rectángulo de la ventana, alto y estrecho, en la pared entre los ramilletes, el tejado de la caja de Ward y
+         * la cornisa; a su izquierda y a su derecha, la noche.
+         */
+        val LUNA_Q = floatArrayOf(0.04f, 0.075f, 0.29f, 0.1f, 0.35f, 0.6f, 0.1f, 0.64f)
+        /** El ancho del borde del parche (su penumbra), en anchos: un borde decidido, no un velo. */
+        const val BORDE = 0.014f
+
+        /** De 0 a 1, cuánto está ([x], [y]) dentro del cuadrilátero [q] (en el orden de las agujas del reloj), con su borde. */
+        fun dentro(q: FloatArray, x: Float, y: Float, borde: Float): Float {
+            var m = Float.MAX_VALUE
+            for (i in 0 until 4) {
+                val ax = q[2 * i]; val ay = q[2 * i + 1]
+                val bx = q[(2 * i + 2) % 8]; val by = q[(2 * i + 3) % 8]
+                val dx = bx - ax; val dy = by - ay
+                val l = sqrt(dx * dx + dy * dy).coerceAtLeast(1e-5f)
+                m = minOf(m, ((x - ax) * -dy + (y - ay) * dx) / l)
+            }
+            val f = (m / borde).coerceIn(0f, 1f)
+            return f * f * (3f - 2f * f)
+        }
+    }
 }
 
 /**
@@ -163,26 +193,29 @@ internal class TonoBotanico(val a: AireBotanico, val k: Float, val sol: Float, v
     /** El color propio hundido: oscuro, de su mismo tono (no gris), con el aire de la noche. */
     private fun hundido(c: Color): Color {
         val n = hondo
-        val f = if (cuerpo) 0.2f else 0.13f
+        val f = if (cuerpo) 0.18f else 0.13f
         return Color(c.red * f + n.red * 0.8f, c.green * f + n.green * 0.8f, c.blue * f + n.blue * 0.8f, c.alpha)
     }
 
     /** El color a la luz de la llama: el rojo sube y el azul baja. */
     private fun aLaLlama(c: Color): Color = Color((c.red * 1.08f).coerceAtMost(1f), c.green * 0.9f, c.blue * 0.66f, c.alpha)
 
-    /** Al anochecer de los Sueños claros: cada cosa con su color, más baja y apenas entibiada. */
-    private fun alOcaso(c: Color): Color = Color(c.red * 0.84f, c.green * 0.8f, c.blue * 0.84f, c.alpha)
+    /** Al anochecer de los Sueños claros: cada cosa con su mismo color (la salvia sigue salvia), solo un poco más baja. */
+    private fun alOcaso(c: Color): Color = Color(c.red * 0.9f, c.green * 0.9f, c.blue * 0.92f, c.alpha)
 
     /** El color de [c] con la luz del momento; [f] más claro (positivo) o más hondo (negativo), como lo pinta la luz de día. */
     fun c(c: Color, f: Float = 0f): Color {
         if (!a.oscuro) {
             val b = if (a.noche) alOcaso(c) else c
-            val d = if (f > 0f) mezcla(b, LUZ_MUEBLE, f) else if (f < 0f) mezcla(b, hondo, -f) else b
+            // Lo hondo, de día, hacia la sombra violeta; al ocaso, hacia su mismo color más bajo (el violeta queda para las sombras).
+            val d = if (f > 0f) mezcla(b, LUZ_MUEBLE, f)
+                else if (f < 0f) (if (a.noche) mezcla(b, Color(b.red * 0.5f, b.green * 0.52f, b.blue * 0.6f, b.alpha), -f * 1.3f) else mezcla(b, hondo, -f))
+                else b
             if (a.noche) {
-                // El ocaso pinta lo que toca de melocotón (sin irse al naranja) y las luces recién prendidas, un poco.
-                val l = Color((d.red * 1.2f + 0.05f).coerceAtMost(1f), (d.green * 1.1f + 0.04f).coerceAtMost(1f), (d.blue * 0.98f + 0.03f).coerceAtMost(1f), c.alpha)
-                val lejos = mezcla(d, p.SOMBRA_OCASO, 0.07f)
-                return mezcla(mezcla(lejos, mezcla(l, p.OCASO, 0.16f), 0.8f * sol), p.LLAMA, 0.12f * k)
+                // El ocaso pinta solo donde cae: el mismo color virado a melocotón y un paso más claro (sin irse al naranja); el
+                // violeta va en las sombras ([s]), no aquí. Las luces recién prendidas, un poco.
+                val l = Color((d.red * 1.14f + 0.07f).coerceAtMost(1f), (d.green * 1.04f + 0.035f).coerceAtMost(1f), (d.blue * 0.96f + 0.02f).coerceAtMost(1f), c.alpha)
+                return mezcla(mezcla(d, mezcla(l, p.OCASO, 0.34f), sol), p.LLAMA, 0.1f * k)
             }
             // De día: lo de arriba a la izquierda, más claro y tibio; lo lejano, un poco más hondo.
             val luz = (sol - 0.42f)
@@ -194,10 +227,10 @@ internal class TonoBotanico(val a: AireBotanico, val k: Float, val sol: Float, v
         var v = mezcla(hundido(base), mezcla(base, aLaLlama(base), 0.6f), kk)
         v = mezcla(v, if (arriba) p.VIDRIO_VERDE else p.LLAMA, 0.13f * k)
         if (sol > 0f) {
-            // La luna: la plata fría en lo que toca, sin velar lo demás.
-            val l = c.red * 0.3f + c.green * 0.59f + c.blue * 0.11f
+            // La luna: el mismo color, un poco más claro y apenas frío, en lo que toca (la salvia sigue salvia; no vela lo demás).
             val q = 0.4f * sol * sol
-            v = Color((v.red + l * 0.4f * q).coerceAtMost(1f), (v.green + l * 0.52f * q).coerceAtMost(1f), (v.blue + (l * 0.7f + 0.08f) * q).coerceAtMost(1f), c.alpha)
+            v = Color((v.red + (c.red * 0.96f + 0.02f) * q).coerceAtMost(1f), (v.green + (c.green * 0.95f + 0.02f) * q).coerceAtMost(1f),
+                (v.blue + (c.blue * 0.88f + 0.03f) * q).coerceAtMost(1f), c.alpha)
         }
         return v
     }
@@ -208,7 +241,7 @@ internal class TonoBotanico(val a: AireBotanico, val k: Float, val sol: Float, v
 
     /** El brillo de lo que mira a la luz: de día, crema; al ocaso, melocotón; de noche, el filo de la llama según [k]. */
     fun b(al: Float): Color = when {
-        !a.oscuro && a.noche -> mezcla(LUZ_MUEBLE, p.OCASO, 0.55f).copy(alpha = (al * (0.35f + 0.6f * sol)).coerceIn(0f, 1f))
+        !a.oscuro && a.noche -> mezcla(LUZ_MUEBLE, p.OCASO, 0.55f).copy(alpha = (al * (0.2f + 0.75f * sol)).coerceIn(0f, 1f))
         !a.oscuro -> luzMueble(al * (0.75f + 0.5f * sol))
         sol > 0.05f && sol > k -> p.LUNA_RAS.copy(alpha = (al * 0.8f * sol).coerceIn(0f, 1f))
         arriba -> mezcla(p.VIDRIO_VERDE, LUZ_MUEBLE, 0.4f).copy(alpha = (al * 0.9f * k).coerceIn(0f, 1f))
