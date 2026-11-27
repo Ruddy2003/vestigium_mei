@@ -1415,197 +1415,26 @@ object EstanteCiber : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.36f
-    override val base = 0.11f
-    override val lado = 0.05f
-    override val altoRepisa: Dp = 70.dp
-    override val tabla: Dp = 13.dp
-    override val separa: Dp = 3.dp
+    // ---------------------------------------------------------------- el estante y cada entrada (MuebleEstanteCiber*.kt)
+
+    override val corona = MuebleEstanteCiber.CORONA
+    override val base = MuebleEstanteCiber.BASE
+    override val lado = MuebleEstanteCiber.LADO
+    override val altoRepisa: Dp = MuebleEstanteCiber.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteCiber.TABLA
+    override val separa: Dp = MuebleEstanteCiber.SEPARA
     override val letra: FontFamily = Letra.terminal
+    override val auraEnReposo = false
 
-    override fun ancho(palabras: Int): Dp = (40 + (palabras / 80).coerceAtMost(12)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.84f + 0.12f * azar(semilla, 4)
+    override fun ancho(palabras: Int): Dp = MuebleEstanteCiber.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteCiber.alto(semilla, palabras)
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El fondo de la caja: plástico negro con sus nervios.
-        val cuerpo = Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, d.base.top)
-        drawRect(c(PLASTICO_OSC), cuerpo.topLeft, cuerpo.size)
-        var x = cuerpo.left + 8 * u
-        while (x < cuerpo.right) { drawLine(Color.White.copy(alpha = 0.04f), Offset(x, cuerpo.top), Offset(x, cuerpo.bottom), 1f * u); x += 8 * u }
-        // Cada fila: la sombra del tabique de arriba y los dos rieles del piso donde se paran los disquetes.
-        d.repisas.forEach { rep ->
-            drawRect(Color.Black.copy(alpha = 0.35f), rep.topLeft, Size(rep.width, 6 * u))
-            drawRect(Color.Black.copy(alpha = 0.15f), rep.topLeft, Size(rep.width, 12 * u))
-            drawLine(c(PLASTICO_LUZ).copy(alpha = 0.5f), Offset(rep.left, rep.bottom - 3 * u), Offset(rep.right, rep.bottom - 3 * u), 0.8f * u)
-            drawLine(c(PLASTICO_LUZ).copy(alpha = 0.5f), Offset(rep.left, rep.bottom - 6 * u), Offset(rep.right, rep.bottom - 6 * u), 0.8f * u)
-        }
-        // De noche, el resplandor de la pantalla baja por la caja (capas planas, sin degradado).
-        if (noche) {
-            val alcanceLuz = minOf(cuerpo.height, 260 * u)
-            for (k in 1..4) drawRect(FOSFORO.copy(alpha = 0.03f), cuerpo.topLeft, Size(cuerpo.width, alcanceLuz * k / 4f))
-        }
-        // Las paredes de la caja, con su brillo de plástico.
-        listOf(d.izquierda to true, d.derecha to false).forEach { (lad, izq) ->
-            drawRect(c(PLASTICO), lad.topLeft, lad.size)
-            val bx = if (izq) lad.left + lad.width * 0.2f else lad.right - lad.width * 0.3f
-            drawRect(Color.White.copy(alpha = 0.08f), Offset(bx, lad.top), Size(lad.width * 0.1f, lad.height))
-            if (noche) drawRect(FOSFORO.copy(alpha = 0.06f), lad.topLeft, lad.size)
-            bisel(lad, Color.White.copy(alpha = 0.12f), Color.Black.copy(alpha = 0.3f), 1.2f * u)
-        }
-        // Los tabiques entre filas.
-        d.tablas.forEach { tb ->
-            drawRect(c(PLASTICO), tb.topLeft, tb.size)
-            drawRect(c(PLASTICO_LUZ), tb.topLeft, Size(tb.width, 1.6f * u))
-            drawRect(Color.Black.copy(alpha = 0.3f), Offset(tb.left, tb.bottom - 2 * u), Size(tb.width, 2 * u))
-            var gx = tb.left + 4 * u
-            while (gx < tb.right - 4 * u) { drawLine(Color.Black.copy(alpha = 0.25f), Offset(gx, tb.top + tb.height * 0.3f), Offset(gx, tb.top + tb.height * 0.7f), 0.6f * u); gx += 5 * u }
-        }
-        // La pestaña del separador de cada mes, con el texto en fósforo.
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRoundRect(c(PLASTICO_LUZ), r.topLeft, r.size, CornerRadius(2 * u))
-            drawRoundRect(c(PANTALLA), r.deflate(1.4f * u).topLeft, r.deflate(1.4f * u).size, CornerRadius(1.2f * u))
-            drawRect(c(FOSFORO_TENUE), Offset(r.left + 4 * u, r.center.y - 2 * u), Size(4 * u, 4 * u))
-            textoEn(medidor, p.texto, Rect(r.left + 10 * u, r.top + 1 * u, r.right - 4 * u, r.bottom - 1 * u), letra, FOSFORO, 10f, espaciado = 0.6f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el frente de la caja con su agarradera y la mesa, con el cable del ratón y un bolígrafo.
-        val b = d.base
-        val frente = Rect(b.left, b.top, b.right, b.top + b.height * 0.38f)
-        val piso = frente.bottom
-        drawRect(c(MESA), Offset(0f, piso), Size(w, h - piso))
-        vetas(Rect(0f, piso, w, h), c(MESA_VETA).copy(alpha = 0.6f), 91, densidad = 0.8f, grosor = 0.6f)
-        if (noche) drawRect(FOSFORO.copy(alpha = 0.06f), Offset(0f, piso), Size(w, h - piso))
-        val cable = Path().apply {
-            moveTo(w * 0.62f, h)
-            cubicTo(w * 0.66f, piso + (h - piso) * 0.3f, w * 0.86f, piso + (h - piso) * 0.9f, w * 0.94f, piso + (h - piso) * 0.4f)
-            cubicTo(w * 0.98f, piso + (h - piso) * 0.15f, w, piso + (h - piso) * 0.3f, w, piso + (h - piso) * 0.25f)
-        }
-        drawPath(cable, c(CABLE), style = Stroke(1.6f * u))
-        rotate(-6f, Offset(w * 0.25f, piso + (h - piso) * 0.55f)) {
-            drawRoundRect(c(DISCOS[1]), Offset(w * 0.12f, piso + (h - piso) * 0.5f), Size(w * 0.26f, 3.2f * u), CornerRadius(1.6f * u))
-            drawRect(c(METAL), Offset(w * 0.36f, piso + (h - piso) * 0.5f), Size(w * 0.03f, 3.2f * u))
-        }
-        drawRect(Color.Black.copy(alpha = 0.4f), Offset(frente.left, piso), Size(frente.width, 3 * u))
-        drawRect(c(PLASTICO), frente.topLeft, frente.size)
-        drawRect(c(PLASTICO_LUZ), frente.topLeft, Size(frente.width, 1.4f * u))
-        val agarre = Rect(frente.center.x - frente.width * 0.12f, frente.top + frente.height * 0.3f, frente.center.x + frente.width * 0.12f, frente.bottom - frente.height * 0.25f)
-        drawRoundRect(c(PLASTICO_OSC), agarre.topLeft, agarre.size, CornerRadius(agarre.height / 2))
-        if (noche) drawRect(FOSFORO.copy(alpha = 0.05f), frente.topLeft, frente.size)
-    }
+    /** El tema es solo oscuro: el dibujo no cambia con el modo. */
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteCiber) { estante(d, medidor, noche) }
 
-    /** El borde del monitor con su pantalla, el cursor y el piloto; la tapa ahumada abierta y el borde de la caja. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        drawRect(c(FONDO), r.topLeft, r.size)
-        // La carcasa del monitor: solo se ve su parte de abajo, con las esquinas redondeadas.
-        val monitor = Rect(r.left + r.width * 0.05f, r.top - r.height * 0.2f, r.right - r.width * 0.05f, r.top + r.height * 0.56f)
-        drawRoundRect(c(CARCASA), monitor.topLeft, monitor.size, CornerRadius(10 * u))
-        drawRect(c(CARCASA_SOMBRA), Offset(monitor.left + 6 * u, monitor.bottom - 3 * u), Size(monitor.width - 12 * u, 3 * u))
-        // La pantalla de fósforo, abombada, con sus líneas de barrido.
-        val pantalla = Rect(monitor.left + monitor.width * 0.08f, r.top, monitor.right - monitor.width * 0.08f, monitor.bottom - monitor.height * 0.3f)
-        drawRoundRect(c(CARCASA_SOMBRA), pantalla.inflate(3 * u).topLeft, pantalla.inflate(3 * u).size, CornerRadius(12 * u))
-        drawRoundRect(PANTALLA, pantalla.topLeft, pantalla.size, CornerRadius(10 * u))
-        val brillo = if (noche) 1f else 0.75f
-        clipRect(pantalla.left, pantalla.top, pantalla.right, pantalla.bottom) {
-            if (noche) mancha(pantalla.center, pantalla.width * 0.55f, FOSFORO.copy(alpha = 0.22f))
-            var ly = pantalla.top + 1 * u
-            while (ly < pantalla.bottom) { drawLine(FOSFORO.copy(alpha = 0.06f), Offset(pantalla.left, ly), Offset(pantalla.right, ly), 0.8f * u); ly += 2.6f * u }
-            // Renglones de salida (bloques, no letras) y el prompt con su cursor.
-            val alto0 = pantalla.height * 0.13f
-            val x0 = pantalla.left + pantalla.width * 0.06f
-            listOf(0.55f, 0.32f, 0.7f).forEachIndexed { k, largo ->
-                val yy = pantalla.top + pantalla.height * (0.12f + 0.2f * k)
-                drawRect(FOSFORO_TENUE.copy(alpha = brillo), Offset(x0, yy), Size(pantalla.width * largo * 0.8f, alto0 * 0.55f))
-            }
-            val yp = pantalla.top + pantalla.height * 0.74f
-            val prompt = Path().apply { moveTo(x0, yp); lineTo(x0 + alto0 * 0.55f, yp + alto0 * 0.4f); lineTo(x0, yp + alto0 * 0.8f) }
-            drawPath(prompt, FOSFORO.copy(alpha = brillo), style = Stroke(1.6f * u))
-            drawRect(FOSFORO.copy(alpha = brillo * 0.7f), Offset(x0 + alto0 * 1.1f, yp + alto0 * 0.2f), Size(pantalla.width * 0.2f, alto0 * 0.5f))
-            drawRect(FOSFORO.copy(alpha = brillo), Offset(x0 + alto0 * 1.3f + pantalla.width * 0.2f, yp), Size(alto0 * 0.5f, alto0 * 0.8f))
-            drawLine(Color.White.copy(alpha = 0.07f), Offset(pantalla.left + pantalla.width * 0.1f, pantalla.bottom), Offset(pantalla.left + pantalla.width * 0.35f, pantalla.top), 10 * u)
-        }
-        // La barbilla del monitor: las rejillas, una ranura y el piloto encendido.
-        val barbilla = monitor.bottom - monitor.height * 0.15f
-        for (k in 0 until 6) drawLine(c(CARCASA_SOMBRA), Offset(monitor.left + monitor.width * (0.08f + 0.025f * k), barbilla - 3 * u), Offset(monitor.left + monitor.width * (0.08f + 0.025f * k), barbilla + 3 * u), 1f * u)
-        drawRoundRect(c(CARCASA_SOMBRA), Offset(monitor.center.x - monitor.width * 0.08f, barbilla - 1.5f * u), Size(monitor.width * 0.16f, 3 * u), CornerRadius(1.5f * u))
-        val led = Offset(monitor.right - monitor.width * 0.1f, barbilla)
-        drawCircle(PILOTO.copy(alpha = 0.3f), 3.6f * u, led)
-        drawCircle(PILOTO, 1.8f * u, led)
-        // La caja: su borde trasero con las bisagras y la tapa ahumada abierta hacia atrás, por la que se ve el monitor.
-        val borde = r.bottom - r.height * 0.1f
-        val izq = r.left + r.width * lado * 0.5f; val der = r.right - r.width * lado * 0.5f
-        val tapa = Path().apply {
-            moveTo(izq + 4 * u, borde); lineTo(der - 4 * u, borde)
-            lineTo(der - r.width * 0.06f, r.top + r.height * 0.36f); lineTo(izq + r.width * 0.06f, r.top + r.height * 0.36f); close()
-        }
-        drawPath(tapa, c(AHUMADO).copy(alpha = 0.5f))
-        drawPath(tapa, c(PLASTICO_LUZ).copy(alpha = 0.8f), style = Stroke(1.2f * u))
-        clipPath(tapa) {
-            drawLine(Color.White.copy(alpha = 0.1f), Offset(r.left + r.width * 0.2f, borde), Offset(r.left + r.width * 0.32f, r.top + r.height * 0.36f), 8 * u)
-            drawLine(Color.White.copy(alpha = 0.06f), Offset(r.left + r.width * 0.3f, borde), Offset(r.left + r.width * 0.4f, r.top + r.height * 0.36f), 3 * u)
-            if (noche) drawRect(FOSFORO.copy(alpha = 0.08f), r.topLeft, r.size)
-        }
-        listOf(0.18f, 0.82f).forEach { f ->
-            drawRoundRect(c(PLASTICO_LUZ), Offset(r.left + r.width * f - 8 * u, borde - 3 * u), Size(16 * u, 6 * u), CornerRadius(3 * u))
-        }
-        drawRect(c(PLASTICO), Offset(izq, borde), Size(der - izq, r.bottom - borde))
-        drawRect(c(PLASTICO_LUZ), Offset(izq, borde), Size(der - izq, 1.4f * u))
-        if (noche) drawRect(FOSFORO.copy(alpha = 0.1f), Offset(izq, borde), Size(der - izq, r.bottom - borde))
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val base = DISCOS[(v.semilla and 0x7fffffff) % DISCOS.size]
-        val cuerpo = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        // El cuerpo de plástico, con la esquina cortada arriba a la derecha.
-        val ch = w * 0.08f
-        val forma = Path().apply { moveTo(0f, 0f); lineTo(w - ch, 0f); lineTo(w, ch); lineTo(w, h); lineTo(0f, h); close() }
-        drawPath(forma, cuerpo)
-        drawRect(Color.White.copy(alpha = 0.06f), Offset.Zero, Size(w, h * 0.04f))
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(0f, h * 0.97f), Size(w, h * 0.03f))
-        drawPath(forma, Color.White.copy(alpha = 0.14f), style = Stroke(0.8f * u))
-        // El hueco del obturador y el obturador de metal con su ventanilla.
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(w * 0.16f, 0f), Size(w * 0.66f, h * 0.38f))
-        val obt = Rect(w * 0.22f, 0f, w * 0.68f, h * 0.36f)
-        drawRect(c(METAL), obt.topLeft, obt.size)
-        drawRect(Color.White.copy(alpha = 0.3f), obt.topLeft, Size(obt.width, 1.2f * u))
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(obt.left, obt.bottom - 1.2f * u), Size(obt.width, 1.2f * u))
-        val ventanilla = Rect(obt.left + obt.width * 0.55f, obt.top + obt.height * 0.2f, obt.left + obt.width * 0.8f, obt.bottom - obt.height * 0.14f)
-        drawRect(Color(0xFF3A2E22), ventanilla.topLeft, ventanilla.size)
-        drawRect(Color.Black.copy(alpha = 0.35f), ventanilla.topLeft, ventanilla.size, style = Stroke(0.6f * u))
-        // Arriba a la izquierda, la flecha de inserción en relieve; de noche, una luna.
-        val cf = Offset(w * 0.1f, h * 0.16f)
-        val sf = minOf(w * 0.08f, 4 * u)
-        if (v.noche) {
-            drawCircle(LUNA, sf, cf)
-            drawCircle(cuerpo, sf * 0.85f, Offset(cf.x + sf * 0.45f, cf.y - sf * 0.25f))
-        } else {
-            val flecha = Path().apply { moveTo(cf.x - sf, cf.y - sf * 0.6f); lineTo(cf.x + sf, cf.y - sf * 0.6f); lineTo(cf.x, cf.y + sf * 0.8f); close() }
-            drawPath(flecha, Color.White.copy(alpha = 0.22f))
-        }
-        // La etiqueta escrita a mano: el día, el mes y renglones, más cuanto más escribiste.
-        val et = Rect(w * 0.12f, h * 0.44f, w * 0.88f, h * 0.92f)
-        drawRect(c(ETIQUETA), et.topLeft, et.size)
-        drawRect(c(FOSFORO_TENUE), et.topLeft, Size(et.width, et.height * 0.08f))
-        textoEn(medidor, v.dia, Rect(et.left, et.top + et.height * 0.1f, et.right, et.top + et.height * 0.5f), letra, c(BOLIGRAFO), 14f)
-        textoEn(medidor, v.mes, Rect(et.left + 1 * u, et.top + et.height * 0.5f, et.right - 1 * u, et.top + et.height * 0.72f), letra, c(BOLIGRAFO).copy(alpha = 0.85f), 7f, minimo = 4f)
-        val renglones = 1 + (v.lleno * 2).toInt()
-        for (j in 0 until renglones) {
-            val yy = et.top + et.height * (0.78f + 0.08f * j)
-            if (yy < et.bottom - 1 * u) drawLine(c(BOLIGRAFO).copy(alpha = 0.45f), Offset(et.left + et.width * 0.1f, yy), Offset(et.left + et.width * (0.5f + 0.35f * azar(v.semilla, 50 + j)), yy), 0.7f * u)
-        }
-        // Las ventanas de protección contra escritura, abajo en las esquinas.
-        val lv = minOf(w * 0.07f, 3.5f * u)
-        drawRect(Color.Black.copy(alpha = 0.7f), Offset(w * 0.025f, h * 0.88f), Size(lv, lv))
-        drawRect(if (azar(v.semilla, 8) > 0.5f) Color.Black.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.18f), Offset(w * 0.975f - lv, h * 0.88f), Size(lv, lv))
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteCiber) { volumen(v, medidor) }
 
     // ---------------------------------------------------------------- la tapa
 
