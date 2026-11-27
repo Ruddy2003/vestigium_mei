@@ -142,8 +142,29 @@ object EstanteDistopia : DisenoBiblioteca {
         val cuerpo = Rect(w * 0.015f, h * 0.035f, w * 0.975f, h * 0.955f)
         val lomo = Rect(cuerpo.left, cuerpo.top, cuerpo.left + w * 0.11f, cuerpo.bottom)
         val cara = Rect(lomo.right, cuerpo.top, cuerpo.right, cuerpo.bottom)
-        // La sombra sobre la mesa.
-        drawRoundRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.22f), Offset(cuerpo.left + 3 * u, cuerpo.top + 4 * u), cuerpo.size, CornerRadius(3 * u))
+        // Donde descansa: el tablero de linóleo de la mesa del registro, con su canto de chapa. La luz: de día, el tubo, arriba a la
+        // izquierda; de noche, la lámpara colgante, a la izquierda, y la calle fría por el tragaluz, a la derecha; en el sueño, la
+        // luna, por la derecha. La sombra, con color, va al lado contrario.
+        val pd = PaletaDistopia
+        val calida = oscuro && !e.noche
+        val fria = pd.LUNA
+        val colSombra = if (e.noche) pd.NOCHE_SUENOS else if (oscuro) pd.NOCHE else Color(0xFF283234)
+        val tablero = h - 5.5f * u
+        drawRect(c(mezcla(pd.LINO, pd.ACERO, 0.3f)), Offset(0f, cuerpo.bottom - 3 * u), Size(w, tablero - cuerpo.bottom + 3 * u))
+        drawRect(c(pd.ACERO_LUZ), Offset(0f, tablero), Size(w, h - tablero))
+        drawRect(colSombra.copy(alpha = 0.4f), Offset(0f, h - 1.4f * u), Size(w, 1.4f * u))
+        val filoTablero = when {
+            e.noche -> Brush.horizontalGradient(listOf(fria.copy(alpha = 0f), fria.copy(alpha = 0.5f)), w * 0.4f, w)
+            calida -> Brush.horizontalGradient(listOf(pd.BOMBILLA.copy(alpha = 0.7f), pd.BOMBILLA.copy(alpha = 0f), fria.copy(alpha = 0f), fria.copy(alpha = 0.35f)), 0f, w)
+            else -> Brush.horizontalGradient(listOf(pd.LUZ_TUBO.copy(alpha = 0.75f), pd.LUZ_TUBO.copy(alpha = 0.3f)), 0f, w)
+        }
+        drawRect(filoTablero, Offset(0f, tablero), Size(w, 1.2f * u))
+        // De noche, el charco de la lámpara en el linóleo, a la izquierda.
+        if (calida) drawRect(Brush.horizontalGradient(listOf(pd.BOMBILLA.copy(alpha = 0.3f), pd.BOMBILLA.copy(alpha = 0f)), 0f, w * 0.5f), Offset(0f, cuerpo.bottom), Size(w * 0.5f, tablero - cuerpo.bottom))
+        // La sombra en la pared y en el tablero, y la de contacto, justo debajo.
+        val dx = if (e.noche) -4 * u else 4 * u
+        drawRoundRect(colSombra.copy(alpha = if (oscuro || e.noche) 0.6f else 0.3f), Offset(cuerpo.left + dx, cuerpo.top + 3 * u), cuerpo.size, CornerRadius(3 * u))
+        drawRect(colSombra.copy(alpha = if (oscuro) 0.6f else 0.4f), Offset(cuerpo.left, cuerpo.bottom), Size(cuerpo.width, 1.6f * u))
         // Lo de dentro, que se ve al abrir: la contratapa, el legajo mecanografiado y el mecanismo de palanca.
         if (a > 0.01f) {
             drawRect(mezcla(carton, Color.Black, 0.35f), cara.topLeft, cara.size)
@@ -233,6 +254,11 @@ object EstanteDistopia : DisenoBiblioteca {
                 textoEn(medidor, palabrasTapa(e.palabras), Rect(ventana.left + ventana.width * 0.45f, h * 0.785f, ventana.right - 5 * u, h * 0.85f), Letra.codigo, tinta.copy(alpha = 0.85f), 10.5f, minimo = 6f)
             // El plástico: el marco, su brillo en la esquina de arriba y el filo de luz de abajo.
             drawRect(c(Color(0xFF2B2D2E)), ventana.topLeft, ventana.size, style = Stroke(1.2f * u))
+            // En el sueño, la luna en el canto de la derecha del plástico y del canto de metal.
+            if (e.noche) {
+                drawLine(pd.LUNA.copy(alpha = 0.45f), Offset(ventana.right - 1.2f * u, ventana.top + 2 * u), Offset(ventana.right - 1.2f * u, ventana.bottom - 2 * u), 1f * u)
+                drawRect(Brush.horizontalGradient(listOf(fria.copy(alpha = 0f), fria.copy(alpha = 0.4f)), cara.left + cara.width * 0.4f, cara.right), Offset(cara.left + cara.width * 0.4f, cara.bottom - 4.5f * u), Size(cara.width * 0.6f, 1f * u))
+            }
             clipRect(ventana.left, ventana.top, ventana.right, h * 0.27f) {
                 drawPath(Path().apply {
                     moveTo(ventana.left, ventana.top + h * 0.12f); lineTo(ventana.left + w * 0.1f, ventana.top)
@@ -263,8 +289,50 @@ object EstanteDistopia : DisenoBiblioteca {
         drawArc(Color.White.copy(alpha = 0.35f), 200f, 70f, false, Offset(dedo.x - rd, dedo.y - rd), Size(rd * 2, rd * 2), style = Stroke(0.8f * u))
         drawRect(c(if (e.palabras > 480) ROJO else ACERO_LUZ), Offset(lomo.left, h * 0.79f), Size(lomo.width, h * 0.045f))
         for (j in 0 until 5) drawLine(tinta.copy(alpha = 0.6f), Offset(lomo.left + lomo.width * (0.22f + j * 0.13f), h * 0.86f), Offset(lomo.left + lomo.width * (0.22f + j * 0.13f), h * 0.92f), (if (j % 2 == 0) 1.4f else 0.7f) * u)
-        // De noche, el haz del reflector entra en diagonal por la ventana alta.
-        if (e.noche) drawPath(Path().apply { moveTo(w * 0.5f, 0f); lineTo(w * 0.78f, 0f); lineTo(w * 0.42f, h); lineTo(w * 0.1f, h); close() }, Color(0xFFDCE3F0).copy(alpha = 0.08f))
+        // Los cantos (sin velos sobre la pieza): de día, el filete del tubo arriba y a la izquierda, y la sombra propia, teñida, en el
+        // canto de la derecha; de noche, el cálido de la lámpara arriba a la izquierda y el frío de la calle en el canto de la
+        // derecha; en el sueño manda la luna, que entra por la derecha: su filo frío arriba y a la derecha, y el lomo en sombra.
+        val der = cara.left + cara.width * giro
+        when {
+            e.noche -> {
+                drawRect(Brush.horizontalGradient(listOf(fria.copy(alpha = 0.05f), fria.copy(alpha = 0.6f)), cuerpo.left, der), Offset(cuerpo.left + 2 * u, cuerpo.top), Size(der - cuerpo.left - 3 * u, 1.3f * u))
+                drawRect(fria.copy(alpha = 0.6f), Offset(der - 1.5f * u, cuerpo.top + 2 * u), Size(1.5f * u, cuerpo.height - 4 * u))
+                drawRect(colSombra.copy(alpha = 0.35f), lomo.topLeft, Size(lomo.width * 0.5f, lomo.height))
+            }
+            calida -> {
+                drawRect(Brush.horizontalGradient(listOf(pd.BOMBILLA.copy(alpha = 0.8f), pd.BOMBILLA.copy(alpha = 0f)), cuerpo.left, w * 0.6f), Offset(cuerpo.left + 1 * u, cuerpo.top), Size(w * 0.6f - cuerpo.left, 1.3f * u))
+                drawRect(Brush.verticalGradient(listOf(pd.BOMBILLA.copy(alpha = 0.45f), pd.BOMBILLA.copy(alpha = 0f)), cuerpo.top, cuerpo.top + cuerpo.height * 0.6f), Offset(lomo.left, cuerpo.top + 1 * u), Size(1.1f * u, cuerpo.height * 0.6f))
+                drawRect(fria.copy(alpha = 0.45f), Offset(der - 1.3f * u, cuerpo.top + 3 * u), Size(1.3f * u, cuerpo.height - 6 * u))
+                lamparaTapa(Offset(lomo.center.x + w * 0.02f, h * 0.045f))
+            }
+            else -> {
+                drawRect(pd.LUZ_TUBO.copy(alpha = 0.55f), Offset(cuerpo.left + 1 * u, cuerpo.top), Size(der - cuerpo.left - 2 * u, 1.2f * u))
+                drawRect(pd.LUZ_TUBO.copy(alpha = 0.35f), Offset(lomo.left, cuerpo.top + 1 * u), Size(1.2f * u, cuerpo.height - 2 * u))
+                drawRect(Brush.horizontalGradient(listOf(colSombra.copy(alpha = 0f), colSombra.copy(alpha = 0.3f)), der - 6 * u, der), Offset(der - 6 * u, cuerpo.top), Size(6 * u, cuerpo.height))
+            }
+        }
+    }
+
+    /**
+     * La lámpara colgante de la mesa del registro (la de la libreta), que asoma por arriba a la izquierda, encendida (solo de
+     * noche): la boca de la tulipa esmaltada, el blanco de dentro, la bombilla y su halo corto. [boca]: el centro de la boca.
+     */
+    private fun DrawScope.lamparaTapa(boca: Offset) {
+        val u = density
+        val pd = PaletaDistopia
+        val ancho = 17 * u
+        mancha(Offset(boca.x, boca.y + 3 * u), 24 * u, pd.BOMBILLA.copy(alpha = 0.4f))
+        val tulipa = Path().apply {
+            moveTo(boca.x - ancho * 0.62f, 0f); lineTo(boca.x + ancho * 0.62f, 0f)
+            quadraticTo(boca.x + ancho * 0.8f, boca.y * 0.6f, boca.x + ancho, boca.y)
+            lineTo(boca.x - ancho, boca.y)
+            quadraticTo(boca.x - ancho * 0.8f, boca.y * 0.6f, boca.x - ancho * 0.62f, 0f); close()
+        }
+        drawPath(tulipa, Brush.horizontalGradient(listOf(Color(0xFF55604A), Color(0xFF2E3A33), Color(0xFF161D1C)), boca.x - ancho, boca.x + ancho))
+        drawOval(mezcla(Color(0xFFE9E6D8), pd.BOMBILLA, 0.4f), Offset(boca.x - ancho, boca.y - 2.5f * u), Size(ancho * 2, 5 * u))
+        drawLine(pd.BOMBILLA.copy(alpha = 0.8f), Offset(boca.x - ancho, boca.y), Offset(boca.x + ancho, boca.y), 1.2f * u)
+        drawOval(mezcla(pd.BOMBILLA, Color.White, 0.55f), Offset(boca.x - 4 * u, boca.y - 1 * u), Size(8 * u, 8 * u))
+        drawOval(Color.White.copy(alpha = 0.9f), Offset(boca.x - 2.2f * u, boca.y + 0.5f * u), Size(4.4f * u, 4.4f * u))
     }
 
     // ---------------------------------------------------------------- la página y el escritor
