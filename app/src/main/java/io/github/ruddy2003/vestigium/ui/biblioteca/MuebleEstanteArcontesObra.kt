@@ -317,12 +317,15 @@ internal object ObraEstanteArcontes {
         val r = p.r
         val t = s.t(r.center, true)
         val tam = 8.6f
-        val ancho = (capaEn(medidor, p.texto, Rect(0f, 0f, 4000f, r.height + 4f * u), P.LETRA, t.tinta(), tam, peso = FontWeight.Bold)?.size?.width?.toFloat() ?: r.width) + 26f * u
+        // De noche, lejos de la llama, la tira se hunde en el azul violáceo y lleva la tinta clara (ver [TonoArcontes.tintaSobre]).
+        val papel = t.etiqueta(P.PAPIRO_ETIQUETA)
+        val tinta = t.tintaSobre(papel)
+        val ancho = (capaEn(medidor, p.texto, Rect(0f, 0f, 4000f, r.height + 4f * u), P.LETRA, tinta, tam, peso = FontWeight.Bold)?.size?.width?.toFloat() ?: r.width) + 26f * u
         val an = ancho.coerceIn(r.width * 0.5f, r.width * 1.5f)
         val tira = Rect(r.center.x - an / 2, r.top - 1f * u, r.center.x + an / 2, r.bottom + 1f * u)
         val forma = contornoIrregular(tira, 83 + p.texto.length, 44, 0.022f)
         translate(1f * u, 1.4f * u) { drawPath(forma, t.s(0.4f)) }
-        drawPath(forma, t.etiqueta(P.PAPIRO_ETIQUETA))
+        drawPath(forma, papel)
         val fibras = Path()
         var yf = tira.top + 1.4f * u; var jf = 0
         while (yf < tira.bottom - 1f * u && jf < 20) {
@@ -341,7 +344,7 @@ internal object ObraEstanteArcontes {
                 drawLine(t.b(0.4f), Offset(xx - 0.3f * u, r.top - 2f * u), Offset(xx + 0.2f * u, r.bottom + 2f * u), 0.4f * u)
             }
         }
-        textoEn(medidor, p.texto, Rect(tira.left + 10f * u, tira.top - 2f * u, tira.right - 10f * u, tira.bottom + 2f * u), P.LETRA, t.tinta(), tam, peso = FontWeight.Bold, minimo = 5f)
+        textoEn(medidor, p.texto, Rect(tira.left + 10f * u, tira.top - 2f * u, tira.right - 10f * u, tira.bottom + 2f * u), P.LETRA, tinta, tam, peso = FontWeight.Bold, minimo = 5f)
     }
 
     // ---------------------------------------------------------------- los costados

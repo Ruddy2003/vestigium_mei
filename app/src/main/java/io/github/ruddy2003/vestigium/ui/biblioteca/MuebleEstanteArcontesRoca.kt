@@ -187,7 +187,7 @@ internal object RocaEstanteArcontes {
         val (luz, fuerza) = when {
             a.oscuro -> P.LUNA_RAS to 0.2f
             a.noche -> P.OCASO to 0.34f
-            else -> Color(0xFFFFEDC2) to 0.74f
+            else -> Color(0xFFFFF0CA) to 0.88f
         }
         // La penumbra: la mancha agrandada en cinco pasos, cada uno con un poco de luz.
         for (j in 5 downTo 1) {

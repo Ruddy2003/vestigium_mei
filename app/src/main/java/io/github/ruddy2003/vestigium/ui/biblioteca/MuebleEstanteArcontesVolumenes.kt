@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
@@ -110,8 +111,17 @@ internal object VolumenEstanteArcontes {
         val u = density
         val hd = 21f * u; val hm = 11.5f * u; val solape = 5.6f * u
         val y0 = r.center.y - (hd + hm - solape) / 2
-        textoEn(medidor, v.dia, Rect(r.left - 2f * u, y0, r.right + 2f * u, y0 + hd), P.LETRA, tinta, DIA, peso = FontWeight.Bold)
-        textoEn(medidor, mesCorto(v.mes), Rect(r.left - 2f * u, y0 + hd - solape, r.right + 2f * u, y0 + hd - solape + hm), P.LETRA, tinta.copy(alpha = 0.88f), MES, minimo = 5f)
+        texto(medidor, v.dia, Rect(r.left - 2f * u, y0, r.right + 2f * u, y0 + hd), tinta, DIA, FontWeight.Bold, 6f)
+        texto(medidor, mesCorto(v.mes), Rect(r.left - 2f * u, y0 + hd - solape, r.right + 2f * u, y0 + hd - solape + hm), tinta.copy(alpha = 0.9f), MES, FontWeight.Normal, 5f)
+    }
+
+    /**
+     * Un texto centrado en [r] con la tinta [tinta]: se mide siempre con el mismo color (el medidor guarda pocas medidas y el
+     * color cuenta en ellas) y se pinta con el de la tinta, que de noche cambia según el papel.
+     */
+    private fun DrawScope.texto(medidor: TextMeasurer, s: String, r: Rect, tinta: Color, tam: Float, peso: FontWeight, minimo: Float) {
+        val capa = capaEn(medidor, s, r, P.LETRA, Color.Black, tam, peso = peso, minimo = minimo) ?: return
+        drawText(capa, color = tinta, topLeft = Offset(r.center.x - capa.size.width / 2f, r.center.y - capa.size.height / 2f))
     }
 
     // ---------------------------------------------------------------- lo compartido (armado una vez por tamaño)
@@ -250,10 +260,13 @@ internal object VolumenEstanteArcontes {
             fibras.moveTo(dentro.left, y); fibras.lineTo(dentro.right, y + (azar(v.semilla + 1, j) - 0.5f) * u)
             y += 2.6f * u; j++
         }
-        drawPath(fibras, P.FIBRA.copy(alpha = 0.22f), style = Stroke(0.45f * u))
-        drawRect(P.FIBRA.copy(alpha = 0.16f), Offset(dentro.left, dentro.bottom - et.height * 0.14f), Size(dentro.width, et.height * 0.14f))
-        drawPath(forma, mezclaRapida(c, P.FIBRA, 0.55f), style = Stroke(0.7f * u))
-        diaYMes(v, medidor, et.deflate(1.4f * u), t.tinta())
+        // Las fibras y el canto, más hondos que el papel (de noche, lejos de la llama, el papel ya es oscuro: no lo aclaran).
+        val tinta = t.tintaSobre(c)
+        val fibra = if (tinta == t.tinta()) P.FIBRA else Color(c.red * 0.6f, c.green * 0.6f, c.blue * 0.6f)
+        drawPath(fibras, fibra.copy(alpha = 0.22f), style = Stroke(0.45f * u))
+        drawRect(fibra.copy(alpha = 0.16f), Offset(dentro.left, dentro.bottom - et.height * 0.14f), Size(dentro.width, et.height * 0.14f))
+        drawPath(forma, mezclaRapida(c, fibra, 0.55f), style = Stroke(0.7f * u))
+        diaYMes(v, medidor, et.deflate(1.4f * u), tinta)
         if (v.noche) luna(Offset(et.right - 3.2f * u, et.top + 3.4f * u), 3.2f * u, t)
     }
 

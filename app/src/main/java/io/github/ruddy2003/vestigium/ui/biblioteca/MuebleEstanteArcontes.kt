@@ -145,7 +145,7 @@ internal object MuebleEstanteArcontes {
 
     /** La luz de la lámpara de arriba en el cuerpo: cuánta llega (de 1 a 0) a un punto a [dx] y [dy] de la llama, en anchos. */
     fun lampara(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.75f else 1.3f) * exp(-5f * sqrt(dx * dx * 1.05f + dy * dy * (if (dy > 0f) 0.6f else 1f)))).coerceIn(0f, 1f)
+        ((if (suenos) 0.5f else 0.85f) * exp(-5f * sqrt(dx * dx * 1.05f + dy * dy * (if (dy > 0f) 0.6f else 1f)))).coerceIn(0f, 1f)
 
     /** El tramo de la grieta que vuelve a asomar en el fondo de la primera repisa: a lo ancho, en anchos. */
     val GRIETA_HUECO_X get() = RocaEstanteArcontes.GRIETA_X1 - 0.012f
@@ -251,7 +251,7 @@ internal object MuebleEstanteArcontes {
         // En un estante ancho, lo de la corona y del pie se queda del tamaño de un teléfono grande ([TOPE]), en medio.
         val e = escala(w, density)
         a.escala = e
-        ObraEstanteArcontes.vetaNoche = if (oscuro) 0.45f else 1f
+        ObraEstanteArcontes.vetaNoche = if (oscuro) 0.3f else 1f
         val wc = w * e
         val apoyo = ch - wc * CORNISA
         val pCorona = Offset(w / 2, apoyo)

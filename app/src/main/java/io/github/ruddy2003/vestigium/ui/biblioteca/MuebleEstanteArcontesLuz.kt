@@ -266,9 +266,11 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
         // De noche: hundido en el azul violáceo lejos de la llama; con la lumbre sale su color, y solo cerca se calienta.
         val base = if (f > 0f) mezclaRapida(c, LUZ_MUEBLE, f * 0.4f) else if (f < 0f) mezclaRapida(c, hondo, -f * 0.6f) else c
         val kk = k.coerceIn(0f, 1f)
-        val calido = kk * kk
+        // El olivo del armario se hunde más y se calienta solo muy cerca de la llama (lejos, el azul violáceo del Ideario).
+        val calido = if (cuerpo) Math.pow(kk.toDouble(), 2.5).toFloat() else kk * kk
         val propio = mezclaRapida(base, aLaLlama(base), 0.75f * calido)
-        val hundirse = (0.9f - (if (cuerpo) 0.58f else 0.62f) * Math.pow(kk.toDouble(), 1.25).toFloat()).coerceIn(0.22f, 0.9f)
+        val hundirse = (if (cuerpo) 0.92f - 0.62f * Math.pow(kk.toDouble(), 1.5).toFloat()
+            else 0.9f - 0.62f * Math.pow(kk.toDouble(), 1.25).toFloat()).coerceIn(0.22f, 0.92f)
         var v = mezclaRapida(propio, hondo, hundirse)
         v = conFrio(mezclaRapida(v, lumbre, 0.16f * calido))
         if (sol > 0f) {
@@ -318,20 +320,41 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
     }
 
     /**
-     * El papiro o el pergamino donde va el día, teñido por la luz que le llega: ámbar cerca de la llama; lejos, gris violáceo de
-     * valor medio (la tinta se sigue leyendo).
+     * El papiro o el pergamino donde va el día, teñido por la luz que le llega, de noche con paso gradual: ámbar junto a la llama;
+     * lejos, hundido en el azul violáceo, oscuro (lo más claro de la noche queda junto a las llamas y en la grieta). Nunca de un
+     * valor intermedio en el que ninguna tinta llegue a 4.5 a 1 (ver [tintaSobre]).
      */
     fun etiqueta(col: Color): Color {
         if (!a.oscuro) return c(col)
-        val lejos = Color(col.red * 0.45f + 0.09f, col.green * 0.45f + 0.11f, col.blue * 0.45f + 0.22f, col.alpha)
+        val lejos = Color(col.red * 0.2f + 0.035f, col.green * 0.2f + 0.04f, col.blue * 0.2f + 0.1f, col.alpha)
         val alumbrado = Color((col.red * 1.04f).coerceAtMost(1f), col.green * 0.92f, col.blue * 0.7f, col.alpha)
-        var v = mezclaRapida(lejos, alumbrado, (1.1f * Math.pow(k.toDouble(), 1.7).toFloat()).coerceAtMost(1f))
-        if (sol > 0f) v = mezclaRapida(v, mezclaRapida(col, p.LUNA, 0.3f).let { Color(it.red * 0.7f, it.green * 0.74f, it.blue * 0.82f, it.alpha) }, 0.45f * sol)
-        return conFrio(v)
+        var v = mezclaRapida(lejos, alumbrado, (1.1f * Math.pow(k.toDouble(), 1.5).toFloat()).coerceAtMost(1f))
+        if (sol > 0f) v = mezclaRapida(v, mezclaRapida(col, p.LUNA, 0.3f).let { Color(it.red * 0.5f, it.green * 0.54f, it.blue * 0.64f, it.alpha) }, 0.45f * sol)
+        v = conFrio(v)
+        // Fuera de la franja de valores en que ni la tinta oscura ni la clara se leen bien: al borde más cercano.
+        val l = luminanciaArcontes(v)
+        if (l > OSCURA_HASTA && l < CLARA_DESDE) {
+            val meta = if (l < (OSCURA_HASTA + CLARA_DESDE) / 2) OSCURA_HASTA * 0.94f else CLARA_DESDE * 1.06f
+            val f = Math.pow((meta / l).toDouble(), 1 / 2.2).toFloat()
+            v = Color((v.red * f).coerceAtMost(1f), (v.green * f).coerceAtMost(1f), (v.blue * f).coerceAtMost(1f), v.alpha)
+        }
+        return v
     }
 
-    /** La tinta del día sobre [etiqueta]: siempre oscura y legible. */
+    /** La tinta del día: siempre oscura y legible (de día y al ocaso). */
     fun tinta(): Color = if (a.oscuro) Color(0xFF110C08) else if (a.noche) Color(0xFF231B27) else p.TINTA
+
+    /**
+     * La tinta sobre un papel [fondo]: de noche, oscura sobre el papiro alumbrado y clara (un gris lila pálido) sobre el hundido,
+     * para que el número tenga siempre al menos 4.5 a 1.
+     */
+    fun tintaSobre(fondo: Color): Color = if (!a.oscuro || luminanciaArcontes(fondo) >= CLARA_DESDE) tinta() else Color(0xFFE6E2F0)
+
+    private companion object {
+        /** Hasta qué luminancia el papel lleva tinta clara, y desde cuál oscura (entre las dos, ninguna llega a 4.5 a 1). */
+        const val OSCURA_HASTA = 0.125f
+        const val CLARA_DESDE = 0.2f
+    }
 }
 
 /**
@@ -401,6 +424,12 @@ internal class SitioArcontes(val a: AireArcontes, val w: Float, val e: Float = 1
 }
 
 // ---------------------------------------------------------------- ayudantes de dibujo
+
+/** La luminancia relativa de [c] (la de las pautas de contraste: de 0, negro, a 1, blanco). */
+internal fun luminanciaArcontes(c: Color): Float {
+    fun lin(v: Float) = if (v <= 0.04045f) v / 12.92f else Math.pow(((v + 0.055f) / 1.055f).toDouble(), 2.4).toFloat()
+    return 0.2126f * lin(c.red) + 0.7152f * lin(c.green) + 0.0722f * lin(c.blue)
+}
 
 /**
  * La mezcla de dos colores en RGB, sin pasar por Oklab como `mezcla` (la de Compose): para lo que se calcula miles de veces por
