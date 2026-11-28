@@ -24,7 +24,7 @@ import kotlin.math.sin
  * solapadas, del 70 al 90 % del alto del hueco, que cambian de un hueco a otro: el farolillo de vela en su cardán (de noche, la luz
  * de media altura), las pizarras de buceo atadas con su lápiz y la piola, el catalejo de pie con la brújula de bote en su caja, la
  * esponja de copa con el cubo de lona de la cosecha, el caracol y el erizo, el molinillo de café de latón con la lata de café y la
- * taza, la botella de ron con el rollo de cabo y el vaso de lata (las piezas nuevas, en [PiezasHuecoAbismo]). Cada cosa con su
+ * taza, la botella de ron con el cabo adujado en la tabla y el vaso de lata (las piezas nuevas, en [PiezasHuecoAbismo]). Cada cosa con su
  * luz, su sombra en el fondo y su sombra en la tabla.
  */
 internal object HuecosEstanteAbismo {
@@ -41,13 +41,38 @@ internal object HuecosEstanteAbismo {
             farolillo(Offset(xc, r.bottom), h, a, cerca)
             fin = xc - w * 0.075f
         }
+        reparto(k, oc, der, xc, w).forEach { (g, a0, a1) -> grupoEn(g, a0, a1, r, a, cerca) }
+    }
+
+    /**
+     * Los grupos del hueco libre de la repisa [k] (cuál y entre qué x): cinco que se turnan de una repisa a otra; en un hueco
+     * muy ancho, dos o tres distintos. Lo usan el hueco y lo que cuelga por el canto.
+     */
+    private fun reparto(k: Int, oc: Float, der: Float, xc: Float, w: Float): List<Triple<Int, Float, Float>> {
+        val x0 = oc + w * 0.02f; val x1 = der - w * 0.02f
+        if (x1 - x0 < w * 0.07f) return emptyList()
+        val fin = if (xc >= 0f) xc - w * 0.075f else x1
         val ancho = fin - x0
-        if (ancho < w * 0.08f) return
-        // Cinco grupos que se turnan de una repisa a otra; en un hueco muy ancho, dos o tres distintos.
+        if (ancho < w * 0.08f) return emptyList()
         val grupo = Math.floorMod(k * 2 + 1 + k / 5, 5)
-        grupoEn(grupo, x0, if (ancho > w * 0.46f) x0 + w * 0.3f else fin, r, a, cerca)
-        if (ancho > w * 0.46f) grupoEn(Math.floorMod(grupo + 2, 5), x0 + w * 0.31f, minOf(fin, x0 + w * 0.6f), r, a, cerca)
-        if (ancho > w * 0.62f) grupoEn(Math.floorMod(grupo + 4, 5), x0 + w * 0.58f, minOf(fin, x0 + w * 0.86f), r, a, cerca)
+        val l = ArrayList<Triple<Int, Float, Float>>()
+        l.add(Triple(grupo, x0, if (ancho > w * 0.46f) x0 + w * 0.3f else fin))
+        if (ancho > w * 0.46f) l.add(Triple(Math.floorMod(grupo + 2, 5), x0 + w * 0.31f, minOf(fin, x0 + w * 0.6f)))
+        if (ancho > w * 0.62f) l.add(Triple(Math.floorMod(grupo + 4, 5), x0 + w * 0.58f, minOf(fin, x0 + w * 0.86f)))
+        return l
+    }
+
+    /** Lo que cuelga por el canto de la tabla (se pinta después de las tablas): el chicote del cabo adujado con su guardacabo. */
+    fun DrawScope.colgantes(k: Int, r: Rect, oc: Float, der: Float, xc: Float, a: AireAbismo, cerca: (Offset) -> Float, placas: List<Rect>) {
+        val w = size.width
+        reparto(k, oc, der, xc, w).forEach { (g, a0, a1) ->
+            if (g != 4) return@forEach
+            val p = Offset((a0 + a1) / 2 - w * 0.065f, r.bottom)
+            // No cuelga encima de la placa del mes.
+            val x = p.x + w * 0.023f
+            if (placas.any { pl -> x > pl.left - w * 0.03f && x < pl.right + w * 0.03f && pl.top < r.bottom + w * 0.06f && pl.bottom > r.bottom }) return@forEach
+            with(PiezasHuecoAbismo) { chicote(p, r.height, a, cerca) }
+        }
     }
 
     private fun DrawScope.grupoEn(g: Int, x0: Float, x1: Float, r: Rect, a: AireAbismo, cerca: (Offset) -> Float) {
@@ -69,8 +94,8 @@ internal object HuecosEstanteAbismo {
                 taza(Offset(cx + w * 0.07f, y), h, a, cerca)
             }
             else -> {
-                botella(Offset(cx + w * 0.01f, y), h, a, cerca)
-                with(PiezasHuecoAbismo) { rolloCabo(Offset(cx - w * 0.06f, y), h, a, cerca) }
+                botella(Offset(cx + w * 0.02f, y), h, a, cerca)
+                with(PiezasHuecoAbismo) { rolloTumbado(Offset(cx - w * 0.065f, y), h, a, cerca) }
             }
         }
     }
@@ -324,7 +349,7 @@ internal object HuecosEstanteAbismo {
         val w = size.width; val u = density
         val k = cerca(Offset(pie.x, pie.y - h * 0.35f))
         val hacia = lado(a, pie, w)
-        val alto = h * 0.82f; val an = w * 0.066f
+        val alto = h * 0.88f; val an = w * 0.07f
         sombras(pie, an, alto, a, k)
         val cuerpo = Path().apply {
             moveTo(pie.x - an / 2, pie.y)

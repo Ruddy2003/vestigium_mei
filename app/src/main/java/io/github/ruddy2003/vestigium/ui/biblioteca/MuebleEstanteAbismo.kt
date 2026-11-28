@@ -229,7 +229,13 @@ internal object MuebleEstanteAbismo {
             costado(Rect(d.derecha.left, ch, d.derecha.right, b.top), false, d, ac, cerca)
             d.placas.forEach { p -> placa(p, medidor, ac, cerca(p.r.center)) }
         }
-        with(HuecosEstanteAbismo) { d.repisas.forEachIndexed { k, r -> if (xs[k] >= 0f) llamaHueco(xs[k], r, ac) } }
+        with(HuecosEstanteAbismo) {
+            d.repisas.forEachIndexed { k, r ->
+                val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
+                colgantes(k, r, oc, d.derecha.left, xs[k], ac, cerca, d.placas.map { it.r })
+            }
+            d.repisas.forEachIndexed { k, r -> if (xs[k] >= 0f) llamaHueco(xs[k], r, ac) }
+        }
         // Lo de abajo, en vivo: el zócalo y el suelo con lo que hay en él, desde el píxel entero de encima del zócalo y sobre un
         // fondo opaco, para que la junta con la última tabla no deje asomar nada.
         val arriba = floor(minOf(b.top, d.tablas.lastOrNull()?.bottom ?: b.top))

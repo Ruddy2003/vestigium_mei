@@ -17,8 +17,8 @@ import kotlin.math.sin
 
 /**
  * Tres cosas grandes del pañol para los huecos de Abismo ([HuecosEstanteAbismo]): el cubo de lona de la cosecha, con su asa de
- * cabo y las esponjas que asoman; la lata de café de hojalata pintada, con sus aros y su tapa; y el rollo de cabo adujado de pie,
- * con sus dos ligadas y la gaza con su guardacabo de hierro. Cada una con su luz, su sombra en el fondo y en la tabla.
+ * cabo y las esponjas que asoman; la lata de café de hojalata pintada, con sus aros y su tapa; y el cabo adujado y tumbado en la
+ * tabla, con el chicote y su guardacabo de hierro colgando por el canto. Cada una con su luz, su sombra en el fondo y en la tabla.
  */
 internal object PiezasHuecoAbismo {
     private val P = PaletaAbismo
@@ -109,53 +109,62 @@ internal object PiezasHuecoAbismo {
     }
 
     /**
-     * El rollo de cabo adujado y de pie, como una rueda: las vueltas con su colchado, dos ligadas que lo atan, y el chicote con su
-     * gaza y el guardacabo de hierro que cuelga por delante.
+     * El cabo adujado y tumbado en la tabla: una pila baja de vueltas vistas en elipse, cada una con su luz arriba y su sombra abajo,
+     * el colchado, el hueco del centro y el chicote que sale de la vuelta de arriba hacia el canto (lo que cuelga, en [chicote]).
      */
-    fun DrawScope.rolloCabo(pie: Offset, h: Float, a: AireAbismo, cerca: (Offset) -> Float) {
+    fun DrawScope.rolloTumbado(pie: Offset, h: Float, a: AireAbismo, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
-        val k = cerca(Offset(pie.x, pie.y - h * 0.3f))
-        val re = h * 0.27f; val ri = h * 0.11f
-        val c = Offset(pie.x, pie.y - re * 0.98f)
-        contactoAbismo(Offset(pie.x + w * 0.008f, pie.y - 1f), re * 1.7f, w * 0.016f, a, 0.45f)
-        if (!a.oscuro) drawOval(a.sombra(0.16f), Offset(c.x - re + w * 0.016f, c.y - re * 0.95f), Size(re * 2, re * 1.9f))
-        // Las vueltas, de fuera adentro: cada una un aro con su luz arriba a la izquierda y su colchado.
-        val n = 6
-        val g = (re - ri) / n
+        val k = cerca(Offset(pie.x, pie.y - h * 0.1f))
+        val rx = w * 0.078f; val ry = w * 0.026f
+        val g = h * 0.042f
+        contactoAbismo(Offset(pie.x + w * 0.008f, pie.y - 1f), rx * 2.3f, w * 0.02f, a, 0.45f)
+        if (!a.oscuro) drawOval(a.sombra(0.14f), Offset(pie.x - rx + w * 0.018f, pie.y - g * 5f - ry), Size(rx * 2, g * 4f + ry * 2))
+        // Las vueltas, de abajo arriba.
+        val n = 4
         for (j in 0 until n) {
-            val rr = re - g * (j + 0.5f)
-            val col = if (j % 2 == 0) P.MANILA else mezcla(P.MANILA, P.MANILA_OSC, 0.3f)
-            drawOval(a.dia(P.MANILA_OSC, -0.1f, k), Offset(c.x - rr, c.y - rr * 0.96f), Size(rr * 2, rr * 1.92f), style = Stroke(g * 1.05f))
-            drawOval(a.dia(col, 0f, k), Offset(c.x - rr, c.y - rr * 0.96f), Size(rr * 2, rr * 1.92f), style = Stroke(g * 0.7f))
-            drawArc(a.brillo(0.35f, k), 190f, 90f, false, Offset(c.x - rr, c.y - rr * 0.96f), Size(rr * 2, rr * 1.92f), style = Stroke(g * 0.22f))
+            val cy = pie.y - ry - g * 0.6f - j * g * 0.95f
+            val ww = rx * (1f - 0.04f * j)
+            val ov = Rect(pie.x - ww + j * w * 0.002f, cy - ry, pie.x + ww + j * w * 0.002f, cy + ry)
+            drawOval(a.sombra(0.35f), Offset(ov.left, ov.top + g * 0.5f), ov.size, style = Stroke(g))
+            drawOval(a.dia(P.MANILA_OSC, -0.05f, k), ov.topLeft, ov.size, style = Stroke(g))
+            drawArc(a.dia(if (j % 2 == 0) P.MANILA else mezcla(P.MANILA, P.MANILA_OSC, 0.25f), 0f, k), 0f, 180f, false, ov.topLeft, ov.size, style = Stroke(g * 0.65f))
+            drawArc(a.brillo(0.4f, k), 200f, 120f, false, Offset(ov.left, ov.top - g * 0.3f), ov.size, style = Stroke(g * 0.2f))
+            // El colchado en la cara de delante de la vuelta.
+            val tic = Path()
+            for (i in 0 until 16) {
+                val t = Math.PI * (i + 0.5) / 16
+                val p = Offset(ov.center.x + ww * cos(t).toFloat(), cy + ry * sin(t).toFloat())
+                tic.moveTo(p.x - g * 0.22f, p.y - g * 0.28f); tic.lineTo(p.x + g * 0.22f, p.y + g * 0.28f)
+            }
+            drawPath(tic, a.dia(P.MANILA_OSC, 0f, k).copy(alpha = 0.7f), style = Stroke(0.7f * u))
         }
-        // El colchado: rayitas inclinadas a lo largo de la vuelta de fuera.
-        val tic = Path()
-        for (i in 0 until 40) {
-            val t = 2 * Math.PI * i / 40
-            val p = Offset(c.x + (re - g * 0.5f) * cos(t).toFloat(), c.y + (re - g * 0.5f) * 0.96f * sin(t).toFloat())
-            tic.moveTo(p.x - g * 0.25f, p.y - g * 0.3f); tic.lineTo(p.x + g * 0.25f, p.y + g * 0.3f)
-        }
-        drawPath(tic, a.dia(P.MANILA_OSC, 0f, k).copy(alpha = 0.7f), style = Stroke(0.7f * u))
-        drawOval(a.sombra(0.55f), Offset(c.x - ri * 0.8f, c.y - ri * 0.78f), Size(ri * 1.6f, ri * 1.56f))
-        // Las dos ligadas, cortas y desparejas (no hacen radios: el rollo no se lee como signo).
-        listOf(Triple(-62.0, 0.45f, 1f), Triple(148.0, 0.3f, 0.85f)).forEach { (gr, f0, f1) ->
-            val t = Math.toRadians(gr)
-            val p0 = Offset(c.x + (ri + (re - ri) * f0) * cos(t).toFloat(), c.y + (ri + (re - ri) * f0) * 0.96f * sin(t).toFloat())
-            val p1 = Offset(c.x + (ri + (re - ri) * f1) * cos(t).toFloat(), c.y + (ri + (re - ri) * f1) * 0.96f * sin(t).toFloat())
-            drawLine(a.dia(P.ESPARTO, -0.2f, k), p0, p1, 3f * u)
-            drawLine(a.dia(P.ESPARTO, 0.1f, k), p0, p1, 1.4f * u)
-        }
-        // El chicote con su gaza y el guardacabo de hierro, que cuelga por delante a la derecha.
-        val ch0 = Offset(c.x + re * 0.6f, c.y + re * 0.7f)
-        val gz = Offset(c.x + re * 0.95f, pie.y - h * 0.05f)
-        drawLine(a.dia(P.MANILA, 0f, k), ch0, gz, g * 0.9f, StrokeCap.Round)
+        // El hueco del centro, visto desde arriba, y el chicote que sale hacia el canto.
+        val top = pie.y - ry - g * 0.6f - (n - 1) * g * 0.95f
+        drawOval(a.sombra(0.5f), Offset(pie.x - rx * 0.55f, top - ry * 0.5f), Size(rx * 1.1f, ry))
+        val ch = Path().apply { moveTo(pie.x + rx * 0.5f, top + ry * 0.6f); cubicTo(pie.x + rx * 0.7f, top + ry * 2f, pie.x + rx * 0.45f, pie.y - g * 0.4f, pie.x + rx * 0.3f, pie.y + 1f * u) }
+        drawPath(ch, a.dia(P.MANILA_OSC, 0f, k), style = Stroke(g * 0.95f, cap = StrokeCap.Round))
+        drawPath(ch, a.dia(P.MANILA, 0.05f, k), style = Stroke(g * 0.6f, cap = StrokeCap.Round))
+    }
+
+    /** El chicote del cabo adujado en [pie] que cuelga por el canto de la tabla, con su gaza y el guardacabo de hierro. */
+    fun DrawScope.chicote(pie: Offset, h: Float, a: AireAbismo, cerca: (Offset) -> Float) {
+        val w = size.width; val u = density
+        val k = cerca(Offset(pie.x, pie.y + w * 0.02f))
+        val rx = w * 0.078f
+        val g = h * 0.042f
+        val p0 = Offset(pie.x + rx * 0.3f, pie.y - 1f * u)
+        val p1 = Offset(p0.x + w * 0.006f, pie.y + w * 0.035f)
+        if (!a.oscuro) drawLine(a.sombra(0.3f), p0 + Offset(2f * u, 2f * u), p1 + Offset(2f * u, 2f * u), g * 0.9f)
+        drawLine(a.dia(P.MANILA_OSC, 0f, k), p0, p1, g * 0.95f, StrokeCap.Round)
+        drawLine(a.dia(P.MANILA, 0.05f, k), p0, p1, g * 0.6f, StrokeCap.Round)
+        val gz = Offset(p1.x, p1.y + w * 0.012f)
         val gu = Path().apply {
             moveTo(gz.x, gz.y - w * 0.012f)
-            cubicTo(gz.x + w * 0.016f, gz.y - w * 0.008f, gz.x + w * 0.014f, gz.y + w * 0.014f, gz.x, gz.y + w * 0.016f)
-            cubicTo(gz.x - w * 0.014f, gz.y + w * 0.014f, gz.x - w * 0.016f, gz.y - w * 0.008f, gz.x, gz.y - w * 0.012f)
+            cubicTo(gz.x + w * 0.015f, gz.y - w * 0.008f, gz.x + w * 0.013f, gz.y + w * 0.013f, gz.x, gz.y + w * 0.015f)
+            cubicTo(gz.x - w * 0.013f, gz.y + w * 0.013f, gz.x - w * 0.015f, gz.y - w * 0.008f, gz.x, gz.y - w * 0.012f)
         }
+        drawPath(corridoAbismo(gu, 1.5f * u, 2f * u), a.sombra(0.4f), style = Stroke(2.6f * u))
         drawPath(gu, a.dia(P.HIERRO, 0f, k), style = Stroke(2.6f * u))
-        drawPath(gu, a.brillo(0.4f, k), style = Stroke(0.8f * u))
+        drawPath(gu, a.brillo(0.45f, k), style = Stroke(0.8f * u))
     }
 }
