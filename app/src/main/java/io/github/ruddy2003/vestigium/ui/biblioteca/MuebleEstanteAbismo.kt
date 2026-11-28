@@ -189,6 +189,11 @@ internal object MuebleEstanteAbismo {
             else if (p.y < apoyo - w * 0.03f) farolArriba(p.x / w - FAROL_X, p.y / w - FAROL_Y, noche)
             else calor(p.x / w, p.y / w, yL, noche, candiles)
         }
+        val cercaArriba: (Offset) -> Float = { p ->
+            if (!a.lumbre) 1f
+            else if (p.y < apoyo - w * 0.03f) farolArriba(p.x / w - FAROL_X, p.y / w - FAROL_Y, noche)
+            else calor(p.x / w, p.y / w, yL, noche, FloatArray(0))
+        }
         val m = manchaAbismo(a)
         val clave = "${w.toInt()}:$ch:${b.top}:$h:$oscuro:$noche:$density"
 
@@ -196,11 +201,11 @@ internal object MuebleEstanteAbismo {
         with(CapaAbismo) {
             pegar(0, "c:$clave", 0, ceil(ch).toInt()) {
                 drawRect(a.luz(PaletaAbismo.TECA_OSC, 0.5f), Offset.Zero, Size(w, ceil(ch) + 1f))
-                with(MuroEstanteAbismo) { pared(a, apoyo, cerca, m) }
-                with(MuroEstanteAbismo) { colgado(a, apoyo, cerca, m) }
-                with(ObraEstanteAbismo) { cornisa(Rect(0f, apoyo, w, ch + 2f), a, cerca, m) }
-                with(CoronaEstanteAbismo) { encima(a, apoyo, cerca, m) }
-                with(MuroEstanteAbismo) { farolYLuz(a, apoyo, cerca) }
+                with(MuroEstanteAbismo) { pared(a, apoyo, cercaArriba, m) }
+                with(MuroEstanteAbismo) { colgado(a, apoyo, cercaArriba, m) }
+                with(ObraEstanteAbismo) { cornisa(Rect(0f, apoyo, w, ch + 2f), a, cercaArriba, m) }
+                with(CoronaEstanteAbismo) { encima(a, apoyo, cercaArriba, m) }
+                with(MuroEstanteAbismo) { farolYLuz(a, apoyo, cercaArriba) }
                 granoMueble(Rect(0f, 0f, w, ch + 2f), oscuro)
             }
         }

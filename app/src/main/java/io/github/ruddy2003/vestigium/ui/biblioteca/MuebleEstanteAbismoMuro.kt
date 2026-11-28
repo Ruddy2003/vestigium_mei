@@ -186,8 +186,8 @@ internal object MuroEstanteAbismo {
         if (!a.oscuro) translate(w * 0.016f, w * 0.01f) { drawPath(vueltas, a.sombra(0.16f), style = Stroke(2f * u)) }
         drawPath(vueltas, a.en(P.MANILA_OSC, 0f, ks, ls, m), style = Stroke(2.2f * u))
         drawPath(vueltas, a.en(P.MANILA, 0.05f, ks, ls, m), style = Stroke(1.2f * u))
-        // Las marcas de trapo de la sondaleza (cada tantas brazas), en las vueltas: rojo, blanco y azul desvaídos.
-        listOf(Triple(-0.024f, 0.55f, P.ROJO_TRAPO), Triple(0.02f, 0.72f, P.MAMPARO_LUZ), Triple(-0.012f, 0.9f, P.AZUL_CARTA)).forEach { (dx, fy, col) ->
+        // Las marcas de la sondaleza (cada tantas brazas), en las vueltas: tiras de cuero, de trapo blanco y de trapo rojo desvaído.
+        listOf(Triple(-0.024f, 0.55f, P.CUERO), Triple(0.02f, 0.72f, P.MAMPARO_LUZ), Triple(-0.012f, 0.9f, P.ROJO_TRAPO)).forEach { (dx, fy, col) ->
             val p = Offset(ps.x + w * dx, ps.y + largo * fy)
             drawRect(a.en(col, 0f, ks, ls, m), Offset(p.x - w * 0.004f, p.y - w * 0.003f), Size(w * 0.008f, w * 0.006f))
         }
