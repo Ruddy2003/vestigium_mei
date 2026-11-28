@@ -24,7 +24,7 @@ import kotlin.math.floor
  * El pie de la librería: el faldón de esmalte con su zócalo cromado y las cuatro patas cónicas abiertas con su contera; debajo, el
  * zócalo verde azulado del muro y la rejilla del suelo del Ideario. Bajo el mueble, la bandeja hidropónica con sus lechugas y la
  * lámpara de cultivo del Ideario colgada del faldón por dos cadenitas; a la izquierda, la regadera esmaltada; a la derecha, el
- * puf de vinilo con dos discos encima. Se pinta en cada dibujo (lo fijo de arriba ya ocupa la imagen guardada).
+ * taburete de cocina con un disco encima. Se pinta en cada dibujo (lo fijo de arriba ya ocupa la imagen guardada).
  */
 internal object PieEstanteRefugio {
     fun DrawScope.pie(g: MarcoRefugio) {
@@ -43,7 +43,7 @@ internal object PieEstanteRefugio {
         faldon(g, b0, falda)
         patas(g, falda, pisan, atras = false)
         regadera(g, pisan)
-        puf(g, pisan)
+        taburete(g, pisan)
         // De noche, el charco rosa del tubo de cultivo en el suelo y en el zócalo.
         if (g.a.cultivo > 0f && g.a.oscuro) {
             mancha(Offset(g.cultivo.x, g.cultivo.y + w * 0.06f), w * 0.36f, P.LAMPARA.copy(alpha = 0.16f * g.a.cultivo))
@@ -261,63 +261,57 @@ internal object PieEstanteRefugio {
     }
 
     /**
-     * El puf de vinilo coral, cortado por el borde derecho: el cuerpo acolchado de canto redondo con sus capitoné (los botones
-     * hundidos y las arrugas que salen de ellos), el ribete y el aro cromado de la base sobre sus patitas, y dos discos en sus fundas
-     * encima, uno corrido.
+     * El taburete de cocina de la época, a la derecha: el asiento grueso de vinilo coral con su canto acolchado, el ribete cromado y
+     * la cara de arriba vista un poco desde arriba; cuatro patas de tubo cromado abiertas (las de atrás, en la sombra), el aro de
+     * los pies y los regatones de goma; encima, un disco en su funda, algo corrido.
      */
-    private fun DrawScope.puf(g: MarcoRefugio, pisan: Float) {
+    private fun DrawScope.taburete(g: MarcoRefugio, pisan: Float) {
         val w = g.w; val u = density
-        val pie = pisan + w * 0.02f
-        val cx = w * 0.85f
-        val ra = w * 0.125f
-        val al = w * 0.13f
-        val top = pie - w * 0.02f - al
-        val l = g.luz(cx - ra * 0.4f, top + al * 0.5f, 0.07f)
-        val hacia = if (g.a.oscuro) g.hacia(cx - ra * 0.4f, top + al * 0.5f) else -1f
-        drawOval(l.s(0.5f), Offset(cx - ra * 1.15f, pie - 4f * u), Size(ra * 2.4f, 8f * u))
-        // Las patitas y el aro cromado de la base.
-        listOf(-0.75f, 0.1f).forEach { f ->
-            val x = cx + ra * f
-            drawLine(l.c(P.CROMO_OSC), Offset(x, pie - w * 0.024f), Offset(x - w * 0.006f, pie), 2.4f * u, StrokeCap.Round)
-        }
-        val base = Rect(cx - ra * 0.95f, pie - w * 0.03f, cx + ra * 0.95f, pie - w * 0.018f)
-        cromoRefugio(base, l, brillo = 0.7f)
-        // El cuerpo acolchado: el canto, con su volumen, y la cara de arriba vista un poco desde arriba.
-        val cuerpo = Path().apply { addRoundRect(RoundRect(Rect(cx - ra, top, cx + ra, pie - w * 0.028f), CornerRadius(ra * 0.22f, al * 0.3f))) }
-        cilindroRefugio(cuerpo, l.c(P.CORAL), l, hacia, 0.4f)
-        clipPath(cuerpo) {
-            // El acolchado: cojines abombados entre los botones (en hileras trabadas), cada uno con su luz arriba y su sombra abajo,
-            // y el botón hundido con su hoyuelo. Sin arrugas en aspa (en fila harían cruces).
-            val bollos = Path(); val luces = Path()
-            for (fila in 0 until 2) for (k in 0 until 5) {
-                val b = Offset(cx - ra * 1.05f + ra * 0.5f * k + (if (fila == 1) ra * 0.25f else 0f), top + al * (0.36f + 0.32f * fila))
-                val d = ra * 0.22f
-                bollos.addOval(Rect(b.x - d, b.y + d * 0.2f, b.x + d, b.y + d * 1.1f))
-                luces.addOval(Rect(b.x - d * 0.7f, b.y - d * 0.55f, b.x + d * 0.5f, b.y - d * 0.15f))
+        val pie = pisan + w * 0.022f
+        val cx = w * 0.86f
+        val ra = w * 0.1f
+        val asiento = pie - w * 0.2f
+        val grueso = w * 0.045f
+        val l = g.luz(cx, asiento, 0.07f)
+        val hacia = if (g.a.oscuro) g.hacia(cx, asiento) else -1f
+        drawOval(l.s(0.5f), Offset(cx - ra * 1.2f + (if (g.a.oscuro) 0f else w * 0.015f), pie - 3f * u), Size(ra * 2.5f, 6f * u))
+        // Las patas: de la orilla del asiento al suelo, abiertas; las de atrás, más cortas y en sombra.
+        val patas = listOf(Triple(-0.5f, -0.78f, true), Triple(0.5f, 0.78f, true), Triple(-0.78f, -1.12f, false), Triple(0.78f, 1.12f, false))
+        patas.forEach { (fa, fb, atras) ->
+            val a = Offset(cx + ra * fa, asiento + grueso * 0.8f)
+            val b = Offset(cx + ra * fb, if (atras) pie - w * 0.03f else pie - 1f * u)
+            val lp = g.luz((a.x + b.x) / 2, (a.y + b.y) / 2, if (atras) 0.05f else 0.07f)
+            drawLine(lp.c(if (atras) P.CROMO_OSC else P.CROMO), a, b, 3f * u, StrokeCap.Round)
+            if (!atras) {
+                drawLine(lp.b(0.85f), a + Offset(-1f * u, 0f), b + Offset(-1f * u, 0f), 0.8f * u)
+                drawLine(lp.s(0.4f), a + Offset(1.1f * u, 0f), b + Offset(1.1f * u, 0f), 0.8f * u)
             }
-            drawPath(bollos, l.s(0.22f))
-            drawPath(luces, l.b(0.28f))
-            for (fila in 0 until 2) for (k in 0 until 5) {
-                val b = Offset(cx - ra * 1.05f + ra * 0.5f * k + (if (fila == 1) ra * 0.25f else 0f), top + al * (0.36f + 0.32f * fila))
-                drawCircle(l.s(0.4f), 2.2f * u, b)
-                drawCircle(l.c(mezcla(P.CORAL, P.BAQUELITA, 0.3f)), 1.2f * u, b)
-            }
-            drawRect(l.s(0.25f), Offset(cx - ra, pie - w * 0.05f), Size(ra * 2, w * 0.024f))
+            drawRoundRect(lp.c(P.BAQUELITA), Offset(b.x - 2.2f * u, b.y - 3f * u), Size(4.4f * u, 3.4f * u), CornerRadius(1.2f * u))
         }
-        val cara = Rect(cx - ra * 0.98f, top - al * 0.2f, cx + ra * 0.98f, top + al * 0.24f)
-        drawOval(l.c(mezcla(P.CORAL, P.VINILO, 0.25f)), cara.topLeft, cara.size)
-        drawOval(l.b(0.3f), Offset(cara.left + ra * 0.2f, cara.top + 1f * u), Size(ra * 0.9f, cara.height * 0.45f))
-        cromoRefugio(Rect(cx - ra, top + al * 0.12f, cx + ra, top + al * 0.12f + 2.2f * u), l, brillo = 0.7f)
-        // Dos discos en sus fundas, tumbados encima.
-        val d0 = Rect(cx - ra * 0.82f, cara.top + cara.height * 0.2f, cx + ra * 0.3f, cara.top + cara.height * 0.2f + w * 0.01f)
-        drawRect(l.s(0.35f), d0.topLeft + Offset(1.4f * u, 2f * u), d0.size)
-        drawRect(l.c(P.MANTEQUILLA), d0.topLeft, d0.size)
-        drawRect(l.b(0.5f), d0.topLeft, Size(d0.width, 0.8f * u))
-        val d1 = Rect(cx - ra * 0.7f, d0.top - w * 0.011f, cx + ra * 0.45f, d0.top + 0.4f * u)
-        drawRect(l.s(0.35f), d1.topLeft + Offset(1.4f * u, 1.6f * u), d1.size)
+        // El aro de los pies, a media altura: la mitad de delante, cromada.
+        val aroY = pie - w * 0.075f
+        val aro = Rect(cx - ra * 0.98f, aroY - w * 0.014f, cx + ra * 0.98f, aroY + w * 0.014f)
+        drawArc(l.c(P.CROMO_OSC), 180f, 180f, false, aro.topLeft, aro.size, style = Stroke(1.8f * u))
+        drawArc(l.c(P.CROMO), 0f, 180f, false, aro.topLeft, aro.size, style = Stroke(2.2f * u))
+        drawArc(l.b(0.8f), 20f, 140f, false, aro.topLeft - Offset(0f, 0.8f * u), aro.size, style = Stroke(0.7f * u))
+        // El asiento: el canto acolchado (un cilindro corto, abombado) y el ribete cromado de abajo.
+        val canto = Rect(cx - ra, asiento, cx + ra, asiento + grueso)
+        val cantoP = Path().apply { addRoundRect(RoundRect(canto, CornerRadius(grueso * 0.45f))) }
+        drawPath(corridoRefugio(cantoP, -hacia * 1.4f * u, 2f * u), l.s(0.35f))
+        cilindroRefugio(cantoP, l.c(P.CORAL), l, hacia, 0.5f)
+        cromoRefugio(Rect(canto.left + 2f * u, canto.bottom - 3f * u, canto.right - 2f * u, canto.bottom - 0.6f * u), l, brillo = 0.75f)
+        drawLine(l.s(0.3f), Offset(canto.left + grueso * 0.3f, canto.top + grueso * 0.45f), Offset(canto.right - grueso * 0.3f, canto.top + grueso * 0.45f), 0.8f * u)
+        // La cara de arriba, vista un poco desde arriba, con el vivo del ribete y su brillo.
+        val cara = Rect(cx - ra, asiento - w * 0.02f, cx + ra, asiento + w * 0.02f)
+        drawOval(l.c(mezcla(P.CORAL, P.VINILO, 0.22f)), cara.topLeft, cara.size)
+        drawOval(l.c(mezcla(P.CORAL, P.BAQUELITA, 0.25f)), cara.topLeft, cara.size, style = Stroke(1.2f * u))
+        drawOval(l.b(0.32f), Offset(cara.left + ra * 0.25f, cara.top + 1.2f * u), Size(ra * 0.8f, cara.height * 0.4f))
+        // Un disco en su funda encima, algo corrido hacia atrás.
+        val d1 = Rect(cx - ra * 0.75f, cara.top - w * 0.006f, cx + ra * 0.55f, cara.top + w * 0.006f)
+        drawRect(l.s(0.35f), d1.topLeft + Offset(1.4f * u, 2f * u), d1.size)
         drawRect(l.c(P.TEAL), d1.topLeft, d1.size)
-        drawRect(l.c(P.CORAL), Offset(d1.left + d1.width * 0.2f, d1.top), Size(d1.width * 0.12f, d1.height))
+        drawRect(l.c(P.MANTEQUILLA), Offset(d1.left + d1.width * 0.18f, d1.top), Size(d1.width * 0.12f, d1.height))
         drawRect(l.b(0.5f), d1.topLeft, Size(d1.width, 0.8f * u))
-        if (l.k > 0.06f) drawPath(bordeRefugio(cuerpo, -hacia * 1.4f * u, 0f), l.filo(0.8f))
+        if (l.k > 0.06f) drawPath(bordeRefugio(cantoP, -hacia * 1.4f * u, 0f), l.filo(0.8f))
     }
 }
