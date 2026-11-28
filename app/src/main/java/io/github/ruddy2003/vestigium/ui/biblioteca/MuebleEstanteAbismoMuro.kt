@@ -408,6 +408,8 @@ internal object MuroEstanteAbismo {
         }
         destelloAbismo(Offset(c.x - ro * 0.55f, c.y - ro * 0.62f), 1.6f * u, a, k)
         // En los Sueños oscuros, la luna manda: su luz fría sale por el ojo de buey y aclara la pared de alrededor.
+        // Al ocaso de los Sueños claros, el sol bajo que entra por él calienta la pared de alrededor.
+        if (!a.oscuro && a.noche) mancha(c, ro * 2.4f, P.OCASO.copy(alpha = 0.2f))
         if (a.oscuro && a.noche) {
             mancha(c, ro * 2.6f, P.LUNA.copy(alpha = 0.1f))
             drawArc(P.LUNA_RAS.copy(alpha = 0.7f), 120f, 120f, false, Offset(c.x - ro, c.y - ro), Size(ro * 2, ro * 2), style = Stroke(1.6f * u))
@@ -494,11 +496,11 @@ internal object MuroEstanteAbismo {
      */
     private fun DrawScope.red(a: AireAbismo, apoyo: Float, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
-        val clavo = Offset(w * 0.095f, w * 0.335f)
+        val clavo = Offset(w * 0.09f, w * 0.315f)
         val k = cerca(clavo)
         val top = clavo.y + w * 0.03f
-        val ancho = w * 0.115f
-        val bajo = apoyo - w * 0.012f
+        val ancho = w * 0.135f
+        val bajo = apoyo - w * 0.01f
         val cx = clavo.x + w * 0.005f
         val bolsa = Path().apply {
             moveTo(cx - ancho * 0.42f, top)
@@ -615,7 +617,7 @@ internal object MuroEstanteAbismo {
         val cr = Rect(cx - fw * 0.42f, crT, cx + fw * 0.42f, crB)
         if (encendido) {
             val baja = a.oscuro && a.noche
-            drawRoundRect(if (baja) Color(0xFFE8B66E) else Color(0xFFFFD98E), cr.topLeft, cr.size, CornerRadius(fw * 0.12f))
+            drawRoundRect(if (baja) Color(0xFFB9894E) else Color(0xFFFFD98E), cr.topLeft, cr.size, CornerRadius(fw * 0.12f))
             drawRect(P.LLAMA.copy(alpha = 0.6f), Offset(cr.left, cr.bottom - cr.height * 0.35f), Size(cr.width, cr.height * 0.35f))
             val lc = Offset(cx, llamaY)
             val esc = if (baja) 0.7f else 1f
@@ -642,7 +644,7 @@ internal object MuroEstanteAbismo {
         if (!a.oscuro) destelloAbismo(Offset(dep.left + dep.width * 0.25f, dep.top + dep.height * 0.35f), 1.2f * u, a, 1f)
         // La luz del farol, por encima de lo que tiene cerca.
         if (a.oscuro) {
-            val f = if (a.noche) 0.55f else 1f
+            val f = if (a.noche) 0.38f else 1f
             val l = Offset(cx, llamaY)
             mancha(l + Offset(0f, w * 0.04f), w * 0.46f, P.LLAMA.copy(alpha = 0.09f * f))
             mancha(l + Offset(0f, w * 0.02f), w * 0.2f, P.LLAMA.copy(alpha = 0.2f * f))

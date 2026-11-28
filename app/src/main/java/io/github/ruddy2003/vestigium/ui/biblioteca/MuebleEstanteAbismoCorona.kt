@@ -36,8 +36,8 @@ internal object CoronaEstanteAbismo {
         val w = size.width
         conLuz(m) { lit -> bichero(a, apoyo, cerca, m, lit) }
         conLuz(m) { lit -> aceitera(Offset(w * 0.805f, apoyo), a, cerca, m, lit) }
-        conLuz(m) { lit -> bomba(Offset(w * 0.555f, apoyo), a, apoyo, cerca, m, lit) }
-        conLuz(m) { lit -> cabo(Offset(w * 0.25f, apoyo), a, apoyo, cerca, m, lit) }
+        conLuz(m) { lit -> bomba(Offset(w * 0.56f, apoyo), a, apoyo, cerca, m, lit) }
+        conLuz(m) { lit -> cabo(Offset(w * 0.22f, apoyo), a, apoyo, cerca, m, lit) }
         conLuz(m) { lit -> caracola(Offset(w * 0.895f, apoyo), a, apoyo, cerca, m, lit) }
         barandilla(a, apoyo, cerca)
     }
@@ -63,13 +63,13 @@ internal object CoronaEstanteAbismo {
      */
     private fun DrawScope.bomba(pie: Offset, a: AireAbismo, apoyo: Float, cerca: (Offset) -> Float, m: ManchaAbismo?, lit: Float) {
         val w = size.width; val u = density
-        val bw = w * 0.31f; val bh = w * 0.175f
+        val bw = w * 0.34f; val bh = w * 0.19f
         val dx = w * 0.04f; val dy = -w * 0.03f
         val x0 = pie.x - bw / 2; val x1 = pie.x + bw / 2
         val y1 = pie.y - w * 0.018f; val y0 = y1 - bh
         val k = cerca(Offset(pie.x, y0))
         fun c(col: Color, f: Float = 0f, p: Offset = Offset(pie.x, y0)) = a.en(col, f, cerca(p), lit, m)
-        val radio = w * 0.116f
+        val radio = w * 0.128f
         val eje = Offset(x1 + dx * 0.5f, y1 - bh * 0.62f + dy * 0.5f)
         val ejeAtras = Offset(x0 + dx * 0.5f - w * 0.012f, y1 - bh * 0.62f + dy * 0.5f)
         // Su sombra en la pared y en la balda.

@@ -64,10 +64,9 @@ internal object PaletaAbismo {
     /** Las esponjas, secas y recién cogidas (las del Ideario). */
     val ESPONJA = Color(0xFFC48C4A)
     val ESPONJA_OSC = Color(0xFF6A4A2C)
-    /** La lona cruda, el hule amarillo del sombrero, el verde del cofre y el cuero oscuro de las bitácoras. */
+    /** La lona cruda, la lana azul de la manta, el verde del cofre y el cuero oscuro de las bitácoras. */
     val LONA = Color(0xFFB09C76)
-    val HULE = Color(0xFFD9A73A)
-    val HULE_OSC = Color(0xFF8E6418)
+    val LANA = Color(0xFF3E5470)
     val VERDE_COFRE = Color(0xFF3E5C50)
     val VERDE_COFRE_LUZ = Color(0xFF5E8070)
     val CUERO = Color(0xFF4A2A1C)

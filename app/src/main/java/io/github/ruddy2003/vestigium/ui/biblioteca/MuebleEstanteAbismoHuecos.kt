@@ -24,7 +24,8 @@ import kotlin.math.sin
  * Lo que acompaña en los huecos libres de las repisas de Abismo ([MuebleEstanteAbismo]): grupos de dos o tres cosas del pañol,
  * solapadas, del 70 al 90 % del alto del hueco, que cambian de un hueco a otro: el farolillo de vela en su cardán (de noche, la luz
  * de media altura), las pizarras de buceo atadas con su lápiz y la piola, el catalejo de pie con la brújula de bote en su caja, la
- * esponja de copa con el caracol y el erizo, el molinillo de café de latón con la taza. Cada cosa con su luz, su sombra en el fondo
+ * esponja de copa con el caracol y el erizo, el molinillo de café de latón con la taza, la botella de ron con el vaso de lata. Cada
+ * cosa con su luz, su sombra en el fondo
  * y su sombra en la tabla.
  */
 internal object HuecosEstanteAbismo {
@@ -43,9 +44,11 @@ internal object HuecosEstanteAbismo {
         }
         val ancho = fin - x0
         if (ancho < w * 0.08f) return
-        val grupo = Math.floorMod(k * 3 + 1, 4)
+        // Cinco grupos que se turnan de una repisa a otra; en un hueco muy ancho, dos o tres distintos.
+        val grupo = Math.floorMod(k * 2 + 1 + k / 5, 5)
         grupoEn(grupo, x0, minOf(fin, x0 + w * 0.3f), r, a, cerca)
-        if (ancho > w * 0.46f) grupoEn(Math.floorMod(grupo + 2, 4), x0 + w * 0.32f, minOf(fin, x0 + w * 0.6f), r, a, cerca)
+        if (ancho > w * 0.46f) grupoEn(Math.floorMod(grupo + 2, 5), x0 + w * 0.31f, minOf(fin, x0 + w * 0.6f), r, a, cerca)
+        if (ancho > w * 0.62f) grupoEn(Math.floorMod(grupo + 4, 5), x0 + w * 0.58f, minOf(fin, x0 + w * 0.86f), r, a, cerca)
     }
 
     private fun DrawScope.grupoEn(g: Int, x0: Float, x1: Float, r: Rect, a: AireAbismo, cerca: (Offset) -> Float) {
@@ -57,7 +60,8 @@ internal object HuecosEstanteAbismo {
             0 -> { pizarras(Offset(cx - w * 0.01f, y), h, a, cerca); piola(Offset(minOf(x1 - w * 0.03f, cx + w * 0.07f), y), h, a, cerca) }
             1 -> { catalejo(Offset(cx - w * 0.04f, y), h, a, cerca); brujula(Offset(cx + w * 0.03f, y), h, a, cerca) }
             2 -> { esponjaCopa(Offset(cx - w * 0.02f, y), h, a, cerca); caracol(Offset(cx + w * 0.07f, y), h, a, cerca) }
-            else -> { molinillo(Offset(cx - w * 0.035f, y), h, a, cerca); taza(Offset(cx + w * 0.05f, y), h, a, cerca) }
+            3 -> { molinillo(Offset(cx - w * 0.035f, y), h, a, cerca); taza(Offset(cx + w * 0.05f, y), h, a, cerca) }
+            else -> botella(Offset(cx - w * 0.02f, y), h, a, cerca)
         }
     }
 
@@ -248,32 +252,99 @@ internal object HuecosEstanteAbismo {
 
     // ---------------------------------------------------------------- la esponja de copa, el caracol
 
-    /** La esponja de copa, seca, de pie: un vaso ancho arriba y estrecho abajo, ocre, con sus poros y la boca honda. */
+    /**
+     * La esponja de copa, seca, de pie: un vaso ancho arriba y estrecho abajo, de borde abultado e irregular, ocre, con su
+     * poro fino, las bocas (los ósculos) hondas con su borde claro y la boca grande de arriba.
+     */
     private fun DrawScope.esponjaCopa(pie: Offset, h: Float, a: AireAbismo, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
         val k = cerca(Offset(pie.x, pie.y - h * 0.4f))
         val alto = h * 0.74f; val an = w * 0.13f
         sombras(pie, an, alto, a, k)
+        // El contorno: el perfil de la copa con bultos irregulares a los dos lados.
+        val n = 14
+        fun ancho(t: Float) = an * (0.2f + 0.32f * t * t * (3f - 2f * t))
         val forma = Path().apply {
             moveTo(pie.x - an * 0.2f, pie.y)
-            cubicTo(pie.x - an * 0.3f, pie.y - alto * 0.4f, pie.x - an * 0.62f, pie.y - alto * 0.75f, pie.x - an * 0.5f, pie.y - alto)
-            cubicTo(pie.x - an * 0.2f, pie.y - alto * 1.04f, pie.x + an * 0.25f, pie.y - alto * 1.02f, pie.x + an * 0.52f, pie.y - alto * 0.96f)
-            cubicTo(pie.x + an * 0.6f, pie.y - alto * 0.7f, pie.x + an * 0.3f, pie.y - alto * 0.4f, pie.x + an * 0.22f, pie.y)
+            for (i in 1..n) {
+                val t = i / n.toFloat()
+                val b = 1f + 0.12f * (azar(8413, i) - 0.5f) * 2f
+                val y = pie.y - alto * t
+                val ym = pie.y - alto * (t - 0.5f / n)
+                quadraticTo(pie.x - ancho(t - 0.5f / n) * b * 1.12f, ym, pie.x - ancho(t) * b, y)
+            }
+            // La boca de arriba, abultada.
+            cubicTo(pie.x - an * 0.3f, pie.y - alto * 1.05f, pie.x + an * 0.25f, pie.y - alto * 1.04f, pie.x + ancho(1f), pie.y - alto * 0.98f)
+            for (i in n - 1 downTo 0) {
+                val t = i / n.toFloat()
+                val b = 1f + 0.12f * (azar(8414, i) - 0.5f) * 2f
+                val y = pie.y - alto * t
+                val ym = pie.y - alto * (t + 0.5f / n)
+                quadraticTo(pie.x + ancho(t + 0.5f / n) * b * 1.12f, ym, pie.x + ancho(t) * b, y)
+            }
             close()
         }
-        drawPath(forma, a.dia(P.ESPONJA, 0f, k))
+        val col = mezcla(P.ESPONJA, P.ESPARTO, 0.3f)
+        drawPath(forma, a.dia(col, 0f, k))
         clipPath(forma) {
             val sx = lado(a, pie, w)
-            drawRect(a.sombra(0.3f), Offset(if (sx > 0) pie.x + an * 0.1f else pie.x - an * 0.7f, pie.y - alto), Size(an * 0.6f, alto))
-            drawRect(a.brillo(0.22f, k), Offset(if (sx > 0) pie.x - an * 0.55f else pie.x + an * 0.2f, pie.y - alto), Size(an * 0.25f, alto))
-            for (j in 0 until 40) {
+            drawRect(a.sombra(0.3f), Offset(if (sx > 0) pie.x + an * 0.12f else pie.x - an * 0.7f, pie.y - alto * 1.1f), Size(an * 0.6f, alto * 1.1f))
+            drawRect(a.brillo(0.25f, k), Offset(if (sx > 0) pie.x - an * 0.5f else pie.x + an * 0.22f, pie.y - alto * 1.1f), Size(an * 0.24f, alto * 1.1f))
+            // El poro fino.
+            for (j in 0 until 46) {
                 val p = Offset(pie.x + an * (azar(8410, j) - 0.5f) * 1.1f, pie.y - alto * azar(8411, j))
-                drawCircle(a.dia(mezcla(P.ESPONJA, P.TINTA, 0.45f), 0f, k).copy(alpha = 0.5f), (0.6f + 0.8f * azar(8412, j)) * u, p)
+                drawCircle(a.dia(mezcla(col, P.TINTA, 0.5f), 0f, k).copy(alpha = 0.55f), (0.6f + 0.9f * azar(8412, j)) * u, p)
+            }
+            // Las bocas: hondas, con su borde claro arriba.
+            for (j in 0 until 6) {
+                val t = 0.18f + 0.68f * azar(8415, j)
+                val p = Offset(pie.x + ancho(t) * (azar(8416, j) - 0.5f) * 1.3f, pie.y - alto * t)
+                val rr = an * (0.06f + 0.05f * azar(8417, j))
+                drawOval(a.dia(P.ESPONJA_OSC, -0.3f, k), Offset(p.x - rr, p.y - rr * 0.75f), Size(rr * 2, rr * 1.5f))
+                drawArc(a.brillo(0.45f, k), 200f, 140f, false, Offset(p.x - rr * 1.1f, p.y - rr * 0.9f), Size(rr * 2.2f, rr * 1.7f), style = Stroke(1f * u))
             }
         }
-        // La boca honda arriba.
-        drawOval(a.dia(P.ESPONJA_OSC, -0.2f, k), Offset(pie.x - an * 0.4f, pie.y - alto * 1.0f), Size(an * 0.85f, alto * 0.09f))
-        drawArc(a.brillo(0.4f, k), 180f, 180f, false, Offset(pie.x - an * 0.46f, pie.y - alto * 1.02f), Size(an * 0.96f, alto * 0.11f), style = Stroke(1.2f * u))
+        // La boca grande de arriba.
+        drawOval(a.dia(P.ESPONJA_OSC, -0.25f, k), Offset(pie.x - an * 0.38f, pie.y - alto * 1.02f), Size(an * 0.8f, alto * 0.08f))
+        drawArc(a.brillo(0.4f, k), 180f, 180f, false, Offset(pie.x - an * 0.45f, pie.y - alto * 1.04f), Size(an * 0.94f, alto * 0.1f), style = Stroke(1.2f * u))
+    }
+
+    /** La botella de ron de vidrio oscuro con su corcho y el vaso de lata abollado delante. */
+    private fun DrawScope.botella(pie: Offset, h: Float, a: AireAbismo, cerca: (Offset) -> Float) {
+        val w = size.width; val u = density
+        val k = cerca(Offset(pie.x, pie.y - h * 0.35f))
+        val hacia = lado(a, pie, w)
+        val alto = h * 0.72f; val an = w * 0.062f
+        sombras(pie, an, alto, a, k)
+        val cuerpo = Path().apply {
+            moveTo(pie.x - an / 2, pie.y)
+            lineTo(pie.x - an / 2, pie.y - alto * 0.58f)
+            cubicTo(pie.x - an / 2, pie.y - alto * 0.7f, pie.x - an * 0.16f, pie.y - alto * 0.72f, pie.x - an * 0.16f, pie.y - alto * 0.8f)
+            lineTo(pie.x - an * 0.16f, pie.y - alto * 0.96f)
+            lineTo(pie.x + an * 0.16f, pie.y - alto * 0.96f)
+            lineTo(pie.x + an * 0.16f, pie.y - alto * 0.8f)
+            cubicTo(pie.x + an * 0.16f, pie.y - alto * 0.72f, pie.x + an / 2, pie.y - alto * 0.7f, pie.x + an / 2, pie.y - alto * 0.58f)
+            lineTo(pie.x + an / 2, pie.y)
+            close()
+        }
+        drawPath(cuerpo, a.dia(Color(0xFF2E3A24), 0f, k))
+        clipPath(cuerpo) {
+            // Lo que queda de ron, ámbar, y el reflejo del vidrio.
+            drawRect(a.dia(Color(0xFF6A3A14), 0f, k), Offset(pie.x - an / 2, pie.y - alto * 0.3f), Size(an, alto * 0.3f))
+            cilindroAbismo(Rect(pie.x - an / 2, pie.y - alto, pie.x + an / 2, pie.y), a, k, -hacia, 1.4f)
+            drawRect(if (a.oscuro) P.LLAMA.copy(alpha = (0.7f * k).coerceAtMost(0.7f)) else luzMueble(0.75f), Offset(pie.x + hacia * an * 0.22f - 0.8f * u, pie.y - alto * 0.62f), Size(1.6f * u, alto * 0.5f))
+        }
+        drawRect(a.dia(P.CORCHO, 0f, k), Offset(pie.x - an * 0.13f, pie.y - alto * 1.02f), Size(an * 0.26f, alto * 0.08f))
+        // El vaso de lata, delante a la derecha.
+        val vx = pie.x + an * 0.9f
+        val vr = Rect(vx - w * 0.022f, pie.y - h * 0.17f, vx + w * 0.022f, pie.y)
+        contactoAbismo(Offset(vx + w * 0.004f, pie.y - 1f), vr.width * 1.4f, w * 0.012f, a, 0.4f)
+        drawRect(a.dia(P.HOJALATA, -0.05f, k), vr.topLeft, vr.size)
+        clipRect(vr.left, vr.top, vr.right, vr.bottom) { cilindroAbismo(vr, a, k, -hacia, 1.3f) }
+        drawOval(a.dia(P.HOJALATA, 0.15f, k), Offset(vr.left, vr.top - w * 0.005f), Size(vr.width, w * 0.01f))
+        drawOval(a.sombra(0.5f), Offset(vr.left + w * 0.004f, vr.top - w * 0.003f), Size(vr.width - w * 0.008f, w * 0.006f))
+        drawArc(a.dia(P.HOJALATA, 0f, k), -80f, 160f, false, Offset(vr.right - w * 0.008f, vr.top + vr.height * 0.2f), Size(w * 0.022f, vr.height * 0.5f), style = Stroke(1.6f * u))
+        drawLine(a.sombra(0.35f), Offset(vr.left + vr.width * 0.3f, vr.top + vr.height * 0.5f), Offset(vr.left + vr.width * 0.45f, vr.top + vr.height * 0.62f), 1f * u)
     }
 
     /** El caracol (un bígaro grande del fondo), tendido: la espira, las vueltas y la boca nacarada. */
@@ -315,8 +386,9 @@ internal object HuecosEstanteAbismo {
             drawRect(a.dia(P.LATON_OSC, 0f, k), Offset(r.left - w * 0.002f, r.top + alto * f), Size(r.width + w * 0.004f, w * 0.006f))
             drawRect(a.brillo(0.5f, k), Offset(r.left - w * 0.002f, r.top + alto * f), Size(r.width + w * 0.004f, 0.8f * u))
         }
-        // El repujado: una banda de óvalos (sin letras ni signos).
-        for (j in 0 until 3) drawOval(a.dia(P.LATON_OSC, 0f, k).copy(alpha = 0.6f), Offset(r.left + r.width * (0.1f + 0.28f * j), r.top + alto * 0.38f), Size(r.width * 0.22f, alto * 0.1f), style = Stroke(0.8f * u))
+        // El repujado: una banda de puntos (sin letras, cifras ni signos).
+        for (j in 0 until 5) drawCircle(a.dia(P.LATON_OSC, 0f, k).copy(alpha = 0.7f), 1.1f * u, Offset(r.left + r.width * (0.12f + 0.19f * j), r.top + alto * 0.42f))
+        for (j in 0 until 4) drawCircle(a.dia(P.LATON_OSC, 0f, k).copy(alpha = 0.7f), 1.1f * u, Offset(r.left + r.width * (0.21f + 0.19f * j), r.top + alto * 0.47f))
         // La tapa con la manivela plegada.
         drawOval(a.dia(P.LATON, 0.1f, k), Offset(r.left, r.top - w * 0.008f), Size(r.width, w * 0.016f))
         drawLine(a.dia(P.HIERRO, 0f, k), Offset(pie.x, r.top - w * 0.006f), Offset(pie.x + an * 0.9f, r.top - w * 0.028f), 2f * u, StrokeCap.Round)

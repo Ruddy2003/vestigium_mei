@@ -155,14 +155,19 @@ internal object VolumenEstanteAbismo {
     private fun DrawScope.etiquetaDia(v: Volumen, medidor: TextMeasurer, et: Rect, l: Luz, giro: Float = 0f) {
         val u = density
         val a = l.a
+        // De noche, lejos de toda luz, el papel se hunde y el día se lee en claro; cerca de la llama, ámbar con la tinta oscura.
+        val hundida = a.oscuro && l.k + l.luna * 0.6f < 0.3f
+        val fondo = if (hundida) mezcla(Color(0xFF263230), Color(0xFF3E4038), ((l.k + l.luna * 0.6f) / 0.3f).coerceIn(0f, 1f)) else l.etiqueta(P.ETIQUETA)
+        val borde = if (hundida) Color(0xFF1A2224) else l.etiqueta(P.ETIQUETA_OSC)
+        val letra = if (hundida) Color(0xFFD6CCB0) else tinta(a, l.k)
         rotate(giro, et.center) {
             drawRect(a.sombra(0.4f), Offset(et.left + 1f * u, et.top + 1.3f * u), et.size)
-            drawRect(l.etiqueta(P.ETIQUETA), et.topLeft, et.size)
-            drawRect(l.etiqueta(P.ETIQUETA_OSC).copy(alpha = 0.45f), Offset(et.left, et.bottom - et.height * 0.12f), Size(et.width, et.height * 0.12f))
-            drawRect(l.etiqueta(P.ETIQUETA_OSC).copy(alpha = 0.3f), Offset(et.right - et.width * 0.1f, et.top), Size(et.width * 0.1f, et.height))
+            drawRect(fondo, et.topLeft, et.size)
+            drawRect(borde.copy(alpha = 0.45f), Offset(et.left, et.bottom - et.height * 0.12f), Size(et.width, et.height * 0.12f))
+            drawRect(borde.copy(alpha = 0.3f), Offset(et.right - et.width * 0.1f, et.top), Size(et.width * 0.1f, et.height))
             val d = Rect(et.left + 1.5f * u, et.top + 1.5f * u, et.right - 1.5f * u, et.bottom - 1.5f * u)
-            drawRect(a.luz(P.TINTA, maxOf(l.k, 0.5f)).copy(alpha = if (a.oscuro) 0.5f else 0.55f), d.topLeft, d.size, style = Stroke(0.6f * u))
-            diaYMes(v, medidor, Rect(et.left + 1.8f * u, et.top + 1.8f * u, et.right - 1.8f * u, et.bottom - 1.8f * u), tinta(a, l.k))
+            drawRect((if (hundida) letra else a.luz(P.TINTA, maxOf(l.k, 0.5f))).copy(alpha = if (hundida) 0.3f else if (a.oscuro) 0.5f else 0.55f), d.topLeft, d.size, style = Stroke(0.6f * u))
+            diaYMes(v, medidor, Rect(et.left + 1.8f * u, et.top + 1.8f * u, et.right - 1.8f * u, et.bottom - 1.8f * u), letra)
         }
     }
 
@@ -229,12 +234,23 @@ internal object VolumenEstanteAbismo {
         val et0 = lomo.top + cab + 4f * u + (lomo.height - cab * 2 - etH - 14f * u) * (0.05f + 0.25f * azar(s, 7))
         val et = Rect(lomo.left + 2f * u, et0, lomo.right - 2f * u, et0 + etH)
         etiquetaDia(v, medidor, et, l)
-        // Debajo, el cerco blanco de la sal (o, en los Sueños, la luna).
+        // Debajo, la marca de la sal donde se mojó: una línea de agua quebrada de lado a lado y el tinte algo comido por debajo (o,
+        // en los Sueños, la luna).
         val y1 = lomo.bottom - cab * 0.85f
         if (v.noche) luna(Offset(lomo.center.x, (et.bottom + y1) / 2), minOf(lomo.width * 0.28f, (y1 - et.bottom) * 0.3f, 7.5f * u), a)
         else if (azar(s, 8) > 0.35f) {
-            val sc = Offset(lomo.left + lomo.width * (0.3f + 0.4f * azar(s, 9)), et.bottom + (y1 - et.bottom) * (0.5f + 0.25f * azar(s, 10)))
-            drawArc(l.c(Color(0xFFF2EEE2)).copy(alpha = 0.55f), 200f, 220f, false, Offset(sc.x - lomo.width * 0.35f, sc.y - w * 0.15f), Size(lomo.width * 0.7f, w * 0.3f), style = Stroke(1.1f * u))
+            val ys = et.bottom + (y1 - et.bottom) * (0.55f + 0.25f * azar(s, 10))
+            val sal = Path().apply {
+                moveTo(lomo.left, ys)
+                var x = lomo.left; var j = 0
+                while (x < lomo.right && j < 12) {
+                    val paso = lomo.width * (0.14f + 0.08f * azar(s, 80 + j))
+                    lineTo(minOf(lomo.right, x + paso), ys + (azar(s, 90 + j) - 0.5f) * 3.2f * u)
+                    x += paso; j++
+                }
+            }
+            clipRect(lomo.left, ys, lomo.right, y1) { drawRect(l.c(Color(0xFFF2EEE2)).copy(alpha = 0.12f), Offset(lomo.left, ys), Size(lomo.width, y1 - ys)) }
+            drawPath(sal, l.c(Color(0xFFF2EEE2)).copy(alpha = 0.6f), style = Stroke(1f * u))
         }
         // El registro de piola que cuelga por el pie en algunas, y el roce de la tela en la cabeza.
         if (azar(s, 70) > 0.45f) {

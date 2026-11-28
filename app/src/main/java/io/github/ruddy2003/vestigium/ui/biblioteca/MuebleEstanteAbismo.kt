@@ -88,7 +88,7 @@ internal object MuebleEstanteAbismo {
     // ---------------------------------------------------------------- la luz
 
     /** Dónde arde el farol colgado del bao, en anchos del mueble desde la esquina de arriba a la izquierda. */
-    const val FAROL_X = 0.815f
+    const val FAROL_X = 0.84f
     const val FAROL_Y = 0.255f
     /** Dónde está el anafe: a lo ancho, y a lo alto en fracción del pie (desde su borde de arriba). */
     const val LUMBRE_X = 0.56f
@@ -106,11 +106,11 @@ internal object MuebleEstanteAbismo {
 
     /** El farol: cuánta luz llega (de 1 a 0) a un punto a [dx] y [dy] de la llama, en anchos del mueble. */
     fun farol(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.85f else 1.65f) * exp(-3.2f * sqrt(dx * dx * 1.1f + dy * dy * (if (dy > 0f) 0.5f else 0.9f)))).coerceIn(0f, 1f)
+        ((if (suenos) 0.62f else 1.65f) * exp(-3.2f * sqrt(dx * dx * 1.1f + dy * dy * (if (dy > 0f) 0.62f else 0.9f)))).coerceIn(0f, 1f)
 
     /** El farol en la pared y en lo de arriba: más corto que en el cuerpo, para que lo lejano se hunda. */
     fun farolArriba(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.8f else 1.5f) * exp(-3.5f * sqrt(dx * dx + dy * dy * 1.1f))).coerceIn(0.02f, 1f)
+        ((if (suenos) 0.62f else 1.5f) * exp(-3.5f * sqrt(dx * dx + dy * dy * 1.1f))).coerceIn(0.02f, 1f)
 
     /**
      * Las brasas del anafe, al pie: bajas y anaranjadas, salen por la boca del anafe hacia delante y hacia arriba; lo que queda muy
@@ -119,7 +119,7 @@ internal object MuebleEstanteAbismo {
     fun lumbre(dx: Float, dy: Float, suenos: Boolean): Float {
         val arriba = (-dy / 0.12f).coerceIn(0f, 1f)
         val tapa = 1f - 0.5f * arriba * arriba * (3f - 2f * arriba)
-        return ((if (suenos) 0.8f else 1.5f) * exp(-3.1f * sqrt(dx * dx * 1.2f + dy * dy)) * tapa).coerceIn(0f, 1f)
+        return ((if (suenos) 0.65f else 1.5f) * exp(-3.1f * sqrt(dx * dx * 1.2f + dy * dy)) * tapa).coerceIn(0f, 1f)
     }
 
     /** El farolillo de un hueco: para sus vecinos, el fondo, el costado de al lado y el canto de las tablas de arriba y de abajo. */
@@ -137,7 +137,7 @@ internal object MuebleEstanteAbismo {
     fun calor(x: Float, y: Float, yLumbre: Float, suenos: Boolean, candiles: FloatArray): Float {
         val kf = farol(x - FAROL_X, y - FAROL_Y, suenos)
         val kl = lumbre(x - LUMBRE_X, y - yLumbre, suenos)
-        val kc = candilMayor(x, y, candiles)
+        val kc = candilMayor(x, y, candiles) * (if (suenos) 0.65f else 1f)
         return (1f - (1f - kf) * (1f - kl) * (1f - kc)).coerceIn(0.03f, 1f)
     }
 
@@ -186,7 +186,7 @@ internal object MuebleEstanteAbismo {
         LucesHuecoAbismo.poner(LucesHuecoAbismo.clave(d.repisas.size, oscuro, noche), centros)
         val cerca: (Offset) -> Float = { p ->
             if (!a.lumbre) 1f
-            else if (p.y < ch) farolArriba(p.x / w - FAROL_X, p.y / w - FAROL_Y, noche)
+            else if (p.y < apoyo - w * 0.03f) farolArriba(p.x / w - FAROL_X, p.y / w - FAROL_Y, noche)
             else calor(p.x / w, p.y / w, yL, noche, candiles)
         }
         val m = manchaAbismo(a)
@@ -204,7 +204,10 @@ internal object MuebleEstanteAbismo {
                 granoMueble(Rect(0f, 0f, w, ch + 2f), oscuro)
             }
         }
-        // El cuerpo: los casilleros, las tablas y los costados.
+        // El cuerpo: los casilleros, las tablas y los costados, sobre un fondo opaco de teca de píxel entero, para que las juntas a
+        // medio píxel entre casillero, tabla y costado no dejen asomar lo de detrás.
+        val c0 = ceil(ch); val c1 = ceil(b.top)
+        if (c1 > c0) drawRect(ac.luz(PaletaAbismo.TECA_OSC, if (a.lumbre) 0.3f else 1f), Offset(0f, c0), Size(ceil(w), c1 - c0))
         with(ObraEstanteAbismo) {
             d.repisas.forEachIndexed { k, r -> casillero(k, r, ac, cerca) }
         }

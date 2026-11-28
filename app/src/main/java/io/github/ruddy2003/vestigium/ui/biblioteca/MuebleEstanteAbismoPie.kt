@@ -25,7 +25,7 @@ import kotlin.math.sin
 /**
  * El pie del estante de Abismo ([MuebleEstanteAbismo]): la cubierta calafateada del Ideario (tablas que corren de lado a lado, más
  * anchas cuanto más cerca, el calafate negro, las testas con sus tapones y la sal en las juntas) y, encima, el cofre de marinero
- * pintado de verde con sus asas de cabo, sus flejes y el chubasquero de hule amarillo doblado encima, cortado por la izquierda; el anafe de barro con
+ * pintado de verde con sus asas de cabo, sus flejes y la manta de lana doblada encima, cortado por la izquierda; el anafe de barro con
  * las brasas y el cazo de café de cobre (de noche, la luz del pie); y la garrafa forrada de mimbre, cortada por la derecha.
  */
 internal object PieEstanteAbismo {
@@ -82,7 +82,7 @@ internal object PieEstanteAbismo {
 
     /**
      * El cofre de marinero pintado de verde de barco, con la tapa algo más ancha, los flejes de hierro, el cierre de latón, la asa
-     * de cabo trenzado del costado y, encima, el chubasquero de hule amarillo doblado, con una manga que cae por el frente.
+     * de cabo trenzado del costado y, encima, la manta de lana azul de a bordo doblada, con sus listas rojas y una punta que cae.
      */
     private fun DrawScope.cofre(pie: Offset, a: AireAbismo, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
@@ -124,38 +124,29 @@ internal object PieEstanteAbismo {
         drawArc(c(P.MANILA, 0f, as0), 260f, 200f, false, Offset(as0.x - w * 0.012f, as0.y - w * 0.015f), Size(w * 0.03f, w * 0.05f), style = Stroke(2.4f * u))
         drawArc(c(P.MANILA_OSC, 0f, as0), 260f, 200f, false, Offset(as0.x - w * 0.012f, as0.y - w * 0.015f), Size(w * 0.03f, w * 0.05f), style = Stroke(0.8f * u))
         if (a.lumbre) drawRect(a.filo(0.7f * k), Offset(x1 + dx - 1.5f * u, y0 + dy), Size(1.5f * u, alto))
-        // El chubasquero de hule amarillo, doblado en tres capas sobre la tapa, con el cuello de pana y una manga que cae por el frente.
+        // La manta de lana azul de a bordo, doblada en tres sobre la tapa, con sus dos listas rojas y una punta que cae por delante.
         val ks = cerca(Offset(w * 0.14f, y0))
         val top = y0 + dy * 0.45f
-        val capas = listOf(Triple(0.015f, 0.255f, 0f), Triple(0.03f, 0.24f, 0.02f), Triple(0.05f, 0.225f, 0.039f))
+        val lana = P.LANA
+        val capas = listOf(Triple(0.004f, 0.25f, 0f), Triple(0.012f, 0.244f, 0.019f), Triple(0.02f, 0.236f, 0.037f))
         capas.forEachIndexed { j, (x0f, x1f, sube) ->
-            val ya = top - w * sube; val ga = w * 0.022f
-            val capa = Rect(w * x0f, ya - ga, w * x1f, ya + w * 0.002f)
-            drawRoundRect(a.sombra(0.35f), Offset(capa.left + w * 0.006f, capa.top + w * 0.004f), capa.size, CornerRadius(ga * 0.5f))
-            drawRoundRect(a.dia(P.HULE, if (j == 2) 0.05f else 0f, ks), capa.topLeft, capa.size, CornerRadius(ga * 0.5f))
-            // El doblez de delante: redondo, con su brillo arriba y su hondo abajo.
-            drawRect(a.dia(P.HULE_OSC, 0f, ks), Offset(capa.left + ga * 0.3f, capa.bottom - ga * 0.32f), Size(capa.width - ga * 0.6f, ga * 0.32f))
-            drawRect(a.brillo(0.55f, ks), Offset(capa.left + ga * 0.4f, capa.top + ga * 0.2f), Size(capa.width * 0.7f, 1.3f * u))
-            drawLine(a.dia(P.HULE_OSC, 0f, ks), Offset(capa.left + capa.width * (0.3f + 0.2f * j), capa.top + ga * 0.3f), Offset(capa.left + capa.width * (0.36f + 0.2f * j), capa.bottom - ga * 0.3f), 1f * u)
+            val ga = w * 0.02f
+            val yb = top - w * sube
+            val capa = Rect(w * x0f, yb - ga, w * x1f, yb + w * 0.003f)
+            drawRoundRect(a.sombra(0.4f), Offset(capa.left + w * 0.006f, capa.top + w * 0.004f), capa.size, CornerRadius(ga * 0.45f))
+            drawRoundRect(a.dia(lana, if (j == 2) 0.06f else 0f, ks), capa.topLeft, capa.size, CornerRadius(ga * 0.45f))
+            // El doblez de delante: su luz arriba y su hondo abajo; las listas rojas, alineadas; el pelo de la lana.
+            drawRect(a.dia(lana, -0.35f, ks), Offset(capa.left + ga * 0.3f, capa.bottom - ga * 0.34f), Size(capa.width - ga * 0.6f, ga * 0.34f))
+            drawRect(a.brillo(0.25f, ks), Offset(capa.left + ga * 0.4f, capa.top + ga * 0.18f), Size(capa.width - ga * 0.8f, 1.2f * u))
+            listOf(0.14f, 0.175f).forEach { fx -> drawRect(a.dia(P.ROJO_TRAPO, 0f, ks), Offset(w * fx, capa.top + 0.5f * u), Size(w * 0.012f, capa.height - 1f * u)) }
+            drawRect(a.sombra(0.25f), Offset(w * 0.14f, capa.bottom - ga * 0.34f), Size(w * 0.047f, ga * 0.34f))
         }
-        // El cuello de pana, en la capa de arriba.
-        drawRoundRect(a.dia(P.CUERO, 0.1f, ks), Offset(w * 0.19f, top - w * 0.06f), Size(w * 0.035f, w * 0.022f), CornerRadius(w * 0.008f))
-        for (j in 0 until 4) drawLine(a.sombra(0.4f), Offset(w * (0.194f + 0.008f * j), top - w * 0.058f), Offset(w * (0.194f + 0.008f * j), top - w * 0.04f), 0.7f * u)
-        // La manga que cae por el frente del cofre, blanda, con su puño.
-        val manga = Path().apply {
-            moveTo(w * 0.03f, top - w * 0.004f)
-            cubicTo(w * 0.026f, top + w * 0.03f, w * 0.04f, top + w * 0.055f, w * 0.05f, top + w * 0.085f)
-            lineTo(w * 0.082f, top + w * 0.08f)
-            cubicTo(w * 0.078f, top + w * 0.05f, w * 0.07f, top + w * 0.025f, w * 0.075f, top - w * 0.004f)
-            close()
-        }
-        drawPath(corridoAbismo(manga, w * 0.008f, w * 0.004f), a.sombra(0.3f))
-        drawPath(manga, a.dia(P.HULE, -0.04f, ks))
-        clipPath(manga) {
-            drawRect(a.dia(P.HULE_OSC, 0f, ks), Offset(w * 0.062f, top - w * 0.01f), Size(w * 0.03f, w * 0.1f))
-            drawRect(a.brillo(0.5f, ks), Offset(w * 0.038f, top + w * 0.01f), Size(1.4f * u, w * 0.06f))
-        }
-        drawPath(poligonoAbismo(w * 0.048f, top + w * 0.078f, w * 0.083f, top + w * 0.073f, w * 0.085f, top + w * 0.088f, w * 0.05f, top + w * 0.094f), a.dia(P.HULE_OSC, -0.1f, ks))
+        // La punta que cae por delante del cofre, con su fleco.
+        val punta = poligonoAbismo(w * 0.035f, top, w * 0.105f, top, w * 0.09f, top + w * 0.05f, w * 0.06f, top + w * 0.062f, w * 0.042f, top + w * 0.035f)
+        drawPath(corridoAbismo(punta, w * 0.007f, w * 0.004f), a.sombra(0.35f))
+        drawPath(punta, a.dia(lana, -0.1f, ks))
+        clipPath(punta) { drawRect(a.dia(lana, -0.35f, ks), Offset(w * 0.075f, top), Size(w * 0.04f, w * 0.07f)) }
+        for (j in 0 until 5) drawLine(a.dia(lana, 0.05f, ks), Offset(w * (0.063f + 0.005f * j), top + w * (0.059f - 0.004f * j)), Offset(w * (0.063f + 0.005f * j), top + w * (0.068f - 0.004f * j)), 0.8f * u)
     }
 
     /**
