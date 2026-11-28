@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.TextMeasurer
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaRefugio as P
@@ -165,7 +166,8 @@ private fun DrawScope.carpetaRefugio(v: Volumen, tono: Color?, medidor: TextMeas
         }
         planosRefugio(cuerpo, vinilo, l, hacia, 0.16f, 0.26f)
         val fuelle = (2.2f + 3.8f * v.lleno) * u
-        clipPath(cuerpo) {
+        // Recorte de rectángulo (la esquina de la carpeta es de 1.4 dp: no se nota y pinta más ligero que un camino).
+        clipRect(x0, top, x0 + an, h - 0.5f * u) {
             // El fuelle del lado de la sombra: el vinilo doblado, más hondo, con su pliegue.
             val fx = if (hacia < 0f) x0 + an - fuelle else x0
             drawRect(mezcla(vinilo, l.a.hondo, if (l.a.oscuro) 0.4f else 0.32f), Offset(fx, top), Size(fuelle, h))
