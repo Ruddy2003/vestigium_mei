@@ -101,7 +101,7 @@ internal class AireOrden(val oscuro: Boolean, val noche: Boolean) {
     val vigilia: Boolean get() = noche && !oscuro
 
     /** La sombra de la vigilia: la del día con un punto de violeta (solo en lo que no da la luz, sin teñir la pared). */
-    private val SOMBRA_TIBIA = mezcla(p.SOMBRA, p.SOMBRA_VIGILIA, 0.45f)
+    private val SOMBRA_TIBIA = mezcla(p.SOMBRA, p.SOMBRA_VIGILIA, 0.3f)
 
     /** El hondo de un color de noche: el del Ideario (multiplicado por el aire azul de la sala, no hacia un gris). */
     private fun hondo(c: Color) = Color((c.red * 0.2f + 0.04f).coerceIn(0f, 1f), (c.green * 0.23f + 0.055f).coerceIn(0f, 1f), (c.blue * 0.3f + 0.085f).coerceIn(0f, 1f), c.alpha)
@@ -121,7 +121,7 @@ internal class AireOrden(val oscuro: Boolean, val noche: Boolean) {
     /** En la vigilia: un punto más bajo, tibio donde llega la vela y con un poco de violeta lejos. */
     private fun enVigilia(c: Color, k: Float): Color {
         val q = k.coerceIn(0f, 1f)
-        val bajo = Color(c.red * 0.9f, c.green * 0.88f, c.blue * 0.9f, c.alpha)
+        val bajo = Color(c.red * 0.9f, c.green * 0.9f, c.blue * 0.91f, c.alpha)
         val tibio = Color((c.red * 1.05f + 0.02f).coerceAtMost(1f), c.green * 0.94f, c.blue * 0.8f, c.alpha)
         return mezcla(bajo, tibio, q)
     }
@@ -199,7 +199,7 @@ internal class AireOrden(val oscuro: Boolean, val noche: Boolean) {
         val q = k.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) enVigilia(p.LATON_PLACA, q) else p.LATON_PLACA
         val b = mezcla(p.PLACA_NOCHE, p.PLACA_VELA, (q * 1.3f).coerceAtMost(1f))
-        val lejos = mezcla(b, Color(0xFF4E4838), 0.5f * (1f - q))
+        val lejos = mezcla(b, Color(0xFF4E4838), 0.6f * (1f - q))
         return if (frio > 0.05f) mezcla(lejos, Color(0xFF7E8A98), (0.5f * frio).coerceAtMost(0.4f) * (1f - q)) else lejos
     }
 

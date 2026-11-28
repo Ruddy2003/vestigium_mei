@@ -169,6 +169,26 @@ internal object MuebleEstanteOrden {
         return xs
     }
 
+    /**
+     * En qué repisa va el piloto rojo del pilar de la izquierda: en la más lejos de todas las luces (el candelero arriba, el farol
+     * abajo y las velas de los huecos, [velas] por repisa, -1 si no lleva), para que su rojo rompa el tramo más hondo; a igual
+     * distancia, la de más abajo. Sin [velas], la penúltima de un estante alto.
+     */
+    fun repisaPiloto(repisas: Int, velas: FloatArray? = null): Int {
+        if (repisas < 3) return minOf(1, repisas - 1).coerceAtLeast(0)
+        if (velas == null) return if (repisas >= 4) repisas - 2 else 1
+        var mejor = 1; var lejos = -1
+        for (k in 1 until repisas - 1) {
+            var d = minOf(k, repisas - 1 - k)
+            for (j in velas.indices) if (velas[j] >= 0f) d = minOf(d, kotlin.math.abs(k - j))
+            if (d >= lejos) { lejos = d; mejor = k }
+        }
+        return mejor
+    }
+
+    /** Cuánto rojo del piloto llega a un punto a [dx] y [dy] de él, en anchos: corto. */
+    fun piloto(dx: Float, dy: Float): Float = (1.1f * exp(-6.5f * sqrt(dx * dx + dy * dy * 1.3f))).coerceIn(0f, 1f)
+
     // ---------------------------------------------------------------- el estante
 
     fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
@@ -191,7 +211,7 @@ internal object MuebleEstanteOrden {
             velL.add(x / w); velL.add((r.bottom - r.height * VELA_HUECO_Y) / w)
         }
         val velas = if (a.lumbre) velL.toFloatArray() else FloatArray(0)
-        LucesOrden.poner(LucesOrden.clave(d.repisas.size, oscuro, noche), centros, w / density)
+        LucesOrden.poner(LucesOrden.clave(d.repisas.size, oscuro, noche), centros, w / density, repisaPiloto(d.repisas.size, xs))
         val cerca: (Offset) -> Float = { p ->
             if (!a.lumbre) 0f
             else if (p.y < apoyo) velaArriba(p.x / w - VELA_X, p.y / w - VELA_Y) * (if (a.dormida) 0.5f else 1f)
@@ -261,6 +281,10 @@ internal object MuebleEstanteOrden {
         val sol = if (!a.oscuro) luminaria(fx, fy) else 0f
         val material = materialOrden(v.tono, oscuro)
         with(VolumenEstanteOrden) {
+            // El rojo del piloto del pilar, si está cerca: su filo en el canto que lo mira (de noche; en los Sueños, más bajo).
+            val pr = LucesOrden.piloto(v.repisas, oscuro, v.noche)
+            val py = CORONA + (pr + 0.42f * ALTO_REPISA.value / FILA) * FILA / anchoDp
+            rojo = if (a.oscuro) piloto(fx - LADO * 0.55f, fy - py) * (if (a.dormida) 0.6f else 1f) else 0f
             when (clase(v.semilla)) {
                 0 -> {
                     // Alguno, recostado contra el vecino de la izquierda.
@@ -293,7 +317,13 @@ internal object LucesOrden {
 
     fun clave(repisas: Int, oscuro: Boolean, noche: Boolean) = "$repisas:$oscuro:$noche"
 
-    fun poner(clave: String, c: FloatArray, anchoDp: Float) { centros = c; ancho = anchoDp.coerceAtLeast(100f); this.clave = clave }
+    @Volatile private var piloto = -1
+
+    fun poner(clave: String, c: FloatArray, anchoDp: Float, repisaPiloto: Int) { centros = c; ancho = anchoDp.coerceAtLeast(100f); piloto = repisaPiloto; this.clave = clave }
+
+    /** En qué repisa está el piloto rojo, si se apuntó para este estante; si no, la que diría el estante sin velas. */
+    fun piloto(repisas: Int, oscuro: Boolean, noche: Boolean): Int =
+        if (clave == clave(repisas, oscuro, noche) && piloto >= 0) piloto else MuebleEstanteOrden.repisaPiloto(repisas)
 
     /** El ancho del estante en dp, si se apuntó para este estante; si no, el de un teléfono. */
     fun anchoDp(repisas: Int, oscuro: Boolean, noche: Boolean): Float =

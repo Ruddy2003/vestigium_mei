@@ -55,7 +55,8 @@ internal object PieEstanteOrden {
         val w = size.width; val h = r.bottom
         // La junta con la última tabla: una franja opaca del color del zócalo desde el píxel entero de encima.
         drawRect(en(P.PAVON, 0f, Offset(w / 2, arriba), a, cerca, frio), Offset(0f, r.top), Size(w, arriba - r.top + 2f))
-        suelo(Rect(0f, zocalo, w, h), a, cerca, frio)
+        // El suelo empieza en el píxel entero de encima del borde del zócalo, que lo tapa: así la junta no deja asomar el fondo.
+        suelo(Rect(0f, kotlin.math.floor(zocalo), w, h), a, cerca, frio)
         zocalo(Rect(0f, arriba, w, zocalo), a, cerca, frio)
         // La sombra del zócalo en el suelo, corrida a la derecha y abajo de día; de noche, honda.
         drawRect(Brush.verticalGradient(listOf(a.sombra(0.5f), a.sombra(0f)), zocalo, zocalo + w * 0.05f), Offset(0f, zocalo), Size(w, w * 0.05f))

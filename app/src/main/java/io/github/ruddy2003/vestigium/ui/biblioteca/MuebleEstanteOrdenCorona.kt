@@ -68,7 +68,8 @@ internal object CoronaEstanteOrden {
 
     /**
      * El plano enmarcado en el muro, sobre los manuales: el riel de colgar con sus dos escuadras, las dos cadenillas, el marco de
-     * acero con sus esquinas de latón y el plano azul con su cuadrícula, una pieza acotada y su cajetín sin letras.
+     * acero con sus esquinas de latón y el plano azul con su cuadrícula, una pieza acotada y su cajetín sin letras (en franjas,
+     * sin partir en cruz; y el taladro, fuera del eje: un círculo atravesado se leía como una letra).
      */
     private fun DrawScope.planoColgado(w: Float, apoyo: Float, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
         val u = density
@@ -117,8 +118,8 @@ internal object CoronaEstanteOrden {
         val pw = pl.width * 0.22f; val ph = pl.height * 0.32f
         drawRect(tr, Offset(pc.x - pw, pc.y - ph), Size(pw * 2f, ph * 2f), style = Stroke(1f * u))
         drawRect(tr, Offset(pc.x - pw * 0.6f, pc.y - ph * 1.4f), Size(pw * 1.2f, ph * 0.4f), style = Stroke(0.8f * u))
-        drawCircle(tr, ph * 0.55f, pc, style = Stroke(0.8f * u))
-        drawLine(tr.copy(alpha = 0.4f), Offset(pc.x, pc.y - ph * 1.7f), Offset(pc.x, pc.y + ph * 1.3f), 0.6f * u, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(4f * u, 2f * u)))
+        drawCircle(tr, ph * 0.42f, Offset(pc.x + pw * 0.45f, pc.y + ph * 0.2f), style = Stroke(0.8f * u))
+        drawRect(tr, Offset(pc.x - pw * 0.75f, pc.y - ph * 0.4f), Size(pw * 0.7f, ph * 0.9f), style = Stroke(0.6f * u))
         drawLine(tr, Offset(pc.x - pw, pc.y + ph * 1.35f), Offset(pc.x + pw, pc.y + ph * 1.35f), 0.6f * u)
         drawLine(tr, Offset(pc.x - pw, pc.y + ph * 1.15f), Offset(pc.x - pw, pc.y + ph * 1.55f), 0.6f * u)
         drawLine(tr, Offset(pc.x + pw, pc.y + ph * 1.15f), Offset(pc.x + pw, pc.y + ph * 1.55f), 0.6f * u)
@@ -126,8 +127,8 @@ internal object CoronaEstanteOrden {
         // El cajetín, abajo a la derecha, sin letras: sus casillas.
         val caj = Rect(pl.right - pl.width * 0.36f, pl.bottom - pl.height * 0.26f, pl.right - w * 0.004f, pl.bottom - w * 0.004f)
         drawRect(tr, caj.topLeft, caj.size, style = Stroke(0.7f * u))
-        drawLine(tr, Offset(caj.left, caj.center.y), Offset(caj.right, caj.center.y), 0.5f * u)
-        drawLine(tr, Offset(caj.left + caj.width * 0.4f, caj.top), Offset(caj.left + caj.width * 0.4f, caj.bottom), 0.5f * u)
+        drawLine(tr, Offset(caj.left, caj.top + caj.height * 0.4f), Offset(caj.right, caj.top + caj.height * 0.4f), 0.5f * u)
+        drawLine(tr, Offset(caj.left, caj.top + caj.height * 0.75f), Offset(caj.right, caj.top + caj.height * 0.75f), 0.5f * u)
         // Las esquinas de latón del marco.
         listOf(t.topLeft, Offset(t.right, t.top), Offset(t.left, t.bottom), t.bottomRight).forEach { o ->
             val sx = if (o.x < t.center.x) 1f else -1f; val sy = if (o.y < t.center.y) 1f else -1f

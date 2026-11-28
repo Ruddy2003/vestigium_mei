@@ -431,7 +431,8 @@ internal object ObraEstanteOrden {
         val w = size.width
         val orilla = w * ORILLA
         val muro = if (izq) Rect(r.left, r.top, r.left + orilla, r.bottom) else Rect(r.right - orilla, r.top, r.right, r.bottom)
-        val ala = if (izq) Rect(r.left + orilla, r.top, r.right, r.bottom) else Rect(r.left, r.top, r.right - orilla, r.bottom)
+        // El ala pisa un píxel del casillero: el borde de dentro cae a medio píxel y, si no, asoma el fondo en esa columna.
+        val ala = if (izq) Rect(r.left + orilla, r.top, r.right + 1f, r.bottom) else Rect(r.left - 1f, r.top, r.right - orilla, r.bottom)
         val ys = puntos(r, w * 0.12f)
         // El muro que asoma por fuera: a la luz por la izquierda; a la derecha, en la sombra del pilar.
         drawRect(pincelV(muro, P.PARED, if (izq) 0f else -0.3f, ys, a, cerca, frio, 0.5f), muro.topLeft, muro.size)
@@ -503,13 +504,14 @@ internal object ObraEstanteOrden {
     private fun DrawScope.piloto(ala: Rect, d: DisposicionEstante, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
         val u = density
         val w = size.width
-        val rep = d.repisas.getOrNull(1) ?: d.repisas.firstOrNull() ?: return
+        val rep = d.repisas.getOrNull(M.repisaPiloto(d.repisas.size, M.velasEn(d, w))) ?: d.repisas.firstOrNull() ?: return
         val c = Offset(ala.center.x, rep.top + rep.height * 0.42f)
         val kr = cerca(c); val fr = frio(c)
         val caja = Rect(c.x - w * 0.022f, c.y - w * 0.022f, c.x + w * 0.022f, c.y + w * 0.022f)
         if (a.oscuro) {
-            val rr = w * 0.13f
-            drawCircle(Brush.radialGradient(listOf(P.PILOTO.copy(alpha = if (a.dormida) 0.18f else 0.3f), P.PILOTO.copy(alpha = 0f)), c, rr), rr, c)
+            val rr = w * 0.2f
+            drawCircle(Brush.radialGradient(0f to P.PILOTO.copy(alpha = if (a.dormida) 0.22f else 0.36f), 0.35f to P.PILOTO.copy(alpha = if (a.dormida) 0.08f else 0.13f),
+                1f to P.PILOTO.copy(alpha = 0f), center = c, radius = rr), rr, c)
         }
         drawRect(a.sombra(0.4f), caja.topLeft + Offset(w * 0.005f, w * 0.005f), caja.size)
         drawRect(a.dia(P.ACERO_HONDO, 0f, kr, fr), caja.topLeft, caja.size)
@@ -524,8 +526,8 @@ internal object ObraEstanteOrden {
         else drawCircle(P.LUZ_FRIA.copy(alpha = 0.55f), rr * 0.3f, c - Offset(rr * 0.38f, rr * 0.38f))
         val reja = a.dia(P.ACERO_CLARO, 0f, kr, fr)
         drawCircle(reja, rr * 1.12f, c, style = Stroke(1.4f * u))
-        listOf(-0.45f, 0f, 0.45f).forEach { f -> drawLine(reja, Offset(c.x + rr * f, c.y - rr * 1.05f), Offset(c.x + rr * f, c.y + rr * 1.05f), 1f * u) }
-        drawLine(reja, Offset(c.x - rr * 1.05f, c.y), Offset(c.x + rr * 1.05f, c.y), 1f * u)
+        // La rejilla, solo de barrotes a lo alto: con un travesaño se leía como una cruz en un círculo.
+        listOf(-0.5f, -0.17f, 0.17f, 0.5f).forEach { f -> drawLine(reja, Offset(c.x + rr * f, c.y - rr * 0.95f), Offset(c.x + rr * f, c.y + rr * 0.95f), 1f * u) }
     }
 
     // ---------------------------------------------------------------- las placas de los meses

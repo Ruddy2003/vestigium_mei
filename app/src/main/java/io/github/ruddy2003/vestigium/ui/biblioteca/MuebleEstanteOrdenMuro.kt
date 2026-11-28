@@ -43,7 +43,9 @@ internal object MuroEstanteOrden {
         val p = Offset(x, y)
         // De noche, la pared se queda en su hondo y la vela la tiñe con su halo (como en el Ideario), no la aclara entera.
         val b = a.dia(P.PARED, f, cerca(p) * 0.4f, frio(p))
-        return if (!a.oscuro) a.luminaria(b, M.luminaria(x / w, y / w) * 0.55f) else b
+        if (a.oscuro) return b
+        val f = M.luminaria(x / w, y / w)
+        return a.luminaria(b, if (a.noche) f * f * 0.75f else f * 0.55f)
     }
 
     // ---------------------------------------------------------------- la pared de arriba
@@ -62,7 +64,7 @@ internal object MuroEstanteOrden {
             // De día, la mancha de la luminaria, suave, encima de los tramos (es la luz en la pared, antes de cualquier cosa).
             if (!a.oscuro) {
                 val luz = if (a.noche) P.VIGILIA else P.LUZ_FRIA
-                mancha(Offset(w * 0.08f, -w * 0.02f), w * (if (a.noche) 0.7f else 0.85f), luz.copy(alpha = if (a.noche) 0.32f else 0.34f))
+                mancha(Offset(w * 0.06f, -w * 0.03f), w * (if (a.noche) 0.52f else 0.85f), luz.copy(alpha = if (a.noche) 0.3f else 0.34f))
             } else {
                 // De noche, el halo de la vela del candelero sube por las placas; en la guardia, el frío de la luminaria.
                 val c = Offset(w * M.VELA_X, w * M.VELA_Y)

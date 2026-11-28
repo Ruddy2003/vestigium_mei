@@ -96,10 +96,23 @@ internal object VolumenEstanteOrden {
         drawRect(a.sombra(0.55f), Offset(-1f * u, h - 0.5f * u), Size(w + 2f * u, 2.6f * u))
     }
 
-    /** El filo de la vela en el canto que la mira (de noche y en la vigilia) y el frío de la guardia en el otro. */
+    /**
+     * Cuánto rojo del piloto del pilar le llega a la entrada que se está dibujando (lo pone el estante antes de cada una: cada
+     * volumen se dibuja en su propio lienzo y no sabe dónde está el piloto).
+     */
+    var rojo = 0f
+
+    /**
+     * El filo de la vela en el canto que la mira (de noche y en la vigilia), el frío de la guardia en el otro y, cerca del piloto,
+     * su rojo en el canto de la izquierda.
+     */
     private fun DrawScope.filos(cuerpo: Rect, a: AireOrden, k: Float, kf: Float, hacia: Float) {
         val u = density
         if (!a.lumbre) return
+        if (rojo > 0.05f) {
+            drawRect(P.PILOTO.copy(alpha = (0.85f * rojo).coerceAtMost(0.8f)), Offset(cuerpo.left, cuerpo.top), Size(1.4f * u, cuerpo.height))
+            drawRect(P.PILOTO.copy(alpha = (0.18f * rojo).coerceAtMost(0.16f)), Offset(cuerpo.left, cuerpo.top), Size(cuerpo.width * 0.45f, cuerpo.height))
+        }
         val x = if (hacia > 0f) cuerpo.right - 1.4f * u else cuerpo.left
         if (!a.dormida) drawRect(a.filo(0.7f * k), Offset(x, cuerpo.top), Size(1.4f * u, cuerpo.height))
         if (kf > 0.08f) {
