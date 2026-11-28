@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontFamily
@@ -157,11 +158,14 @@ internal class AireRefugio(val oscuro: Boolean, val noche: Boolean) {
  * derecha); [lav], de noche y en la pared, el rebote ancho y flojo del fósforo en el cuarto. [c] da el color de algo con esa luz,
  * [s] la sombra, [b] el plano de luz y [filo] el borde encendido por una luz.
  */
-internal class LuzRefugio(val a: AireRefugio, val k: Float, val tinte: Color, val amb: Float, val lav: Float = 0f) {
+internal class LuzRefugio(val a: AireRefugio, val k: Float, val tinte: Color, val amb: Float, val lav: Float = 0f, val pano: Float = 0f) {
     private val p = PaletaRefugio
 
     /** Cuánto enciende la luz lo que toca: poco lejos y de golpe cerca, para que manden los charcos. */
     private val q: Float get() = (1.15f * k * k).coerceAtMost(0.95f)
+
+    /** La misma luz dentro (1) o fuera (0) del paño de las luminarias bajadas (los Sueños en claro). */
+    fun conPano(v: Float): LuzRefugio = if (!a.tarde) this else LuzRefugio(a, k, tinte, amb, lav, v.coerceIn(0f, 1f))
 
     fun c(col: Color): Color = when {
         a.oscuro -> {
@@ -171,7 +175,9 @@ internal class LuzRefugio(val a: AireRefugio, val k: Float, val tinte: Color, va
         a.noche -> {
             // El anochecer: lo que mira a las luminarias, melocotón; lo de lejos, hacia el violeta, sin perder su color.
             val hondo = (0.36f + 0.38f * (1f - amb)).coerceIn(0.1f, 0.64f)
-            mezcla(mezcla(anochecer(col, hondo), alOcaso(col), ((amb - 0.62f) * 1.9f).coerceIn(0f, 0.75f)), alaLuz(col), 0.6f * q)
+            val fuera = mezcla(mezcla(anochecer(col, hondo), alOcaso(col), ((amb - 0.62f) * 1.9f).coerceIn(0f, 0.75f)), alaLuz(col), 0.6f * q)
+            // En el paño: el mismo color, encendido de melocotón (más claro y cálido), con borde neto.
+            if (pano > 0.01f) mezcla(fuera, enPano(col), pano) else fuera
         }
         else -> alTecho(col)
     }
@@ -186,6 +192,11 @@ internal class LuzRefugio(val a: AireRefugio, val k: Float, val tinte: Color, va
             val f = (0.55f - amb) * 0.72f
             Color(c.red * (1f - f), c.green * (1f - f * 0.95f), c.blue * (1f - f * 0.86f), c.alpha)
         }
+
+    /** Un color dentro del paño de las luminarias bajadas: su ocaso, un paso más claro, sin lavar el color propio. */
+    private fun enPano(c: Color): Color =
+        // Las luminarias están bajadas: el paño es más apagado que el día, melocotón y no amarillo.
+        mezcla(Color((c.red * 0.94f + 0.03f).coerceAtMost(1f), (c.green * 0.8f + 0.01f).coerceAtMost(1f), (c.blue * 0.68f).coerceAtMost(1f), c.alpha), p.MELOCOTON, 0.1f)
 
     /** Un color bajo las luminarias del anochecer: melocotón, más claro, sin lavar el color propio. */
     private fun alOcaso(c: Color): Color = mezcla(Color((c.red * 1.14f + 0.07f).coerceAtMost(1f), (c.green * 1.0f + 0.04f).coerceAtMost(1f), (c.blue * 0.84f + 0.02f).coerceAtMost(1f), c.alpha), p.MELOCOTON, 0.22f)
@@ -211,11 +222,11 @@ internal class LuzRefugio(val a: AireRefugio, val k: Float, val tinte: Color, va
         return Color(c.red * 0.36f + n.red * 0.32f, c.green * 0.42f + n.green * 0.34f, c.blue * 0.4f + n.blue * 0.34f, c.alpha)
     }
 
-    fun s(alfa: Float): Color = a.sombra(if (a.tarde) alfa * 1.15f else alfa)
+    fun s(alfa: Float): Color = a.sombra(if (a.tarde) alfa * (1.15f + 0.35f * pano) else alfa)
 
     fun b(alfa: Float): Color = when {
         a.oscuro -> tinte.copy(alpha = (alfa * 0.95f * k).coerceIn(0f, 1f))
-        a.noche -> mezcla(luzMueble(1f), p.TARDE, 0.45f).copy(alpha = (alfa * (0.3f + 0.6f * maxOf(amb - 0.2f, k))).coerceIn(0f, 1f))
+        a.noche -> mezcla(luzMueble(1f), p.TARDE, 0.45f).copy(alpha = (alfa * (0.3f + 0.6f * maxOf(amb - 0.2f, k) + 0.4f * pano)).coerceIn(0f, 1f))
         else -> mezcla(luzMueble(1f), p.LUZ_TECHO, 0.6f).copy(alpha = (alfa * (0.55f + 0.5f * amb)).coerceIn(0f, 1f))
     }
 
@@ -235,7 +246,9 @@ internal class LuzRefugio(val a: AireRefugio, val k: Float, val tinte: Color, va
      * hundida); nunca tanto que el número deje de leerse.
      */
     fun tarjeta(): Color = when {
-        a.oscuro -> mezcla(mezcla(p.TARJETA, a.hondo, 0.62f), alaLuz(mezcla(p.TARJETA, Color.White, 0.12f)), (q * 1.4f).coerceAtMost(1f))
+        // De noche, del color de la luz que le toca (verdosa junto a la pantalla, ámbar junto a la guardia, rosada junto al tubo) y
+        // hundida lejos de las tres.
+        a.oscuro -> mezcla(mezcla(p.TARJETA, a.hondo, 0.68f), mezcla(alaLuz(mezcla(p.TARJETA, Color.White, 0.1f)), tinte, 0.24f), (k * 1.45f).coerceAtMost(1f))
         a.noche -> mezcla(mezcla(p.TARJETA, p.ANOCHECER, 0.2f - 0.1f * maxOf(amb, k)), p.TARDE, 0.1f * amb)
         else -> c(p.TARJETA)
     }
@@ -409,6 +422,21 @@ internal object MuebleEstanteRefugio {
             with(CoronaEstanteRefugio) { detras(g) }
             with(MuebleRefugio) { cornisa(g) }
             with(CoronaEstanteRefugio) { delante(g) }
+            // Al anochecer, lo mismo otra vez dentro del paño de las luminarias bajadas: la pared con el paño, y lo que está delante
+            // (lo de encima y la cornisa) con el paño corrido hacia la luz, así el borde se quiebra al cambiar de plano.
+            if (a.tarde) {
+                val p0 = panoRefugio(w, 0f, 0f)
+                val p1 = panoRefugio(w, -0.03f, -0.012f)
+                // La pared dentro del paño (tapa lo que había debajo: así nada translúcido se pinta dos veces).
+                g.pano = 1f
+                clipPath(p0) { with(ParedEstanteRefugio) { paredArriba(g) } }
+                // Lo de delante, otra vez: sin paño en la franja del borde (donde la pared ya tiene paño y ello no) y con paño dentro.
+                g.pano = 0f
+                clipPath(p0) { clipPath(p1, androidx.compose.ui.graphics.ClipOp.Difference) { delanteDeLaPared(g) } }
+                g.pano = 1f
+                clipPath(p0) { clipPath(p1) { delanteDeLaPared(g) } }
+                g.pano = null
+            }
             granoMueble(Rect(0f, 0f, w, ch), oscuro)
         }
         if (n == 0) return
@@ -427,7 +455,19 @@ internal object MuebleEstanteRefugio {
         }
         with(PieEstanteRefugio) { pie(g) }
         with(MuebleRefugio) { guardia(g) }
-        granoMueble(Rect(0f, ch, w, h), oscuro)
+        // El grano fino, solo en lo que se ve del mueble y del pie: el de los huecos ya va en su baldosa (y casi todo lo tapan las
+        // entradas), así no se pega encima de todo el cuerpo.
+        granoMueble(Rect(0f, ch, d.izquierda.right, fondo), oscuro)
+        granoMueble(Rect(d.derecha.left, ch, w, fondo), oscuro)
+        d.tablas.forEach { t -> granoMueble(Rect(t.left, t.top, t.right, t.bottom), oscuro) }
+        granoMueble(Rect(0f, fondo, w, h), oscuro)
+    }
+
+    /** Lo que está delante de la pared en la corona: el cable, la cornisa y lo que pisa el tablero. */
+    private fun DrawScope.delanteDeLaPared(g: MarcoRefugio) {
+        with(CoronaEstanteRefugio) { detras(g) }
+        with(MuebleRefugio) { cornisa(g) }
+        with(CoronaEstanteRefugio) { delante(g) }
     }
 
     fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) = volumenRefugio(v, medidor, oscuro)
@@ -443,7 +483,13 @@ internal class MarcoRefugio(val w: Float, val h: Float, val ch: Float, val x0: F
     val apoyo: Float get() = w * m.APOYO
     /** La luz de un punto en píxeles, a [delante] anchos de la pared. */
     fun luz(p: Offset, delante: Float = 0f): LuzRefugio = luz(p.x, p.y, delante)
-    fun luz(x: Float, y: Float, delante: Float = 0f): LuzRefugio = m.luz(a, x / w, y / w, h / w, n, delante)
+    fun luz(x: Float, y: Float, delante: Float = 0f): LuzRefugio {
+        val l = m.luz(a, x / w, y / w, h / w, n, delante)
+        return pano?.let { l.conPano(it) } ?: l
+    }
+
+    /** El paño de las luminarias forzado para todo lo que se pinte mientras no sea null (1 dentro del paño; ver [pintarConPano]). */
+    var pano: Float? = null
 
     /**
      * Hacia dónde cae la sombra de lo que cuelga de la pared, en píxeles, por [largo]: de día, a la derecha y abajo (las
@@ -460,6 +506,16 @@ internal class MarcoRefugio(val w: Float, val h: Float, val ch: Float, val x0: F
     val pantalla: Offset get() = Offset(w * m.PANTALLA_X, w * m.PANTALLA_Y)
     val guardia: Offset get() = Offset(w * m.GUARDIA_X, w * m.guardiaY(n))
     val cultivo: Offset get() = Offset(w * m.CULTIVO_X, h - w * m.CULTIVO_Y)
+}
+
+/**
+ * El paño de luz de las luminarias bajadas (los Sueños en claro): entra de arriba a la izquierda, fuera del cuadro, y cae hacia la
+ * derecha y abajo, cortado por la campana de la luminaria en un borde inclinado. En píxeles, corrido [dx] y [dy] anchos.
+ */
+internal fun panoRefugio(w: Float, dx: Float, dy: Float): androidx.compose.ui.graphics.Path = androidx.compose.ui.graphics.Path().apply {
+    fun p(x: Float, y: Float) = Offset((x + dx) * w, (y + dy) * w)
+    val a = p(-0.1f, 0.035f); val b = p(0.43f, 0.035f); val c = p(0.74f, 0.62f); val d = p(-0.1f, 0.62f)
+    moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c.x, c.y); lineTo(d.x, d.y); close()
 }
 
 /**

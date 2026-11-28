@@ -64,10 +64,13 @@ internal fun DrawScope.volumenRefugio(v: Volumen, medidor: TextMeasurer, oscuro:
     }
 }
 
-/** La sombra que la entrada echa detrás (en el fondo y en la vecina), lejos de la luz. */
-private fun DrawScope.sombraDetrasRefugio(forma: Path, l: LuzRefugio, hacia: Float) {
+/**
+ * La sombra que la entrada echa detrás (en el fondo y en la vecina), lejos de la luz: un rectángulo redondeado del tamaño de [r]
+ * con esquinas de [radio] (pinta más ligero que un camino con la silueta, y detrás no se distingue).
+ */
+private fun DrawScope.sombraDetrasRefugio(r: Rect, radio: Float, l: LuzRefugio, hacia: Float) {
     val u = density
-    drawPath(corridoRefugio(forma, -hacia * 5f * u, if (l.a.oscuro) -1.5f * u else 2.4f * u), l.s(if (l.a.oscuro) 0.5f else 0.42f))
+    drawRoundRect(l.s(if (l.a.oscuro) 0.5f else 0.42f), Offset(r.left - hacia * 5f * u, r.top + (if (l.a.oscuro) -1.5f * u else 2.4f * u)), r.size, CornerRadius(radio))
 }
 
 /** La sombra de contacto en el labio de la tabla. */
@@ -142,8 +145,7 @@ private fun DrawScope.carpetaRefugio(v: Volumen, tono: Color?, medidor: TextMeas
     val radio = 1.4f * u
     rotate(giro, Offset(if (giro > 0f) x0 + an else x0, h)) {
         val cuerpo = Path().apply { addRoundRect(RoundRect(Rect(x0, top, x0 + an, h - 0.5f * u), CornerRadius(radio))) }
-        val silueta = Path().apply { addPath(cuerpo); addRect(Rect(x0 + an * 0.08f, top - asoma, x0 + an * 0.9f, top + 2f)) }
-        sombraDetrasRefugio(silueta, l, hacia)
+        sombraDetrasRefugio(Rect(x0, top - asoma * 0.8f, x0 + an, h - 0.5f * u), radio, l, hacia)
         contactoRefugio(x0, x0 + an, l, hacia)
         // Las hojas que asoman por arriba (papel crema, una más corta) y las pestañas de colores.
         val hojas = listOf(mezcla(P.ETIQUETA, Color.White, 0.2f), P.ETIQUETA, mezcla(P.ETIQUETA, P.OCRE, 0.2f))
@@ -247,12 +249,12 @@ private fun DrawScope.tarroRefugio(v: Volumen, tono: Color?, medidor: TextMeasur
         close()
     }
     val tapa = Rect(cx - cuello * 0.56f, h * 0.012f, cx + cuello * 0.56f, tapaAl + 0.5f * u)
-    val forma = Path().apply { addPath(vidrio); addRect(tapa) }
-    sombraDetrasRefugio(forma, l, hacia)
+    sombraDetrasRefugio(Rect(x0, h * 0.04f, x0 + an, h - 0.5f * u), an * 0.2f, l, hacia)
     contactoRefugio(x0, x0 + an, l, hacia)
     // Lo vacío de arriba: el vidrio claro, con el fondo oliva que se adivina detrás.
     drawPath(vidrio, l.c(mezcla(P.AGUA_VIDRIO, P.OLIVA, 0.55f)).copy(alpha = 0.75f))
-    clipPath(vidrio) {
+    // Lo de dentro va bajo los hombros, donde el tarro ya es recto: basta un recorte de rectángulo (pinta más ligero que el camino).
+    clipRect(x0 + 0.6f * u, hombro, x0 + an - 0.6f * u, h - an * 0.05f) {
         // El caldo, del color de las piezas pero más hondo, hasta su nivel.
         val nivel = hombro + (h - hombro) * (0.3f - 0.28f * v.lleno)
         drawRect(mezcla(pieza, l.a.hondo, if (l.a.oscuro) 0.35f else 0.3f), Offset(x0, nivel), Size(an, h - nivel))
@@ -363,7 +365,7 @@ private fun DrawScope.bolsaRefugio(v: Volumen, tono: Color?, medidor: TextMeasur
         puntos.add(Offset(x0 - panza, boca + (h - boca) * 0.7f))
         puntos.add(Offset(x0 - panza * 0.5f, boca + (h - boca) * 0.3f))
         val forma = poligonoRefugio(puntos)
-        sombraDetrasRefugio(forma, l, hacia)
+        sombraDetrasRefugio(Rect(x0 - panza * 0.6f, boca, x0 + an + panza * 0.6f, h - 0.5f * u), an * 0.1f, l, hacia)
         contactoRefugio(x0 - panza * 0.5f, x0 + an + panza * 0.5f, l, hacia)
         planosRefugio(forma, papel, l, hacia, 0.22f, 0.28f)
         clipPath(forma) {

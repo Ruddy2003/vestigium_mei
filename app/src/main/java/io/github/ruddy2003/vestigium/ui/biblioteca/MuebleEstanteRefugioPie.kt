@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaRefugio as P
 import io.github.ruddy2003.vestigium.ui.ideario.azar
@@ -23,8 +24,9 @@ import kotlin.math.floor
 /**
  * El pie de la librería: el faldón de esmalte con su zócalo cromado y las cuatro patas cónicas abiertas con su contera; debajo, el
  * zócalo verde azulado del muro y la rejilla del suelo del Ideario. Bajo el mueble, la bandeja hidropónica con sus lechugas y la
- * lámpara de cultivo del Ideario colgada del faldón por dos cadenitas; a la izquierda, la regadera esmaltada; a la derecha, el
- * taburete de cocina con un disco encima. Se pinta en cada dibujo (lo fijo de arriba ya ocupa la imagen guardada).
+ * lámpara de cultivo del Ideario colgada del faldón por dos cadenitas; a la izquierda, el cajón del economato con latas y la
+ * regadera esmaltada delante; a la derecha, cortado por el borde, el bidón del agua de reserva con su grifo y su taza. Se pinta en
+ * cada dibujo (lo fijo de arriba ya ocupa la imagen guardada).
  */
 internal object PieEstanteRefugio {
     fun DrawScope.pie(g: MarcoRefugio) {
@@ -38,17 +40,19 @@ internal object PieEstanteRefugio {
         drawRect(g.luz(w * 0.5f, b0, 0.03f).c(P.AGUA_OSC), Offset(0f, floor(b0)), Size(w, 1f))
         muroBajo(g, falda, suelo)
         piso(g, suelo)
+        // De noche, el charco rosa del tubo de cultivo en el zócalo y en la rejilla: antes de las cosas (que se pintan con su luz) y
+        // solo bajo el faldón, hasta donde se ve.
+        if (g.a.cultivo > 0f && g.a.oscuro) clipRect(0f, falda, w, g.h) {
+            mancha(Offset(g.cultivo.x, g.cultivo.y + w * 0.09f), w * 0.3f, P.LAMPARA.copy(alpha = 0.3f * g.a.cultivo))
+            mancha(Offset(g.cultivo.x, g.cultivo.y + w * 0.12f), w * 0.13f, P.LAMPARA.copy(alpha = 0.3f * g.a.cultivo))
+        }
         patas(g, falda, pisan, atras = true)
         bandeja(g, falda, suelo)
         faldon(g, b0, falda)
         patas(g, falda, pisan, atras = false)
+        cajon(g, pisan)
         regadera(g, pisan)
-        taburete(g, pisan)
-        // De noche, el charco rosa del tubo de cultivo en el suelo y en el zócalo.
-        if (g.a.cultivo > 0f && g.a.oscuro) {
-            mancha(Offset(g.cultivo.x, g.cultivo.y + w * 0.06f), w * 0.36f, P.LAMPARA.copy(alpha = 0.16f * g.a.cultivo))
-            mancha(Offset(g.cultivo.x, g.cultivo.y + w * 0.02f), w * 0.15f, P.LAMPARA.copy(alpha = 0.26f * g.a.cultivo))
-        }
+        bidon(g, pisan)
     }
 
     /** El zócalo verde azulado del muro, entre las patas, con sus juntas, y la sombra franca del mueble encima. */
@@ -171,26 +175,45 @@ internal object PieEstanteRefugio {
             drawLine(l.c(P.CROMO_OSC), Offset(x, artesa.bottom), Offset(x - w * 0.01f, pie), 1.8f * u)
             drawLine(l.c(P.CROMO_OSC), Offset(x, artesa.bottom), Offset(x + w * 0.01f, pie), 1.8f * u)
         }
-        // Las lechugas, detrás del frente de la artesa.
+        // Las lechugas, detrás del frente de la artesa. De noche, bajo el tubo magenta, el verde se apaga (no amarillea), los bordes
+        // de las hojas que miran al tubo cogen su rosa y lo de abajo se va al morado.
+        val noche = g.a.oscuro && g.a.cultivo > 0f
         for (j in 0 until 5) {
             val cx = x0 + (x1 - x0) * (0.12f + 0.19f * j)
             val lj = g.luz(cx, artesa.top + w * 0.07f, 0.03f)
+            val kr = if (noche) g.a.cultivo * MuebleEstanteRefugio.kCultivo(cx / w, artesa.top / w, g.h / w) else 0f
             val rr = w * (0.046f + 0.01f * azar(9900, j))
+            val bordes = Path(); val bajos = Path()
             for (k in 0 until 7) {
                 val a = -2.9f + k * 0.48f + 0.2f * azar(9901 + j, k)
                 val hl = rr * (0.9f + 0.4f * azar(9902 + j, k))
                 val p = Offset(cx + hl * 0.55f * kotlin.math.cos(a), artesa.top - hl * 0.3f + hl * 0.4f * kotlin.math.sin(a))
+                val verde = mezcla(P.HOJA, Color(0xFF9CC45A), 0.4f * (k % 2))
                 rotate(Math.toDegrees(a.toDouble()).toFloat() + 90f, p) {
-                    drawOval(lj.c(mezcla(P.HOJA, Color(0xFF9CC45A), 0.4f * (k % 2))), Offset(p.x - hl * 0.32f, p.y - hl * 0.5f), Size(hl * 0.64f, hl))
-                    drawLine(lj.b(0.35f), Offset(p.x, p.y - hl * 0.4f), Offset(p.x, p.y + hl * 0.35f), 0.6f * u)
+                    val hoja = Rect(p.x - hl * 0.32f, p.y - hl * 0.5f, p.x + hl * 0.32f, p.y + hl * 0.5f)
+                    drawOval(if (noche) hojaDeNoche(verde, kr, g) else lj.c(verde), hoja.topLeft, hoja.size)
+                    if (noche) {
+                        drawOval(Color(0xFF2A1C36).copy(alpha = 0.35f), Offset(hoja.left + hl * 0.2f, hoja.top + hl * 0.1f), Size(hl * 0.44f, hl * 0.86f))
+                        drawArc(P.LAMPARA.copy(alpha = (0.85f * kr).coerceIn(0f, 0.85f)), 200f, 140f, false, hoja.topLeft, hoja.size, style = Stroke(1.1f * u))
+                    } else drawLine(lj.b(0.35f), Offset(p.x, p.y - hl * 0.4f), Offset(p.x, p.y + hl * 0.35f), 0.6f * u)
                 }
             }
-            drawOval(lj.c(mezcla(Color(0xFF9CC45A), P.HOJA, 0.2f)), Offset(cx - rr * 0.45f, artesa.top - rr * 0.6f), Size(rr * 0.9f, rr * 0.7f))
+            val cogollo = mezcla(Color(0xFF9CC45A), P.HOJA, 0.2f)
+            drawOval(if (noche) hojaDeNoche(cogollo, kr, g) else lj.c(cogollo), Offset(cx - rr * 0.45f, artesa.top - rr * 0.6f), Size(rr * 0.9f, rr * 0.7f))
+            if (noche) drawArc(P.LAMPARA.copy(alpha = (0.9f * kr).coerceIn(0f, 0.9f)), 200f, 140f, false, Offset(cx - rr * 0.45f, artesa.top - rr * 0.6f), Size(rr * 0.9f, rr * 0.7f), style = Stroke(1.2f * u))
         }
-        // La artesa esmaltada mantequilla, con su borde cromado.
+        // La artesa esmaltada mantequilla, con su borde cromado. De noche, el tubo la tiñe de rosa: el canto de arriba, encendido; el
+        // frente, rosado y más hondo hacia abajo.
         val ap = Path().apply { addRoundRect(RoundRect(artesa, CornerRadius(w * 0.008f))) }
-        planosRefugio(ap, l.c(P.MANTEQUILLA), l, -1f, 0.1f, 0.18f)
-        cromoRefugio(Rect(artesa.left, artesa.top, artesa.right, artesa.top + 2.4f * u), l, brillo = 0.7f)
+        if (noche) {
+            val ka = g.a.cultivo * MuebleEstanteRefugio.kCultivo(artesa.center.x / w, artesa.top / w, g.h / w)
+            val frente = mezcla(g.a.hundido(P.MANTEQUILLA), mezcla(mezcla(P.MANTEQUILLA, P.LAMPARA, 0.6f), Color(0xFF3A2440), 0.35f), ka)
+            drawPath(ap, Brush.verticalGradient(listOf(frente, mezcla(frente, Color(0xFF2A1C36), 0.45f)), artesa.top, artesa.bottom))
+            drawRect(mezcla(P.LAMPARA, Color.White, 0.3f).copy(alpha = (0.9f * ka).coerceIn(0f, 0.9f)), Offset(artesa.left, artesa.top), Size(artesa.width, 2.4f * u))
+        } else {
+            planosRefugio(ap, l.c(P.MANTEQUILLA), l, -1f, 0.1f, 0.18f)
+            cromoRefugio(Rect(artesa.left, artesa.top, artesa.right, artesa.top + 2.4f * u), l, brillo = 0.7f)
+        }
         for (j in 0 until 5) drawCircle(l.s(0.3f), 1.2f * u, Offset(x0 + (x1 - x0) * (0.12f + 0.19f * j), artesa.top + alto * 0.35f))
         // La lámpara de cultivo: dos cadenitas desde el faldón, la pantalla y el tubo encendido.
         val lc = g.cultivo
@@ -260,58 +283,126 @@ internal object PieEstanteRefugio {
         if (l.k > 0.06f) drawPath(bordeRefugio(cuerpo, -hacia * 1.4f * u, 0f), l.filo(0.8f))
     }
 
+    /** Una hoja bajo el tubo magenta: su verde apagado (sin amarillear) cuanto más le llega [k]; lejos, hundida. */
+    private fun hojaDeNoche(verde: Color, k: Float, g: MarcoRefugio): Color =
+        mezcla(g.a.hundido(verde), mezcla(mezcla(verde, Color(0xFF4F6B55), 0.55f), Color(0xFF3A2C44), 0.12f), (k * 1.1f).coerceIn(0f, 1f))
+
     /**
-     * El taburete de cocina de la época, a la derecha: el asiento grueso de vinilo coral con su canto acolchado, el ribete cromado y
-     * la cara de arriba vista un poco desde arriba; cuatro patas de tubo cromado abiertas (las de atrás, en la sombra), el aro de
-     * los pies y los regatones de goma; encima, un disco en su funda, algo corrido.
+     * El bidón del agua de reserva, a la derecha y cortado por el borde: la chapa esmaltada mostaza con sus dos aros de rodadura, la
+     * franja verde azulada, la tapa de arriba con su tapón, el grifo cromado abajo con una gota y la taza coral en el suelo; el esmalte
+     * saltado y el óxido en el canto de abajo; su sombra ancha en la rejilla.
      */
-    private fun DrawScope.taburete(g: MarcoRefugio, pisan: Float) {
+    private fun DrawScope.bidon(g: MarcoRefugio, pisan: Float) {
         val w = g.w; val u = density
         val pie = pisan + w * 0.022f
-        val cx = w * 0.86f
-        val ra = w * 0.1f
-        val asiento = pie - w * 0.2f
-        val grueso = w * 0.045f
-        val l = g.luz(cx, asiento, 0.07f)
-        val hacia = if (g.a.oscuro) g.hacia(cx, asiento) else -1f
-        drawOval(l.s(0.5f), Offset(cx - ra * 1.2f + (if (g.a.oscuro) 0f else w * 0.015f), pie - 3f * u), Size(ra * 2.5f, 6f * u))
-        // Las patas: de la orilla del asiento al suelo, abiertas; las de atrás, más cortas y en sombra.
-        val patas = listOf(Triple(-0.5f, -0.78f, true), Triple(0.5f, 0.78f, true), Triple(-0.78f, -1.12f, false), Triple(0.78f, 1.12f, false))
-        patas.forEach { (fa, fb, atras) ->
-            val a = Offset(cx + ra * fa, asiento + grueso * 0.8f)
-            val b = Offset(cx + ra * fb, if (atras) pie - w * 0.03f else pie - 1f * u)
-            val lp = g.luz((a.x + b.x) / 2, (a.y + b.y) / 2, if (atras) 0.05f else 0.07f)
-            drawLine(lp.c(if (atras) P.CROMO_OSC else P.CROMO), a, b, 3f * u, StrokeCap.Round)
-            if (!atras) {
-                drawLine(lp.b(0.85f), a + Offset(-1f * u, 0f), b + Offset(-1f * u, 0f), 0.8f * u)
-                drawLine(lp.s(0.4f), a + Offset(1.1f * u, 0f), b + Offset(1.1f * u, 0f), 0.8f * u)
-            }
-            drawRoundRect(lp.c(P.BAQUELITA), Offset(b.x - 2.2f * u, b.y - 3f * u), Size(4.4f * u, 3.4f * u), CornerRadius(1.2f * u))
+        val an = w * 0.25f; val al = w * 0.25f
+        val x0 = w * 0.8f
+        val r = Rect(x0, pie - al, x0 + an, pie)
+        val l = g.luz(x0 + an * 0.3f, pie - al * 0.5f, 0.08f)
+        val hacia = if (g.a.oscuro) g.hacia(x0 + an * 0.3f, pie - al * 0.5f) else -1f
+        // La sombra en la rejilla, ancha y hacia la derecha.
+        drawOval(l.s(0.55f), Offset(r.left - an * 0.04f + (if (g.a.oscuro) 0f else w * 0.02f), pie - w * 0.012f), Size(an * 1.15f, w * 0.026f))
+        val cuerpo = Path().apply { addRoundRect(RoundRect(r, CornerRadius(an * 0.05f))) }
+        cilindroRefugio(cuerpo, l.c(P.OCRE), l, hacia, 0.5f)
+        // La franja verde azulada pintada entre los aros, y los dos aros de rodadura (el relieve: luz arriba, sombra abajo).
+        val fr = Rect(r.left, r.top + al * 0.42f, r.right, r.top + al * 0.58f)
+        drawRect(l.c(P.TEAL), fr.topLeft, fr.size)
+        drawRect(l.s(0.3f), Offset(if (hacia < 0f) r.left + an * 0.62f else r.left, fr.top), Size(an * 0.38f, fr.height))
+        listOf(0.3f, 0.7f).forEach { f ->
+            val y = r.top + al * f
+            drawRect(l.s(0.4f), Offset(r.left, y + 1.4f * u), Size(an, 2f * u))
+            drawRect(l.c(mezcla(P.OCRE, P.CREMA, 0.3f)), Offset(r.left, y - 1.4f * u), Size(an, 2.8f * u))
+            drawRect(l.b(0.6f), Offset(r.left, y - 1.4f * u), Size(an, 0.8f * u))
         }
-        // El aro de los pies, a media altura: la mitad de delante, cromada.
-        val aroY = pie - w * 0.075f
-        val aro = Rect(cx - ra * 0.98f, aroY - w * 0.014f, cx + ra * 0.98f, aroY + w * 0.014f)
-        drawArc(l.c(P.CROMO_OSC), 180f, 180f, false, aro.topLeft, aro.size, style = Stroke(1.8f * u))
-        drawArc(l.c(P.CROMO), 0f, 180f, false, aro.topLeft, aro.size, style = Stroke(2.2f * u))
-        drawArc(l.b(0.8f), 20f, 140f, false, aro.topLeft - Offset(0f, 0.8f * u), aro.size, style = Stroke(0.7f * u))
-        // El asiento: el canto acolchado (un cilindro corto, abombado) y el ribete cromado de abajo.
-        val canto = Rect(cx - ra, asiento, cx + ra, asiento + grueso)
-        val cantoP = Path().apply { addRoundRect(RoundRect(canto, CornerRadius(grueso * 0.45f))) }
-        drawPath(corridoRefugio(cantoP, -hacia * 1.4f * u, 2f * u), l.s(0.35f))
-        cilindroRefugio(cantoP, l.c(P.CORAL), l, hacia, 0.5f)
-        cromoRefugio(Rect(canto.left + 2f * u, canto.bottom - 3f * u, canto.right - 2f * u, canto.bottom - 0.6f * u), l, brillo = 0.75f)
-        drawLine(l.s(0.3f), Offset(canto.left + grueso * 0.3f, canto.top + grueso * 0.45f), Offset(canto.right - grueso * 0.3f, canto.top + grueso * 0.45f), 0.8f * u)
-        // La cara de arriba, vista un poco desde arriba, con el vivo del ribete y su brillo.
-        val cara = Rect(cx - ra, asiento - w * 0.02f, cx + ra, asiento + w * 0.02f)
-        drawOval(l.c(mezcla(P.CORAL, P.VINILO, 0.22f)), cara.topLeft, cara.size)
-        drawOval(l.c(mezcla(P.CORAL, P.BAQUELITA, 0.25f)), cara.topLeft, cara.size, style = Stroke(1.2f * u))
-        drawOval(l.b(0.32f), Offset(cara.left + ra * 0.25f, cara.top + 1.2f * u), Size(ra * 0.8f, cara.height * 0.4f))
-        // Un disco en su funda encima, algo corrido hacia atrás.
-        val d1 = Rect(cx - ra * 0.75f, cara.top - w * 0.006f, cx + ra * 0.55f, cara.top + w * 0.006f)
-        drawRect(l.s(0.35f), d1.topLeft + Offset(1.4f * u, 2f * u), d1.size)
-        drawRect(l.c(P.TEAL), d1.topLeft, d1.size)
-        drawRect(l.c(P.MANTEQUILLA), Offset(d1.left + d1.width * 0.18f, d1.top), Size(d1.width * 0.12f, d1.height))
-        drawRect(l.b(0.5f), d1.topLeft, Size(d1.width, 0.8f * u))
-        if (l.k > 0.06f) drawPath(bordeRefugio(cantoP, -hacia * 1.4f * u, 0f), l.filo(0.8f))
+        // El esmalte saltado y el óxido del canto de abajo.
+        drawRect(l.c(mezcla(P.NARANJA, P.BAQUELITA, 0.45f)).copy(alpha = 0.55f), Offset(r.left, r.bottom - al * 0.06f), Size(an, al * 0.06f))
+        for (j in 0 until 5) {
+            val p = Offset(r.left + an * (0.1f + 0.5f * azar(9960, j)), r.top + al * (0.1f + 0.8f * azar(9961, j)))
+            saltadoRefugio(p, an * (0.018f + 0.02f * azar(9962, j)), 9963 + j, l.c(Color(0xFF22282A)), l.b(0.4f), l.c(P.NARANJA))
+        }
+        abolladuraRefugio(Offset(r.left + an * 0.3f, r.top + al * 0.8f), an * 0.08f, al * 0.06f, l)
+        // La tapa de arriba, vista un poco desde arriba: el canto, la cara y el tapón con su asa.
+        val tapa = Rect(r.left, r.top - al * 0.07f, r.right, r.top + al * 0.07f)
+        drawOval(l.c(mezcla(P.OCRE, P.BAQUELITA, 0.25f)), tapa.topLeft, tapa.size)
+        drawOval(l.c(mezcla(P.OCRE, P.CREMA, 0.25f)), Offset(tapa.left + an * 0.04f, tapa.top + al * 0.012f), Size(an * 0.92f, tapa.height * 0.8f))
+        val tp = Offset(r.left + an * 0.3f, r.top - al * 0.01f)
+        drawOval(l.c(P.CROMO_OSC), Offset(tp.x - an * 0.07f, tp.y - al * 0.03f), Size(an * 0.14f, al * 0.06f))
+        drawOval(l.c(P.CROMO), Offset(tp.x - an * 0.05f, tp.y - al * 0.04f), Size(an * 0.1f, al * 0.045f))
+        drawArc(l.c(P.CROMO_OSC), 180f, 180f, false, Offset(tp.x - an * 0.035f, tp.y - al * 0.075f), Size(an * 0.07f, al * 0.06f), style = Stroke(1.4f * u))
+        drawArc(l.b(0.6f), 190f, 120f, false, tapa.topLeft, tapa.size, style = Stroke(1f * u))
+        // El grifo cromado abajo, a la izquierda, con su palanca, una gota y la taza coral en el suelo.
+        val gy = r.top + al * 0.8f
+        val gx = r.left + an * 0.12f
+        drawRect(l.c(P.CROMO_OSC), Offset(gx - an * 0.05f, gy - 2.6f * u), Size(an * 0.07f, 5.2f * u))
+        drawRect(l.c(P.CROMO), Offset(gx - an * 0.1f, gy - 1.8f * u), Size(an * 0.07f, 3.6f * u))
+        drawRect(l.c(P.CROMO), Offset(gx - an * 0.1f, gy + 1.6f * u), Size(3f * u, an * 0.04f))
+        drawLine(l.c(P.CROMO_OSC), Offset(gx - an * 0.06f, gy - 2f * u), Offset(gx - an * 0.02f, gy - an * 0.07f), 2f * u, StrokeCap.Round)
+        drawRect(l.b(0.8f), Offset(gx - an * 0.1f, gy - 1.8f * u), Size(an * 0.07f, 0.8f * u))
+        val gota = Offset(gx - an * 0.1f + 1.5f * u, gy + 1.6f * u + an * 0.06f)
+        drawCircle(l.c(mezcla(P.AGUA_VIDRIO, P.CROMO_LUZ, 0.4f)), 1.4f * u, gota)
+        val ta = an * 0.16f; val th = al * 0.15f
+        val taza = Rect(gx - an * 0.1f - ta * 0.4f, pie - th, gx - an * 0.1f + ta * 0.6f, pie)
+        drawOval(l.s(0.45f), Offset(taza.left, pie - 2f * u), Size(ta * 1.2f, 4f * u))
+        val tazaP = Path().apply { addRoundRect(RoundRect(taza, CornerRadius(0f, 0f), CornerRadius(0f, 0f), CornerRadius(ta * 0.3f), CornerRadius(ta * 0.3f))) }
+        cilindroRefugio(tazaP, l.c(P.CORAL), l, hacia, 0.5f)
+        drawOval(l.c(mezcla(P.CORAL, P.BAQUELITA, 0.4f)), Offset(taza.left, taza.top - th * 0.12f), Size(ta, th * 0.24f))
+        drawOval(l.c(P.VINILO), Offset(taza.left, taza.top - th * 0.12f), Size(ta, th * 0.24f), style = Stroke(0.9f * u))
+        drawArc(l.c(P.CORAL), -70f, 140f, false, Offset(taza.left - ta * 0.28f, taza.top + th * 0.15f), Size(ta * 0.4f, th * 0.5f), style = Stroke(1.6f * u))
+        if (l.k > 0.06f) drawPath(bordeRefugio(cuerpo, -hacia * 1.6f * u, 0f), l.filo(0.8f))
+    }
+
+    /**
+     * El cajón del economato, de tablas de pino con sus clavos y sus cantoneras: lleno de latas de ración del Ideario (oliva con su
+     * franja ocre) que asoman por arriba, y una más tumbada encima; detrás de la regadera, con su sombra en la rejilla.
+     */
+    private fun DrawScope.cajon(g: MarcoRefugio, pisan: Float) {
+        val w = g.w; val u = density
+        val pie = pisan + w * 0.006f
+        val an = w * 0.25f; val al = w * 0.11f
+        val x0 = w * 0.075f
+        val r = Rect(x0, pie - al, x0 + an, pie)
+        val l = g.luz(r.center, 0.07f)
+        val hacia = if (g.a.oscuro) g.hacia(r.center.x, r.center.y) else -1f
+        drawOval(l.s(0.5f), Offset(r.left + (if (g.a.oscuro) 0f else w * 0.015f), pie - w * 0.01f), Size(an * 1.08f, w * 0.02f))
+        // Las latas, detrás del frente: la fila de arriba asoma.
+        val la = an * 0.2f; val lh = al * 0.55f
+        for (j in 0 until 4) {
+            val lx = r.left + an * (0.06f + 0.23f * j)
+            val ly = r.top + al * 0.12f
+            val lr = Rect(lx, ly - lh * 0.45f, lx + la, ly + lh * 0.55f)
+            val lp = Path().apply { addRect(lr) }
+            cilindroRefugio(lp, l.c(mezcla(P.OLIVA_LUZ, P.OLIVA, 0.3f + 0.15f * (j % 2))), l, hacia, 0.45f)
+            drawRect(l.c(P.OCRE), Offset(lr.left, lr.top + lh * 0.3f), Size(la, lh * 0.16f))
+            drawOval(l.c(mezcla(P.ACERO, P.CREMA, 0.2f)), Offset(lr.left, lr.top - la * 0.12f), Size(la, la * 0.24f))
+            drawOval(l.c(P.ACERO), Offset(lr.left + la * 0.1f, lr.top - la * 0.08f), Size(la * 0.8f, la * 0.16f))
+        }
+        // El cajón: el frente de dos tablas con su rendija, las cantoneras de los lados y los clavos.
+        val madera = mezcla(P.OCRE, P.CREMA, 0.5f)
+        val frente = Rect(r.left, r.top + al * 0.18f, r.right, r.bottom)
+        planosRefugio(Path().apply { addRect(frente) }, l.c(madera), l, hacia, 0.12f, 0.22f)
+        val rendija = frente.top + frente.height * 0.5f
+        drawRect(l.c(mezcla(P.BAQUELITA, P.NOCHE, 0.3f)), Offset(frente.left, rendija - 1.4f * u), Size(an, 2.8f * u))
+        drawRect(l.b(0.45f), Offset(frente.left, rendija + 1.4f * u), Size(an, 0.8f * u))
+        drawRect(l.b(0.5f), frente.topLeft, Size(an, 1f * u))
+        // La veta de las tablas: unas rayas largas y tenues.
+        val vetas = Path()
+        for (j in 0 until 6) {
+            val y = frente.top + frente.height * (0.12f + 0.15f * j)
+            vetas.addRect(Rect(frente.left + an * 0.15f * azar(9970, j), y, frente.right - an * 0.2f * azar(9971, j), y + 0.6f * u))
+        }
+        drawPath(vetas, l.s(0.18f))
+        listOf(frente.left, frente.right - an * 0.08f).forEach { cxn ->
+            drawRect(l.c(mezcla(madera, P.BAQUELITA, 0.25f)), Offset(cxn, frente.top), Size(an * 0.08f, frente.height))
+            drawRect(l.b(0.35f), Offset(cxn, frente.top), Size(0.9f * u, frente.height))
+            listOf(0.25f, 0.75f).forEach { fy -> drawCircle(l.c(P.ACERO_OSC), 1.1f * u, Offset(cxn + an * 0.04f, frente.top + frente.height * fy)) }
+        }
+        // La lata tumbada encima, de canto.
+        val tl = Rect(r.left + an * 0.42f, r.top - al * 0.3f, r.left + an * 0.42f + la * 1.6f, r.top - al * 0.3f + la * 0.95f)
+        val tlp = Path().apply { addRect(tl) }
+        drawPath(corridoRefugio(tlp, -hacia * 1.4f * u, 2f * u), l.s(0.35f))
+        drawPath(tlp, Brush.verticalGradient(listOf(l.c(P.OLIVA_LUZ), l.c(P.OLIVA), l.c(P.OLIVA_OSC)), tl.top, tl.bottom))
+        drawRect(l.c(P.OCRE), Offset(tl.left + tl.width * 0.42f, tl.top), Size(tl.width * 0.16f, tl.height))
+        drawOval(l.c(mezcla(P.ACERO, P.CREMA, 0.2f)), Offset(tl.right - tl.height * 0.14f, tl.top), Size(tl.height * 0.28f, tl.height))
+        if (l.k > 0.06f) drawRect(l.filo(0.7f), Offset(frente.left, frente.top), Size(an, 1.4f * u))
     }
 }

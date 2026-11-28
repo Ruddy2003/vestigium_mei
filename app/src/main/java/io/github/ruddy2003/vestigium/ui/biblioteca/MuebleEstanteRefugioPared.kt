@@ -66,7 +66,6 @@ internal object ParedEstanteRefugio {
         pinceladas(Rect(0f, 0f, w, ch), if (g.a.oscuro) g.a.hondo else P.CREMA_OSC, 8101, 34, u, 0.09f)
         // De día, la mancha de las luminarias arriba a la izquierda (como en el Ideario).
         if (g.a.techo) mancha(Offset(w * 0.05f, w * 0.02f), w * 0.75f, P.LUZ_TECHO.copy(alpha = 0.45f))
-        if (g.a.tarde) mancha(Offset(w * 0.04f, w * 0.05f), w * 0.6f, P.MELOCOTON.copy(alpha = 0.32f))
         // De noche, el halo del fósforo en la pared, alrededor de la pantalla.
         if (g.a.pantalla > 0f) mancha(g.pantalla, w * 0.42f, P.FOSFORO.copy(alpha = 0.09f * g.a.pantalla))
         bloques(g, 0f, ch)
@@ -377,6 +376,12 @@ internal object ParedEstanteRefugio {
                 val c = Offset(aw * azar(8310, k), ah * azar(8311, k))
                 drawCircle(cols[(k + 2) % cols.size].copy(alpha = 0.16f * fuerza), (0.6f + 0.8f * azar(8312, k)) * u, c)
             }
+            // El grano fino (el del resto del mueble), ya metido en la baldosa: así el fondo no lleva otra capa encima.
+            val r = java.util.Random(8320)
+            val oscuros = List(500) { Offset(r.nextFloat() * aw, r.nextFloat() * ah) }
+            val claros = List(500) { Offset(r.nextFloat() * aw, r.nextFloat() * ah) }
+            drawPoints(oscuros, androidx.compose.ui.graphics.PointMode.Points, io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE.copy(alpha = if (a.oscuro) 0.06f else 0.08f), 1.1f * u * 0.5f, StrokeCap.Round)
+            drawPoints(claros, androidx.compose.ui.graphics.PointMode.Points, io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE.copy(alpha = if (a.oscuro) 0.05f else 0.08f), 1.1f * u * 0.5f, StrokeCap.Round)
         }
         val nuevo = ShaderBrush(ImageShader(img, TileMode.Repeated, TileMode.Repeated))
         claveBaldosa2 = claveBaldosa; pincel2 = pincel
@@ -393,11 +398,10 @@ internal object ParedEstanteRefugio {
         val w = g.w; val u = density
         if (r.width < 2f || r.height < 2f) return
         val xs = List(9) { j -> r.left + r.width * j / 8f }
-        val fondoCol = mezcla(P.OLIVA_OSC, P.OLIVA, 0.3f)
-        val arriba = xs.map { g.luz(it, r.top + r.height * 0.2f, 0f).c(fondoCol) }
-        val abajo = xs.map { g.luz(it, r.top + r.height * 0.78f, 0f).c(fondoCol) }
-        drawRect(Brush.horizontalGradient(arriba, r.left, r.right), r.topLeft, Size(r.width, r.height * 0.5f + 1f))
-        drawRect(Brush.horizontalGradient(abajo, r.left, r.right), Offset(r.left, r.top + r.height * 0.5f), Size(r.width, r.height * 0.5f))
+        // Un paso más hondo que el oliva del armario, para que las entradas verdes se despeguen del fondo; un solo degradado a lo
+        // ancho, con la luz de media altura.
+        val fondoCol = mezcla(P.OLIVA_OSC, P.OLIVA, 0.12f)
+        drawRect(Brush.horizontalGradient(xs.map { g.luz(it, r.top + r.height * 0.55f, 0f).c(fondoCol) }, r.left, r.right), r.topLeft, r.size)
         // El dibujo de la melamina, corrido en cada hueco para que no se repita igual.
         val b = baldosa(u, g.a)
         val dx = w * 0.37f * k; val dy = w * 0.11f * k
