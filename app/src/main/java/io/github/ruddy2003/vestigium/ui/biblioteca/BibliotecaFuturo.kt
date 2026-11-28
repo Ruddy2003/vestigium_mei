@@ -2133,16 +2133,9 @@ object EstanteNeon : DisenoBiblioteca {
 }
 
 /**
- * Refugio: el armario de taquillas del refugio, de chapa pintada de verde azulado (el optimismo atómico del tema), contra el
- * muro de hormigón crema. Arriba corren las tuberías del techo (una gruesa de acero y una de cobre, con sus bridas, la
- * válvula de volante roja y el manómetro), y sobre el armario está la sirena enjaulada junto a la placa amarilla del refugio
- * (un triángulo y barras: formas, no letras) y sus rejillas. Los costados son los marcos de las puertas: a la izquierda las
- * bisagras, la rejilla y la placa del número; a la derecha el pasador con su candado. El fondo de cada taquilla es de chapa
- * perforada; las tablas llevan remaches y cada mes va en una pantallita de fósforo verde. Abajo, el zócalo con su rejilla y el
- * piso de hormigón con la franja amarilla y la coladera. Cada entrada es un carrete de cinta abierto en su estuche (no un
- * cartucho): la brida con sus seis ventanas deja ver la cinta, más gruesa cuanto más escribiste, y arriba va la etiqueta del
- * día. De noche se enciende la luz roja de emergencia. Distinto del Ideario, que es el armario de cartuchos con la puerta de la
- * bóveda.
+ * Refugio. El estante y sus entradas están en `MuebleEstanteRefugio*.kt`: la librería de pared de la sala de lectura, de chapa
+ * esmaltada verde agua de los años cincuenta, en la otra pared del mismo cuarto de registros del Ideario; las entradas son la
+ * carpeta de vinilo, el tarro de conserva y la bolsa de papel del economato.
  * La tapa del diario es el estuche del carrete cerrado, con la etiqueta de la bitácora y la ventanilla al carrete; al
  * abrirse, la tapa se levanta.
  */

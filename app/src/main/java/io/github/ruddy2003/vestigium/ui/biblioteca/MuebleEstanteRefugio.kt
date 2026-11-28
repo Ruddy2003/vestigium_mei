@@ -117,7 +117,7 @@ internal object PaletaRefugio {
 internal class AireRefugio(val oscuro: Boolean, val noche: Boolean) {
     private val p = PaletaRefugio
     /** Cuánto alumbra la pantalla del monitor (de día brilla, pero no alumbra). */
-    val pantalla: Float get() = if (oscuro && !noche) 1f else if (oscuro) 0.62f else 0f
+    val pantalla: Float get() = if (oscuro && !noche) 1f else if (oscuro) 0.62f else if (noche) 0.3f else 0f
     /** Cuánto arde la luz de guardia ámbar del costado derecho. */
     val guardia: Float get() = if (oscuro && !noche) 1f else if (oscuro) 0.42f else if (noche) 0.35f else 0f
     /** Cuánto arde el tubo de la lámpara de cultivo bajo el mueble. */
@@ -170,7 +170,7 @@ internal class LuzRefugio(val a: AireRefugio, val k: Float, val tinte: Color, va
         }
         a.noche -> {
             // El anochecer: lo que mira a las luminarias, melocotón; lo de lejos, hacia el violeta, sin perder su color.
-            val hondo = (0.4f + 0.42f * (1f - amb)).coerceIn(0.1f, 0.72f)
+            val hondo = (0.36f + 0.38f * (1f - amb)).coerceIn(0.1f, 0.64f)
             mezcla(mezcla(anochecer(col, hondo), alOcaso(col), ((amb - 0.62f) * 1.9f).coerceIn(0f, 0.75f)), alaLuz(col), 0.6f * q)
         }
         else -> alTecho(col)
@@ -192,7 +192,7 @@ internal class LuzRefugio(val a: AireRefugio, val k: Float, val tinte: Color, va
 
     /** Un color al anochecer, lejos de las luminarias: su mismo color más hondo, apenas más frío (el violeta va solo en las sombras). */
     private fun anochecer(c: Color, hondo: Float): Color =
-        Color(c.red * (1f - hondo), c.green * (1f - hondo * 0.97f), c.blue * (1f - hondo * 0.88f), c.alpha)
+        Color(c.red * (1f - hondo), c.green * (1f - hondo * 0.99f), c.blue * (1f - hondo * 0.95f), c.alpha)
 
     /**
      * Un color bajo la luz que le toca: su propio color con el tinte de esa luz encima (el fósforo lo enverdece, la guardia lo
@@ -279,7 +279,7 @@ internal object MuebleEstanteRefugio {
 
     val CORONA = 0.6f
     val BASE = 0.34f
-    val LADO = 0.075f
+    val LADO = 0.082f
     val ALTO_REPISA: Dp = 112.dp
     val TABLA: Dp = 18.dp
     val SEPARA: Dp = 3.dp
@@ -318,7 +318,7 @@ internal object MuebleEstanteRefugio {
     const val PANTALLA_X = 0.175f
     const val PANTALLA_Y = 0.356f
     /** La luz de guardia del costado derecho: su x y a qué fracción del cuerpo está. */
-    const val GUARDIA_X = 0.9625f
+    const val GUARDIA_X = 0.959f
     const val GUARDIA_T = 0.56f
     /** El tubo de la lámpara de cultivo, bajo el mueble: su x y su altura sobre el pie del lienzo (en anchos). */
     const val CULTIVO_X = 0.47f
@@ -367,8 +367,8 @@ internal object MuebleEstanteRefugio {
     fun kCultivo(x: Float, y: Float, alto: Float): Float {
         val yc = alto - CULTIVO_Y
         val arriba = (yc - y).coerceAtLeast(0f)
-        val tapa = (1f - 4.5f * arriba).coerceIn(0.28f, 1f)
-        return (2.0f * exp(-5.6f * dist((x - CULTIVO_X) * 0.8f, (y - yc) * 0.9f))).coerceAtMost(1f) * tapa
+        val tapa = (1f - 4.5f * arriba).coerceIn(0.18f, 1f)
+        return (1.75f * exp(-5.6f * dist((x - CULTIVO_X) * 0.8f, (y - yc) * 0.9f))).coerceAtMost(1f) * tapa
     }
 
     private fun dist(dx: Float, dy: Float) = sqrt(dx * dx + dy * dy)

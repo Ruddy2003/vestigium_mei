@@ -255,23 +255,44 @@ private fun DrawScope.tarroRefugio(v: Volumen, tono: Color?, medidor: TextMeasur
         val nivel = hombro + (h - hombro) * (0.3f - 0.28f * v.lleno)
         drawRect(mezcla(pieza, l.a.hondo, if (l.a.oscuro) 0.35f else 0.3f), Offset(x0, nivel), Size(an, h - nivel))
         drawLine(mezcla(pieza, Color.White, 0.35f).copy(alpha = if (l.a.oscuro) 0.35f else 0.7f), Offset(x0, nivel), Offset(x0 + an, nivel), 1.1f * u)
-        // Las piezas apretadas: redondas, en hileras trabadas, cada una con su lado de luz y su brillo.
-        val r = an * (0.2f + 0.03f * azar(s, 24))
-        var fila = 0
-        var y = h - r * 0.9f
-        while (y > nivel + r * 0.3f && fila < 12) {
-            var x = x0 + r * (if (fila % 2 == 0) 0.75f else 1.6f)
-            var j = 0
-            while (x < x0 + an + r && j < 8) {
-                val c = Offset(x + r * 0.15f * (azar(s, 30 + fila * 7 + j) - 0.5f), y)
-                val rr = r * (0.88f + 0.18f * azar(s, 60 + fila * 7 + j))
-                drawCircle(mezcla(pieza, l.a.hondo, 0.12f * ((fila + j) % 2)), rr, c)
-                drawCircle(mezcla(pieza, l.a.hondo, 0.3f), rr * 0.62f, c + Offset(-hacia * rr * 0.28f, rr * 0.25f))
-                drawCircle(l.b(0.55f), rr * 0.24f, c + Offset(hacia * rr * 0.35f, -rr * 0.38f))
-                x += r * 1.7f; j++
+        // Las piezas apretadas: en unos tarros, largas y de pie (las judías, los espárragos), cada una con su luz y su sombra; en
+        // otros, redondas (los tomates, los albaricoques), en hileras trabadas.
+        // Todas las piezas en tres caminos (el tono, la sombra y el brillo): un tarro no cuesta más que una carpeta.
+        val cuerpos = Path(); val hondos = Path(); val brillos = Path()
+        if (azar(s, 25) < 0.38f) {
+            val pw = an * 0.15f
+            var x = x0 + pw * 0.3f; var j = 0
+            while (x < x0 + an && j < 12) {
+                val tope = nivel + (h - nivel) * (0.06f + 0.12f * azar(s, 40 + j))
+                cuerpos.addRoundRect(RoundRect(Rect(x, tope, x + pw, h - 2f * u), CornerRadius(pw * 0.5f)))
+                hondos.addRect(Rect(if (hacia < 0f) x + pw * 0.62f else x, tope + pw * 0.4f, (if (hacia < 0f) x + pw * 0.62f else x) + pw * 0.38f, h - pw * 0.6f))
+                brillos.addRect(Rect(if (hacia < 0f) x + pw * 0.16f else x + pw * 0.66f, tope + pw * 0.5f, (if (hacia < 0f) x + pw * 0.16f else x + pw * 0.66f) + pw * 0.16f, tope + pw * 0.5f + (h - tope) * 0.7f))
+                x += pw * 1.08f; j++
             }
-            y -= r * 1.45f; fila++
+        } else {
+            val r = an * (0.2f + 0.03f * azar(s, 24))
+            var fila = 0
+            var y = h - r * 0.9f
+            while (y > nivel + r * 0.3f && fila < 12) {
+                var x = x0 + r * (if (fila % 2 == 0) 0.75f else 1.6f)
+                var j = 0
+                while (x < x0 + an + r && j < 8) {
+                    val c = Offset(x + r * 0.15f * (azar(s, 30 + fila * 7 + j) - 0.5f), y)
+                    val rr = r * (0.88f + 0.18f * azar(s, 60 + fila * 7 + j))
+                    cuerpos.addOval(Rect(c.x - rr, c.y - rr, c.x + rr, c.y + rr))
+                    val cs = c + Offset(-hacia * rr * 0.28f, rr * 0.25f)
+                    hondos.addOval(Rect(cs.x - rr * 0.62f, cs.y - rr * 0.62f, cs.x + rr * 0.62f, cs.y + rr * 0.62f))
+                    val cb = c + Offset(hacia * rr * 0.35f, -rr * 0.38f)
+                    brillos.addOval(Rect(cb.x - rr * 0.24f, cb.y - rr * 0.24f, cb.x + rr * 0.24f, cb.y + rr * 0.24f))
+                    x += r * 1.7f; j++
+                }
+                y -= r * 1.45f; fila++
+            }
         }
+        drawPath(cuerpos, pieza)
+        drawPath(cuerpos, mezcla(pieza, l.a.hondo, 0.4f), style = Stroke(0.7f * u))
+        drawPath(hondos, mezcla(pieza, l.a.hondo, 0.3f))
+        drawPath(brillos, l.b(0.55f))
         // El vidrio: el hondo del lado de la sombra, el brillo largo del de la luz y el fondo grueso.
         val sx = if (hacia < 0f) x0 + an * 0.84f else x0
         drawRect(l.s(0.3f), Offset(sx, hombro - h * 0.05f), Size(an * 0.16f, h))

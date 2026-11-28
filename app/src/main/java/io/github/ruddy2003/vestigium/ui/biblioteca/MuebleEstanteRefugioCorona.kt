@@ -72,7 +72,7 @@ internal object CoronaEstanteRefugio {
         val w = g.w; val u = density
         val pie = g.apoyo
         val lado = w * 0.15f
-        val fundas = listOf(Triple(0.705f, -9f, 0), Triple(0.745f, -4f, 1), Triple(0.79f, 3f, 2))
+        val fundas = listOf(Triple(0.66f, -9f, 0), Triple(0.7f, -4f, 1), Triple(0.74f, 3f, 2))
         fundas.forEachIndexed { i, (fx, giro, tipo) ->
             val x0 = w * fx
             val r = Rect(x0, pie - lado, x0 + lado, pie)
@@ -127,7 +127,7 @@ internal object CoronaEstanteRefugio {
                 drawRect(l.s(0.35f), Offset(r.right - 1.2f * u, r.top), Size(1.2f * u, lado))
             }
         }
-        contacto(g, w * 0.7f, w * 0.95f, pie, 0.38f)
+        contacto(g, w * 0.65f, w * 0.9f, pie, 0.38f)
     }
 
     /** Un disco de vinilo: el negro con sus surcos que brillan en un arco, la etiqueta coral y el agujero. */
@@ -257,7 +257,7 @@ internal object CoronaEstanteRefugio {
         if (g.a.oscuro) {
             mancha(c, r * 4.2f, P.FOSFORO.copy(alpha = (if (reposo) 0.12f else 0.2f)))
             mancha(c, r * 2f, P.FOSFORO.copy(alpha = (if (reposo) 0.14f else 0.24f)))
-        }
+        } else if (g.a.tarde) mancha(c, r * 2.4f, P.FOSFORO.copy(alpha = 0.14f))
         drawPath(vidrio, Brush.radialGradient(listOf(if (reposo) Color(0xFF16402A) else Color(0xFF235E3A), P.PANTALLA), c, r))
         clipPath(vidrio) {
             val ret = Path()
@@ -384,8 +384,8 @@ internal object CoronaEstanteRefugio {
     private fun DrawScope.casco(g: MarcoRefugio) {
         val w = g.w; val u = density
         val pie = g.apoyo
-        val cx = w * 0.905f
-        val cw = w * 0.16f
+        val cx = w * 0.915f
+        val cw = w * 0.15f
         val alto = w * 0.062f
         val boca = pie - alto
         val l = g.luz(cx, pie - alto / 2, 0.04f)

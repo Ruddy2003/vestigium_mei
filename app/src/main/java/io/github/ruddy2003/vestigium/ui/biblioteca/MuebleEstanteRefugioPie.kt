@@ -54,7 +54,7 @@ internal object PieEstanteRefugio {
     /** El zócalo verde azulado del muro, entre las patas, con sus juntas, y la sombra franca del mueble encima. */
     private fun DrawScope.muroBajo(g: MarcoRefugio, falda: Float, suelo: Float) {
         val w = g.w; val u = density
-        with(ParedEstanteRefugio) { campo(g, Rect(0f, falda - 1f, w, suelo), P.TEAL, 0f, paso = 6f, muestras = 9) }
+        with(ParedEstanteRefugio) { campo(g, Rect(0f, falda - 1f, w, suelo), P.TEAL, 0f, paso = 16f * density, muestras = 9) }
         pinceladas(Rect(0f, falda, w, suelo), if (g.a.oscuro) g.a.hondo else mezcla(P.TEAL, Color.Black, 0.4f), 9801, 14, u, 0.14f)
         with(ParedEstanteRefugio) { bloques(g, falda, suelo) }
         // La sombra del mueble: franca bajo el faldón y apagándose hacia el suelo.
@@ -72,7 +72,7 @@ internal object PieEstanteRefugio {
         val w = g.w; val u = density
         val h = g.h
         val l = g.luz(w * 0.5f, (suelo + h) / 2, 0.03f)
-        with(ParedEstanteRefugio) { campo(g, Rect(0f, suelo, w, h), mezcla(P.ACERO_OSC, P.NOCHE, 0.5f), 0.03f, paso = 6f, muestras = 9) }
+        with(ParedEstanteRefugio) { campo(g, Rect(0f, suelo, w, h), mezcla(P.ACERO_OSC, P.NOCHE, 0.5f), 0.03f, paso = 16f * density, muestras = 9) }
         val trav = Path(); val travLuz = Path()
         var y = suelo + 2f * u
         var paso = (h - suelo) * 0.14f
@@ -106,7 +106,7 @@ internal object PieEstanteRefugio {
     /** El faldón de esmalte verde agua bajo la última tabla, con su zócalo cromado abajo y el esmalte rozado por los pies. */
     private fun DrawScope.faldon(g: MarcoRefugio, b0: Float, falda: Float) {
         val w = g.w; val u = density
-        with(ParedEstanteRefugio) { campo(g, Rect(0f, b0, w, falda), P.AGUA, 0.04f, paso = 4f, muestras = 11) }
+        with(ParedEstanteRefugio) { campo(g, Rect(0f, b0, w, falda), P.AGUA, 0.04f, paso = 9f * density, muestras = 9) }
         pinceladas(Rect(0f, b0, w, falda), if (g.a.oscuro) g.a.hondo else P.AGUA_OSC, 9830, 10, u, 0.1f)
         drawRect(g.a.sombra(0.35f), Offset(0f, b0), Size(w, 2f * u))
         val zc = Rect(0f, falda - w * 0.014f, w, falda)
@@ -163,7 +163,8 @@ internal object PieEstanteRefugio {
         val pie = suelo + w * 0.07f
         val alto = w * 0.062f
         val artesa = Rect(x0, pie - alto, x1, pie - w * 0.012f)
-        val l = g.luz((x0 + x1) / 2, artesa.center.y, 0.03f)
+        // La luz de la artesa, tomada más abajo: su frente mira a quien mira, no al tubo de encima.
+        val l = g.luz((x0 + x1) / 2, artesa.bottom + w * 0.05f, 0.03f)
         // El caballete de tubo y la sombra en el suelo.
         drawOval(l.s(0.45f), Offset(x0, pie - 2.6f * u), Size(x1 - x0, 5f * u))
         listOf(x0 + w * 0.03f, x1 - w * 0.03f).forEach { x ->
@@ -173,7 +174,7 @@ internal object PieEstanteRefugio {
         // Las lechugas, detrás del frente de la artesa.
         for (j in 0 until 5) {
             val cx = x0 + (x1 - x0) * (0.12f + 0.19f * j)
-            val lj = g.luz(cx, artesa.top, 0.03f)
+            val lj = g.luz(cx, artesa.top + w * 0.07f, 0.03f)
             val rr = w * (0.046f + 0.01f * azar(9900, j))
             for (k in 0 until 7) {
                 val a = -2.9f + k * 0.48f + 0.2f * azar(9901 + j, k)
@@ -267,8 +268,8 @@ internal object PieEstanteRefugio {
     private fun DrawScope.puf(g: MarcoRefugio, pisan: Float) {
         val w = g.w; val u = density
         val pie = pisan + w * 0.02f
-        val cx = w * 0.9f
-        val ra = w * 0.14f
+        val cx = w * 0.85f
+        val ra = w * 0.125f
         val al = w * 0.13f
         val top = pie - w * 0.02f - al
         val l = g.luz(cx - ra * 0.4f, top + al * 0.5f, 0.07f)
@@ -285,19 +286,22 @@ internal object PieEstanteRefugio {
         val cuerpo = Path().apply { addRoundRect(RoundRect(Rect(cx - ra, top, cx + ra, pie - w * 0.028f), CornerRadius(ra * 0.22f, al * 0.3f))) }
         cilindroRefugio(cuerpo, l.c(P.CORAL), l, hacia, 0.4f)
         clipPath(cuerpo) {
-            // El capitoné: dos hileras de botones hundidos, con las arrugas en aspa suave que salen de cada uno.
-            val arrugas = Path(); val luces = Path()
-            for (fila in 0 until 2) for (k in 0 until 4) {
-                val b = Offset(cx - ra * 0.85f + ra * 0.5f * k + (if (fila == 1) ra * 0.25f else 0f), top + al * (0.4f + 0.32f * fila))
-                val d = ra * 0.12f
-                arrugas.moveTo(b.x - d, b.y - d * 0.5f); arrugas.quadraticTo(b.x, b.y + 0.5f * u, b.x + d, b.y - d * 0.5f)
-                arrugas.moveTo(b.x - d, b.y + d * 0.5f); arrugas.quadraticTo(b.x, b.y - 0.5f * u, b.x + d, b.y + d * 0.5f)
-                luces.addOval(Rect(b.x - d * 0.6f, b.y - d * 0.5f, b.x + d * 0.2f, b.y - d * 0.2f))
-                drawCircle(l.s(0.45f), 1.8f * u, b)
+            // El acolchado: cojines abombados entre los botones (en hileras trabadas), cada uno con su luz arriba y su sombra abajo,
+            // y el botón hundido con su hoyuelo. Sin arrugas en aspa (en fila harían cruces).
+            val bollos = Path(); val luces = Path()
+            for (fila in 0 until 2) for (k in 0 until 5) {
+                val b = Offset(cx - ra * 1.05f + ra * 0.5f * k + (if (fila == 1) ra * 0.25f else 0f), top + al * (0.36f + 0.32f * fila))
+                val d = ra * 0.22f
+                bollos.addOval(Rect(b.x - d, b.y + d * 0.2f, b.x + d, b.y + d * 1.1f))
+                luces.addOval(Rect(b.x - d * 0.7f, b.y - d * 0.55f, b.x + d * 0.5f, b.y - d * 0.15f))
+            }
+            drawPath(bollos, l.s(0.22f))
+            drawPath(luces, l.b(0.28f))
+            for (fila in 0 until 2) for (k in 0 until 5) {
+                val b = Offset(cx - ra * 1.05f + ra * 0.5f * k + (if (fila == 1) ra * 0.25f else 0f), top + al * (0.36f + 0.32f * fila))
+                drawCircle(l.s(0.4f), 2.2f * u, b)
                 drawCircle(l.c(mezcla(P.CORAL, P.BAQUELITA, 0.3f)), 1.2f * u, b)
             }
-            drawPath(arrugas, l.s(0.35f), style = Stroke(0.9f * u))
-            drawPath(luces, l.b(0.3f))
             drawRect(l.s(0.25f), Offset(cx - ra, pie - w * 0.05f), Size(ra * 2, w * 0.024f))
         }
         val cara = Rect(cx - ra * 0.98f, top - al * 0.2f, cx + ra * 0.98f, top + al * 0.24f)

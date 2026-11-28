@@ -179,7 +179,7 @@ internal object ParedEstanteRefugio {
         drawCircle(lv.c(P.NARANJA), rv, c, style = Stroke(2.2f * u))
         for (k in 0 until 3) { val a = k * 2.094f + 0.5f; drawLine(lv.c(P.NARANJA), c, Offset(c.x + rv * cos(a), c.y + rv * sin(a)), 1.4f * u) }
         drawCircle(lv.c(P.ACERO), r * 0.3f, c)
-        // El grifo cromado: el cuerpo, el caño curvo hacia abajo y el mando en cruz… no: el mando de palanca.
+        // El grifo cromado: el cuerpo, el caño corto hacia abajo y la palanca.
         val lg = g.luz(x, fin, 0.035f)
         val cuerpo = Rect(x - r * 1.3f, fin - r * 0.4f, x + r * 1.3f, fin + r * 1.6f)
         drawRoundRect(lg.s(0.3f), cuerpo.topLeft + Offset(1.6f * u, 1.6f * u), cuerpo.size, CornerRadius(r * 0.5f))
@@ -246,7 +246,7 @@ internal object ParedEstanteRefugio {
             drawLine(l.c(P.TINTA).copy(alpha = 0.75f), Offset(c.x + re * (0.78f - lar) * cos(a), c.y + re * (0.78f - lar) * sin(a)), Offset(c.x + re * 0.78f * cos(a), c.y + re * 0.78f * sin(a)), (if (k % 3 == 0) 1.3f else 0.8f) * u)
         }
         val aguja = if (g.a.oscuro || g.a.tarde) mezcla(P.FOSFORESCENTE, P.FOSFORO, 0.25f).copy(alpha = if (g.a.oscuro) 0.95f else 0.8f) else l.c(P.TINTA)
-        // Las diez y diez de siempre no: las cinco y veinte.
+        // Las agujas: la hora y el minutero, y la aguja de los segundos, coral.
         drawLine(aguja, c, Offset(c.x + re * 0.45f * cos(2.2f), c.y + re * 0.45f * sin(2.2f)), 1.8f * u, StrokeCap.Round)
         drawLine(aguja, c, Offset(c.x + re * 0.68f * cos(0.52f), c.y + re * 0.68f * sin(0.52f)), 1.2f * u, StrokeCap.Round)
         drawLine(l.c(P.CORAL), c, Offset(c.x + re * 0.7f * cos(-1.2f), c.y + re * 0.7f * sin(-1.2f)), 0.6f * u)

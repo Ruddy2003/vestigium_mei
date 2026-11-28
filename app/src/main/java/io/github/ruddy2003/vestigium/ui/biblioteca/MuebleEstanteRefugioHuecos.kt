@@ -36,7 +36,7 @@ internal object HuecosEstanteRefugio {
         if (libre > w * 0.5f) {
             val mitad = libre * 0.5f
             grupo(orden[i], Rect(x0, r.top, x0 + mitad, r.bottom), g, centrado = true)
-            grupo(orden[Math.floorMod(i + 2, 5)], Rect(x0 + mitad + w * 0.012f, r.top, r.right - w * 0.03f, r.bottom), g, centrado = true)
+            grupo(orden[Math.floorMod(i + 3, 5)], Rect(x0 + mitad + w * 0.012f, r.top, r.right - w * 0.03f, r.bottom), g, centrado = true)
         } else grupo(orden[i], Rect(x0, r.top, x0 + libre, r.bottom), g)
     }
 
@@ -392,13 +392,22 @@ internal object HuecosEstanteRefugio {
         val caja = Rect(cx + an * 1.15f, pie - chh, cx + an * 1.15f + ca, pie)
         val cajaP = Path().apply { addRect(caja) }
         sombras(cajaP, caja.left, caja.right, pie, l, hacia)
-        // Las bombillas, detrás del frente de la caja: sus globos y sus casquillos.
-        for (j in 0 until 3) {
-            val bc = Offset(caja.left + ca * (0.2f + 0.3f * j), caja.top - chh * 0.12f)
-            val br = ca * 0.13f
-            drawCircle(l.c(mezcla(P.ETIQUETA, Color.White, 0.3f)).copy(alpha = 0.9f), br, bc)
-            drawCircle(l.b(0.8f), br * 0.3f, bc - Offset(br * 0.35f, br * 0.35f))
-            drawCircle(l.s(0.2f), br, bc, style = Stroke(0.6f * u))
+        // Las bombillas, de pie en la caja y ladeadas, a distintas alturas: el globo de pera y el casquillo cromado abajo (no dos
+        // bolas sueltas, que harían ojos).
+        listOf(Triple(0.24f, -14f, 0.2f), Triple(0.52f, 6f, 0.05f), Triple(0.8f, 18f, 0.26f)).forEach { (fx, giro, baja) ->
+            val br = ca * 0.14f
+            val pie = caja.top + chh * 0.1f
+            val bc = Offset(caja.left + ca * fx, pie - br * 2.3f + chh * baja)
+            rotate(giro, Offset(bc.x, pie)) {
+                val pera = cerradaRefugio(listOf(Offset(bc.x, bc.y - br), Offset(bc.x + br, bc.y), Offset(bc.x + br * 0.4f, bc.y + br * 1.3f),
+                    Offset(bc.x - br * 0.4f, bc.y + br * 1.3f), Offset(bc.x - br, bc.y)))
+                drawPath(pera, l.c(mezcla(P.ETIQUETA, Color.White, 0.3f)).copy(alpha = 0.92f))
+                drawPath(pera, l.s(0.25f), style = Stroke(0.6f * u))
+                drawLine(l.b(0.85f), Offset(bc.x - br * 0.45f, bc.y - br * 0.4f), Offset(bc.x - br * 0.5f, bc.y + br * 0.3f), 0.9f * u)
+                val casquillo = Rect(bc.x - br * 0.42f, bc.y + br * 1.2f, bc.x + br * 0.42f, bc.y + br * 2.1f)
+                cromoRefugio(casquillo, l, vertical = true)
+                for (k in 1..2) drawLine(l.s(0.4f), Offset(casquillo.left, casquillo.top + casquillo.height * k / 3f), Offset(casquillo.right, casquillo.top + casquillo.height * k / 3f), 0.6f * u)
+            }
         }
         planosRefugio(cajaP, l.c(mezcla(P.OCRE, P.CREMA, 0.45f)), l, hacia, 0.12f, 0.24f)
         drawRect(l.c(P.TEAL), Offset(caja.left, caja.top + chh * 0.35f), Size(ca, chh * 0.2f))

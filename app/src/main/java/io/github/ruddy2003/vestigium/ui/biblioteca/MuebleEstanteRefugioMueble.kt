@@ -310,22 +310,30 @@ internal object MuebleRefugio {
             drawRect(Brush.verticalGradient(lc.map { it.c(P.CROMO_OSC) }, y0, y1), Offset(canto, y0), Size(an * 0.14f, y1 - y0))
             drawRect(Brush.verticalGradient(lc.map { it.c(P.CROMO_LUZ) }, y0, y1), Offset(canto + an * 0.03f, y0), Size(an * 0.05f, y1 - y0))
             drawRect(Brush.verticalGradient(lc.map { it.b(0.85f) }, y0, y1), Offset(canto + an * 0.04f, y0), Size(1.1f * u, y1 - y0))
-            // El junquillo cromado, a lo largo de la cara.
-            val xj = if (izq) a + an * 0.38f else a + an * 0.5f
-            val lj = ys.map { g.luz(xj, it, 0.045f) }
-            drawRect(g.a.sombra(0.3f), Offset(xj + 1.6f * u, y0), Size(1f * u, y1 - y0))
-            drawRect(Brush.verticalGradient(lj.map { it.c(P.CROMO) }, y0, y1), Offset(xj, y0), Size(1.8f * u, y1 - y0))
-            drawRect(Brush.verticalGradient(lj.map { it.b(0.8f) }, y0, y1), Offset(xj, y0), Size(0.6f * u, y1 - y0))
-            // De noche, el filo de la luz más cercana en el canto cromado y en el junquillo.
+            // Un cuarterón rehundido en cada tramo, a la altura de su repisa: el fondo más hondo, el escalón de arriba en sombra y
+            // el de abajo a la luz, y el junquillo cromado alrededor.
+            val px0 = if (izq) a + an * 0.24f else a + an * 0.2f
+            val px1 = if (izq) b - an * 0.22f else b - an * 0.26f
+            d.repisas.forEach { rep ->
+                val pr = Rect(px0, rep.top + 0.022f * w, px1, rep.bottom - 0.012f * w)
+                if (pr.height < 4f * u) return@forEach
+                val lp = g.luz(pr.center.x, pr.center.y, 0.04f)
+                val pp = Path().apply { addRoundRect(RoundRect(pr, CornerRadius(pr.width * 0.45f))) }
+                drawPath(pp, Brush.verticalGradient(listOf(g.luz(pr.center.x, pr.top, 0.035f).c(mezcla(P.AGUA, P.AGUA_OSC, 0.45f)), g.luz(pr.center.x, pr.bottom, 0.035f).c(mezcla(P.AGUA, P.AGUA_OSC, 0.3f))), pr.top, pr.bottom))
+                drawPath(bordeRefugio(pp, 1.4f * u, 2f * u), lp.s(0.4f))
+                drawPath(bordeRefugio(pp, -1.2f * u, -1.6f * u), lp.b(0.45f))
+                drawPath(pp, lp.c(P.CROMO), style = Stroke(1.3f * u))
+                drawPath(corridoRefugio(pp, -0.5f * u, -0.5f * u), lp.b(0.7f), style = Stroke(0.5f * u))
+                if (lp.k > 0.06f) drawPath(pp, lp.filo(0.7f), style = Stroke(1f * u))
+            }
+            // De noche, el filo de la luz más cercana en el canto cromado.
             if (g.a.oscuro || g.a.noche) {
                 val filos = lc.map { it.filo(0.95f) }
                 if (filos.any { it.alpha > 0.04f }) drawRect(Brush.verticalGradient(filos, y0, y1), Offset(canto + an * 0.03f, y0), Size(2f * u, y1 - y0))
-                val filosJ = lj.map { it.filo(0.7f) }
-                if (filosJ.any { it.alpha > 0.04f }) drawRect(Brush.verticalGradient(filosJ, y0, y1), Offset(xj, y0), Size(1.4f * u, y1 - y0))
             }
             // Un botón cromado a la altura de cada tabla (los pernos que la sujetan).
             d.tablas.forEach { t ->
-                val c = Offset(if (izq) a + an * 0.62f else a + an * 0.28f, t.center.y)
+                val c = Offset((px0 + px1) / 2, t.center.y)
                 botonCromoRefugio(c, w * 0.009f, g.luz(c, 0.045f))
             }
             // El esmalte saltado en los cantos.
