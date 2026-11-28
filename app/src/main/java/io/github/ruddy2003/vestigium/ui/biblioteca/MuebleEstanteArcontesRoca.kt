@@ -61,10 +61,11 @@ internal object RocaEstanteArcontes {
         CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(img), Size(ancho, alto)) {
             val oscura = SOMBRA_MUEBLE
             val clara = LUZ_MUEBLE
-            // Los estratos: bandas onduladas que dan la vuelta a la baldosa (una onda entera o dos a lo ancho).
+            // Los estratos: bandas onduladas que dan la vuelta a la baldosa (una onda entera o dos a lo ancho); como en el Ideario,
+            // lo que más se ve de la piedra.
             var y = 4f * u; var k = 0
             while (y < alto && k < 40) {
-                val grueso = (2.5f + 7f * azar(7101, k)) * u
+                val grueso = (3f + 8f * azar(7101, k)) * u
                 val fase = azar(7102, k) * 6.28f
                 val ondas = 1 + (azar(7103, k) * 2f).toInt()
                 val banda = Path()
@@ -79,23 +80,23 @@ internal object RocaEstanteArcontes {
                     banda.lineTo(x, y + grueso + 1.5f * u * sin(fase * 1.3f + 2f * PI.toFloat() * ondas * j / pasos))
                 }
                 banda.close()
-                drawPath(banda, (if (k % 3 == 1) clara else oscura).copy(alpha = 0.04f + 0.05f * azar(7104, k)))
+                drawPath(banda, (if (k % 3 == 1) clara else oscura).copy(alpha = 0.045f + 0.05f * azar(7104, k)))
                 y += (10f + 22f * azar(7105, k)) * u; k++
             }
-            // Los poros: puntos hondos y, alguno, claro.
+            // Los poros: puntos hondos y, alguno, claro (pocos y suaves: muchos y grises agrisaban la piedra).
             val hondos = Path(); val claros = Path()
-            for (j in 0 until 260) {
+            for (j in 0 until 150) {
                 val p = Offset(ancho * azar(7110, j), alto * azar(7111, j))
                 val t = (0.35f + 0.85f * azar(7112, j)) * u
                 if (azar(7113, j) > 0.82f) claros.addOval(Rect(p.x - t, p.y - t, p.x + t, p.y + t))
                 else hondos.addOval(Rect(p.x - t, p.y - t, p.x + t, p.y + t))
             }
-            drawPath(hondos, oscura.copy(alpha = 0.2f))
-            drawPath(claros, clara.copy(alpha = 0.45f))
+            drawPath(hondos, oscura.copy(alpha = 0.13f))
+            drawPath(claros, clara.copy(alpha = 0.35f))
             // El picado del cincel: golpes cortos sueltos, cada uno con su labio claro, de largo e inclinación distintos (nunca en
             // fila: en fila se leen como rayas de contar).
             val golpes = Path(); val labios = Path()
-            for (j in 0 until 120) {
+            for (j in 0 until 60) {
                 val o = Offset(ancho * azar(7120, j), alto * azar(7121, j))
                 val an = 0.7f + 1.4f * azar(7122, j)
                 val l = (1.2f + 2.2f * azar(7123, j)) * u
@@ -103,8 +104,8 @@ internal object RocaEstanteArcontes {
                 golpes.moveTo(o.x, o.y); golpes.lineTo(o.x + dx, o.y + dy)
                 labios.moveTo(o.x + 0.6f * u, o.y + 0.3f * u); labios.lineTo(o.x + dx + 0.6f * u, o.y + dy + 0.3f * u)
             }
-            drawPath(golpes, oscura.copy(alpha = 0.2f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
-            drawPath(labios, clara.copy(alpha = 0.22f), style = Stroke(0.45f * u, cap = StrokeCap.Round))
+            drawPath(golpes, oscura.copy(alpha = 0.15f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
+            drawPath(labios, clara.copy(alpha = 0.2f), style = Stroke(0.45f * u, cap = StrokeCap.Round))
             // Pinceladas que rompen el plano.
             for (j in 0 until 26) {
                 val l = (14f + 26f * azar(7130, j)) * u
@@ -139,41 +140,71 @@ internal object RocaEstanteArcontes {
         val w = size.width
         val a = s.a
         if (!a.oscuro) {
-            // A lo largo de la diagonal, de la boca (arriba a la izquierda) a lo hondo (abajo a la derecha).
+            // A lo largo de la diagonal, de la boca (arriba a la izquierda) a lo hondo (abajo a la derecha): la caliza del Ideario,
+            // con su luz de fondo; fuera de la mancha (la mancha va encima, como luz).
+            val antes = a.forzar
+            a.forzar = 0f
             val n = 6
             val cs = List(n) { i ->
                 val f = i / (n - 1f)
-                s.t(Offset(r.left + r.width * f, r.top + r.height * f)).c(mezclaRapida(P.CALIZA, P.CALIZA_LUZ, 0.5f))
+                s.t(Offset(r.left + r.width * f, r.top + r.height * f)).c(mezclaRapida(P.CALIZA, P.CALIZA_LUZ, 0.3f))
             }
+            a.forzar = antes
             drawRect(Brush.linearGradient(cs, r.topLeft, r.bottomRight), r.topLeft, r.size)
         } else {
-            // De noche: el halo de la lámpara de encima del armario en la pared y lo lejano hundido en el azul negro.
-            val l = Offset(MuebleEstanteArcontes.LAMP_X * w, MuebleEstanteArcontes.LAMP_Y * w)
+            // De noche: el halo de la lámpara de encima del armario en la pared y lo lejano hundido en el azul violáceo.
+            val l = Offset(a.lampX * w, a.lampY * w)
+            val antes = a.forzar
+            a.forzar = 0f
             fun k(d: Float) = s.t(l + Offset(-d * w, -d * w * 0.3f)).c(P.CALIZA)
-            drawRect(Brush.radialGradient(0f to k(0.01f), 0.08f to k(0.08f), 0.18f to k(0.18f), 0.32f to k(0.32f), 0.5f to k(0.5f), 0.75f to k(0.75f), 1f to k(1.1f),
-                center = l + Offset(0f, w * 0.02f), radius = w * 1.1f), r.topLeft, r.size)
+            val brocha = Brush.radialGradient(0f to k(0.01f), 0.08f to k(0.08f), 0.18f to k(0.18f), 0.32f to k(0.32f), 0.5f to k(0.5f), 0.75f to k(0.75f), 1f to k(1.1f),
+                center = l + Offset(0f, w * 0.02f), radius = w * 1.1f)
+            a.forzar = antes
+            drawRect(brocha, r.topLeft, r.size)
         }
+    }
+
+    /**
+     * La luz de la boca en la pared, encima de la caliza: la misma piedra un paso más clara y más cálida (un velo de luz crema,
+     * no un amarillo), con el borde blando por abajo y a la derecha (la penumbra, en pasos que se apagan) y, arriba, cortado por el
+     * canto quebrado del techo que avanza (el techo se pinta después). Al ocaso, melocotón; con la luna, plata fría y corta.
+     */
+    private fun DrawScope.luzDeLaBoca(s: SitioArcontes, r: Rect) {
+        val w = size.width
+        val a = s.a
+        val q = a.parche ?: return
+        val (luz, fuerza) = when {
+            a.oscuro -> P.LUNA_RAS to 0.2f
+            a.noche -> P.OCASO to 0.34f
+            else -> Color(0xFFFFF1CC) to 0.62f
+        }
+        // La penumbra: la mancha agrandada en cinco pasos, cada uno con un poco de luz.
+        for (j in 5 downTo 1) {
+            drawPath(caminoManchaArcontes(q, w, true, 0.011f * j), luz.copy(alpha = fuerza * 0.11f))
+        }
+        drawPath(caminoManchaArcontes(q, w, true), luz.copy(alpha = fuerza * 0.45f))
     }
 
     /** La pared de la corona en [r], de arriba hasta donde pisan las cosas ([apoyo]) y un poco más (la cornisa la cubre). */
     fun DrawScope.pared(s: SitioArcontes, r: Rect, apoyo: Float) {
         val w = size.width; val u = density
         val a = s.a
-        conManchaArcontes(s) { fondo(s, r) }
+        fondo(s, r)
+        luzDeLaBoca(s, r)
         // El velo de lino: por la izquierda de la mancha el sol pasa por la tela y deja sus pliegues en rayas.
-        if (a.parche === AireArcontes.SOL_Q) clipPath(caminoManchaArcontes(AireArcontes.SOL_Q, w, true)) { velo(s, r) }
-        // El polvo dorado que flota en el aire de la mancha.
+        if (a.parche === AireArcontes.SOL_Q) clipPath(caminoManchaArcontes(AireArcontes.SOL_Q, w, true, 0.03f)) { velo(s, r) }
+        // El polvo dorado que flota en el aire de la mancha, poco.
         if (!a.oscuro && !a.noche) clipPath(caminoManchaArcontes(AireArcontes.SOL_Q, w, true)) {
             val motas = Path(); val chicas = Path()
-            for (j in 0 until 60) {
-                val p = Offset(w * (0.02f + 0.62f * azar(7201, j)), w * (0.08f + 0.62f * azar(7202, j)))
-                val t = (0.45f + 0.9f * azar(7203, j) * azar(7204, j)) * u
+            for (j in 0 until 34) {
+                val p = Offset(w * (0.06f + 0.56f * azar(7201, j)), w * (0.08f + 0.55f * azar(7202, j)))
+                val t = (0.45f + 0.8f * azar(7203, j) * azar(7204, j)) * u
                 (if (j % 3 == 0) motas else chicas).addOval(Rect(p.x - t, p.y - t, p.x + t, p.y + t))
             }
-            drawPath(motas, P.SOL.copy(alpha = 0.85f))
-            drawPath(chicas, P.ORO.copy(alpha = 0.55f))
+            drawPath(motas, P.SOL.copy(alpha = 0.7f))
+            drawPath(chicas, P.ORO.copy(alpha = 0.4f))
         }
-        textura(r, if (a.oscuro) 0.45f else 0.75f)
+        textura(r, if (a.oscuro) 0.45f else 0.7f)
         tizne(s)
         techo(s, r)
         bordes(s, r.top, r.bottom)
@@ -187,18 +218,19 @@ internal object RocaEstanteArcontes {
         s.a.forzar = 0f
         val fuera = s.a.en(0.1f, 0.3f, 0f)
         s.a.forzar = antes
+        val x0 = AireArcontes.VELO_X; val dx = AireArcontes.VELO_Y * 0.8f
         val zona = Path().apply {
-            moveTo(-0.08f * w, 0f); lineTo((0.17f) * w, 0f); lineTo((0.17f + 0.12f * 0.8f) * w, 0.8f * w); lineTo(-0.08f * w, 0.8f * w); close()
+            moveTo(-0.08f * w, 0f); lineTo(x0 * w, 0f); lineTo((x0 + dx) * w, 0.8f * w); lineTo(-0.08f * w, 0.8f * w); close()
         }
         clipPath(zona) {
-            drawRect(fuera.c(P.CALIZA).copy(alpha = 0.42f), r.topLeft, r.size)
+            drawRect(fuera.c(P.CALIZA).copy(alpha = 0.36f), r.topLeft, r.size)
             // Los pliegues: pocas bandas anchas y blandas que bajan casi rectas, una más clara y otra más honda.
-            var x = -0.05f; var j = 0
-            while (x < 0.3f && j < 12) {
-                val ancho = 0.035f + 0.025f * azar(7210, j)
+            var x = -0.08f; var j = 0
+            while (x < x0 + dx && j < 12) {
+                val ancho = 0.03f + 0.02f * azar(7210, j)
                 val p = Path().apply {
                     moveTo(x * w, 0f); lineTo((x + ancho) * w, 0f)
-                    lineTo((x + ancho + 0.035f) * w, 0.8f * w); lineTo((x + 0.035f) * w, 0.8f * w); close()
+                    lineTo((x + ancho + 0.03f) * w, 0.8f * w); lineTo((x + 0.03f) * w, 0.8f * w); close()
                 }
                 drawPath(p, if (j % 2 == 0) SOMBRA_MUEBLE.copy(alpha = 0.05f + 0.03f * azar(7211, j)) else LUZ_MUEBLE.copy(alpha = 0.08f + 0.05f * azar(7212, j)))
                 x += ancho; j++
@@ -206,13 +238,13 @@ internal object RocaEstanteArcontes {
         }
         // El borde del velo: un filo más claro donde la tela deja pasar la luz directa.
         val t = s.t(Offset(0.2f * w, 0.3f * w))
-        drawLine(t.b(0.35f), Offset(0.17f * w, 0f), Offset((0.17f + 0.096f) * w, 0.8f * w), 1.4f * density)
+        drawLine(t.b(0.3f), Offset(x0 * w, 0f), Offset((x0 + dx) * w, 0.8f * w), 1.2f * density)
     }
 
     /** El tizne de tantas noches encima de la lámpara de arriba: una mancha blanda y oscura que sube hacia el techo. */
     private fun DrawScope.tizne(s: SitioArcontes) {
         val w = size.width
-        val l = Offset(MuebleEstanteArcontes.LAMP_X * w, MuebleEstanteArcontes.LAMP_Y * w)
+        val l = Offset(s.a.lampX * w, s.a.lampY * w)
         val al = if (s.a.oscuro) 0.3f else 0.2f
         listOf(Triple(0.045f, 0.035f, 1f), Triple(0.1f, 0.05f, 0.75f), Triple(0.17f, 0.06f, 0.5f)).forEach { (dy, r, f) ->
             val c = Offset(l.x + w * 0.006f * f, l.y - w * dy)
@@ -230,9 +262,12 @@ internal object RocaEstanteArcontes {
             for (k in borde.indices.reversed()) lineTo(borde[k].x, borde[k].y)
             close()
         }
-        // La sombra en la pared, debajo del canto: blanda, en tres pasos que se van apagando.
+        // La sombra en la pared, debajo del canto: blanda, en tres pasos que se van apagando (corta la mancha del sol con el canto
+        // quebrado del techo).
+        val antes = s.a.forzar
+        s.a.forzar = 0f
         val t0 = s.t(Offset(w * 0.3f, w * 0.04f))
-        listOf(0.034f to 0.09f, 0.022f to 0.1f, 0.011f to 0.12f).forEach { (largo, al) ->
+        listOf(0.034f to 0.1f, 0.022f to 0.12f, 0.011f to 0.16f).forEach { (largo, al) ->
             val sombra = Path().apply {
                 moveTo(borde[0].x, borde[0].y)
                 for (p in borde) lineTo(p.x + 3f * u, p.y + w * largo)
@@ -242,6 +277,7 @@ internal object RocaEstanteArcontes {
             drawPath(sombra, t0.s(al))
         }
         val cs = List(5) { i -> s.t(Offset(w * i / 4f, w * 0.02f)).c(mezclaRapida(P.CALIZA_SOMBRA, P.ROCA, 0.45f)) }
+        s.a.forzar = antes
         drawPath(roca, Brush.horizontalGradient(cs, 0f, w))
         clipPath(roca) { textura(Rect(0f, 0f, w, w * 0.08f), if (s.a.oscuro) 0.5f else 0.9f, 37f) }
         val canto = Path().apply { borde.forEachIndexed { i, p -> if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y) } }
@@ -296,45 +332,55 @@ internal object RocaEstanteArcontes {
     fun DrawScope.lumbreArriba(s: SitioArcontes, ch: Float) {
         if (!s.a.oscuro) return
         val w = size.width
-        val l = Offset(MuebleEstanteArcontes.LAMP_X * w, MuebleEstanteArcontes.LAMP_Y * w)
+        val l = Offset(s.a.lampX * w, s.a.lampY * w)
         val f = if (s.a.noche) 0.5f else 1f
-        charcoArcontes(l, w * 0.42f, P.LLAMA_HALO, 0.55f * f)
-        charcoArcontes(l, w * 0.13f, P.LLAMA_HALO, 0.9f * f)
+        val e = MuebleEstanteArcontes.escala(w, density)
+        charcoArcontes(l, w * e * 0.38f, P.LLAMA_HALO, 0.6f * f)
+        charcoArcontes(l, w * e * 0.12f, P.LLAMA_HALO, 0.9f * f)
     }
 
     // ---------------------------------------------------------------- el fondo de cada hueco
 
     /**
-     * La roca del fondo de un hueco [r] (el armario no tiene fondo): la caliza en sombra, con su textura, la sombra franca de la
-     * tabla de arriba y su penumbra, la del costado de la izquierda y, en la primera repisa, la grieta que vuelve a asomar.
+     * La roca del fondo de un hueco [r] (el armario no tiene fondo): la misma caliza crema de la pared, que se hunde solo por la
+     * sombra del armario: la sombra franca de la tabla de arriba y su penumbra, la del costado de la izquierda (la luz viene de la
+     * boca, arriba a la izquierda), y todo un poco más hondo que la pared de fuera; con su textura y, en la primera repisa, la
+     * grieta que vuelve a asomar.
      */
     fun DrawScope.fondoHueco(k: Int, r: Rect, s: SitioArcontes, techo: Float, oc: Float) {
         val u = density; val w = size.width
         val fr = Rect(r.left - 1f, r.top - 1f, r.right + 1f, r.bottom + 1f)
-        val roca = mezclaRapida(P.HUECO, P.CALIZA_SOMBRA, 0.1f)
+        val roca = mezclaRapida(P.CALIZA, P.CALIZA_LUZ, 0.3f)
+        val y1 = fr.top + techo + r.height * 0.2f + 1f; val y2 = fr.top + techo + r.height * 0.34f + 1f
+        val lado = w * 0.05f
         if (!s.a.lumbre) {
+            val antes = s.a.forzar
+            s.a.forzar = 0f
             val tc = s.t(r.center)
-            val c = tc.c(roca, 0.02f)
-            val sombra = tc.c(P.HUECO_HONDO, -0.2f)
-            // En bandas lisas: la sombra franca de la tabla de arriba, su penumbra, la roca y, abajo, la luz que rebota en la tabla.
-            val y0 = fr.top; val y1 = fr.top + techo + r.height * 0.2f + 1f; val y2 = fr.top + techo + r.height * 0.34f + 1f
-            val y3 = fr.top + fr.height * 0.85f
+            s.a.forzar = antes
+            val c = tc.c(roca, -0.1f)
+            val sombra = mezclaRapida(c, SOMBRA_MUEBLE, 0.4f)
+            val y3 = fr.top + fr.height * 0.86f
             // Debajo, todo el fondo de un color opaco: las bandas se tocan a medio píxel y, si no, asomaría lo de detrás.
             drawRect(c, fr.topLeft, fr.size)
-            drawRect(sombra, Offset(fr.left, y0), Size(fr.width, y1 - y0))
+            // La sombra franca de la tabla de arriba y su penumbra; la del costado de la izquierda y la suya.
+            drawRect(sombra, Offset(fr.left, fr.top), Size(fr.width, y1 - fr.top))
             drawRect(mezclaRapida(c, sombra, 0.45f), Offset(fr.left, y1), Size(fr.width, y2 - y1))
-            drawRect(c, Offset(fr.left, y2), Size(fr.width, y3 - y2))
-            drawRect(tc.c(roca, 0.04f), Offset(fr.left, y3), Size(fr.width, fr.bottom - y3))
+            drawRect(sombra, Offset(fr.left, y1), Size(lado, fr.bottom - y1))
+            drawRect(mezclaRapida(c, sombra, 0.45f), Offset(fr.left + lado, y2), Size(lado * 0.6f, fr.bottom - y2))
+            // Abajo, la luz que rebota en la tabla.
+            drawRect(mezclaRapida(c, LUZ_MUEBLE, 0.08f), Offset(fr.left + lado * 1.6f, y3), Size(fr.width - lado * 1.6f, fr.bottom - y3))
         } else {
             // Detrás de las entradas solo asoman las rendijas: ahí va liso; arriba y en el hueco libre, con la luz que cambia.
             val xo = oc.coerceIn(fr.left, fr.right)
             val yo = r.top + r.height * 0.34f
-            drawRect(s.t(Offset((fr.left + xo) / 2, r.center.y)).c(roca, -0.05f), fr.topLeft, fr.size)
-            drawRect(s.aLoAncho(fr.left, fr.right, r.center.y + r.height * 0.15f) { it.c(roca, -0.05f) }, fr.topLeft, Size(fr.width, yo - fr.top))
-            if (fr.right > xo) drawRect(s.aLoAncho(xo, fr.right, r.center.y + r.height * 0.15f) { it.c(roca, -0.05f) }, Offset(xo, yo), Size(fr.right - xo, fr.bottom - yo))
+            drawRect(s.t(Offset((fr.left + xo) / 2, r.center.y)).c(roca, -0.1f), fr.topLeft, fr.size)
+            drawRect(s.aLoAncho(fr.left, fr.right, r.center.y + r.height * 0.15f) { it.c(roca, -0.1f) }, fr.topLeft, Size(fr.width, yo - fr.top))
+            if (fr.right > xo) drawRect(s.aLoAncho(xo, fr.right, r.center.y + r.height * 0.15f) { it.c(roca, -0.1f) }, Offset(xo, yo), Size(fr.right - xo, fr.bottom - yo))
             val tc = s.t(r.center)
-            drawRect(tc.s(0.55f), Offset(r.left, r.top), Size(r.width, techo + r.height * 0.2f))
-            drawRect(tc.s(0.25f), Offset(r.left, r.top + techo + r.height * 0.2f), Size(r.width, r.height * 0.14f))
+            drawRect(tc.s(0.5f), Offset(r.left, r.top), Size(r.width, techo + r.height * 0.2f))
+            drawRect(tc.s(0.22f), Offset(r.left, r.top + techo + r.height * 0.2f), Size(r.width, r.height * 0.14f))
+            drawRect(tc.s(0.35f), Offset(r.left, y1), Size(lado, r.bottom - y1))
         }
         val fz = if (s.a.oscuro) 0.3f else 0.6f
         val x = oc.coerceIn(r.left, r.right)

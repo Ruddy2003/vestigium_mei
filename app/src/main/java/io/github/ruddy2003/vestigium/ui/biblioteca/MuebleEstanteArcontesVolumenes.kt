@@ -32,14 +32,14 @@ import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
 import kotlin.math.ceil
 
 /**
- * Las entradas del estante de Arcontes ([MuebleEstanteArcontes]), tres cosas del círculo según la semilla, de tres siluetas: el
- * códice (rígido: la tapa de cuero teñido como los de Nag Hammadi, la solapa en punta que viene de atrás, la correa enrollada con
- * su pasador de hueso, los cantos deshilachados de las hojas de papiro y la tira del día metida bajo la correa), el rollo de pie
- * (redondo: el papiro con su espiral, la camisa de pergamino teñido atada con dos correas rojas y la etiqueta de pergamino
- * colgada de lo alto) y el envoltorio (blando: hojas sueltas en un paño de lana teñida con las dos franjas oscuras del manto del
- * Ideario, atado con cordel, la boca anudada y caída a un lado con la bula de barro, y la etiqueta colgada del nudo). El ánimo es
- * el tinte del cuero, del pergamino y de la lana ([tonoDeDiaArcontes]); sin ánimo, sin teñir. En los Sueños, una media luna de
- * plata con su disco apagado en la etiqueta.
+ * Las entradas del estante de Arcontes ([MuebleEstanteArcontes]), tres cosas del círculo según la semilla, de tres siluetas, cada
+ * una con su etiqueta en su sitio y a su manera: el códice (rígido: la tapa de cuero teñido como los de Nag Hammadi, con su grano y
+ * sus roces, la tira del día pegada a media altura, la solapa en punta que viene de atrás y la correa enrollada con su pasador de
+ * hueso), el rollo de pie (redondo: el papiro con su espiral, el umbilicus que asoma por los dos cabos, la camisa de tela teñida
+ * con su punta caída, el cordel y la etiqueta colgada de un hilo, más abajo y ladeada) y el envoltorio (blando: un fardo de lana
+ * teñida de hombros redondos con las dos franjas oscuras del manto del Ideario, el cordel con la bula de barro y la etiqueta atada
+ * al nudo). El ánimo es el tinte del cuero, de la tela y de la lana ([tonoDeDiaArcontes]); sin ánimo, sin teñir. En los Sueños,
+ * una media luna de plata con su disco apagado en la etiqueta.
  */
 internal object VolumenEstanteArcontes {
     private val P = PaletaArcontes
@@ -62,15 +62,17 @@ internal object VolumenEstanteArcontes {
         return if (ti != null) Tinte(t.animo(m), t.animo(claro), t.animo(hondo)) else Tinte(t.c(m), t.c(claro), t.c(hondo))
     }
 
-    /** Las franjas de un cuerpo redondo en un solo degradado de cortes francos, para pintar de una vez una forma cualquiera. */
+    /**
+     * La luz de un cuerpo redondo en un solo degradado blando (cada tono en el medio de su franja), para pintar de una vez una
+     * forma cualquiera: el claro y el brillo del lado de la luz, la cara, y el hondo del otro lado.
+     */
     private fun franjas(ti: Tinte, hacia: Float, x0: Float, x1: Float): Brush {
         val paradas = ArrayList<Pair<Float, Color>>()
         for (i in 0 until 7) {
             val m = TONOS[i]
             val c = if (m >= 0f) mezclaRapida(ti.cara, ti.claro, m) else mezclaRapida(ti.cara, ti.hondo, -m)
-            val a0 = if (hacia < 0f) FRANJAS[i] else 1f - FRANJAS[i + 1]
-            val a1 = if (hacia < 0f) FRANJAS[i + 1] else 1f - FRANJAS[i]
-            paradas += a0 to c; paradas += a1 to c
+            val centro = (FRANJAS[i] + FRANJAS[i + 1]) / 2
+            paradas += (if (hacia < 0f) centro else 1f - centro) to c
         }
         paradas.sortBy { it.first }
         return Brush.horizontalGradient(*paradas.toTypedArray(), startX = x0, endX = x1)
@@ -236,10 +238,12 @@ internal object VolumenEstanteArcontes {
      * Una etiqueta de papiro (o pergamino) en [et], de borde deshilachado, con sus fibras, su sombra, el día, el mes y la luna. Va
      * derecha: el texto girado no aprovecha las letras ya pintadas y cuesta mucho más.
      */
-    private fun DrawScope.etiqueta(v: Volumen, medidor: TextMeasurer, et: Rect, t: TonoArcontes, papel: Color, roido: Float = 0.03f) {
+    private fun DrawScope.etiqueta(v: Volumen, medidor: TextMeasurer, et: Rect, t: TonoArcontes, papel: Color, roido: Float = 0.03f, pegada: Boolean = false) {
         val u = density
         val forma = contornoIrregular(et, v.semilla, 20, roido)
-        drawRect(t.s(0.38f), Offset(et.left + 1f * u, et.top + 1.4f * u), et.size)
+        // Pegada, casi no deja sombra; colgada, se separa de lo de detrás.
+        if (pegada) drawRect(t.s(0.25f), Offset(et.left + 0.5f * u, et.top + 0.7f * u), et.size)
+        else drawRect(t.s(0.4f), Offset(et.left + 1.6f * u, et.top + 2f * u), et.size)
         val c = t.etiqueta(papel)
         drawPath(forma, c)
         val dentro = et.deflate(1.2f * u)
@@ -269,13 +273,21 @@ internal object VolumenEstanteArcontes {
         drawArc(t.b(0.45f), 200f, 70f, false, Offset(c.x - r * 0.85f, c.y - r * 0.85f), Size(r * 1.7f, r * 1.7f), style = Stroke(r * 0.12f))
     }
 
+    // ---------------------------------------------------------------- la etiqueta de cada clase
+
+    /** La etiqueta: alto (cabe el día a 16 sp y el mes sin achicarse) y ancho, al menos [ET_MIN] dp o tres cuartos de la entrada. */
+    private const val ET_ALTO = 27f
+    private const val ET_MIN = 22f
+
+    private fun DrawScope.anchoEtiqueta(): Float = maxOf(ET_MIN * density, size.width * 0.74f).coerceAtMost(size.width * 0.96f)
+
     // ---------------------------------------------------------------- el códice
 
     /**
-     * El códice: la tapa de cuero teñido, con su grano y el filete grabado en seco; los cantos de las hojas de papiro que asoman
-     * arriba, deshilachados; la solapa grande en punta que viene de atrás por la derecha, más oscura, con su filo de luz y su
-     * sombra; la tira del día pegada arriba; y la correa que da dos o tres vueltas por la punta de la solapa, con su pasador de
-     * hueso y el cabo que cuelga.
+     * El códice: la tapa de cuero teñido, combada (más clara del lado de la luz), con su grano, sus roces y el filete grabado en
+     * seco; los cantos de las hojas de papiro que asoman arriba, deshilachados; la tira del día pegada en la tapa a media altura;
+     * la solapa en punta que viene de atrás por la derecha y baja por delante, más oscura, con su bisel de luz, su canto y su
+     * sombra; y la correa, redonda, que da dos o tres vueltas por la punta de la solapa, con su pasador de hueso y el cabo que cuelga.
      */
     fun DrawScope.codice(v: Volumen, medidor: TextMeasurer, t: TonoArcontes, hacia: Float, tinteA: Color?) {
         val u = density
@@ -293,54 +305,65 @@ internal object VolumenEstanteArcontes {
         }
         drawPath(hojas, t.etiqueta(P.PAPIRO))
         for (j in 0 until 2 + (v.lleno * 4).toInt()) drawLine(t.c(P.FIBRA).copy(alpha = 0.55f), Offset(w * 0.06f, arriba - j * 0.7f * u + 0.6f * u), Offset(w * 0.94f, arriba - j * 0.7f * u + 0.4f * u), 0.5f * u)
-        // La tapa.
+        // La tapa, combada: un degradado blando de la luz a la sombra, el grano del cuero y sus roces.
         val tapa = Rect(0f, arriba, w, h)
         val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(tapa, CornerRadius(2.8f * u))) }
-        drawRoundRect(ti.cara, tapa.topLeft, tapa.size, CornerRadius(2.8f * u))
-        val yp = h * (0.5f + 0.08f * azar(sv, 32))
-        val xp = w * (0.12f + 0.1f * azar(sv, 33))
-        run {
-            // La tapa se comba un poco: el canto que mira a la luz, más claro; el otro, más hondo.
-            val l = mezclaRapida(ti.cara, ti.claro, 0.4f); val o = mezclaRapida(ti.cara, ti.hondo, 0.5f)
-            drawRect(if (hacia < 0f) l else o, Offset(tapa.left + 1f * u, tapa.top + 2f * u), Size(w * 0.16f, tapa.height - 4f * u))
-            drawRect(if (hacia < 0f) o else l, Offset(w * 0.84f - 1f * u, tapa.top + 2f * u), Size(w * 0.16f, tapa.height - 4f * u))
-            grano(tapa.deflate(1.5f * u), sv, 1f)
-            // El filete grabado en seco, a un dedo del borde.
-            val fi = tapa.deflate(3.2f * u)
-            drawRect(ti.hondo.copy(alpha = 0.7f), fi.topLeft, fi.size, style = Stroke(0.7f * u))
-            drawRect(ti.claro.copy(alpha = 0.5f), fi.topLeft + Offset(0.7f * u, 0.7f * u), fi.size, style = Stroke(0.5f * u))
-            // La solapa en punta, que viene de atrás por la derecha: más oscura, con su sombra en la tapa.
-            val y0 = arriba + h * 0.05f; val y1 = h - h * 0.035f
-            val sol = Path().apply { moveTo(w, y0); lineTo(xp, yp); lineTo(w, y1); close() }
-            translate(-1.8f * u, 2.2f * u) { drawPath(sol, t.s(0.5f)) }
-            val ts = Tinte(mezclaRapida(ti.cara, ti.hondo, 0.32f), mezclaRapida(ti.claro, ti.cara, 0.4f), ti.hondo)
-            drawPath(sol, ts.cara)
-            // El filo de arriba de la solapa mira a la luz; el de abajo queda en sombra; y su propio filete grabado.
-            drawLine(ti.claro.copy(alpha = 0.8f), Offset(w, y0), Offset(xp, yp), 1.1f * u)
-            drawLine(ti.hondo.copy(alpha = 0.85f), Offset(xp, yp), Offset(w, y1), 1f * u)
-            drawPath(Path().apply { moveTo(w - 3f * u, y0 + 4.5f * u); lineTo(xp + 7f * u, yp); lineTo(w - 3f * u, y1 - 4.5f * u) }, ti.hondo.copy(alpha = 0.6f), style = Stroke(0.6f * u))
-            // El desgaste: la esquina de abajo a la izquierda, más clara.
-            drawOval(ti.claro.copy(alpha = 0.3f), Offset(w * 0.03f, h - w * 0.32f), Size(w * 0.4f, w * 0.28f))
+        drawRoundRect(plano(ti, hacia, 0f, w), tapa.topLeft, tapa.size, CornerRadius(2.8f * u))
+        grano(tapa.deflate(1.5f * u), sv, 1f)
+        // Los roces: el cuero gastado y más claro en las esquinas y el canto de arriba, y unos rayones sueltos.
+        drawOval(ti.claro.copy(alpha = 0.32f), Offset(-w * 0.12f, arriba - w * 0.1f), Size(w * 0.5f, w * 0.34f))
+        drawOval(ti.claro.copy(alpha = 0.22f), Offset(w * 0.62f, h - w * 0.26f), Size(w * 0.5f, w * 0.34f))
+        drawRect(ti.claro.copy(alpha = 0.25f), Offset(w * 0.1f, arriba + 0.6f * u), Size(w * 0.8f, 1.2f * u))
+        val rayones = Path()
+        for (j in 0 until 4) {
+            val p = Offset(w * (0.15f + 0.7f * azar(sv, 90 + j)), h * (0.15f + 0.35f * azar(sv, 95 + j)))
+            rayones.moveTo(p.x, p.y); rayones.lineTo(p.x + (2f + 3f * azar(sv, 99 + j)) * u, p.y + (azar(sv, 103 + j) - 0.5f) * 2f * u)
         }
-        // La tira del día, pegada en lo alto de la tapa.
-        val et = Rect(w * 0.1f, arriba + h * 0.07f + 3f * u * azar(sv, 36), w * 0.9f, arriba + h * 0.07f + 3f * u * azar(sv, 36) + 30f * u)
-        etiqueta(v, medidor, et, t, P.PAPIRO_ETIQUETA)
-        // La correa: dos o tres vueltas casi horizontales por la punta de la solapa, y el cabo que cuelga por la izquierda.
+        drawPath(rayones, ti.claro.copy(alpha = 0.55f), style = Stroke(0.5f * u))
+        // El filete grabado en seco, a un dedo del borde.
+        val fi = tapa.deflate(3.2f * u)
+        drawRect(ti.hondo.copy(alpha = 0.7f), fi.topLeft, fi.size, style = Stroke(0.7f * u))
+        drawRect(ti.claro.copy(alpha = 0.45f), fi.topLeft + Offset(0.7f * u, 0.7f * u), fi.size, style = Stroke(0.5f * u))
+        // La tira del día, pegada en la tapa a media altura (encima del arranque de la solapa), con su sombra corta.
+        val ew = anchoEtiqueta()
+        val ycen = h * (0.37f + 0.05f * azar(sv, 36))
+        val top = (ycen - ET_ALTO * u / 2).coerceAtLeast(arriba + 4f * u)
+        val ex = w * 0.5f + (azar(sv, 37) - 0.5f) * (w - ew) * 0.6f
+        val et = Rect(ex - ew / 2, top, ex + ew / 2, top + ET_ALTO * u)
+        etiqueta(v, medidor, et, t, P.PAPIRO_ETIQUETA, pegada = true)
+        // La solapa en punta: viene de atrás por la derecha, desde debajo de la tira, y baja por delante hasta la punta.
+        val y0 = maxOf(et.bottom + 3f * u, h * 0.5f); val y1 = h - h * 0.03f
+        val yp = (y0 + y1) / 2 + h * (0.04f + 0.04f * azar(sv, 32))
+        val xp = w * (0.14f + 0.1f * azar(sv, 33))
+        val sol = Path().apply { moveTo(w, y0); lineTo(xp, yp); lineTo(w, y1); close() }
+        translate(-1.6f * u, 2.4f * u) { drawPath(sol, t.s(0.5f)) }
+        val cs = mezclaRapida(ti.cara, ti.hondo, 0.3f)
+        drawPath(sol, Brush.linearGradient(listOf(mezclaRapida(cs, ti.claro, 0.18f), cs, mezclaRapida(cs, ti.hondo, 0.35f)), Offset(w, y0), Offset(w * 0.7f, y1)))
+        // El bisel de luz del filo de arriba, el canto en sombra del de abajo y el filete de la solapa.
+        drawPath(Path().apply { moveTo(w, y0); lineTo(xp, yp); lineTo(xp + 4f * u, yp + 0.4f * u); lineTo(w, y0 + 3.4f * u); close() }, ti.claro.copy(alpha = 0.45f))
+        drawLine(ti.claro.copy(alpha = 0.85f), Offset(w, y0), Offset(xp, yp), 0.9f * u)
+        drawLine(ti.hondo.copy(alpha = 0.9f), Offset(xp, yp), Offset(w, y1), 1.2f * u)
+        drawLine(t.s(0.35f), Offset(xp + 1f * u, yp + 1.2f * u), Offset(w, y1 + 1.2f * u), 1f * u)
+        drawPath(Path().apply { moveTo(w - 3f * u, y0 + 4.5f * u); lineTo(xp + 7f * u, yp); lineTo(w - 3f * u, y1 - 4.5f * u) }, ti.hondo.copy(alpha = 0.55f), style = Stroke(0.6f * u))
+        grano(Rect(w * 0.5f, y0 + 2f * u, w - 1f * u, y1 - 2f * u), sv + 5, 0.6f)
+        // La correa: redonda (su sombra, el cuero, el brillo de arriba), dos o tres vueltas por la punta, que se comban un poco.
         val vueltas = 2 + (azar(sv, 35) * 1.99f).toInt()
         val correa = t.c(P.CORREA, 0.04f)
         for (j in 0 until vueltas) {
-            val y = yp - 2f * u + j * 3.4f * u
+            val y = yp - 2.4f * u + j * 3.6f * u
             val inc = (if (j % 2 == 0) 1f else -0.8f) * u
-            drawLine(t.s(0.45f), Offset(-1f * u, y + 1.2f * u - inc), Offset(w + 1f * u, y + 1.2f * u + inc), 2.8f * u)
-            drawLine(correa, Offset(-1f * u, y - inc), Offset(w + 1f * u, y + inc), 2.4f * u)
-            drawLine(t.b(0.22f), Offset(-1f * u, y - inc - 0.8f * u), Offset(w + 1f * u, y + inc - 0.8f * u), 0.5f * u)
+            val vuelta = Path().apply { moveTo(-1f * u, y - inc); quadraticTo(w * 0.5f, y + 1.4f * u, w + 1f * u, y + inc) }
+            translate(0f, 1.3f * u) { drawPath(vuelta, t.s(0.45f), style = Stroke(3f * u)) }
+            drawPath(vuelta, correa, style = Stroke(2.6f * u))
+            translate(0f, -0.8f * u) { drawPath(vuelta, t.b(0.3f), style = Stroke(0.6f * u)) }
+            translate(0f, 0.9f * u) { drawPath(vuelta, t.s(0.3f), style = Stroke(0.6f * u)) }
         }
         val cabo = Path().apply {
-            val a = Offset(1.5f * u, yp + vueltas * 3.4f * u - 2f * u)
-            moveTo(a.x, a.y); quadraticTo(a.x - 2.5f * u, a.y + h * 0.12f, a.x + 1.5f * u, a.y + h * 0.2f)
+            val a = Offset(1.5f * u, yp + vueltas * 3.6f * u - 2f * u)
+            moveTo(a.x, a.y); quadraticTo(a.x - 2.5f * u, a.y + h * 0.1f, a.x + 1.5f * u, minOf(h - 2f * u, a.y + h * 0.17f))
         }
-        drawPath(cabo, t.s(0.4f), style = Stroke(2.4f * u, cap = StrokeCap.Round))
-        drawPath(cabo, correa, style = Stroke(2f * u, cap = StrokeCap.Round))
+        drawPath(cabo, t.s(0.4f), style = Stroke(2.6f * u, cap = StrokeCap.Round))
+        drawPath(cabo, correa, style = Stroke(2.1f * u, cap = StrokeCap.Round))
         // El pasador de hueso en la punta de la solapa.
         val pas = Offset(xp + 3f * u, yp + 1f * u)
         drawLine(t.s(0.4f), pas + Offset(-3.4f * u, 1.6f * u), pas + Offset(3.8f * u, 1.2f * u), 3.4f * u, StrokeCap.Round)
@@ -355,40 +378,48 @@ internal object VolumenEstanteArcontes {
     // ---------------------------------------------------------------- el rollo
 
     /**
-     * El rollo de pie: el papiro enrollado, con su espiral, las vueltas de dentro que asoman arriba y la última hoja que se suelta y
-     * se riza por fuera; la camisa de pergamino teñido del ánimo envuelta encima, con el canto de la hoja que la cierra; un
-     * cordel que la ciñe dos vueltas, con su nudo y sus cabos; y la etiqueta de pergamino que cuelga de lo alto por un hilo.
+     * El rollo de pie, redondo de verdad: el papiro enrollado con su sombreado de cilindro, las fibras, la hoja de fuera que se
+     * riza, arriba la boca con su espiral y las vueltas de dentro que asoman, el umbilicus de madera que sale por los dos cabos (el
+     * de abajo lo levanta un poco de la tabla, y se ve el canto redondo de abajo); la camisa de tela teñida del ánimo, que lo envuelve
+     * por en medio y deja caer su punta suelta por un lado, con sus pliegues; un cordel de dos vueltas con su nudo; y la etiqueta
+     * colgada de un hilo atado arriba, más abajo y ladeada.
      */
     fun DrawScope.rollo(v: Volumen, medidor: TextMeasurer, t: TonoArcontes, hacia: Float, tinteA: Color?, giro: Float = 0f) {
         val u = density
         val w = size.width; val h = size.height
         baldosas(u)
         val sv = v.semilla
-        val d = w * 0.82f
+        val d = w * 0.8f
         val cx = w * (0.5f + 0.03f * (azar(sv, 50) - 0.5f))
         val el = d * 0.34f
-        val asoma = (1.5f + 3.5f * azar(sv, 51)) * u
-        val y0 = asoma + el / 2 + 1.5f * u
+        val asoma = (1.5f + 3f * azar(sv, 51)) * u
+        val pomo = 4.4f * u
+        val y0 = asoma + pomo + el / 2 + 1.5f * u
+        val base = h - 2.6f * u
+        val lado = if (azar(sv, 54) > 0.5f) 1f else -1f
         rotate(giro, Offset(0f, h)) {
             alrededor(t, hacia, y0)
-            val tp = tinte(null, P.PAPIRO, t, 0.25f, 0.45f)
-            // El papiro: el cuerpo redondo con su fondo en curva y las fibras a lo ancho.
+            val tp = tinte(null, P.PAPIRO, t, 0.25f, 0.5f)
+            // El cabo de abajo del umbilicus, que lo levanta de la tabla.
+            drawRoundRect(t.s(0.45f), Offset(cx - 2.6f * u, h - 2f * u), Size(5.6f * u, 2.4f * u), CornerRadius(1.2f * u))
+            drawRoundRect(t.c(P.OLIVO_OSC), Offset(cx - 2.2f * u, base - 1.4f * u), Size(4.4f * u, 3.6f * u), CornerRadius(1.4f * u))
+            // El papiro: el cuerpo redondo con su sombreado de cilindro (blando) y las fibras.
             val cuerpo = Path().apply {
-                moveTo(cx - d / 2, y0); lineTo(cx - d / 2, h - el / 2)
-                arcTo(Rect(cx - d / 2, h - el, cx + d / 2, h), 180f, -180f, false)
+                moveTo(cx - d / 2, y0); lineTo(cx - d / 2, base - el / 2)
+                arcTo(Rect(cx - d / 2, base - el, cx + d / 2, base), 180f, -180f, false)
                 lineTo(cx + d / 2, y0); close()
             }
-            drawPath(cuerpo, tp.cara)
-            val vis = Rect(cx - d / 2, y0, cx + d / 2, h * 0.42f)
-            drawRect(mezclaRapida(tp.cara, if (hacia < 0f) tp.claro else tp.hondo, 0.5f), vis.topLeft, Size(d * 0.18f, vis.height))
-            drawRect(mezclaRapida(tp.cara, if (hacia < 0f) tp.hondo else tp.claro, 0.55f), Offset(vis.right - d * 0.22f, vis.top), Size(d * 0.22f, vis.height))
+            drawPath(cuerpo, franjas(tp, hacia, cx - d / 2, cx + d / 2))
             val fibras = Path()
             var yf = y0 + 2f * u; var jf = 0
-            while (yf < h - el && jf < 50) { fibras.moveTo(cx - d / 2 + 0.5f * u, yf); fibras.lineTo(cx + d / 2 - 0.5f * u, yf + 0.6f * u); yf += 4f * u; jf++ }
-            drawPath(fibras, t.c(P.FIBRA).copy(alpha = 0.22f), style = Stroke(0.5f * u))
-            // La camisa de pergamino teñido: envuelve de arriba a casi abajo, con el borde de arriba desparejo.
-            val c0 = h * (0.3f + 0.06f * azar(sv, 52))
-            val c1 = h - el / 2 - h * (0.03f + 0.03f * azar(sv, 53))
+            while (yf < base - el && jf < 50) { fibras.moveTo(cx - d / 2 + 0.5f * u, yf); fibras.lineTo(cx + d / 2 - 0.5f * u, yf + 0.6f * u); yf += 4f * u; jf++ }
+            drawPath(fibras, t.c(P.FIBRA).copy(alpha = 0.2f), style = Stroke(0.5f * u))
+            // El canto redondo de abajo: el borde de la última vuelta, que se ve al estar levantado.
+            drawArc(t.s(0.45f), 10f, 160f, false, Offset(cx - d / 2, base - el), Size(d, el), style = Stroke(1.2f * u))
+            drawArc(tp.claro.copy(alpha = 0.6f), 20f, 120f, false, Offset(cx - d * 0.42f, base - el * 0.95f), Size(d * 0.84f, el * 0.8f), style = Stroke(0.6f * u))
+            // La camisa de tela teñida: envuelve por en medio, con el borde de arriba desparejo y la orilla de abajo.
+            val c0 = h * (0.3f + 0.05f * azar(sv, 52))
+            val c1 = base - el / 2 - h * (0.06f + 0.03f * azar(sv, 53))
             val dc = d * 1.05f
             val camisa = Path().apply {
                 moveTo(cx - dc / 2, c0)
@@ -398,29 +429,32 @@ internal object VolumenEstanteArcontes {
                 quadraticTo(cx, c1 + el * 1.05f, cx - dc / 2, c1)
                 close()
             }
-            val ti = tinte(tinteA, P.PERGAMINO, t, 0.28f, 0.56f)
+            val ti = tinte(tinteA, P.LANA_CRUDA, t, 0.3f, 0.58f)
             translate(0f, 1.4f * u) { drawPath(camisa, t.s(0.3f)) }
-            drawPath(camisa, ti.cara)
-            run {
-                val yb0 = c0 + el * 0.9f; val yb1 = c1
-                if (yb1 > yb0) {
-                    drawRect(mezclaRapida(ti.cara, if (hacia < 0f) ti.claro else ti.hondo, 0.5f), Offset(cx - dc / 2 + 0.5f * u, yb0), Size(dc * 0.2f, yb1 - yb0))
-                    drawRect(mezclaRapida(ti.cara, if (hacia < 0f) ti.hondo else ti.claro, 0.6f), Offset(cx + dc / 2 - dc * 0.26f - 0.5f * u, yb0), Size(dc * 0.26f, yb1 - yb0))
-                    drawRect(mezclaRapida(ti.cara, ti.claro, 0.8f), Offset(if (hacia < 0f) cx - dc * 0.24f else cx + dc * 0.18f, yb0), Size(dc * 0.06f, yb1 - yb0))
-                }
-            }
-            grano(Rect(cx - dc / 2 + 1f * u, c0 + el * 0.9f, cx + dc / 2 - 1f * u, c1), sv + 3, 0.5f)
-            // El canto de la hoja que cierra la camisa: una raya que baja, con su luz y la sombra que echa.
-            val xb = cx + dc * (0.18f + 0.1f * azar(sv, 55))
-            val yb0 = c0 + el * 0.55f; val yb1 = c1 + el * 0.75f
-            drawLine(t.s(0.4f), Offset(xb + 1.2f * u, yb0), Offset(xb + 1.8f * u, yb1), 2f * u)
-            drawLine(ti.claro.copy(alpha = 0.7f), Offset(xb, yb0), Offset(xb + 0.6f * u, yb1), 0.9f * u)
+            drawPath(camisa, franjas(ti, hacia, cx - dc / 2, cx + dc / 2))
+            sarga(Rect(cx - dc / 2 + 1f * u, c0 + el * 0.9f, cx + dc / 2 - 1f * u, c1), 0.55f)
+            // El borde de arriba de la tela, con su luz, y su orilla de abajo.
             drawPath(Path().apply {
                 moveTo(cx - dc / 2, c0); quadraticTo(cx - dc * 0.2f, c0 + el * 0.85f, cx + dc * 0.05f, c0 + el * 0.5f + 1.5f * u)
                 quadraticTo(cx + dc * 0.3f, c0 + el * 0.4f, cx + dc / 2, c0 - 1f * u)
-            }, ti.claro.copy(alpha = 0.75f), style = Stroke(0.9f * u))
+            }, ti.claro.copy(alpha = 0.7f), style = Stroke(0.9f * u))
+            drawPath(Path().apply { moveTo(cx - dc / 2, c1); quadraticTo(cx, c1 + el * 1.05f, cx + dc / 2, c1) }, ti.hondo.copy(alpha = 0.8f), style = Stroke(1f * u))
+            // La punta suelta de la tela, que cae por un lado con su pliegue.
+            val xa = cx + lado * dc * 0.5f
+            val yc0 = c0 + (c1 - c0) * 0.18f
+            val caida = Path().apply {
+                moveTo(xa, yc0)
+                quadraticTo(xa + lado * dc * 0.1f, (yc0 + c1) / 2, xa + lado * dc * 0.02f, c1 + el * 0.5f)
+                lineTo(xa - lado * dc * 0.16f, c1 + el * 0.15f)
+                quadraticTo(xa - lado * dc * 0.12f, (yc0 + c1) / 2, xa - lado * dc * 0.2f, yc0 + (c1 - c0) * 0.1f)
+                close()
+            }
+            translate(lado * 1.2f * u, 1.6f * u) { drawPath(caida, t.s(0.35f)) }
+            drawPath(caida, mezclaRapida(ti.cara, if (lado * hacia > 0f) ti.claro else ti.hondo, 0.3f))
+            drawLine(mezclaRapida(ti.cara, ti.hondo, 0.7f), Offset(xa - lado * dc * 0.08f, yc0 + (c1 - c0) * 0.15f), Offset(xa - lado * dc * 0.05f, c1 + el * 0.3f), 0.9f * u)
+            drawLine(ti.claro.copy(alpha = 0.6f), Offset(xa - lado * dc * 0.02f, yc0 + (c1 - c0) * 0.12f), Offset(xa + lado * dc * 0.01f, c1 + el * 0.35f), 0.6f * u)
             // El cordel: dos vueltas finas que siguen la curva, el nudo delante y dos cabos.
-            val yc = c0 + (c1 - c0) * (0.4f + 0.12f * azar(sv, 56))
+            val yc = c0 + (c1 - c0) * (0.5f + 0.1f * azar(sv, 56))
             val cord = t.c(P.CORDEL)
             for (j in 0 until 2) {
                 val y = yc + j * 2.6f * u
@@ -428,11 +462,11 @@ internal object VolumenEstanteArcontes {
                 translate(0f, 1.1f * u) { drawPath(arco, t.s(0.4f), style = Stroke(1.6f * u)) }
                 drawPath(arco, cord, style = Stroke(1.3f * u))
             }
-            val n = Offset(cx - d * 0.16f, yc + el * 0.5f + 1.3f * u)
+            val n = Offset(cx - lado * d * 0.16f, yc + el * 0.5f + 1.3f * u)
             drawCircle(t.s(0.4f), 2.2f * u, n + Offset(0.6f * u, 0.8f * u))
             drawCircle(cord, 1.9f * u, n)
-            drawLine(cord, n, n + Offset(-1.5f * u, 7f * u), 1.1f * u, StrokeCap.Round)
-            drawLine(cord, n, n + Offset(2.4f * u, 8.5f * u), 1.1f * u, StrokeCap.Round)
+            drawLine(cord, n, n + Offset(-1.5f * u, 6f * u), 1.1f * u, StrokeCap.Round)
+            drawLine(cord, n, n + Offset(2.4f * u, 7f * u), 1.1f * u, StrokeCap.Round)
             // La última hoja del papiro, que se suelta de la izquierda y se riza hacia fuera.
             val rizo = Path().apply {
                 moveTo(cx - d / 2, y0 + el * 0.3f)
@@ -440,7 +474,7 @@ internal object VolumenEstanteArcontes {
                 cubicTo(cx - d / 2 + 1.5f * u, y0 - el * 0.5f, cx - d / 2 + 0.5f * u, y0 - el * 0.1f, cx - d / 2 + 2.5f * u, y0 + el * 0.2f)
                 close()
             }
-            // La boca de arriba: el óvalo del papiro con su espiral y las vueltas de dentro, que asoman.
+            // La boca de arriba: el óvalo del papiro con su espiral, las vueltas de dentro que asoman y el umbilicus que sale.
             val boca = Rect(cx - d / 2, y0 - el / 2, cx + d / 2, y0 + el / 2)
             drawOval(t.etiqueta(mezclaRapida(P.PAPIRO, P.PAPIRO_OSC, 0.25f)), boca.topLeft, boca.size)
             val dentro = Rect(cx - d * 0.22f, y0 - el * 0.22f - asoma, cx + d * 0.22f, y0 + el * 0.22f - asoma)
@@ -454,122 +488,107 @@ internal object VolumenEstanteArcontes {
             drawPath(espiral, t.c(P.FIBRA, -0.2f).copy(alpha = 0.85f), style = Stroke(0.8f * u))
             val dd = dentro.deflate(dentro.width * 0.28f)
             drawArc(t.c(P.FIBRA, -0.2f).copy(alpha = 0.85f), 30f, 280f, false, dd.topLeft, dd.size, style = Stroke(0.8f * u))
-            drawCircle(t.c(P.FIBRA, -0.4f), 1f * u, dentro.center)
             drawArc(t.b(0.5f), 160f, 120f, false, boca.topLeft, boca.size, style = Stroke(1f * u))
+            // El umbilicus: la varilla de madera que sale del centro, con su perilla.
+            val ce = dentro.center
+            drawLine(t.s(0.4f), ce + Offset(0.8f * u, 0f), ce + Offset(0.8f * u, -pomo + 1f * u), 2.2f * u)
+            drawLine(t.c(P.OLIVO_OSC), ce, ce - Offset(0f, pomo - 1f * u), 2f * u)
+            drawOval(t.c(P.OLIVO_HONDO), Offset(ce.x - 2.3f * u, ce.y - pomo - 1.2f * u), Size(4.6f * u, 3.2f * u))
+            drawCircle(t.b(0.55f), 0.8f * u, Offset(ce.x - 0.9f * u, ce.y - pomo - 0.2f * u))
             drawPath(rizo, t.etiqueta(mezclaRapida(P.PAPIRO, P.PAPIRO_OSC, 0.4f)))
             drawPath(rizo, t.c(P.FIBRA).copy(alpha = 0.7f), style = Stroke(0.6f * u))
-            filos(Rect(cx - dc / 2, y0, cx + dc / 2, h - el / 2), t, hacia)
+            filos(Rect(cx - dc / 2, y0, cx + dc / 2, base - el / 2), t, hacia)
         }
-        // La etiqueta de pergamino, colgada de un hilo atado a lo alto.
+        // La etiqueta, colgada de un hilo atado arriba, junto al umbilicus: más abajo que las demás y ladeada.
         // Donde queda el nudo del hilo con el rollo recostado (gira alrededor de su esquina de abajo a la izquierda).
         val an = Math.toRadians(giro.toDouble())
-        val px = cx + d * 0.2f; val py = y0 + el * 0.25f - h
+        val px = cx + d * 0.18f; val py = y0 - h
         val nudo = Offset((px * kotlin.math.cos(an) - py * kotlin.math.sin(an)).toFloat(), h + (px * kotlin.math.sin(an) + py * kotlin.math.cos(an)).toFloat())
-        val top = y0 + el * 0.55f + (1f + 4f * azar(sv, 57)) * u
+        val ew = anchoEtiqueta()
+        val ycen = h * (0.6f + 0.06f * azar(sv, 57))
+        val top = minOf(ycen - ET_ALTO * u / 2, h - ET_ALTO * u - 4f * u)
         val corre = nudo.x - px
-        val et = Rect(cx - w * 0.42f + corre, top, cx + w * 0.42f + corre, top + 30f * u)
-        drawLine(t.c(P.CORDEL), nudo, Offset(et.center.x + w * 0.12f, et.top + 2f * u), 0.7f * u)
-        etiqueta(v, medidor, et, t, mezclaRapida(P.PAPIRO_ETIQUETA, P.PERGAMINO, 0.4f), 0.018f)
+        val ex = cx + corre + (azar(sv, 58) - 0.5f) * w * 0.1f
+        val et = Rect(ex - ew / 2, top, ex + ew / 2, top + ET_ALTO * u)
+        val colgada = Offset(et.center.x + ew * 0.18f, et.top + 1.6f * u)
+        drawLine(t.s(0.3f), nudo + Offset(0.8f * u, 0.6f * u), colgada + Offset(0.8f * u, 0.6f * u), 0.7f * u)
+        drawLine(t.c(P.CORDEL), nudo, colgada, 0.7f * u)
+        val ladeo = (if (azar(sv, 59) > 0.5f) 1f else -1f) * (3.5f + 2.5f * azar(sv, 60))
+        rotate(ladeo, colgada) { etiqueta(v, medidor, et, t, mezclaRapida(P.PAPIRO_ETIQUETA, P.PERGAMINO, 0.25f), 0.018f) }
     }
 
     // ---------------------------------------------------------------- el envoltorio
 
     /**
-     * El envoltorio: las hojas sueltas envueltas en un paño de lana teñida, un fardo blando con sus esquinas (más ancho abajo, la
-     * tapa un poco hundida en medio y los costados apretados por el cordel); la punta del paño doblada por delante en una solapa
-     * con las dos franjas oscuras y los flecos del manto del Ideario; la etiqueta en la solapa; y la vuelta de cordel con la bula
-     * de barro en el nudo.
+     * El envoltorio: las hojas sueltas envueltas en un paño de lana teñida, un fardo blando de hombros redondos (la tapa en cúpula,
+     * los costados que se abomban abajo y se aprietan donde pasa el cordel); cerca de la orilla de abajo, las dos franjas oscuras
+     * del manto del Ideario; los pliegues que salen del cordel; el cordel con su nudo y la bula de barro; y la etiqueta atada al nudo.
      */
     fun DrawScope.envoltorio(v: Volumen, medidor: TextMeasurer, t: TonoArcontes, hacia: Float, tinteA: Color?) {
         val u = density
         val w = size.width; val h = size.height
         baldosas(u)
         val sv = v.semilla
-        val arriba = h * (0.035f + 0.03f * azar(sv, 62))
-        val yc = h * (0.74f + 0.04f * azar(sv, 65))
-        val esq = minOf(w * 0.2f, 7f * u)
-        alrededor(t, hacia, arriba, 0.9f)
-        val ti = tinte(tinteA, P.LANA_CRUDA, t, 0.3f, 0.55f)
-        // El cuerpo: blando, con las esquinas redondeadas, la tapa hundida y los costados apretados por el cordel.
+        val arriba = h * (0.03f + 0.03f * azar(sv, 62))
+        val hombro = minOf(w * 0.36f, 13f * u)
+        val yc = h * (0.31f + 0.04f * azar(sv, 65))
+        alrededor(t, hacia, arriba + hombro * 0.5f, 0.9f)
+        val ti = tinte(tinteA, P.LANA_CRUDA, t, 0.3f, 0.58f)
+        // El cuerpo: hombros redondos, la tapa en cúpula, apretado en el cordel y abombado abajo.
         val cuerpo = Path().apply {
-            moveTo(w * 0.05f, arriba + esq)
-            quadraticTo(w * 0.05f, arriba, w * 0.05f + esq, arriba)
-            quadraticTo(w * 0.5f, arriba + h * 0.035f, w * 0.95f - esq, arriba)
-            quadraticTo(w * 0.95f, arriba, w * 0.95f, arriba + esq)
-            quadraticTo(w * 1.0f, (arriba + yc) / 2, w * 0.93f, yc)
-            quadraticTo(w * 1.02f, (yc + h) / 2 + h * 0.08f, w * 0.88f, h)
-            lineTo(w * 0.12f, h)
-            quadraticTo(w * -0.02f, (yc + h) / 2 + h * 0.08f, w * 0.07f, yc)
-            quadraticTo(w * 0.0f, (arriba + yc) / 2, w * 0.05f, arriba + esq)
+            moveTo(w * 0.07f, h)
+            quadraticTo(w * -0.01f, (yc + h) / 2 + h * 0.06f, w * 0.05f, yc + 2f * u)
+            lineTo(w * 0.07f, yc)
+            lineTo(w * 0.05f, arriba + hombro)
+            quadraticTo(w * 0.05f, arriba, w * 0.05f + hombro, arriba - 0.6f * u)
+            quadraticTo(w * 0.5f, arriba - 2.2f * u, w * 0.95f - hombro, arriba - 0.6f * u)
+            quadraticTo(w * 0.95f, arriba, w * 0.95f, arriba + hombro)
+            lineTo(w * 0.93f, yc)
+            lineTo(w * 0.95f, yc + 2f * u)
+            quadraticTo(w * 1.01f, (yc + h) / 2 + h * 0.06f, w * 0.93f, h)
             close()
         }
-        drawPath(cuerpo, ti.cara)
-        run {
-            val yb0 = arriba + esq; val yb1 = h - h * 0.06f
-            drawRect(mezclaRapida(ti.cara, ti.claro, 0.45f), Offset(if (hacia < 0f) w * 0.12f else w * 0.74f, yb0), Size(w * 0.14f, yb1 - yb0))
-            drawRect(mezclaRapida(ti.cara, ti.hondo, 0.5f), Offset(if (hacia < 0f) w * 0.7f else w * 0.12f, yb0), Size(w * 0.18f, yb1 - yb0))
+        drawPath(cuerpo, franjas(ti, hacia, 0f, w))
+        sarga(Rect(w * 0.1f, arriba + hombro * 0.5f, w * 0.9f, h - 2f * u), 0.9f)
+        // La luz en la cúpula de arriba y la sombra que echa el cordel.
+        drawPath(Path().apply { moveTo(w * 0.1f, arriba + hombro * 0.5f); quadraticTo(w * 0.12f, arriba + 0.8f * u, w * 0.05f + hombro, arriba + 0.6f * u); quadraticTo(w * 0.5f, arriba - 1f * u, w * 0.7f, arriba + 0.4f * u) },
+            t.b(0.4f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+        drawRect(t.s(0.28f), Offset(w * 0.06f, yc + 1.4f * u), Size(w * 0.88f, 2.4f * u))
+        // Los pliegues que salen del cordel: arriba, cortos hacia los hombros; abajo, largos hacia la base.
+        for (j in 0 until 3) {
+            val x = w * (0.22f + 0.28f * j)
+            val abajo = Path().apply { moveTo(x, yc + 3f * u); quadraticTo(x + (j - 1) * w * 0.06f, (yc + h) / 2, x + (j - 1) * w * 0.1f, h - h * 0.2f) }
+            drawPath(abajo, t.s(0.26f), style = Stroke(1.3f * u))
+            translate(1.2f * u, 0f) { drawPath(abajo, t.b(0.18f), style = Stroke(0.7f * u)) }
+            val arribaP = Path().apply { moveTo(x, yc - 1f * u); quadraticTo(x + (j - 1) * w * 0.04f, (yc + arriba) / 2, x + (j - 1) * w * 0.08f, arriba + hombro * 0.6f) }
+            drawPath(arribaP, t.s(0.2f), style = Stroke(1f * u))
         }
-        run {
-            sarga(Rect(w * 0.1f, arriba + esq, w * 0.9f, h - 2f * u), 1f)
-            // Las esquinas de las hojas que se marcan en el paño, abajo, y los pliegues que bajan del cordel.
-            for (j in 0 until 3) {
-                val x = w * (0.2f + 0.3f * j)
-                val p = Path().apply { moveTo(x, yc + 1f * u); quadraticTo(x + (j - 1) * w * 0.06f, (yc + h) / 2, x + (j - 1) * w * 0.08f, h - 1f * u) }
-                drawPath(p, t.s(0.28f), style = Stroke(1.3f * u))
-                translate(1.2f * u, 0f) { drawPath(p, t.b(0.2f), style = Stroke(0.7f * u)) }
-            }
-            drawRect(t.s(0.25f), Offset(w * 0.12f, h - h * 0.06f), Size(w * 0.76f, h * 0.06f))
+        // Las dos franjas oscuras del manto, cerca de la orilla de abajo, siguiendo la curva del paño.
+        listOf(0.84f, 0.9f).forEach { f ->
+            val y = h * f
+            drawPath(Path().apply { moveTo(w * 0.03f, y - h * 0.012f); quadraticTo(w * 0.5f, y + h * 0.02f, w * 0.97f, y - h * 0.012f) }, t.c(P.FRANJA), style = Stroke(h * 0.022f))
         }
-        // La solapa: la punta del paño doblada por delante, con su borde de abajo ladeado, sus franjas y sus flecos.
+        drawRect(t.s(0.3f), Offset(w * 0.1f, h - h * 0.05f), Size(w * 0.8f, h * 0.05f))
+        // El cordel, que aprieta el paño, y el nudo con la bula de barro.
         val lado = if (azar(sv, 61) > 0.5f) 1f else -1f
-        val ys = h * (0.53f + 0.04f * azar(sv, 63))
-        val inc = lado * h * 0.035f
-        val solapa = Path().apply {
-            moveTo(w * 0.04f, arriba + esq * 0.8f)
-            quadraticTo(w * 0.04f, arriba - 1f * u, w * 0.05f + esq, arriba - 1f * u)
-            quadraticTo(w * 0.5f, arriba + h * 0.03f, w * 0.95f - esq, arriba - 1f * u)
-            quadraticTo(w * 0.96f, arriba - 1f * u, w * 0.96f, arriba + esq * 0.8f)
-            quadraticTo(w * 0.99f, (arriba + ys) / 2, w * 0.95f, ys + inc)
-            quadraticTo(w * 0.5f, ys + h * 0.02f, w * 0.05f, ys - inc)
-            quadraticTo(w * 0.01f, (arriba + ys) / 2, w * 0.04f, arriba + esq * 0.8f)
-            close()
-        }
-        translate(0f, 2f * u) { drawPath(solapa, t.s(0.42f)) }
-        drawPath(solapa, mezclaRapida(ti.cara, ti.claro, 0.15f))
-        run {
-            val y0 = arriba + esq * 0.6f; val y1 = ys - h * 0.035f
-            drawRect(mezclaRapida(ti.cara, ti.hondo, 0.45f), Offset(if (hacia < 0f) w * 0.74f else w * 0.06f, y0), Size(w * 0.2f, y1 - y0))
-            drawRect(mezclaRapida(ti.cara, ti.claro, 0.45f), Offset(if (hacia < 0f) w * 0.06f else w * 0.78f, y0), Size(w * 0.16f, y1 - y0))
-        }
-        sarga(Rect(w * 0.07f, arriba + esq * 0.6f, w * 0.93f, ys - h * 0.04f), 0.9f)
-        // Las dos franjas oscuras del manto, cerca del orillo, siguiendo su borde.
-        listOf(0.07f, 0.12f).forEach { f ->
-            val y = ys - h * f
-            drawPath(Path().apply { moveTo(w * 0.04f, y - inc * 0.92f); quadraticTo(w * 0.5f, y + h * 0.02f, w * 0.96f, y + inc * 0.92f) }, t.c(P.FRANJA), style = Stroke(h * 0.022f))
-        }
-        drawPath(Path().apply { moveTo(w * 0.05f, ys - inc); quadraticTo(w * 0.5f, ys + h * 0.02f, w * 0.95f, ys + inc) }, t.s(0.4f), style = Stroke(1f * u))
-        // Los flecos del orillo.
-        val flecos = Path()
-        for (j in 0 until 9) {
-            val f = (j + 0.5f) / 9f
-            val x = w * (0.07f + 0.86f * f)
-            val y = ys + (inc * (2f * f - 1f)) + h * 0.02f * 4f * f * (1f - f)
-            flecos.moveTo(x, y); flecos.lineTo(x + (azar(sv, 66 + j) - 0.5f) * 1.2f * u, y + (2.2f + 1.6f * azar(sv, 75 + j)) * u)
-        }
-        drawPath(flecos, t.c(mezclaRapida(ti.cara, P.LANA_CRUDA, 0.25f)), style = Stroke(0.8f * u, cap = StrokeCap.Round))
-        // La etiqueta, en la solapa.
-        val top = arriba + h * 0.07f + 3f * u * azar(sv, 67)
-        val et = Rect(w * 0.1f, top, w * 0.9f, top + 30f * u)
-        etiqueta(v, medidor, et, t, P.PAPIRO_ETIQUETA)
-        // La vuelta de cordel, que hunde un poco el paño, y la bula de barro en el nudo.
         val cord = t.c(P.CORDEL)
-        val arco = Path().apply { moveTo(w * 0.03f, yc - 1f * u); quadraticTo(w / 2, yc + h * 0.035f, w * 0.97f, yc - 1f * u) }
-        translate(0f, -1.6f * u) { drawPath(arco, t.b(0.3f), style = Stroke(1.6f * u)) }
-        translate(0f, 1.6f * u) { drawPath(arco, t.s(0.45f), style = Stroke(2.2f * u)) }
+        val arco = Path().apply { moveTo(w * 0.03f, yc - 1f * u); quadraticTo(w / 2, yc + h * 0.03f, w * 0.97f, yc - 1f * u) }
+        translate(0f, -1.4f * u) { drawPath(arco, t.b(0.3f), style = Stroke(1.4f * u)) }
         drawPath(arco, cord, style = Stroke(1.7f * u))
-        val nudo = Offset(w * (0.5f + 0.18f * lado), yc + h * 0.012f)
-        drawLine(cord, nudo, nudo + Offset(lado * 1.5f * u, 7f * u), 1.1f * u, StrokeCap.Round)
-        bula(nudo, minOf(w * 0.16f, 4.6f * u), t.c(P.BARRO_CLARO), t)
+        val nudo = Offset(w * (0.5f + 0.2f * lado), yc + h * 0.012f)
+        drawCircle(t.s(0.4f), 2.4f * u, nudo + Offset(0.6f * u, 0.8f * u))
+        drawCircle(cord, 2.1f * u, nudo)
+        // La etiqueta, atada al nudo por un hilo corto: cuelga debajo del cordel.
+        val ew = anchoEtiqueta()
+        val ex = (nudo.x - lado * ew * 0.15f).coerceIn(ew / 2 + 1f * u, w - ew / 2 - 1f * u)
+        val top = nudo.y + 4f * u
+        val et = Rect(ex - ew / 2, top, ex + ew / 2, top + ET_ALTO * u)
+        drawLine(cord, nudo, Offset(nudo.x, top + 1.5f * u), 0.8f * u)
+        etiqueta(v, medidor, et, t, P.PAPIRO_ETIQUETA)
+        // La bula de barro, colgada del nudo por el otro lado.
+        val pb = Offset(nudo.x + lado * minOf(w * 0.18f, 6f * u), nudo.y + 3f * u)
+        drawLine(cord, nudo, pb, 0.9f * u)
+        bula(pb, minOf(w * 0.15f, 4.4f * u), t.c(P.BARRO_CLARO), t)
         filos(Rect(w * 0.05f, arriba, w * 0.95f, h), t, hacia)
     }
 }

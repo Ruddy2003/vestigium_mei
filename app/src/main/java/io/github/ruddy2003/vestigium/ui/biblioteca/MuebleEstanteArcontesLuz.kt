@@ -38,12 +38,15 @@ internal object PaletaArcontes {
     val HUECO_HONDO = Color(0xFF5A4C3C)
     /** La roca de los bordes y del techo de la cueva, que se tuerce hacia dentro y queda en sombra. */
     val ROCA = Color(0xFF6F5F55)
-    /** El olivo del armario (el de las arquetas): su cara, su luz, su sombra, lo hondo y la veta que se arremolina. */
-    val OLIVO = Color(0xFFB39567)
-    val OLIVO_LUZ = Color(0xFFD6BE8E)
-    val OLIVO_OSC = Color(0xFF7C623E)
-    val OLIVO_HONDO = Color(0xFF4A3824)
-    val OLIVO_VETA = Color(0xFF4F3B25)
+    /**
+     * El olivo del armario: el de las arquetas, pero más viejo y aceitado, más miel y más oscuro, para que el mueble se recorte
+     * contra la caliza clara (el olivo claro se lavaría en ella); su cara, su luz, su sombra, lo hondo y la veta parda.
+     */
+    val OLIVO = Color(0xFFA27A45)
+    val OLIVO_LUZ = Color(0xFFC99D60)
+    val OLIVO_OSC = Color(0xFF6E4E2A)
+    val OLIVO_HONDO = Color(0xFF3F2C18)
+    val OLIVO_VETA = Color(0xFF4A3018)
     /** El bronce de las chapas y los aros, su luz, su sombra y el cardenillo que le sale en las juntas. */
     val BRONCE = Color(0xFF8C6A34)
     val BRONCE_LUZ = Color(0xFFC9A45E)
@@ -53,7 +56,7 @@ internal object PaletaArcontes {
     val HUESO = Color(0xFFE8DEC6)
     /** El papiro de las hojas, el de las etiquetas (de valor medio), su fibra; el cordel de lino. */
     val PAPIRO = Color(0xFFEDE3C8)
-    val PAPIRO_ETIQUETA = Color(0xFFC4AD7B)
+    val PAPIRO_ETIQUETA = Color(0xFFB89C68)
     val PAPIRO_OSC = Color(0xFFB9A57A)
     val FIBRA = Color(0xFF8E7650)
     val CORDEL = Color(0xFFCDBB8E)
@@ -130,6 +133,17 @@ internal class AireArcontes(val oscuro: Boolean, val noche: Boolean) {
     var forzar = -1f
 
     /**
+     * Dónde arden, en el lienzo y en anchos, la lámpara de encima del armario y el brasero del pie (en un estante ancho, lo de la
+     * corona y del pie se queda del tamaño de un teléfono grande y se corren hacia el medio; ver [MuebleEstanteArcontes.escala]).
+     */
+    var lampX = MuebleEstanteArcontes.LAMP_X
+    var lampY = MuebleEstanteArcontes.LAMP_Y
+    var braseroX = MuebleEstanteArcontes.BRASERO_X
+    var braseroY = 0f
+    /** La escala de lo de la corona y del pie: la luz alcanza lo mismo (en dp) en un estante ancho que en un teléfono. */
+    var escala = 1f
+
+    /**
      * Cuánto le llega de la mancha de la boca a un punto (anchos del mueble): 1 dentro, 0 fuera, con un borde decidido y
      * despejado. De día, la parte de la izquierda pasa por el velo de lino y queda más baja, con las rayas de sus pliegues.
      */
@@ -143,7 +157,7 @@ internal class AireArcontes(val oscuro: Boolean, val noche: Boolean) {
         }
         if (v > 0f && q === SOL_Q) {
             // El velo: por la izquierda la luz pasa por el lino (más baja) y deja los pliegues en rayas.
-            val borde = 0.17f + 0.12f * y
+            val borde = VELO_X + VELO_Y * y
             val t = ((borde - x) / 0.03f).coerceIn(0f, 1f)
             if (t > 0f) v *= 1f - t * (0.42f + 0.16f * sin(x * 120f + y * 8f))
         }
@@ -157,13 +171,22 @@ internal class AireArcontes(val oscuro: Boolean, val noche: Boolean) {
         return exp(-1.3f * sqrt(dx * dx + dy * dy))
     }
 
-    /** El tono de algo que está en ([x], [y]) (anchos), con la lumbre [k] que le llega y la parte de ella que es brasa ([rojo]). */
-    fun en(x: Float, y: Float, k: Float, rojo: Float = 0f, cuerpo: Boolean = false): TonoArcontes =
-        TonoArcontes(this, k.coerceIn(0f, 1f), mancha(x, y), ambiente(x, y), rojo.coerceIn(0f, 1f), cuerpo)
+    /**
+     * El tono de algo que está en ([x], [y]) (anchos), con la lumbre [k] que le llega, la parte de ella que es brasa ([rojo]) y la
+     * luz fría de la grieta ([frio], solo de noche).
+     */
+    fun en(x: Float, y: Float, k: Float, rojo: Float = 0f, cuerpo: Boolean = false, frio: Float = 0f): TonoArcontes =
+        TonoArcontes(this, k.coerceIn(0f, 1f), mancha(x, y), ambiente(x, y), rojo.coerceIn(0f, 1f), cuerpo, if (oscuro) frio.coerceIn(0f, 1f) else 0f)
 
     companion object {
-        /** El sol de la boca: una mancha ancha en la pared de la corona, más alta a la izquierda, que baja al costado izquierdo. */
-        val SOL_Q = floatArrayOf(-0.06f, 0.1f, 0.3f, 0.055f, 0.6f, 0.12f, 0.68f, 0.3f, 0.52f, 0.6f, 0.14f, 0.76f, -0.06f, 0.72f)
+        /**
+         * El sol de la boca: una mancha ancha en la pared de la corona, más alta a la izquierda, que baja al costado izquierdo.
+         * Arriba sube hasta el techo de roca, que la corta con su canto quebrado.
+         */
+        val SOL_Q = floatArrayOf(-0.06f, -0.02f, 0.3f, -0.02f, 0.62f, 0.0f, 0.68f, 0.3f, 0.52f, 0.6f, 0.14f, 0.76f, -0.06f, 0.72f)
+        /** Dónde empieza el velo de lino, a la izquierda de la mancha: x = [VELO_X] + [VELO_Y] · y (anchos). */
+        const val VELO_X = 0.05f
+        const val VELO_Y = 0.1f
         /** El último sol: entra bajo y largo, más tendido, y llega a la cornisa y a lo alto de las repisas. */
         val OCASO_Q = floatArrayOf(-0.06f, 0.3f, 0.55f, 0.27f, 0.92f, 0.36f, 0.74f, 0.82f, -0.06f, 1.08f)
         /** La luna: una mancha alta y corta en la pared de arriba a la izquierda. */
@@ -189,16 +212,16 @@ internal class AireArcontes(val oscuro: Boolean, val noche: Boolean) {
 
 /**
  * El tono de un sitio: cómo se pinta lo que está ahí. De día, su color con la luz de fondo ([amb]: más claro y tibio cerca de la
- * boca, más hondo lejos) y, donde cae la mancha del sol ([sol]), dorado de más. De noche, de su hondo (oscuro, de su mismo tono,
- * con el azul negro del cielo antiguo) a su color según [k] (la lumbre que le llega), con la llama encima (o la brasa, [rojo]).
- * Al ocaso, más bajo y con el melocotón donde toca [sol]; con la luna, la plata fría donde toca.
+ * boca, más hondo lejos) y, donde cae la mancha del sol ([sol]), la misma piedra un paso más clara y más cálida. De noche, como en
+ * el Ideario: todo hundido en el azul violáceo de la noche de la cueva, y según [k] (la lumbre que le llega) va saliendo su color,
+ * primero más claro y, ya junto a la llama, dorado (o rojo de brasa, [rojo]); y junto a la grieta, su luz fría ([frio]). Al ocaso,
+ * más bajo y con el melocotón donde toca [sol]; con la luna, la plata fría donde toca.
  */
-internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, val amb: Float, val rojo: Float, val cuerpo: Boolean) {
+internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, val amb: Float, val rojo: Float, val cuerpo: Boolean, val frio: Float = 0f) {
     private val p = PaletaArcontes
 
     /** El aire en que se hunde lo que no se alumbra. */
     private val hondo: Color get() = when {
-        a.oscuro && cuerpo -> p.NOCHE_CUERPO
         a.oscuro && a.noche -> p.NOCHE_SUENOS
         a.oscuro -> p.NOCHE
         a.noche -> p.SOMBRA_OCASO
@@ -208,12 +231,12 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
     /** La lumbre del sitio: la llama, o la brasa si le llega más del brasero. */
     private val lumbre: Color get() = if (rojo > 0f) mezclaRapida(p.LLAMA, p.BRASA, rojo * 0.7f) else p.LLAMA
 
-    /** El color propio hundido: oscuro, de su mismo tono (no gris), con el aire de la noche. */
-    private fun hundido(c: Color): Color {
-        val n = hondo
-        val f = if (cuerpo) 0.17f else 0.13f
-        return Color(c.red * f + n.red * 0.82f, c.green * f + n.green * 0.82f, c.blue * f + n.blue * 0.82f, c.alpha)
-    }
+    /** El color propio hundido en la noche, como el `n` del Ideario: nueve partes del azul violáceo y una de lo suyo. */
+    private fun hundido(c: Color): Color = mezclaRapida(c, hondo, 0.9f)
+
+    /** La luz fría de la grieta sobre [v] (de noche, junto a ella): el blanco violeta que tiñe y aclara un poco. */
+    private fun conFrio(v: Color): Color =
+        if (frio <= 0.01f) v else mezclaRapida(v, mezclaRapida(p.GRIETA_HALO, p.GRIETA, 0.25f), 0.32f * frio)
 
     /** El color a la luz de la llama: el rojo sube y el azul baja (más aún junto a la brasa). */
     private fun aLaLlama(c: Color): Color =
@@ -231,20 +254,24 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
                 val l = Color((d.red * 1.13f + 0.07f).coerceAtMost(1f), (d.green * 1.04f + 0.035f).coerceAtMost(1f), (d.blue * 0.95f + 0.02f).coerceAtMost(1f), c.alpha)
                 return mezclaRapida(mezclaRapida(d, mezclaRapida(l, p.OCASO, 0.26f), sol * 0.9f), p.LLAMA, 0.12f * k)
             }
-            // De día: lo cercano a la boca más claro y tibio; lo lejano, más hondo; y donde cae el sol, el oro de más.
+            // De día: lo cercano a la boca más claro y tibio; lo lejano, más hondo; y donde cae el sol, la misma piedra un paso
+            // más clara y más cálida (no un amarillo).
             val luz = amb - 0.45f
             var v = if (luz > 0f) mezclaRapida(d, LUZ_MUEBLE, 0.3f * luz) else mezclaRapida(d, SOMBRA_MUEBLE, -0.22f * luz)
             if (sol > 0f) {
-                val dorado = Color((v.red * 1.07f + 0.07f).coerceAtMost(1f), (v.green * 1.04f + 0.055f).coerceAtMost(1f), (v.blue * 0.92f + 0.03f).coerceAtMost(1f), c.alpha)
-                v = mezclaRapida(v, mezclaRapida(dorado, p.SOL, 0.06f), sol * 0.88f)
+                val claro = Color((v.red * 1.05f + 0.045f).coerceAtMost(1f), (v.green * 1.04f + 0.035f).coerceAtMost(1f), (v.blue * 1.0f + 0.02f).coerceAtMost(1f), c.alpha)
+                v = mezclaRapida(v, claro, sol * 0.9f)
             }
             return v
         }
+        // De noche: hundido en el azul violáceo lejos de la llama; con la lumbre sale su color, y solo cerca se calienta.
         val base = if (f > 0f) mezclaRapida(c, LUZ_MUEBLE, f * 0.4f) else if (f < 0f) mezclaRapida(c, hondo, -f * 0.6f) else c
-        val e = if (cuerpo) 1.9 else 1.6
-        val kk = (1.12f * Math.pow(k.toDouble(), e).toFloat()).coerceAtMost(0.93f)
-        var v = mezclaRapida(hundido(base), mezclaRapida(base, aLaLlama(base), 0.6f), kk)
-        v = mezclaRapida(v, lumbre, 0.13f * k)
+        val kk = k.coerceIn(0f, 1f)
+        val calido = kk * kk
+        val propio = mezclaRapida(base, aLaLlama(base), 0.75f * calido)
+        val hundirse = (0.9f - (if (cuerpo) 0.58f else 0.62f) * Math.pow(kk.toDouble(), 1.25).toFloat()).coerceIn(0.22f, 0.9f)
+        var v = mezclaRapida(propio, hondo, hundirse)
+        v = conFrio(mezclaRapida(v, lumbre, 0.16f * calido))
         if (sol > 0f) {
             // La luna: el mismo color, un poco más claro y frío donde toca (la caliza sigue caliza; no vela lo demás).
             val q = 0.15f * sol * sol
@@ -282,24 +309,26 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
      */
     fun animo(t: Color): Color {
         if (!a.oscuro) return c(t)
-        val apagado = mezclaRapida(Color(t.red * 0.26f, t.green * 0.26f, t.blue * 0.27f, t.alpha), hondo, 0.28f)
+        // Lejos de la llama, hundido pero con su matiz vivo (el añil sigue añil; el ocre, ocre oscuro), un poco violáceo.
+        val n = hondo
+        val apagado = Color(t.red * 0.36f + n.red * 0.4f, t.green * 0.34f + n.green * 0.4f, t.blue * 0.4f + n.blue * 0.4f, t.alpha)
         val encendido = mezclaRapida(t, aLaLlama(t), 0.45f)
         var v = mezclaRapida(apagado, encendido, (1.12f * Math.pow(k.toDouble(), 1.35).toFloat()).coerceAtMost(1f))
         if (sol > 0f) v = mezclaRapida(v, mezclaRapida(t, p.LUNA, 0.35f), 0.4f * sol)
-        return v
+        return conFrio(v)
     }
 
     /**
-     * El papiro o el pergamino donde va el día, teñido por la luz que le llega: ámbar cerca de la llama, pardo hondo lejos (nunca
-     * más claro que lo alumbrado) y siempre con contraste para la tinta.
+     * El papiro o el pergamino donde va el día, teñido por la luz que le llega: ámbar cerca de la llama; lejos, gris violáceo de
+     * valor medio (la tinta se sigue leyendo).
      */
     fun etiqueta(col: Color): Color {
         if (!a.oscuro) return c(col)
-        val lejos = mezclaRapida(Color(col.red * 0.4f, col.green * 0.36f, col.blue * 0.3f, col.alpha), p.NOCHE.copy(alpha = col.alpha), 0.12f)
+        val lejos = Color(col.red * 0.45f + 0.09f, col.green * 0.45f + 0.11f, col.blue * 0.45f + 0.22f, col.alpha)
         val alumbrado = Color((col.red * 1.04f).coerceAtMost(1f), col.green * 0.92f, col.blue * 0.7f, col.alpha)
         var v = mezclaRapida(lejos, alumbrado, (1.1f * Math.pow(k.toDouble(), 1.7).toFloat()).coerceAtMost(1f))
         if (sol > 0f) v = mezclaRapida(v, mezclaRapida(col, p.LUNA, 0.3f).let { Color(it.red * 0.7f, it.green * 0.74f, it.blue * 0.82f, it.alpha) }, 0.45f * sol)
-        return v
+        return conFrio(v)
     }
 
     /** La tinta del día sobre [etiqueta]: siempre oscura y legible. */
@@ -307,36 +336,54 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
 }
 
 /**
- * Dónde está cada cosa para la luz: el aire del momento, el ancho del mueble, cuánta lumbre llega a cada punto ([cerca]) y qué
- * parte de ella es del brasero ([brasa]). Con [t] se saca el tono de un sitio.
+ * Dónde está cada cosa para la luz: el aire del momento, el ancho del mueble y, por [luz], cuánta lumbre llega a cada punto, qué
+ * parte de ella es del brasero y cuánta luz fría le da la grieta. Con [t] se saca el tono de un sitio. Lo que se pinta achicado
+ * (con [escalado]: lo de la corona y del pie en un estante ancho) pregunta en sus propias medidas y aquí se pasan al lienzo.
  */
-internal class SitioArcontes(val a: AireArcontes, val w: Float, private val luz: (Float, Float, FloatArray) -> Unit) {
-    private val buf = FloatArray(2)
-    fun k(p: Offset): Float { luz(p.x, p.y, buf); return buf[0] }
-    fun t(p: Offset, cuerpo: Boolean = false): TonoArcontes { luz(p.x, p.y, buf); return a.en(p.x / w, p.y / w, buf[0], buf[1], cuerpo) }
+internal class SitioArcontes(val a: AireArcontes, val w: Float, val e: Float = 1f, val pivote: Offset = Offset.Zero,
+                             private val luz: (Float, Float, FloatArray) -> Unit) {
+    private val buf = FloatArray(3)
 
-    // Los tonos de la última fila y de la última columna, para no volver a calcularlos en las piezas que pintan varias capas.
-    private var claveFila = ""
+    /** El punto [p] (en las medidas de lo que se pinta) en el lienzo. */
+    fun enLienzo(p: Offset): Offset = if (e == 1f) p else Offset(pivote.x + (p.x - pivote.x) * e, pivote.y + (p.y - pivote.y) * e)
+
+    /** El mismo sitio para pintar achicado a [escala] alrededor de [centro] (del lienzo). */
+    fun escalado(escala: Float, centro: Offset) = SitioArcontes(a, w, escala, centro, luz)
+
+    fun k(p: Offset): Float { val q = enLienzo(p); luz(q.x, q.y, buf); return buf[0] }
+    fun t(p: Offset, cuerpo: Boolean = false): TonoArcontes {
+        val q = enLienzo(p)
+        buf[2] = 0f
+        luz(q.x, q.y, buf)
+        return a.en(q.x / w, q.y / w, buf[0], buf[1], cuerpo, buf[2])
+    }
+
+    // Los tonos de la última fila y de la última columna, para no volver a calcularlos en las piezas que pintan varias capas
+    // (la clave en números: armarla en texto pesaba en cada dibujo).
+    private val claveFila = FloatArray(4) { Float.NaN }
     private var fila: List<TonoArcontes> = emptyList()
-    private var claveColumna = ""
+    private val claveColumna = FloatArray(4) { Float.NaN }
     private var columna: List<TonoArcontes> = emptyList()
 
+    private fun igual(c: FloatArray, a0: Float, a1: Float, a2: Float, cuerpo: Boolean): Boolean {
+        val q = if (cuerpo) 1f else 0f
+        if (c[0] == a0 && c[1] == a1 && c[2] == a2 && c[3] == q) return true
+        c[0] = a0; c[1] = a1; c[2] = a2; c[3] = q
+        return false
+    }
+
     private fun tonosFila(x0: Float, x1: Float, y: Float, cuerpo: Boolean): List<TonoArcontes> {
-        val clave = "$x0:$x1:$y:$cuerpo"
-        if (clave != claveFila) {
+        if (!igual(claveFila, x0, x1, y, cuerpo)) {
             val n = ((x1 - x0) / (w * 0.12f)).toInt().coerceIn(3, 9)
             fila = List(n) { i -> t(Offset(x0 + (x1 - x0) * i / (n - 1), y), cuerpo) }
-            claveFila = clave
         }
         return fila
     }
 
     private fun tonosColumna(y0: Float, y1: Float, x: Float, cuerpo: Boolean): List<TonoArcontes> {
-        val clave = "$y0:$y1:$x:$cuerpo"
-        if (clave != claveColumna) {
+        if (!igual(claveColumna, y0, y1, x, cuerpo)) {
             val n = ((y1 - y0) / (w * 0.1f)).toInt().coerceIn(3, 16)
             columna = List(n) { i -> t(Offset(x, y0 + (y1 - y0) * i / (n - 1)), cuerpo) }
-            claveColumna = clave
         }
         return columna
     }
@@ -433,13 +480,14 @@ private fun enEscalaArcontes(t: Color, escala: List<Color>): Float? {
 }
 
 /**
- * Los tintes del ánimo, de bajo a alto (el cuero de los códices, el pergamino de los rollos y la lana de los envoltorios): lo
- * bajo, el añil del lago (el tinte de la hierba pastel); lo de en medio, sin teñir, tostado (nunca blanco); lo alto, la gualda y
- * el ocre dorado. Siguen la escala del tema (`juegoTonos`: el lago, la caliza y el ocre).
+ * Los tintes del ánimo, de bajo a alto (el cuero de los códices, la tela de las camisas de los rollos y la lana de los
+ * envoltorios), tintes de entonces y no colores planos: lo bajo, el añil de la hierba pastel, hondo y un poco violáceo; lo de en
+ * medio, sin teñir, tostado (nunca blanco); lo alto, la gualda apagada y el ocre de tierra. Siguen la escala del tema
+ * (`juegoTonos`: el lago, la caliza y el ocre).
  */
 private val TINTES_ARCONTES = listOf(
-    0f to Color(0xFF173A4A), 0.18f to Color(0xFF25566A), 0.34f to Color(0xFF4F8590), 0.45f to Color(0xFF9AA08A), 0.5f to Color(0xFFC2AE84),
-    0.56f to Color(0xFFCDAE62), 0.68f to Color(0xFFC79534), 0.82f to Color(0xFFB0781E), 1f to Color(0xFF8C5512),
+    0f to Color(0xFF1C2747), 0.18f to Color(0xFF2B3B63), 0.34f to Color(0xFF56638A), 0.45f to Color(0xFF8F8B84), 0.5f to Color(0xFFB7A47F),
+    0.56f to Color(0xFFBC9F68), 0.68f to Color(0xFFAC8446), 0.82f to Color(0xFF966835), 1f to Color(0xFF774C26),
 )
 
 /**

@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -84,6 +85,15 @@ internal object MuebleEstanteArcontes {
         else -> 0.78f + 0.08f * azar(semilla, 1)
     }
 
+    /**
+     * El ancho de un teléfono grande, en dp. En un estante más ancho, lo de la corona (lo colgado, el bodegón, la cornisa) y lo del
+     * pie (el zócalo y lo que hay en el suelo) se queda de ese tamaño, en medio, y la pared y el suelo siguen a los lados.
+     */
+    const val TOPE = 440f
+
+    /** Cuánto se achica lo de la corona y del pie en un estante de [w] píxeles con densidad [densidad]: 1 hasta el [TOPE]. */
+    fun escala(w: Float, densidad: Float): Float = minOf(1f, TOPE * densidad / maxOf(1f, w))
+
     // ---------------------------------------------------------------- la luz
 
     /** Dónde arde la lámpara de encima del armario, en anchos del mueble desde la esquina de arriba a la izquierda. */
@@ -91,7 +101,7 @@ internal object MuebleEstanteArcontes {
     val LAMP_Y get() = CORONA - CORNISA - 0.088f
     /** Dónde arde el brasero del pie: a lo ancho, y a lo alto en fracción del pie (desde su borde de arriba). */
     const val BRASERO_X = 0.5f
-    const val BRASERO_Y = 0.72f
+    const val BRASERO_Y = 0.5f
     /** El ancho con que un volumen pasa su repisa a anchos del mueble (no sabe cuánto mide el estante): el de un teléfono. */
     const val ANCHO_NOMINAL = 380f
     /** Una repisa con su tabla, en dp. */
@@ -128,7 +138,30 @@ internal object MuebleEstanteArcontes {
 
     /** La luz de la lámpara de arriba en el cuerpo: cuánta llega (de 1 a 0) a un punto a [dx] y [dy] de la llama, en anchos. */
     fun lampara(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.9f else 1.7f) * exp(-4.6f * sqrt(dx * dx * 1.05f + dy * dy * (if (dy > 0f) 0.6f else 1f)))).coerceIn(0f, 1f)
+        ((if (suenos) 0.75f else 1.3f) * exp(-5f * sqrt(dx * dx * 1.05f + dy * dy * (if (dy > 0f) 0.6f else 1f)))).coerceIn(0f, 1f)
+
+    /** El tramo de la grieta que vuelve a asomar en el fondo de la primera repisa: a lo ancho, en anchos. */
+    val GRIETA_HUECO_X get() = RocaEstanteArcontes.GRIETA_X1 - 0.012f
+
+    /** La distancia de ([x], [y]) al tramo de ([x0], [y0]) a ([x1], [y1]). */
+    private fun distanciaTramo(x: Float, y: Float, x0: Float, y0: Float, x1: Float, y1: Float): Float {
+        val dx = x1 - x0; val dy = y1 - y0
+        val l2 = (dx * dx + dy * dy).coerceAtLeast(1e-6f)
+        val f = (((x - x0) * dx + (y - y0) * dy) / l2).coerceIn(0f, 1f)
+        val ex = x - (x0 + dx * f); val ey = y - (y0 + dy * f)
+        return sqrt(ex * ex + ey * ey)
+    }
+
+    /**
+     * La luz fría de la grieta en ([x], [y]) (anchos, de noche): de la raja de la pared y, si [y0] < [y1], del tramo que vuelve a
+     * asomar en la primera repisa. La única luz fría del cuadro: alumbra poco y de cerca.
+     */
+    fun frio(x: Float, y: Float, y0: Float, y1: Float): Float {
+        val r = RocaEstanteArcontes
+        var d = distanciaTramo(x, y, r.GRIETA_X0, r.GRIETA_Y0, r.GRIETA_X1, r.GRIETA_Y1)
+        if (y1 > y0) d = minOf(d, distanciaTramo(x, y, GRIETA_HUECO_X, y0, GRIETA_HUECO_X - 0.01f, y1))
+        return if (d > 0.25f) 0f else 0.85f * exp(-d / 0.045f)
+    }
 
     /** La luz de la lámpara de arriba en la pared y en lo de arriba: más corta, para que lo lejano se hunda. */
     fun lamparaArriba(dx: Float, dy: Float, suenos: Boolean): Float =
@@ -142,11 +175,11 @@ internal object MuebleEstanteArcontes {
     fun vela(dx: Float, dy: Float, suenos: Boolean): Float =
         ((if (suenos) 0.8f else 1.35f) * exp(-5.6f * sqrt(dx * dx + dy * dy * 0.9f))).coerceIn(0f, 1f)
 
-    /** La lámpara de hueco que más alumbra ([x], [y]) entre [velas] (x, y, x, y… en anchos). */
-    private fun velaMayor(x: Float, y: Float, velas: FloatArray, suenos: Boolean): Float {
+    /** La lámpara de hueco que más alumbra ([x], [y]) entre [velas] (x, y, x, y… en anchos; las de las velas, divididas por [e]). */
+    private fun velaMayor(x: Float, y: Float, velas: FloatArray, suenos: Boolean, e: Float = 1f): Float {
         var m = 0f
         var i = 0
-        while (i + 1 < velas.size) { m = maxOf(m, vela(x - velas[i], y - velas[i + 1], suenos)); i += 2 }
+        while (i + 1 < velas.size) { m = maxOf(m, vela(x - velas[i] / e, y - velas[i + 1] / e, suenos)); i += 2 }
         return m
     }
 
@@ -166,11 +199,16 @@ internal object MuebleEstanteArcontes {
         return (kb / (kl + kb + kv + 0.05f)).coerceIn(0f, 1f)
     }
 
-    /** La lumbre de ([x], [y]) y la parte de ella que es brasa, de una vez, en [o] (o[0] y o[1]). */
-    fun lumbre(x: Float, y: Float, yBrasero: Float, suenos: Boolean, velas: FloatArray, o: FloatArray) {
-        val kl = lampara(x - LAMP_X, y - LAMP_Y, suenos)
-        val kb = brasero(x - BRASERO_X, y - yBrasero, suenos)
-        val kv = velaMayor(x, y, velas, suenos)
+    /**
+     * La lumbre de ([x], [y]) y la parte de ella que es brasa, de una vez, en [o] (o[0] y o[1]), con la lámpara y el brasero donde
+     * los puso el estante ([a]).
+     */
+    fun lumbre(x: Float, y: Float, a: AireArcontes, velas: FloatArray, o: FloatArray) {
+        val suenos = a.noche
+        val e = a.escala
+        val kl = lampara((x - a.lampX) / e, (y - a.lampY) / e, suenos)
+        val kb = brasero((x - a.braseroX) / e, (y - a.braseroY) / e, suenos)
+        val kv = velaMayor(x / e, y / e, velas, suenos, e)
         o[0] = (1f - (1f - kl) * (1f - kb) * (1f - kv)).coerceIn(0.02f, 1f)
         o[1] = (kb / (kl + kb + kv + 0.05f)).coerceIn(0f, 1f)
     }
@@ -203,8 +241,24 @@ internal object MuebleEstanteArcontes {
         val a = AireArcontes(oscuro, noche)
         val ch = d.corona.bottom
         val b = d.base
-        val apoyo = ch - w * CORNISA
-        val yB = (b.top + b.height * BRASERO_Y) / w
+        // En un estante ancho, lo de la corona y del pie se queda del tamaño de un teléfono grande ([TOPE]), en medio.
+        val e = escala(w, density)
+        a.escala = e
+        ObraEstanteArcontes.vetaNoche = if (oscuro) 0.45f else 1f
+        val wc = w * e
+        val apoyo = ch - wc * CORNISA
+        val pCorona = Offset(w / 2, apoyo)
+        a.lampX = 0.5f + (LAMP_X - 0.5f) * e
+        a.lampY = (apoyo - 0.088f * wc) / w
+        val suelo = b.top + b.height * SUELO * e
+        val hPie = suelo + (h - suelo) / e
+        val pPie = Offset(w / 2, suelo)
+        val fuego = PieEstanteArcontes.fuego(w, suelo, hPie).let { f -> Offset(pPie.x + (f.x - pPie.x) * e, pPie.y + (f.y - pPie.y) * e) }
+        a.braseroX = fuego.x / w; a.braseroY = fuego.y / w
+        // La grieta que vuelve a asomar en el fondo de la primera repisa (para su luz fría).
+        val r0 = d.repisas.firstOrNull()
+        val g0 = if (r0 != null) (r0.top + w * ObraEstanteArcontes.TECHO * 0.6f) / w else 0f
+        val g1 = if (r0 != null) (r0.top + r0.height * 0.52f) / w else 0f
         // Las lámparas de los huecos: se apuntan para que cada volumen sepa cuánta luz le dan.
         val centros = FloatArray(d.repisas.size) { -1f }
         val velasL = ArrayList<Float>()
@@ -222,8 +276,9 @@ internal object MuebleEstanteArcontes {
         LucesHuecoArcontes.poner(LucesHuecoArcontes.clave(d.repisas.size, oscuro, noche), centros, mensula)
         val s = SitioArcontes(a, w) { x, y, o ->
             if (!a.lumbre) { o[0] = 0f; o[1] = 0f }
-            else if (y < ch) { o[0] = lamparaArriba(x / w - LAMP_X, y / w - LAMP_Y, noche); o[1] = 0f }
-            else lumbre(x / w, y / w, yB, noche, velas, o)
+            else if (y < ch) { o[0] = lamparaArriba((x / w - a.lampX) / e, (y / w - a.lampY) / e, noche); o[1] = 0f }
+            else lumbre(x / w, y / w, a, velas, o)
+            if (oscuro) o[2] = frio(x / w, y / w, g0, g1)
         }
         val clave = "${w.toInt()}:$ch:${b.top}:$h:$oscuro:$noche:$density"
 
@@ -231,9 +286,9 @@ internal object MuebleEstanteArcontes {
         with(CapaArcontes) {
             pegar("c:$clave", 0, ceil(ch).toInt()) {
                 with(RocaEstanteArcontes) { pared(s, Rect(0f, 0f, w, ch + 2f), apoyo) }
-                with(CoronaEstanteArcontes) { colgado(s, apoyo) }
-                with(ObraEstanteArcontes) { cornisa(Rect(0f, apoyo, w, ch + 2f), s) }
-                with(CoronaEstanteArcontes) { encima(s, apoyo) }
+                achicado(s, e, pCorona) { sc -> with(CoronaEstanteArcontes) { colgado(sc, apoyo) } }
+                with(ObraEstanteArcontes) { cornisa(Rect(0f, apoyo, w, ch + 2f), s, wc) }
+                achicado(s, e, pCorona) { sc -> with(CoronaEstanteArcontes) { encima(sc, apoyo) } }
                 with(RocaEstanteArcontes) { lumbreArriba(s, ch) }
                 granoMueble(Rect(0f, 0f, w, ch + 2f), oscuro)
             }
@@ -266,11 +321,10 @@ internal object MuebleEstanteArcontes {
         // fondo opaco, para que la junta con la última tabla no deje asomar nada.
         val arriba = floor(minOf(b.top, d.tablas.lastOrNull()?.bottom ?: b.top))
         drawRect(s.t(Offset(w / 2, b.top), true).c(PaletaArcontes.CALIZA_SOMBRA), Offset(0f, arriba), Size(w, ceil(h) - arriba + 1f))
-        val suelo = b.top + b.height * SUELO
-        val sp = SitioArcontes(a, w) { x, y, o -> if (!a.lumbre) { o[0] = 0f; o[1] = 0f } else lumbre(x / w, y / w, yB, noche, SIN_VELAS, o) }
-        with(PieEstanteArcontes) { suelo(sp, b, suelo, h) }
-        with(ObraEstanteArcontes) { zocalo(Rect(0f, arriba, w, suelo), sp) }
-        with(PieEstanteArcontes) { objetos(sp, b, suelo, h) }
+        val sp = SitioArcontes(a, w) { x, y, o -> if (!a.lumbre) { o[0] = 0f; o[1] = 0f } else lumbre(x / w, y / w, a, SIN_VELAS, o) }
+        with(PieEstanteArcontes) { suelo(sp, b, suelo, h, fuego) }
+        with(ObraEstanteArcontes) { zocalo(Rect(0f, arriba, w, suelo), sp, wc) }
+        achicado(sp, e, pPie) { sl -> with(PieEstanteArcontes) { objetos(sl, suelo, hPie) } }
         d.repisas.forEachIndexed { k, r ->
             val x = (d.ocupado.getOrNull(k) ?: r.left).coerceIn(r.left, r.right)
             granoMueble(Rect(r.left, r.top, x, r.top + r.height * 0.26f), oscuro, 0.8f)
@@ -280,6 +334,13 @@ internal object MuebleEstanteArcontes {
         granoMueble(Rect(0f, ch, d.izquierda.right, b.top), oscuro, 0.8f)
         granoMueble(Rect(d.derecha.left, ch, w, b.top), oscuro, 0.8f)
         granoMueble(Rect(0f, b.top, w, h), oscuro, 0.8f)
+    }
+
+    /** Pinta [bloque] achicado a [e] alrededor de [centro] (con su sitio en esas medidas), o tal cual si no hace falta. */
+    private inline fun DrawScope.achicado(s: SitioArcontes, e: Float, centro: Offset, bloque: DrawScope.(SitioArcontes) -> Unit) {
+        if (e >= 0.999f) { bloque(s); return }
+        val sc = s.escalado(e, centro)
+        withTransform({ scale(e, e, centro) }) { bloque(sc) }
     }
 
     /**
@@ -334,7 +395,9 @@ internal object MuebleEstanteArcontes {
             kl >= kb -> if (fx < LAMP_X) 1f else -1f
             else -> if (fx < BRASERO_X) 1f else -1f
         }
-        val t = a.en(fx, fy, if (a.oscuro) maxOf(k, 0.05f) else k, rojo)
+        // Junto a la grieta que asoma en la primera repisa, su luz fría.
+        val fr = if (a.oscuro && v.repisa == 0) 0.75f * exp(-kotlin.math.abs(fx - GRIETA_HUECO_X) / 0.045f) else 0f
+        val t = a.en(fx, fy, if (a.oscuro) maxOf(k, 0.05f) else k, rojo, false, fr)
         val tinte = tonoDeDiaArcontes(v.tono, oscuro)
         with(VolumenEstanteArcontes) {
             when (clase(v.semilla)) {
@@ -380,10 +443,15 @@ internal object LucesHuecoArcontes {
     }
 }
 
-/** El recorte de la mancha de la boca en el lienzo de ancho [w]: el polígono de [q] con el borde movido como en [AireArcontes.mancha]. */
-internal fun caminoManchaArcontes(q: FloatArray, w: Float, ondula: Boolean): androidx.compose.ui.graphics.Path {
+/**
+ * El recorte de la mancha de la boca en el lienzo de ancho [w]: el polígono de [q] con el borde movido como en [AireArcontes.mancha]
+ * y agrandado [extra] anchos hacia fuera (para la penumbra). Para lo que se pinta achicado ([s] con escala), en sus medidas.
+ */
+internal fun caminoManchaArcontes(q: FloatArray, w: Float, ondula: Boolean, extra: Float = 0f, s: SitioArcontes? = null): androidx.compose.ui.graphics.Path {
     val p = androidx.compose.ui.graphics.Path()
     val n = q.size / 2
+    val e = s?.e ?: 1f
+    val pv = s?.pivote ?: Offset.Zero
     var primero = true
     for (i in 0 until n) {
         val ax = q[2 * i]; val ay = q[2 * i + 1]
@@ -396,8 +464,9 @@ internal fun caminoManchaArcontes(q: FloatArray, w: Float, ondula: Boolean): and
         for (j in 0 until pasos) {
             val t = j / pasos.toFloat()
             val x = ax + dx * t; val y = ay + dy * t
-            val o = if (ondula) 0.007f * kotlin.math.sin(x * 37f + y * 23f) + 0.004f * kotlin.math.sin(x * 91f - y * 53f) else 0f
-            val px = (x - nx * o) * w; val py = (y - ny * o) * w
+            val o = (if (ondula) 0.007f * kotlin.math.sin(x * 37f + y * 23f) + 0.004f * kotlin.math.sin(x * 91f - y * 53f) else 0f) + extra
+            var px = (x - nx * o) * w; var py = (y - ny * o) * w
+            if (e != 1f) { px = pv.x + (px - pv.x) / e; py = pv.y + (py - pv.y) / e }
             if (primero) { p.moveTo(px, py); primero = false } else p.lineTo(px, py)
         }
     }
@@ -412,7 +481,7 @@ internal inline fun DrawScope.conManchaArcontes(s: SitioArcontes, bloque: DrawSc
     s.a.forzar = 0f
     bloque()
     s.a.forzar = 1f
-    clipPath(caminoManchaArcontes(q, s.w, true)) { bloque() }
+    clipPath(caminoManchaArcontes(q, s.w, true, 0f, s)) { bloque() }
     s.a.forzar = -1f
 }
 

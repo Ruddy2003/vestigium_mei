@@ -72,22 +72,26 @@ internal object ObraEstanteArcontes {
                 }
                 y0 += (2.2f + 2.6f * azar(7502, j)) * u; j++
             }
-            drawPath(hondas, SOMBRA_MUEBLE.copy(alpha = 0.3f), style = Stroke(0.7f * u))
-            drawPath(claras, LUZ_MUEBLE.copy(alpha = 0.32f), style = Stroke(0.9f * u))
+            // La veta parda del olivo, marcada (sobre el olivo miel, para que el mueble tenga su dibujo), y alguna línea de luz.
+            drawPath(hondas, P.OLIVO_VETA.copy(alpha = 0.5f), style = Stroke(0.8f * u))
+            drawPath(claras, LUZ_MUEBLE.copy(alpha = 0.22f), style = Stroke(0.9f * u))
             // Los nudos: anillos y el corazón oscuro.
             for (n in nudos) {
                 val c = if (vertical) Offset(n.y, n.x) else n
                 for (a in 1..3) {
                     val rx = a * 3.2f * u; val ry = a * 1.3f * u
                     val (ax, ay) = if (vertical) ry to rx else rx to ry
-                    drawOval(SOMBRA_MUEBLE.copy(alpha = 0.28f - 0.05f * a), Offset(c.x - ax, c.y - ay), Size(2 * ax, 2 * ay), style = Stroke(0.6f * u))
+                    drawOval(P.OLIVO_VETA.copy(alpha = 0.5f - 0.08f * a), Offset(c.x - ax, c.y - ay), Size(2 * ax, 2 * ay), style = Stroke(0.7f * u))
                 }
                 val (bx, by) = if (vertical) 1.2f * u to 2.8f * u else 2.8f * u to 1.2f * u
-                drawOval(SOMBRA_MUEBLE.copy(alpha = 0.55f), Offset(c.x - bx, c.y - by), Size(2 * bx, 2 * by))
+                drawOval(P.OLIVO_HONDO.copy(alpha = 0.75f), Offset(c.x - bx, c.y - by), Size(2 * bx, 2 * by))
             }
         }
         return img
     }
+
+    /** Cuánto se ve la veta parda: de noche, poco (lejos de la llama el olivo se hunde en el azul violáceo). La pone el estante. */
+    var vetaNoche = 1f
 
     /** La veta sobre [r], en mosaico, empezando en [desde] (para que cada pieza tenga la suya). */
     fun DrawScope.veta(r: Rect, vertical: Boolean, fuerza: Float, desde: Float = 0f) {
@@ -95,7 +99,7 @@ internal object ObraEstanteArcontes {
         val u = density
         if (densidadVeta != u) { vetaH = pintarVeta(u, false); vetaV = pintarVeta(u, true); densidadVeta = u }
         val b = (if (vertical) vetaV else vetaH) ?: return
-        val a = fuerza.coerceIn(0f, 1f)
+        val a = (fuerza * vetaNoche).coerceIn(0f, 1f)
         clipRect(r.left, r.top, r.right, r.bottom) {
             var y = r.top - (if (vertical) desde % b.height else 0f)
             while (y < r.bottom) {
@@ -119,12 +123,13 @@ internal object ObraEstanteArcontes {
      * vuela con su luz arriba y su sombra debajo, el bocel, el friso de muescas a punta de cuchillo con sus esquinas y su chapa de
      * bronce, y el filete; con la sombra que echa en la pared y la mancha del sol que se quiebra en cada moldura.
      */
-    fun DrawScope.cornisa(r: Rect, s: SitioArcontes) {
+    fun DrawScope.cornisa(r: Rect, s: SitioArcontes, wc: Float) {
         val w = size.width; val u = density
-        val y0 = r.top - w * TAPA
-        val yc = r.top + w * CAVETO
-        val yb = yc + w * BOCEL
-        val yf = yb + w * FRISO
+        // Sus altos y sus adornos, a la medida de un teléfono grande ([wc]): en un estante ancho no crecen.
+        val y0 = r.top - wc * TAPA
+        val yc = r.top + wc * CAVETO
+        val yb = yc + wc * BOCEL
+        val yf = yb + wc * FRISO
         val ya = r.bottom
         // La sombra que la cornisa echa en la roca de los lados (por fuera de los costados) y el arranque de la pared.
         val t0 = s.t(Offset(w * 0.5f, r.top))
@@ -162,14 +167,14 @@ internal object ObraEstanteArcontes {
             val xf0 = w * 0.02f; val xf1 = w * 0.98f
             drawRect(s.aLoAncho(xf0, xf1, (yb + yf) / 2, true) { it.c(P.OLIVO) }, Offset(xf0, yb), Size(xf1 - xf0, yf - yb + 1f))
             veta(Rect(xf0, yb, xf1, yf), false, 0.45f, 131f)
-            muescas(xf0 + w * 0.05f, xf1 - w * 0.05f, yb + (yf - yb) * 0.16f, (yf - yb) * 0.3f, s, false)
-            muescas(xf0 + w * 0.05f, xf1 - w * 0.05f, yf - (yf - yb) * 0.16f, (yf - yb) * 0.3f, s, true)
-            drawLine(tc.s(0.28f), Offset(xf0 + w * 0.05f, (yb + yf) / 2), Offset(xf1 - w * 0.05f, (yb + yf) / 2), 0.7f * u)
-            drawLine(tc.b(0.3f), Offset(xf0 + w * 0.05f, (yb + yf) / 2 + 0.8f * u), Offset(xf1 - w * 0.05f, (yb + yf) / 2 + 0.8f * u), 0.5f * u)
+            muescas(xf0 + wc * 0.05f, xf1 - wc * 0.05f, yb + (yf - yb) * 0.16f, (yf - yb) * 0.3f, s, false)
+            muescas(xf0 + wc * 0.05f, xf1 - wc * 0.05f, yf - (yf - yb) * 0.16f, (yf - yb) * 0.3f, s, true)
+            drawLine(tc.s(0.28f), Offset(xf0 + wc * 0.05f, (yb + yf) / 2), Offset(xf1 - wc * 0.05f, (yb + yf) / 2), 0.7f * u)
+            drawLine(tc.b(0.3f), Offset(xf0 + wc * 0.05f, (yb + yf) / 2 + 0.8f * u), Offset(xf1 - wc * 0.05f, (yb + yf) / 2 + 0.8f * u), 0.5f * u)
             // Las esquinas de bronce del friso y la chapa de en medio.
-            esquinaBronce(Offset(xf0, yb), w * 0.045f, yf - yb, true, s)
-            esquinaBronce(Offset(xf1, yb), w * 0.045f, yf - yb, false, s)
-            chapa(Rect(w * 0.47f, yb + (yf - yb) * 0.22f, w * 0.53f, yf - (yf - yb) * 0.22f), s)
+            esquinaBronce(Offset(xf0, yb), wc * 0.045f, yf - yb, true, s)
+            esquinaBronce(Offset(xf1, yb), wc * 0.045f, yf - yb, false, s)
+            chapa(Rect(w * 0.5f - wc * 0.03f, yb + (yf - yb) * 0.22f, w * 0.5f + wc * 0.03f, yf - (yf - yb) * 0.22f), s)
             // El filete de abajo, retranqueado, y la sombra del friso sobre él.
             drawRect(s.aLoAncho(xf0, xf1, ya, true) { it.c(P.OLIVO_OSC) }, Offset(xf0, yf), Size(xf1 - xf0, ya - yf + 2f))
             drawRect(tc.s(0.4f), Offset(xf0, yf), Size(xf1 - xf0, 2f * u))
@@ -384,17 +389,17 @@ internal object ObraEstanteArcontes {
      * El zócalo en [r]: dos hiladas de sillares de caliza labrados a la manera herodiana (el margen liso picado alrededor y la
      * almohadilla en medio, un poco salida), con sus juntas, la cara de arriba donde pisa el armario y su sombra en el suelo.
      */
-    fun DrawScope.zocalo(r: Rect, s: SitioArcontes) {
+    fun DrawScope.zocalo(r: Rect, s: SitioArcontes, wc: Float) {
         val w = size.width; val u = density
         val hiladas = 2
         val alto = r.height / hiladas
         for (i in 0 until hiladas) {
             val y0 = r.top + alto * i; val y1 = y0 + alto
-            var x = -w * (0.05f + 0.1f * azar(7801, i)); var j = 0
-            while (x < w && j < 30) {
-                val largo = w * (0.2f + 0.13f * azar(7802 + i, j))
+            var x = -wc * (0.05f + 0.1f * azar(7801, i)); var j = 0
+            while (x < w && j < 60) {
+                val largo = wc * (0.2f + 0.13f * azar(7802 + i, j))
                 val b = Rect(x, y0, x + largo, y1)
-                sillar(b, i * 31 + j, s)
+                sillar(b, i * 31 + j, s, wc)
                 x += largo; j++
             }
         }
@@ -409,10 +414,10 @@ internal object ObraEstanteArcontes {
      * salida, de contorno desparejo (su filo de arriba en luz y su sombra abajo a la derecha), la junta honda y alguna esquina
      * saltada.
      */
-    private fun DrawScope.sillar(b: Rect, semilla: Int, s: SitioArcontes) {
-        val w = size.width; val u = density
+    private fun DrawScope.sillar(b: Rect, semilla: Int, s: SitioArcontes, wc: Float) {
+        val u = density
         val t = s.t(b.center)
-        val margen = minOf(w * 0.01f, b.height * 0.2f)
+        val margen = minOf(wc * 0.01f, b.height * 0.2f)
         val tono = mezclaRapida(P.CALIZA, P.CALIZA_SOMBRA, 0.12f + 0.22f * azar(7811, semilla))
         drawRect(s.aLoAncho(b.left, b.right, b.center.y) { it.c(tono, 0.07f) }, b.topLeft, Size(b.width + 1f, b.height + 1f))
         val al = Rect(b.left + margen, b.top + margen * 0.9f, b.right - margen, b.bottom - margen * 1.1f)

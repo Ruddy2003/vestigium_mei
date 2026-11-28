@@ -26,20 +26,32 @@ import kotlin.math.sin
 /**
  * El pie del estante de Arcontes ([MuebleEstanteArcontes]): el suelo de tierra apisonada de la cueva (el del Ideario), con sus
  * piedrecitas y una estera de juncos tejida en espiga; encima, cortados por los bordes: el ánfora del salador apoyada contra el
- * zócalo, con su tapón de barro; el brasero de barro con sus brasas y la ollita (la tercera luz de la noche, más roja); y el
- * montón de red de pesca con sus plomos, sus flotadores de madera y la aguja de hacer red, como las de la excavación de Magdala.
+ * zócalo, con su tapón de barro; el brasero de bronce, un cuenco bajo sobre tres patas con sus ascuas (la luz más roja de la
+ * noche); y el montón de red de pesca con sus plomos, sus flotadores de madera y la aguja de hacer red, como las de la excavación
+ * de Magdala. Lo que hay en el suelo se pinta a la medida de un teléfono grande (en un estante ancho, achicado en medio).
  */
 internal object PieEstanteArcontes {
     private val P = PaletaArcontes
 
+    /** Las medidas del brasero, en anchos: el ancho del cuenco, el alto de las patas y la hondura del cuenco. */
+    private const val BR_ANCHO = 0.23f
+    private const val BR_PATAS = 0.07f
+    private const val BR_CUENCO = 0.054f
+
+    /** Dónde se para el brasero en un suelo de [suelo] a [h]. */
+    private fun pieBrasero(w: Float, suelo: Float, h: Float) = Offset(MuebleEstanteArcontes.BRASERO_X * w, h - (h - suelo) * 0.16f)
+
+    /** Dónde arden las ascuas del brasero (en las medidas en que se pinta el suelo): un poco por encima de la boca del cuenco. */
+    fun fuego(w: Float, suelo: Float, h: Float): Offset = pieBrasero(w, suelo, h).let { Offset(it.x, it.y - w * (BR_PATAS + BR_CUENCO + 0.006f)) }
+
     /** El suelo, de [suelo] (debajo del zócalo) al borde de abajo [h]: la tierra con su luz, sus piedras y la estera. */
-    fun DrawScope.suelo(s: SitioArcontes, b: Rect, suelo: Float, h: Float) {
+    fun DrawScope.suelo(s: SitioArcontes, b: Rect, suelo: Float, h: Float, fuego: Offset) {
         val w = size.width; val u = density
         val r = Rect(0f, suelo - 1f, w, h + 1f)
         if (s.a.oscuro) {
-            val f = Offset(MuebleEstanteArcontes.BRASERO_X * w, b.top + b.height * MuebleEstanteArcontes.BRASERO_Y)
-            fun k(d: Float) = s.t(f + Offset(d * w, d * w * 0.2f)).c(P.TIERRA)
-            drawRect(Brush.radialGradient(0f to k(0.02f), 0.15f to k(0.1f), 0.35f to k(0.22f), 0.6f to k(0.38f), 1f to k(0.6f), center = f + Offset(0f, w * 0.05f), radius = w * 0.62f),
+            val e = s.a.escala
+            fun k(d: Float) = s.t(fuego + Offset(d * w * e, d * w * e * 0.2f)).c(P.TIERRA)
+            drawRect(Brush.radialGradient(0f to k(0.02f), 0.15f to k(0.1f), 0.35f to k(0.22f), 0.6f to k(0.38f), 1f to k(0.6f), center = fuego + Offset(0f, w * e * 0.1f), radius = w * e * 0.62f),
                 r.topLeft, r.size)
         } else {
             val cs = List(5) { i -> s.t(Offset(w * i / 4f, (suelo + h) / 2)).c(P.TIERRA) }
@@ -121,12 +133,14 @@ internal object PieEstanteArcontes {
         return img
     }
 
-    /** Lo que hay en el suelo: el ánfora, el brasero y la red. */
-    fun DrawScope.objetos(s: SitioArcontes, b: Rect, suelo: Float, h: Float) {
+    /** Lo que hay en el suelo, de [suelo] a [h] (en sus medidas): el ánfora, el brasero y la red. */
+    fun DrawScope.objetos(s: SitioArcontes, suelo: Float, h: Float) {
         val w = size.width
-        anfora(Offset(w * 0.115f, h - (h - suelo) * 0.12f), b, s)
-        red(Offset(w * 0.83f, h - (h - suelo) * 0.1f), b, s)
-        brasero(Offset(MuebleEstanteArcontes.BRASERO_X * w, h - (h - suelo) * 0.16f), b, s)
+        // El borde de arriba del zócalo, en estas medidas (hasta ahí puede subir el ánfora).
+        val tope = suelo - (h - suelo) * MuebleEstanteArcontes.SUELO / (1f - MuebleEstanteArcontes.SUELO)
+        anfora(Offset(w * 0.115f, h - (h - suelo) * 0.12f), tope, s)
+        red(Offset(w * 0.83f, h - (h - suelo) * 0.1f), tope, s)
+        brasero(pieBrasero(w, suelo, h), s)
     }
 
     // ---------------------------------------------------------------- el ánfora
@@ -135,9 +149,9 @@ internal object PieEstanteArcontes {
      * El ánfora del salador, apoyada contra el zócalo y cortada por el borde: el cuerpo largo con su pie de punta en un aro de
      * cuerda, el hombro, el cuello con sus dos asas y el tapón de barro sellado; el engobe claro chorreado y las marcas del torno.
      */
-    private fun DrawScope.anfora(pie: Offset, b: Rect, s: SitioArcontes) {
+    private fun DrawScope.anfora(pie: Offset, tope: Float, s: SitioArcontes) {
         val w = size.width; val u = density
-        val al = minOf(pie.y - b.top - w * 0.005f, w * 0.31f)
+        val al = minOf(pie.y - tope - w * 0.005f, w * 0.31f)
         val an = al * 0.34f
         val t = s.t(Offset(pie.x, pie.y - al * 0.5f))
         val hacia = if (s.a.oscuro) 1f else -1f
@@ -179,6 +193,13 @@ internal object PieEstanteArcontes {
                     drawPath(chorro, t.c(P.CALIZA_LUZ).copy(alpha = 0.28f + 0.1f * k))
                 }
                 drawLine(t.b(0.4f), Offset(x - an * 0.36f, y - al * 0.7f), Offset(x - an * 0.4f, y - al * 0.35f), an * 0.06f, StrokeCap.Round)
+                // De noche, el brasero (a la derecha) le pinta el costado que lo mira: el charco rojo en el barro y su filo.
+                if (s.a.lumbre) {
+                    val f = if (s.a.oscuro && !s.a.noche) 1f else 0.55f
+                    drawRect(Brush.horizontalGradient(listOf(Color.Transparent, P.BRASA.copy(alpha = 0.3f * f), P.LLAMA.copy(alpha = 0.42f * f)), x, x + an * 0.52f),
+                        Offset(x, y - al * 0.85f), Size(an * 0.55f, al * 0.85f))
+                    drawLine(P.LLAMA_HALO.copy(alpha = 0.55f * f), Offset(x + an * 0.44f, y - al * 0.66f), Offset(x + an * 0.4f, y - al * 0.36f), an * 0.05f, StrokeCap.Round)
+                }
             }
             // El tapón de barro sellado en la boca.
             val tp = Rect(x - an * 0.15f, y - al * 1.02f, x + an * 0.15f, y - al * 0.95f)
@@ -190,100 +211,110 @@ internal object PieEstanteArcontes {
     // ---------------------------------------------------------------- el brasero
 
     /**
-     * El brasero: un hornillo de barro, redondo y más ancho abajo, con su cordón de dedos apretados y la boca del tiro en arco abajo
-     * (de día, oscura, con ceniza gris y un rojo apagado; de noche, las brasas encendidas, la tercera luz) y, arriba, la boca con
-     * su resplandor y la ollita.
+     * El brasero de bronce: un cuenco bajo y ancho sobre tres patas finas que se abren (la de atrás, más corta y en sombra), con
+     * sus pies de disco y dos anillas a los lados; dentro, el montón de carbón con las ascuas (de día, ceniza gris con algún rojo
+     * apagado; de noche, encendidas: la luz más roja de la cueva, que deja su charco en el suelo y en el ánfora).
      */
-    private fun DrawScope.brasero(pie: Offset, b: Rect, s: SitioArcontes) {
+    private fun DrawScope.brasero(pie: Offset, s: SitioArcontes) {
         val w = size.width; val u = density
-        val an = w * 0.19f
-        val fuego = Offset(pie.x, b.top + b.height * MuebleEstanteArcontes.BRASERO_Y)
-        val al = ((pie.y - fuego.y) / 0.3f).coerceIn(w * 0.06f, w * 0.19f)
-        val top = pie.y - al
-        fun tb(p: Offset) = s.a.en(p.x / w, p.y / w, s.k(p) * 0.4f, 0.8f)
-        val t = tb(Offset(pie.x, pie.y - al * 0.5f))
+        val an = w * BR_ANCHO; val lg = w * BR_PATAS; val bd = w * BR_CUENCO
+        val cx = pie.x
+        val boca = pie.y - lg - bd
         val viva = s.a.lumbre
         val fuerza = if (s.a.oscuro && !s.a.noche) 1f else 0.6f
-        contactoArcontes(Offset(pie.x, pie.y), an * 1.3f, w * 0.022f, t, 0.5f)
-        val cuerpo = Path().apply {
-            moveTo(pie.x - an * 0.36f, top)
-            cubicTo(pie.x - an * 0.46f, top + al * 0.2f, pie.x - an * 0.56f, pie.y - al * 0.3f, pie.x - an * 0.5f, pie.y)
-            lineTo(pie.x + an * 0.5f, pie.y)
-            cubicTo(pie.x + an * 0.56f, pie.y - al * 0.3f, pie.x + an * 0.46f, top + al * 0.2f, pie.x + an * 0.36f, top)
+        // El bronce de fuera mira lejos de las ascuas: de noche le llega poco de ellas.
+        val t0 = s.t(Offset(cx, boca + bd * 0.6f))
+        val t = if (s.a.oscuro) TonoArcontes(t0.a, t0.k * 0.35f, t0.sol, t0.amb, t0.rojo, false) else t0
+        val bronce = t.c(P.BRONCE); val luz = t.c(P.BRONCE_LUZ, 0.04f); val hondo = t.c(P.BRONCE_OSC, -0.15f)
+        // El charco de las ascuas en la tierra, debajo y alrededor (de noche), y las sombras de los pies.
+        if (viva) drawOval(Brush.radialGradient(listOf(P.BRASA.copy(alpha = 0.42f * fuerza), P.LLAMA.copy(alpha = 0.16f * fuerza), Color.Transparent),
+            Offset(cx, pie.y), an * 1.1f), Offset(cx - an * 1.1f, pie.y - an * 0.24f), Size(an * 2.2f, an * 0.5f))
+        contactoArcontes(Offset(cx, pie.y), an * 0.95f, w * 0.014f, t0, 0.42f)
+        // Las tres patas: la de atrás (más corta y en sombra), y las dos de delante que se abren, con su luz.
+        val atras = Path().apply { moveTo(cx + an * 0.05f, boca + bd * 0.95f); quadraticTo(cx + an * 0.08f, pie.y - lg * 0.5f, cx + an * 0.04f, pie.y - lg * 0.16f) }
+        drawPath(atras, hondo, style = Stroke(2.4f * u, cap = StrokeCap.Round))
+        drawOval(hondo, Offset(cx + an * 0.04f - 3f * u, pie.y - lg * 0.16f - 1.2f * u), Size(6f * u, 2.4f * u))
+        listOf(-1f, 1f).forEach { lado ->
+            val a0 = Offset(cx + lado * an * 0.28f, boca + bd * 0.7f)
+            val a1 = Offset(cx + lado * an * 0.44f, pie.y - 1.2f * u)
+            val pata = Path().apply { moveTo(a0.x, a0.y); cubicTo(a0.x + lado * an * 0.02f, a0.y + lg * 0.45f, a1.x - lado * an * 0.1f, a1.y - lg * 0.5f, a1.x, a1.y) }
+            translate(1.4f * u, 0.8f * u) { drawPath(pata, t0.s(0.3f), style = Stroke(2.6f * u, cap = StrokeCap.Round)) }
+            drawPath(pata, if (lado < 0f) bronce else hondo, style = Stroke(2.8f * u, cap = StrokeCap.Round))
+            drawPath(pata, (if (lado < 0f) t.b(0.55f) else t.b(0.2f)), style = Stroke(0.8f * u, cap = StrokeCap.Round))
+            // El pie: un disco chato.
+            drawOval(t0.s(0.4f), Offset(a1.x - 4f * u, a1.y - 0.4f * u), Size(9f * u, 2.6f * u))
+            drawOval(if (lado < 0f) bronce else hondo, Offset(a1.x - 4.2f * u, a1.y - 1.6f * u), Size(8.4f * u, 3f * u))
+            drawLine(t.b(0.4f), Offset(a1.x - 3f * u, a1.y - 1.2f * u), Offset(a1.x + 1.5f * u, a1.y - 1.2f * u), 0.6f * u)
+        }
+        // El cuenco: bajo y ancho, redondo por debajo; la luz del lado de la boca de la cueva (o de las ascuas, de noche, en el labio).
+        val cuenco = Path().apply {
+            moveTo(cx - an / 2, boca)
+            cubicTo(cx - an * 0.49f, boca + bd * 0.8f, cx - an * 0.22f, boca + bd * 1.06f, cx, boca + bd * 1.06f)
+            cubicTo(cx + an * 0.22f, boca + bd * 1.06f, cx + an * 0.49f, boca + bd * 0.8f, cx + an / 2, boca)
             close()
         }
-        drawPath(cuerpo, Brush.horizontalGradient(listOf(tb(Offset(pie.x - an * 0.45f, pie.y - al * 0.5f)).c(P.BARRO_CLARO, -0.04f), t.c(P.BARRO_CLARO, -0.04f),
-            tb(Offset(pie.x + an * 0.45f, pie.y - al * 0.5f)).c(P.BARRO_CLARO, -0.04f)), pie.x - an * 0.5f, pie.x + an * 0.5f))
-        clipPath(cuerpo) {
-            // Redondo: el lado que mira a la boca de la cueva, claro; el otro, en sombra; y el tizne de la boca de arriba.
-            if (!s.a.oscuro) {
-                drawRect(t.b(0.22f), Offset(pie.x - an * 0.5f, top), Size(an * 0.2f, al))
-                drawRect(t.s(0.26f), Offset(pie.x + an * 0.18f, top), Size(an * 0.4f, al))
-            } else drawRect(t.s(0.2f), Offset(pie.x - an * 0.5f, top), Size(an * 0.22f, al))
-            drawRect(Brush.verticalGradient(listOf(P.TINTA.copy(alpha = 0.45f), Color.Transparent), top, top + al * 0.3f), Offset(pie.x - an * 0.5f, top), Size(an, al * 0.3f))
-            for (k in 1..4) drawLine(t.s(0.1f), Offset(pie.x - an * 0.6f, top + al * 0.17f * k), Offset(pie.x + an * 0.6f, top + al * 0.17f * k), 0.6f * u)
+        drawPath(cuenco, Brush.horizontalGradient(listOf(luz, bronce, bronce, hondo), cx - an / 2, cx + an / 2))
+        // El reflejo largo del bronce bruñido, la banda en sombra de abajo y los dos filetes torneados.
+        drawPath(Path().apply { moveTo(cx - an * 0.4f, boca + bd * 0.25f); quadraticTo(cx - an * 0.3f, boca + bd * 0.75f, cx - an * 0.08f, boca + bd * 0.9f) },
+            t.b(0.5f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+        drawPath(Path().apply { moveTo(cx - an * 0.36f, boca + bd * 0.86f); quadraticTo(cx, boca + bd * 1.12f, cx + an * 0.36f, boca + bd * 0.86f) },
+            t.s(0.35f), style = Stroke(2.2f * u))
+        listOf(0.22f, 0.32f).forEach { f ->
+            drawPath(Path().apply { moveTo(cx - an * 0.49f, boca + bd * f); quadraticTo(cx, boca + bd * (f + 0.16f), cx + an * 0.49f, boca + bd * f) },
+                hondo.copy(alpha = 0.6f), style = Stroke(0.7f * u))
         }
-        // El cordón de dedos apretados, a media altura.
-        val cordon = top + al * 0.38f
-        val puntos = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(0.01f, 3.6f * u))
-        drawLine(t.s(0.35f), Offset(pie.x - an * 0.42f + 0.6f * u, cordon + 0.6f * u), Offset(pie.x + an * 0.42f + 0.6f * u, cordon + 0.6f * u), 1.8f * u, StrokeCap.Round, puntos)
-        drawLine(t.c(P.BARRO_CLARO, if (s.a.oscuro) 0f else 0.06f), Offset(pie.x - an * 0.42f, cordon), Offset(pie.x + an * 0.42f, cordon), 3.4f * u, StrokeCap.Round, puntos)
-        // La boca del tiro, en arco, abajo: lo que arde de noche.
-        val ab = Rect(fuego.x - an * 0.17f, fuego.y - al * 0.16f, fuego.x + an * 0.17f, pie.y - 1f * u)
-        val arco = Path().apply {
-            moveTo(ab.left, ab.bottom); lineTo(ab.left, ab.top + ab.width * 0.4f)
-            arcTo(Rect(ab.left, ab.top, ab.right, ab.top + ab.width * 0.8f), 180f, 180f, false)
-            lineTo(ab.right, ab.bottom); close()
+        // Las dos anillas de los lados, para moverlo.
+        listOf(-1f, 1f).forEach { lado ->
+            val c = Offset(cx + lado * an * 0.5f, boca + bd * 0.32f)
+            drawCircle(t0.s(0.35f), 3.6f * u, c + Offset(0.6f * u, 0.8f * u), style = Stroke(1.4f * u))
+            drawCircle(if (lado < 0f) luz else hondo, 3.4f * u, c, style = Stroke(1.3f * u))
         }
-        drawPath(arco, P.TINTA.copy(alpha = 0.85f))
-        val ascuas = Path(); val ceniza = Path()
-        for (k in 0 until 9) {
-            val c = Offset(ab.left + ab.width * (0.12f + 0.76f * azar(8121, k)), ab.bottom - ab.height * (0.08f + 0.3f * azar(8122, k)))
-            val rr = (1.6f + 1.8f * azar(8123, k)) * u
-            (if (k % 3 == 0) ceniza else ascuas).addOval(Rect(c.x - rr, c.y - rr * 0.7f, c.x + rr, c.y + rr * 0.7f))
+        // La boca: el labio vuelto, con su filo, y dentro el montón de carbón con las ascuas.
+        val labio = Rect(cx - an * 0.52f, boca - an * 0.07f, cx + an * 0.52f, boca + an * 0.07f)
+        drawOval(hondo, labio.topLeft, labio.size)
+        val dentro = labio.deflate(an * 0.035f)
+        drawOval(Color(0xFF231C1A), dentro.topLeft, dentro.size)
+        val monton = Path().apply {
+            moveTo(dentro.left + dentro.width * 0.08f, dentro.center.y)
+            quadraticTo(dentro.left + dentro.width * 0.2f, boca - w * 0.02f, cx, boca - w * 0.022f)
+            quadraticTo(dentro.right - dentro.width * 0.2f, boca - w * 0.02f, dentro.right - dentro.width * 0.08f, dentro.center.y)
+            quadraticTo(cx, dentro.bottom, dentro.left + dentro.width * 0.08f, dentro.center.y)
+            close()
         }
-        clipPath(arco) {
-            if (viva) {
-                drawRect(Brush.verticalGradient(listOf(P.BRASA.copy(alpha = 0.2f * fuerza), P.BRASA.copy(alpha = 0.75f * fuerza)), ab.top, ab.bottom), ab.topLeft, ab.size)
-                drawPath(ascuas, P.BRASA)
-                translate(-0.5f * u, -0.6f * u) { drawPath(ascuas, P.LLAMA.copy(alpha = 0.85f * fuerza)) }
-                drawPath(ceniza, Color(0xFF4A3A34))
-            } else {
-                drawPath(ascuas, t.c(Color(0xFF8E8580)))
-                drawPath(ceniza, t.c(Color(0xFFB9B0A6)))
-                drawPath(ascuas, P.BRASA.copy(alpha = 0.3f))
+        drawPath(monton, if (viva) Color(0xFF2E1E18) else t.c(Color(0xFF5A524E)))
+        val carbones = Path(); val ascuas = Path(); val ceniza = Path()
+        for (k in 0 until 14) {
+            val f = azar(8131, k)
+            val c = Offset(dentro.left + dentro.width * (0.14f + 0.72f * f), boca - w * 0.016f * (1f - kotlin.math.abs(f - 0.5f) * 1.7f) * azar(8132, k) + an * 0.02f)
+            val rr = (2.2f + 2.2f * azar(8133, k)) * u
+            val o = Rect(c.x - rr, c.y - rr * 0.65f, c.x + rr, c.y + rr * 0.65f)
+            carbones.addOval(o)
+            when (k % 3) {
+                0 -> ascuas.addOval(o.deflate(rr * 0.35f))
+                1 -> ceniza.addOval(Rect(o.left + rr * 0.3f, o.top, o.right - rr * 0.2f, o.center.y))
+                else -> ascuas.addOval(Rect(o.left + rr * 0.5f, o.center.y - rr * 0.15f, o.right - rr * 0.2f, o.bottom - rr * 0.1f))
             }
         }
-        drawPath(arco, t.s(0.5f), style = Stroke(1.2f * u))
-        translate(1f * u, 0f) {
-            drawPath(Path().apply { moveTo(ab.left, ab.bottom); lineTo(ab.left, ab.top + ab.width * 0.4f); arcTo(Rect(ab.left, ab.top, ab.right, ab.top + ab.width * 0.8f), 180f, 90f, false) },
-                t.b(0.4f), style = Stroke(0.8f * u))
-        }
-        // La boca de arriba, con el resplandor de las brasas, y la ollita encima, de lado.
-        val boca = Rect(pie.x - an * 0.36f, top - al * 0.07f, pie.x + an * 0.36f, top + al * 0.07f)
-        drawOval(t.c(P.BARRO, -0.55f), boca.topLeft, boca.size)
-        if (viva) drawOval(P.BRASA.copy(alpha = 0.6f * fuerza), boca.deflate(boca.height * 0.2f).topLeft, boca.deflate(boca.height * 0.2f).size)
-        drawArc(t.b(0.4f), 180f, 120f, false, boca.topLeft, boca.size, style = Stroke(1f * u))
-        val oc = Offset(pie.x + an * 0.06f, top - al * 0.04f)
-        val orr = minOf(al * 0.4f, an * 0.3f)
-        val to = tb(oc)
-        rotate(-5f, oc) {
-            val olla = Path().apply {
-                moveTo(oc.x - orr * 0.7f, oc.y - orr * 0.9f); lineTo(oc.x + orr * 0.7f, oc.y - orr * 0.9f)
-                cubicTo(oc.x + orr * 1.15f, oc.y - orr * 0.6f, oc.x + orr * 1.1f, oc.y + orr * 0.2f, oc.x, oc.y + orr * 0.3f)
-                cubicTo(oc.x - orr * 1.1f, oc.y + orr * 0.2f, oc.x - orr * 1.15f, oc.y - orr * 0.6f, oc.x - orr * 0.7f, oc.y - orr * 0.9f)
-                close()
-            }
-            drawPath(olla, Brush.horizontalGradient(listOf(to.c(P.BARRO, 0.06f), to.c(P.BARRO_OSC, -0.1f)), oc.x - orr, oc.x + orr))
-            if (viva) drawPath(Path().apply { addOval(Rect(oc.x - orr, oc.y - orr * 0.05f, oc.x + orr, oc.y + orr * 0.35f)) }, P.BRASA.copy(alpha = 0.35f * fuerza))
-            drawOval(to.c(P.BARRO_OSC, -0.4f), Offset(oc.x - orr * 0.7f, oc.y - orr * 1f), Size(orr * 1.4f, orr * 0.22f))
-            drawArc(to.b(0.4f), 190f, 50f, false, Offset(oc.x - orr * 0.95f, oc.y - orr * 0.8f), Size(orr * 1.2f, orr), style = Stroke(1f * u))
-            drawLine(to.c(P.BARRO, -0.2f), Offset(oc.x + orr * 0.7f, oc.y - orr * 0.85f), Offset(oc.x + orr * 1.15f, oc.y - orr * 0.95f), 2f * u, StrokeCap.Round)
-        }
-        // El resplandor de las brasas en el aire, de noche.
+        drawPath(carbones, if (viva) Color(0xFF1C1412) else t.c(Color(0xFF3E3632)))
         if (viva) {
-            charcoArcontes(Offset(fuego.x, fuego.y + al * 0.05f), w * 0.22f, P.BRASA, 0.5f * fuerza)
-            charcoArcontes(Offset(fuego.x, fuego.y + al * 0.05f), w * 0.09f, P.LLAMA_HALO, 0.8f * fuerza)
+            drawPath(ascuas, P.BRASA.copy(alpha = 0.95f))
+            translate(-0.4f * u, -0.5f * u) { drawPath(ascuas, P.LLAMA.copy(alpha = 0.8f * fuerza)) }
+            drawPath(ceniza, Color(0xFF6A5650).copy(alpha = 0.7f))
+        } else {
+            drawPath(ceniza, t.c(Color(0xFFB9B0A6)))
+            drawPath(ascuas, P.BRASA.copy(alpha = 0.35f))
+        }
+        drawArc(t.b(if (s.a.oscuro) 0.2f else 0.55f), 190f, 120f, false, labio.topLeft, labio.size, style = Stroke(1.1f * u))
+        if (viva) {
+            // El resplandor de las ascuas en el labio de dentro, en el aire de encima y unas chispas.
+            drawArc(P.LLAMA.copy(alpha = 0.6f * fuerza), 20f, 140f, false, dentro.topLeft, dentro.size, style = Stroke(1.2f * u))
+            val f0 = Offset(cx, boca - w * 0.01f)
+            charcoArcontes(f0, w * 0.2f, P.BRASA, 0.5f * fuerza)
+            charcoArcontes(f0, w * 0.08f, P.LLAMA_HALO, 0.75f * fuerza)
+            for (k in 0 until 4) {
+                val p = Offset(cx + an * (azar(8141, k) - 0.5f) * 0.4f, boca - w * (0.03f + 0.05f * azar(8142, k)))
+                drawCircle(P.LLAMA_HALO.copy(alpha = 0.8f * fuerza), (0.6f + 0.6f * azar(8143, k)) * u, p)
+            }
         }
     }
 
@@ -293,10 +324,10 @@ internal object PieEstanteArcontes {
      * El montón de red de pesca, cortado por el borde de la derecha: la malla en rombos sobre su bulto blando, la relinga de arriba
      * con los flotadores de madera, la de abajo con los plomos y, delante, la aguja de hacer red.
      */
-    private fun DrawScope.red(pie: Offset, b: Rect, s: SitioArcontes) {
+    private fun DrawScope.red(pie: Offset, tope: Float, s: SitioArcontes) {
         val w = size.width; val u = density
         val an = w * 0.32f
-        val al = minOf(pie.y - b.top - w * 0.02f, w * 0.2f)
+        val al = minOf(pie.y - tope - w * 0.02f, w * 0.2f)
         val t = s.t(Offset(pie.x, pie.y - al * 0.5f))
         contactoArcontes(Offset(pie.x, pie.y), an * 1.05f, w * 0.02f, t, 0.48f)
         val bulto = Path().apply {

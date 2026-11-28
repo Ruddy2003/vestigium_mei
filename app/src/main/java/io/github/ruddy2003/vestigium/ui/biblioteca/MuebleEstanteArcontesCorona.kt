@@ -37,11 +37,14 @@ internal object CoronaEstanteArcontes {
 
     // ---------------------------------------------------------------- lo colgado
 
-    /** Las clavijas de la pared y lo que cuelga de ellas: el hisopo (en la mancha del sol) y la bolsa del escriba. */
+    /**
+     * Las clavijas de la pared y lo que cuelga de ellas, las dos cosas en la mancha del sol, que echan su sombra en ella: el hisopo
+     * y la bolsa del escriba.
+     */
     fun DrawScope.colgado(s: SitioArcontes, apoyo: Float) {
         val w = size.width
         val c1 = Offset(w * 0.11f, w * 0.105f)
-        val c2 = Offset(w * 0.905f, w * 0.13f)
+        val c2 = Offset(w * 0.52f, w * 0.1f)
         // Las sombras en la roca, una sola vez.
         sombraHisopo(c1, w * 0.16f, s)
         sombraBolsa(c2, s)
@@ -67,13 +70,14 @@ internal object CoronaEstanteArcontes {
     private fun DrawScope.sombraHisopo(c: Offset, largo: Float, s: SitioArcontes) {
         val u = density
         val t = s.t(c + Offset(0f, largo * 0.5f))
+        val o = if (s.a.oscuro) 5f * u else largo * 0.14f
         val p = Path().apply {
             moveTo(c.x + 3f * u, c.y + 6f * u)
-            lineTo(c.x + largo * 0.32f + 5f * u, c.y + largo * 1.02f)
-            lineTo(c.x - largo * 0.18f + 5f * u, c.y + largo * 1.04f)
+            lineTo(c.x + largo * 0.32f + o, c.y + largo * 1.02f + o * 0.5f)
+            quadraticTo(c.x + largo * 0.08f + o, c.y + largo * 1.12f + o * 0.5f, c.x - largo * 0.18f + o, c.y + largo * 1.04f + o * 0.5f)
             close()
         }
-        drawPath(p, t.s(0.18f))
+        drawPath(p, t.s(0.2f))
     }
 
     /**
@@ -121,7 +125,7 @@ internal object CoronaEstanteArcontes {
     /** La forma de la bolsa del escriba colgada en [c]: el cuerpo, más ancho abajo, con la solapa. */
     private fun cuerpoBolsa(c: Offset, w: Float): Path {
         val x0 = c.x - w * 0.055f; val x1 = c.x + w * 0.06f
-        val y0 = c.y + w * 0.11f; val y1 = c.y + w * 0.235f
+        val y0 = c.y + w * 0.085f; val y1 = c.y + w * 0.21f
         return Path().apply {
             moveTo(x0 + w * 0.006f, y0)
             lineTo(x1 - w * 0.006f, y0)
@@ -134,17 +138,23 @@ internal object CoronaEstanteArcontes {
         }
     }
 
+    /** La sombra de la bolsa y de su correa en la roca: de día, en la mancha del sol, corrida abajo a la derecha y franca. */
     private fun DrawScope.sombraBolsa(c: Offset, s: SitioArcontes) {
         val w = size.width; val u = density
         val t = s.t(c + Offset(0f, w * 0.17f))
-        translate(5f * u, 5f * u) { drawPath(cuerpoBolsa(c, w), t.s(0.24f)) }
+        val (dx, dy) = if (s.a.oscuro) 5f * u to 5f * u else w * 0.024f to w * 0.018f
+        translate(dx, dy) {
+            drawPath(cuerpoBolsa(c, w), t.s(0.24f))
+            val y0 = c.y + w * 0.085f
+            listOf(c.x - w * 0.048f, c.x + w * 0.053f).forEach { x -> drawLine(t.s(0.2f), c, Offset(x, y0), 2.2f * u, StrokeCap.Round) }
+        }
     }
 
     /** La bolsa de cuero del escriba, colgada de su correa: la solapa con su pasador de hueso y los cálamos que asoman. */
     private fun DrawScope.bolsa(c: Offset, s: SitioArcontes) {
         val w = size.width; val u = density
         val t = s.t(c + Offset(0f, w * 0.17f))
-        val y0 = c.y + w * 0.11f
+        val y0 = c.y + w * 0.085f
         // La correa, de la clavija a los dos lados de la bolsa.
         val correa = t.c(P.CORREA)
         listOf(c.x - w * 0.048f, c.x + w * 0.053f).forEach { x ->
@@ -157,7 +167,7 @@ internal object CoronaEstanteArcontes {
             drawLine(t.c(mezcla(P.JUNCO, P.OLIVO_LUZ, 0.4f)), Offset(x, y0 + 3f * u), Offset(x + (k - 1) * 1.5f * u, y0 - w * (0.03f + 0.012f * k)), 1.8f * u, StrokeCap.Round)
         }
         val cuerpo = cuerpoBolsa(c, w)
-        val b = Rect(c.x - w * 0.06f, y0, c.x + w * 0.066f, c.y + w * 0.235f)
+        val b = Rect(c.x - w * 0.06f, y0, c.x + w * 0.066f, c.y + w * 0.21f)
         drawPath(cuerpo, Brush.horizontalGradient(listOf(t.c(P.CUERO, 0.12f), t.c(P.CUERO), t.c(P.CUERO, -0.35f)), b.left, b.right))
         clipPath(cuerpo) {
             // Las costuras del canto y los rozones del cuero.
