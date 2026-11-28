@@ -25,8 +25,9 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
  * - **el libro de tela**: alto y rígido, de tela del color del ánimo (roja, lino crudo o negra), con la cabezada, los filetes en
  *   seco, una composición de bandas y un disco estampada en el lomo (sin letras), el tejuelo con el día y la ficha de préstamo
  *   que asoma por arriba con su raya roja (la de las fichas del Ideario);
- * - **el rollo de carteles**: redondo, de pie, con la espiral del papel arriba, el pliego de fuera impreso del color del ánimo con su
- *   margen crudo y un trozo de banda de otro color, atado con bramante; el día en una etiqueta de cartón colgada del bramante;
+ * - **el cartel enrollado**: redondo, largo y delgado, de pie o apoyado en diagonal, con la espiral del papel arriba y el pliego de
+ *   fuera impreso del color del ánimo, con su margen crudo y una banda de otro color, atado con bramante; el día en una etiqueta de
+ *   cartón colgada a plomo del bramante;
  * - **el bote de pintura de carteles**: la lata abierta, chorreada de su pintura (roja, cruda o negra), la superficie de la pintura
  *   arriba, el asa de alambre y la brocha apoyada en diagonal; el día en la etiqueta de papel de la lata.
  * El día, en la letra del tema a unos 16 sp, y debajo el mes corto, en cartulina amarillenta de valor medio; en los Sueños, una
@@ -212,95 +213,94 @@ private fun DrawScope.libroUrss(v: Volumen, tono: Color?, medidor: TextMeasurer,
 /** El papel de cuando no hay ánimo: el papel de estraza sin imprimir. */
 private val SIN_ANIMO_PAPEL_URSS = Color(0xFFB8996A)
 
+/**
+ * El cartel enrollado: un rollo largo y delgado de pie, apoyado en diagonal contra su vecino cuando le sobra sitio, con la espiral
+ * del papel arriba, el pliego de fuera impreso del color del ánimo con su margen crudo y una banda de otro color, el borde libre
+ * y la punta despegada; atado con bramante en dos vueltas, y de la de arriba cuelga a plomo la etiqueta del día.
+ */
 private fun DrawScope.rolloUrss(v: Volumen, tono: Color?, medidor: TextMeasurer, l: LuzUrss, hacia: Float) {
     val u = density
     val w = size.width; val h = size.height
     val s = v.semilla
-    val doble = w > 38f * u && azar(s, 20) < 0.45f
-    val an = w * (if (doble) 0.66f else 0.76f + 0.12f * azar(s, 3))
-    val x0 = if (doble) w * 0.04f else (w - an) * (0.3f + 0.4f * azar(s, 4))
-    val ry = an * 0.17f
+    val d = minOf(w * 0.8f, 27f * u)
+    val sobra = w - d
+    // Si le sobra sitio, se apoya en diagonal hacia un lado (el pie al otro).
+    val izq = azar(s, 4) < 0.5f
+    val giro = if (sobra > 4f * u) (Math.toDegrees(kotlin.math.asin((sobra * 0.85f / h).coerceIn(0f, 0.22f).toDouble())).toFloat()) * (if (izq) -1f else 1f) else 0f
+    val xa = if (giro == 0f) sobra * 0.5f else if (izq) sobra else 0f
+    val pivote = Offset(if (izq) xa else xa + d, h)
     val papelBase = tono?.let { materialDelAnimoUrss(it, P.PAPELES) } ?: SIN_ANIMO_PAPEL_URSS
     val papel = if (tono != null) l.animo(papelBase) else l.c(papelBase)
     val crudo = l.c(mezcla(P.CARTULINA, P.CARTON, 0.18f))
-    // El rollo de atrás, más delgado y más alto, apoyado en la pared: papel crudo con su banda.
-    if (doble) {
-        val an2 = w * 0.36f
-        val x2 = w - an2 - w * 0.03f
-        val top2 = h * 0.02f
-        rotate(4f, Offset(x2, h)) {
-            val f2 = Path().apply { addRoundRect(RoundRect(Rect(x2, top2, x2 + an2, h), CornerRadius(an2 * 0.5f, an2 * 0.17f))) }
-            sombraDetrasUrss(f2, l, hacia)
-            cilindroUrss(f2, l.c(mezcla(P.CARTULINA, P.CARTON, 0.3f)), l, hacia, 0.3f)
-            clipPath(f2) { drawRect(l.c(if (azar(s, 21) < 0.5f) P.ROJO else P.NEGRO), Offset(x2, h * 0.42f), Size(an2, h * 0.09f)) }
-            drawOval(l.c(P.CARTULINA), Offset(x2, top2), Size(an2, an2 * 0.34f))
-            drawOval(l.s(0.4f), Offset(x2 + an2 * 0.3f, top2 + an2 * 0.08f), Size(an2 * 0.4f, an2 * 0.18f))
-        }
-    }
-    val top = h * (0.02f + 0.06f * azar(s, 5))
+    val tinta = l.c(tintaSobreUrss(papelBase))
+    val ry = d * 0.19f
+    val top = h * (0.02f + 0.05f * azar(s, 5))
     val cuerpo = Path().apply {
-        moveTo(x0, top + ry); lineTo(x0, h - ry * 0.6f)
-        cubicTo(x0 + an * 0.2f, h + ry * 0.2f, x0 + an * 0.8f, h + ry * 0.2f, x0 + an, h - ry * 0.6f)
-        lineTo(x0 + an, top + ry)
-        cubicTo(x0 + an * 0.8f, top + ry * 1.9f, x0 + an * 0.2f, top + ry * 1.9f, x0, top + ry)
+        moveTo(xa, top + ry); lineTo(xa, h - ry * 0.6f)
+        cubicTo(xa + d * 0.2f, h + ry * 0.2f, xa + d * 0.8f, h + ry * 0.2f, xa + d, h - ry * 0.6f)
+        lineTo(xa + d, top + ry)
+        cubicTo(xa + d * 0.8f, top + ry * 1.9f, xa + d * 0.2f, top + ry * 1.9f, xa, top + ry)
         close()
     }
-    sombraDetrasUrss(cuerpo, l, hacia)
-    contactoUrss(x0, x0 + an, l, hacia)
-    // El papel es mate: el volumen en planos de gouache, sin el brillo largo del metal.
-    planosUrss(cuerpo, papel, l, hacia, 0.24f, 0.3f)
-    clipPath(cuerpo) {
-        // El margen crudo del pliego arriba y abajo (el cartel enrollado con lo impreso hacia fuera).
-        val margen = h * (0.07f + 0.03f * azar(s, 6))
-        val crudoP = Path().apply { addRect(Rect(x0, top, x0 + an, top + ry + margen)); addRect(Rect(x0, h - margen * 0.8f, x0 + an, h + ry)) }
-        planosUrss(crudoP, crudo, l, hacia, 0.24f, 0.3f)
-        // Lo impreso de otro color: una banda ancha en diagonal y otra fina que dan la vuelta al rollo (sin discos).
-        val tinta = l.c(tintaSobreUrss(papelBase))
-        val yb = h * (0.6f + 0.12f * azar(s, 7))
-        drawPath(poligonoUrss(Offset(x0, yb), Offset(x0 + an, yb - h * 0.12f), Offset(x0 + an, yb - h * 0.05f), Offset(x0, yb + h * 0.07f)), tinta)
-        if (azar(s, 8) < 0.6f) drawRect(tinta, Offset(x0, top + ry + margen + h * 0.05f), Size(an, h * 0.025f))
-        // El volumen redondo encima de lo impreso, mate.
-        drawRect(Brush.horizontalGradient(if (hacia < 0f) listOf(l.b(0.18f), Color.Transparent, Color.Transparent, l.s(0.32f)) else listOf(l.s(0.32f), Color.Transparent, Color.Transparent, l.b(0.18f)), x0, x0 + an), Offset(x0, top), Size(an, h - top))
-        // El borde libre del pliego, a lo largo, con su sombrita.
-        val xe = x0 + an * (if (hacia < 0f) 0.76f else 0.24f)
-        drawLine(l.s(0.45f), Offset(xe + 1f * u, top + ry), Offset(xe + 1f * u, h), 1.1f * u)
-        drawLine(l.b(0.5f), Offset(xe, top + ry), Offset(xe, h), 0.7f * u)
-    }
-    // La boca de arriba: la espiral del papel, vuelta a vuelta (el crudo de dentro y el color en la última), y el hueco del centro.
-    val boca = Rect(x0, top, x0 + an, top + ry * 2f)
-    drawOval(l.c(mezcla(P.CARTULINA, Color.White, 0.1f)), boca.topLeft, boca.size)
-    val espiral = Path()
-    val vueltas = 6
-    for (k in 1..vueltas) {
-        val f = 1f - k * 0.13f
-        val dx = (k % 2) * an * 0.012f
-        espiral.addOval(Rect(boca.center.x - boca.width * f / 2 + dx, boca.center.y - boca.height * f / 2, boca.center.x + boca.width * f / 2 + dx, boca.center.y + boca.height * f / 2))
-    }
-    drawPath(espiral, l.s(0.22f), style = Stroke(0.6f * u))
-    drawOval(papel, Offset(boca.left + 0.6f * u, boca.top + 0.4f * u), Size(boca.width - 1.2f * u, boca.height - 0.8f * u), style = Stroke(1.8f * u))
-    drawOval(l.c(mezcla(P.CARTON, P.NEGRO, 0.55f)), Offset(boca.center.x - an * 0.09f, boca.center.y - ry * 0.16f), Size(an * 0.18f, ry * 0.32f))
-    drawArc(l.b(0.55f), 180f, 110f, false, boca.topLeft, boca.size, style = Stroke(0.8f * u))
-    // La punta del pliego de fuera, que se despega arriba junto al borde libre.
-    val xp = x0 + an * (if (hacia < 0f) 0.76f else 0.24f)
-    val sg = if (hacia < 0f) 1f else -1f
-    val punta = poligonoUrss(Offset(xp, top + ry * 1.6f), Offset(xp + sg * an * 0.2f, top + ry * 0.6f), Offset(xp + sg * an * 0.08f, top + ry * 2.6f + h * 0.03f))
-    drawPath(corridoUrss(punta, sg * 1.2f * u, 1.2f * u), l.s(0.3f))
-    drawPath(punta, crudo)
-    drawPath(punta, l.b(0.3f), style = Stroke(0.6f * u))
-    // El bramante: una vuelta alta con la etiqueta colgada y otra baja; de cada vuelta, la parte de delante.
-    val cuerda = l.c(P.BRAMANTE)
-    fun vuelta(y: Float) {
-        val p = Path().apply { moveTo(x0, y); cubicTo(x0 + an * 0.25f, y + ry * 0.8f, x0 + an * 0.75f, y + ry * 0.8f, x0 + an, y) }
-        drawPath(corridoUrss(p, 0f, 1.2f * u), l.s(0.35f), style = Stroke(1.6f * u))
-        drawPath(p, cuerda, style = Stroke(1.5f * u))
-    }
+    val caja = Rect(xa, top, xa + d, h)
     val yAlto = h * (0.27f + 0.05f * azar(s, 9))
-    vuelta(yAlto)
-    vuelta(h * 0.86f)
-    // La etiqueta de cartón, colgada de la vuelta alta por su hilo, con las esquinas de arriba cortadas y su ojal.
-    val nudo = Offset(x0 + an * (0.42f + 0.16f * azar(s, 10)), yAlto + ry * 0.6f)
-    val eti = rectEtiquetaUrss(x0, an, nudo.y + 6f * u, 31f)
-    val ladeo = (-5f + 10f * azar(s, 11))
+    // El punto de la vuelta de arriba (de donde cuelga la etiqueta), ya girado con el rollo.
+    val ang = Math.toRadians(giro.toDouble())
+    val px = xa + d * (0.4f + 0.2f * azar(s, 10)) - pivote.x; val py = yAlto + d * 0.16f - pivote.y
+    val nudo = Offset(pivote.x + (px * kotlin.math.cos(ang) - py * kotlin.math.sin(ang)).toFloat(), pivote.y + (px * kotlin.math.sin(ang) + py * kotlin.math.cos(ang)).toFloat())
+    rotate(giro, pivote) {
+        sombraDetrasUrss(cuerpo, l, hacia)
+        cilindroUrss(cuerpo, papel, l, hacia, 0f, caja)
+        clipPath(cuerpo) {
+            val margen = h * (0.06f + 0.03f * azar(s, 6))
+            val crudoP = Path().apply { addRect(Rect(xa, top, xa + d, top + ry + margen)); addRect(Rect(xa, h - margen * 0.7f, xa + d, h + ry)) }
+            cilindroUrss(crudoP, crudo, l, hacia, 0f, caja)
+            // Lo impreso de otro color: una banda ancha en diagonal y, en algunos, otra fina.
+            val yb = h * (0.55f + 0.18f * azar(s, 7))
+            drawPath(poligonoUrss(Offset(xa, yb), Offset(xa + d, yb - h * 0.1f), Offset(xa + d, yb - h * 0.04f), Offset(xa, yb + h * 0.06f)), tinta)
+            if (azar(s, 8) < 0.5f) drawRect(tinta, Offset(xa, top + ry + margen + h * 0.04f), Size(d, h * 0.022f))
+            drawRect(Brush.horizontalGradient(if (hacia < 0f) listOf(l.b(0.16f), Color.Transparent, Color.Transparent, l.s(0.3f)) else listOf(l.s(0.3f), Color.Transparent, Color.Transparent, l.b(0.16f)), xa, xa + d), Offset(xa, top), Size(d, h - top))
+            // El borde libre del pliego, a lo largo.
+            val xe = xa + d * (if (hacia < 0f) 0.74f else 0.26f)
+            drawLine(l.s(0.45f), Offset(xe + 0.9f * u, top + ry), Offset(xe + 0.9f * u, h), 1f * u)
+            drawLine(l.b(0.45f), Offset(xe, top + ry), Offset(xe, h), 0.6f * u)
+        }
+        // La boca: la espiral del papel y el hueco del centro.
+        val boca = Rect(xa, top, xa + d, top + ry * 2f)
+        drawOval(l.c(mezcla(P.CARTULINA, Color.White, 0.1f)), boca.topLeft, boca.size)
+        val espiral = Path()
+        for (k in 1..4) {
+            val f = 1f - k * 0.18f
+            val dx = (k % 2) * d * 0.015f
+            espiral.addOval(Rect(boca.center.x - boca.width * f / 2 + dx, boca.center.y - boca.height * f / 2, boca.center.x + boca.width * f / 2 + dx, boca.center.y + boca.height * f / 2))
+        }
+        drawPath(espiral, l.s(0.24f), style = Stroke(0.6f * u))
+        drawOval(papel, Offset(boca.left + 0.5f * u, boca.top + 0.3f * u), Size(boca.width - 1f * u, boca.height - 0.6f * u), style = Stroke(1.5f * u))
+        drawOval(l.c(mezcla(P.CARTON, P.NEGRO, 0.55f)), Offset(boca.center.x - d * 0.08f, boca.center.y - ry * 0.15f), Size(d * 0.16f, ry * 0.3f))
+        drawArc(l.b(0.5f), 180f, 110f, false, boca.topLeft, boca.size, style = Stroke(0.8f * u))
+        // La punta del pliego de fuera, despegada arriba.
+        val xp = xa + d * (if (hacia < 0f) 0.74f else 0.26f)
+        val sg = if (hacia < 0f) 1f else -1f
+        val punta = poligonoUrss(Offset(xp, top + ry * 1.7f), Offset(xp + sg * d * 0.22f, top + ry * 0.8f), Offset(xp + sg * d * 0.1f, top + ry * 2.4f + h * 0.03f))
+        drawPath(corridoUrss(punta, sg * 1.2f * u, 1.2f * u), l.s(0.3f))
+        drawPath(punta, crudo)
+        drawPath(punta, l.b(0.3f), style = Stroke(0.6f * u))
+        // El bramante: dos vueltas, con el nudo arriba.
+        val cuerda = l.c(P.BRAMANTE)
+        listOf(yAlto, h * 0.86f).forEach { y ->
+            val p = Path().apply { moveTo(xa, y); cubicTo(xa + d * 0.25f, y + d * 0.22f, xa + d * 0.75f, y + d * 0.22f, xa + d, y) }
+            drawPath(corridoUrss(p, 0f, 1.2f * u), l.s(0.35f), style = Stroke(1.6f * u))
+            drawPath(p, cuerda, style = Stroke(1.5f * u))
+        }
+        if (l.k > 0.06f) drawLine(l.filo(0.7f), Offset(if (hacia < 0f) xa + 1f * u else xa + d - 1f * u, top + ry), Offset(if (hacia < 0f) xa + 1f * u else xa + d - 1f * u, h - ry), 1.2f * u)
+        if (l.luna > 0.05f) drawLine(l.frio(0.6f), Offset(xa + 1f * u, top + ry), Offset(xa + 1f * u, h - ry), 1f * u)
+    }
+    contactoUrss(xa, xa + d, l, hacia)
+    // La etiqueta de cartón, colgada a plomo del nudo por su hilo, con las esquinas de arriba cortadas y su ojal.
+    val cuerda = l.c(P.BRAMANTE)
+    val eti0 = rectEtiquetaUrss(0f, w, nudo.y + 6f * u, 31f)
+    val eti = Rect((nudo.x - eti0.width / 2).coerceIn(0f, (w - eti0.width).coerceAtLeast(0f)), eti0.top, 0f, eti0.bottom).let { Rect(it.left, it.top, it.left + eti0.width, it.bottom) }
+    val ladeo = (-4f + 8f * azar(s, 11))
     drawLine(cuerda, nudo, Offset(eti.center.x, eti.top + 2.6f * u), 1.1f * u)
     drawCircle(cuerda, 1.8f * u, nudo)
     rotate(ladeo, Offset(eti.center.x, eti.top)) {
@@ -311,9 +311,7 @@ private fun DrawScope.rolloUrss(v: Volumen, tono: Color?, medidor: TextMeasurer,
         drawPath(forma, l.c(mezcla(P.CARTON, P.NEGRO, 0.2f)).copy(alpha = 0.6f), style = Stroke(0.7f * u))
         drawCircle(l.c(P.METAL), 1.9f * u, Offset(eti.center.x, eti.top + 2.6f * u), style = Stroke(1f * u))
     }
-    if (l.k > 0.06f) drawLine(l.filo(0.7f), Offset(if (hacia < 0f) x0 + 1f * u else x0 + an - 1f * u, top + ry), Offset(if (hacia < 0f) x0 + 1f * u else x0 + an - 1f * u, h - ry), 1.3f * u)
-    if (l.luna > 0.05f) drawLine(l.frio(0.6f), Offset(x0 + 1f * u, top + ry), Offset(x0 + 1f * u, h - ry), 1f * u)
-    if (v.noche) mediaLunaUrss(Offset(x0 + an * 0.5f, minOf(eti.bottom + (h * 0.86f - eti.bottom) * 0.5f, h * 0.8f)), minOf(an * 0.24f, 6f * u), l, hacia)
+    if (v.noche) mediaLunaUrss(Offset(eti.center.x, minOf(eti.bottom + (h * 0.86f - eti.bottom) * 0.5f, h * 0.8f)), minOf(d * 0.3f, 6f * u), l, hacia)
 }
 
 // ---------------------------------------------------------------- el bote de pintura

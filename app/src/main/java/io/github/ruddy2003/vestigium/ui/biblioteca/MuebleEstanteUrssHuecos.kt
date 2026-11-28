@@ -22,10 +22,9 @@ import kotlin.math.sin
 
 /**
  * Lo que llena los huecos de las repisas donde no llegan las entradas: grupos de dos o tres cosas del club, solapadas, que llenan
- * del 70 al 90 % del alto del hueco y cambian de un hueco a otro. El aritmómetro de manivela delante de dos carpetas de pie; el
+ * del 70 al 90 % del alto del hueco y cambian de un hueco a otro. El samovar del club con la tetera encima, en su bandeja; el
  * ábaco del Ideario, aquí de pie contra la pared, con dos libros tumbados delante; el despertador de dos campanas sobre una pila de
- * libros, con la almohadilla de tinta; la plancha de linóleo grabada con su rodillo de entintar y la gubia. En un hueco muy ancho,
- * dos grupos.
+ * libros, con la almohadilla de tinta; el gramófono de maleta abierto, con un disco en su funda. En un hueco muy ancho, dos grupos.
  */
 internal object HuecosEstanteUrss {
     fun DrawScope.hueco(k: Int, r: Rect, ocupado: Float, g: MarcoUrss) {
@@ -50,10 +49,10 @@ internal object HuecosEstanteUrss {
         val l = g.luz(z.center.x, z.top + z.height * 0.55f, 0.05f)
         val hacia = g.hacia(z.center.x, z.center.y)
         when (cual) {
-            0 -> aritmometro(z, l, hacia, g)
+            0 -> samovar(z, l, hacia, g)
             1 -> abaco(z, l, hacia, g)
             2 -> despertador(z, l, hacia, g)
-            else -> linoleo(z, l, hacia, g)
+            else -> gramofono(z, l, hacia, g)
         }
     }
 
@@ -81,66 +80,88 @@ internal object HuecosEstanteUrss {
         if (l.k > 0.05f) drawRect(l.filo(0.7f), r.topLeft, Size(r.width, 1.2f * u))
     }
 
-    // ---------------------------------------------------------------- el aritmómetro delante de dos carpetas
+    // ---------------------------------------------------------------- el samovar con su tetera
 
     /**
-     * Dos carpetas de cartón de pie, contra la pared (una gris y una roja, con sus cintas), y delante el aritmómetro: la caja de
-     * chapa negra con la tapa inclinada y sus ranuras de palancas, el carro de abajo con sus ventanillas y la manivela del costado.
+     * El samovar eléctrico del club, de latón, sobre su bandeja: el pie cuadrado con sus cuatro patitas, el cuerpo de urna con sus
+     * estrías, las dos asas de madera negra en sus brazos, el grifo con su llave y el pico, la corona de arriba y, encima, la tetera
+     * de loza blanca con su banda roja. Es lo que acompaña al vaso de té del Ideario.
      */
-    private fun DrawScope.aritmometro(z: Rect, l: LuzUrss, hacia: Float, g: MarcoUrss) {
+    private fun DrawScope.samovar(z: Rect, l: LuzUrss, hacia: Float, g: MarcoUrss) {
         val w = g.w; val u = density
         val pie = z.bottom
-        // Las carpetas de pie.
-        val cols = listOf(mezcla(P.CARTON, P.ACERO, 0.35f), mezcla(P.ROJO, P.GRANATE, 0.4f))
-        val silueta = Path()
-        cols.forEachIndexed { i, c ->
-            val r = Rect(z.left + z.width * (0.06f + 0.2f * i), z.top + z.height * (0.14f + 0.05f * i), z.left + z.width * (0.24f + 0.2f * i), pie)
-            silueta.addRect(r)
-            val lc = g.luz(r.center, 0.03f)
-            rotate(if (i == 0) -2f else 1.5f, Offset(r.center.x, pie)) {
-                drawRect(lc.c(c), r.topLeft, r.size)
-                drawRect(Brush.horizontalGradient(listOf(lc.b(0.25f), Color.Transparent, lc.s(0.3f)), r.left, r.right), r.topLeft, r.size)
-                drawRect(lc.c(mezcla(P.CARTULINA, P.CARTON, 0.2f)), Offset(r.left + r.width * 0.15f, r.top - z.height * 0.03f), Size(r.width * 0.7f, z.height * 0.03f))
-                // La cinta atada, que cuelga del canto.
-                drawLine(lc.c(P.CARTULINA), Offset(r.right - r.width * 0.2f, r.top + r.height * 0.4f), Offset(r.right + r.width * 0.12f, r.top + r.height * 0.52f), 1.4f * u, StrokeCap.Round)
-                drawRect(lc.c(ETIQUETA_URSS), Offset(r.left + r.width * 0.2f, r.top + r.height * 0.14f), Size(r.width * 0.6f, r.height * 0.12f))
+        val an = minOf(z.width * 0.66f, w * 0.15f)
+        val cx = z.left + z.width * 0.42f
+        val alto = z.height * 0.88f
+        val ls = g.luz(cx, pie - alto * 0.5f, 0.05f)
+        val laton = mezcla(P.LATON, P.TE, 0.15f)
+        // La bandeja, de chapa pintada, vista un poco desde arriba.
+        val bandeja = Rect(cx - an * 0.7f, pie - an * 0.12f, cx + an * 0.7f, pie)
+        drawOval(ls.s(0.45f), Offset(bandeja.left - hacia * 2f * u, pie - an * 0.06f), Size(bandeja.width + 4f * u, an * 0.1f))
+        drawOval(ls.c(mezcla(P.ROJO, P.GRANATE, 0.4f)), bandeja.topLeft, bandeja.size)
+        drawOval(ls.c(P.NEGRO), bandeja.deflate(an * 0.05f).topLeft, bandeja.deflate(an * 0.05f).size)
+        drawArc(ls.b(0.5f), 190f, 100f, false, bandeja.topLeft, bandeja.size, style = Stroke(1f * u))
+        // El pie: el zócalo cuadrado y sus patitas.
+        val y0 = pie - an * 0.06f
+        val zoc = poligonoUrss(Offset(cx - an * 0.3f, y0), Offset(cx + an * 0.3f, y0), Offset(cx + an * 0.22f, y0 - alto * 0.12f), Offset(cx - an * 0.22f, y0 - alto * 0.12f))
+        listOf(-0.3f, 0.3f).forEach { f -> drawCircle(ls.c(laton), an * 0.04f, Offset(cx + an * f, y0)) }
+        planosUrss(zoc, ls.c(laton), ls, hacia, 0.25f, 0.3f)
+        // El cuello del pie y el cuerpo de urna.
+        val yc = y0 - alto * 0.12f
+        val ya = yc - alto * 0.5f
+        val cuerpo = Path().apply {
+            moveTo(cx - an * 0.14f, yc)
+            cubicTo(cx - an * 0.55f, yc - alto * 0.06f, cx - an * 0.56f, ya + alto * 0.1f, cx - an * 0.38f, ya)
+            lineTo(cx + an * 0.38f, ya)
+            cubicTo(cx + an * 0.56f, ya + alto * 0.1f, cx + an * 0.55f, yc - alto * 0.06f, cx + an * 0.14f, yc)
+            close()
+        }
+        drawPath(corridoUrss(cuerpo, -hacia * 6f * u, if (ls.a.oscuro) -1f * u else 3f * u), ls.s(if (ls.a.oscuro) 0.45f else 0.34f))
+        cilindroUrss(cuerpo, ls.c(laton), ls, hacia, 0.75f)
+        clipPath(cuerpo) {
+            // Las estrías del cuerpo.
+            for (j in 1..7) {
+                val x = cx - an * 0.5f + an * j / 8f
+                drawLine(ls.s(0.22f), Offset(x, ya), Offset(x + (x - cx) * 0.2f, yc), 0.9f * u)
             }
+            drawRect(ls.s(0.3f), Offset(cx - an, ya), Size(an * 2, alto * 0.03f))
         }
-        sombras(silueta, z.left, z.left + z.width * 0.46f, pie, l, hacia)
-        // El aritmómetro.
-        val c = Rect(z.left + z.width * 0.2f, pie - z.height * 0.36f, z.left + z.width * 0.98f, pie)
-        val caja = Path().apply {
-            moveTo(c.left, c.bottom); lineTo(c.left, c.top + c.height * 0.38f); lineTo(c.left + c.width * 0.08f, c.top)
-            lineTo(c.right - c.width * 0.06f, c.top); lineTo(c.right, c.top + c.height * 0.3f); lineTo(c.right, c.bottom); close()
+        // Las asas: brazos de latón y mangos de madera negra.
+        listOf(-1f, 1f).forEach { sg ->
+            val a0 = Offset(cx + sg * an * 0.42f, ya + alto * 0.08f)
+            val a1 = Offset(cx + sg * an * 0.62f, ya + alto * 0.05f)
+            drawLine(ls.c(laton), a0, a1, 1.6f * u)
+            drawLine(ls.c(P.NEGRO), a1, a1 + Offset(sg * an * 0.02f, alto * 0.12f), 3.2f * u, StrokeCap.Round)
+            drawLine(ls.b(0.35f), a1 + Offset(-0.8f * u, 0f), a1 + Offset(sg * an * 0.02f - 0.8f * u, alto * 0.12f), 0.7f * u)
         }
-        val la = g.luz(c.center, 0.05f)
-        sombras(caja, c.left, c.right, pie, la, hacia)
-        val negro = mezcla(P.NEGRO, P.ACERO_OSC, 0.25f)
-        planosUrss(caja, la.c(negro), la, hacia, 0.18f, 0.22f)
-        // La tapa inclinada, más clara, con las ranuras de las palancas y sus botones.
-        val tapa = poligonoUrss(Offset(c.left + c.width * 0.08f, c.top), Offset(c.right - c.width * 0.06f, c.top), Offset(c.right - c.width * 0.04f, c.top + c.height * 0.42f), Offset(c.left + c.width * 0.02f, c.top + c.height * 0.42f))
-        drawPath(tapa, la.c(mezcla(negro, P.ACERO, 0.3f)))
-        drawPath(tapa, la.b(0.25f), style = Stroke(0.8f * u))
-        val n = 8
-        for (j in 0 until n) {
-            val x = c.left + c.width * (0.14f + 0.72f * j / (n - 1))
-            drawLine(la.c(P.NEGRO), Offset(x, c.top + c.height * 0.06f), Offset(x + c.width * 0.01f, c.top + c.height * 0.38f), 1.4f * u)
-            val bt = Offset(x + c.width * 0.004f, c.top + c.height * (0.12f + 0.22f * azar(8101, j)))
-            drawCircle(la.c(P.METAL), 1.5f * u, bt)
+        // El grifo: el caño, la llave y el pico, hacia delante.
+        val gr = Offset(cx + an * 0.1f, yc - alto * 0.03f)
+        drawLine(ls.c(laton), gr, gr + Offset(an * 0.08f, alto * 0.03f), 3f * u, StrokeCap.Round)
+        drawLine(ls.c(laton), gr + Offset(an * 0.08f, alto * 0.03f), gr + Offset(an * 0.09f, alto * 0.09f), 2.2f * u, StrokeCap.Round)
+        drawLine(ls.c(P.NEGRO), gr + Offset(an * 0.02f, -alto * 0.03f), gr + Offset(an * 0.12f, -alto * 0.05f), 2f * u, StrokeCap.Round)
+        drawCircle(ls.c(laton), 2.2f * u, gr)
+        // La corona de arriba y la tetera de loza encima.
+        val cor = Rect(cx - an * 0.2f, ya - alto * 0.06f, cx + an * 0.2f, ya)
+        drawRect(ls.c(laton), cor.topLeft, cor.size)
+        drawRect(ls.b(0.5f), cor.topLeft, Size(cor.width, 1f * u))
+        val lt = g.luz(cx, ya - alto * 0.15f, 0.05f)
+        val te = Path().apply {
+            val yb = cor.top; val yt = yb - alto * 0.2f
+            moveTo(cx - an * 0.18f, yb)
+            cubicTo(cx - an * 0.34f, yb - alto * 0.02f, cx - an * 0.32f, yt + alto * 0.04f, cx - an * 0.14f, yt)
+            lineTo(cx + an * 0.14f, yt)
+            cubicTo(cx + an * 0.32f, yt + alto * 0.04f, cx + an * 0.34f, yb - alto * 0.02f, cx + an * 0.18f, yb)
+            close()
         }
-        // El carro de abajo, con sus ventanillas (sin cifras).
-        val carro = Rect(c.left + c.width * 0.04f, c.top + c.height * 0.56f, c.right - c.width * 0.02f, c.top + c.height * 0.8f)
-        drawRect(la.c(mezcla(P.METAL, P.ACERO, 0.4f)), carro.topLeft, carro.size)
-        drawRect(la.b(0.5f), carro.topLeft, Size(carro.width, 1f * u))
-        for (j in 0 until 9) drawRect(la.c(P.NEGRO).copy(alpha = 0.8f), Offset(carro.left + carro.width * (0.06f + 0.1f * j), carro.top + carro.height * 0.28f), Size(carro.width * 0.055f, carro.height * 0.44f))
-        // La manivela del costado de la derecha, con su mango.
-        val ej = Offset(c.right - c.width * 0.02f, c.top + c.height * 0.45f)
-        val mg = Offset(ej.x + z.width * 0.02f, c.top - c.height * 0.25f)
-        drawLine(la.s(0.3f), ej + Offset(1.4f * u, 1.4f * u), mg + Offset(1.4f * u, 1.4f * u), 2f * u)
-        drawLine(la.c(P.METAL), ej, mg, 2f * u, StrokeCap.Round)
-        drawRoundRect(la.c(P.NEGRO), Offset(mg.x - 2f * u, mg.y - 6f * u), Size(4f * u, 8f * u), CornerRadius(2f * u))
-        drawCircle(la.c(P.METAL), 2.4f * u, ej)
-        if (la.k > 0.05f) drawLine(la.filo(0.8f), Offset(c.left + c.width * 0.08f, c.top), Offset(c.right - c.width * 0.06f, c.top), 1.2f * u)
+        val tb = te.getBounds()
+        // El pico de la tetera y el asa.
+        drawLine(lt.c(P.CARTULINA), Offset(tb.left + tb.width * 0.12f, tb.center.y + tb.height * 0.1f), Offset(tb.left - an * 0.12f, tb.top + tb.height * 0.05f), 2.6f * u, StrokeCap.Round)
+        drawArc(lt.c(P.CARTULINA), -80f, 160f, false, Offset(tb.right - an * 0.08f, tb.top + tb.height * 0.15f), Size(an * 0.16f, tb.height * 0.6f), style = Stroke(2f * u))
+        cilindroUrss(te, lt.c(P.CARTULINA), lt, hacia, 0.6f)
+        clipPath(te) { drawRect(lt.c(P.ROJO), Offset(tb.left, tb.top + tb.height * 0.42f), Size(tb.width, tb.height * 0.14f)) }
+        drawOval(lt.c(P.CARTULINA), Offset(cx - an * 0.1f, tb.top - alto * 0.03f), Size(an * 0.2f, alto * 0.05f))
+        drawCircle(lt.c(P.ROJO), alto * 0.018f, Offset(cx, tb.top - alto * 0.03f))
+        if (ls.k > 0.05f) drawLine(ls.filo(0.85f), Offset(if (hacia < 0f) cx - an * 0.48f else cx + an * 0.48f, ya + alto * 0.08f), Offset(if (hacia < 0f) cx - an * 0.3f else cx + an * 0.3f, yc - alto * 0.04f), 1.4f * u)
     }
 
     // ---------------------------------------------------------------- el ábaco de pie con dos libros tumbados
@@ -273,66 +294,74 @@ internal object HuecosEstanteUrss {
         drawRect(lla.b(0.4f), lt.topLeft, Size(lt.width, 1f * u))
     }
 
-    // ---------------------------------------------------------------- la plancha de linóleo, el rodillo y la gubia
+    // ---------------------------------------------------------------- el gramófono de maleta
 
     /**
-     * La plancha de linóleo grabada para un cartel, de pie contra la pared: el linóleo pardo sobre su taco de madera, entintado de
-     * negro, con lo tallado (bandas, un disco y una cuña) en el color del linóleo; delante, tumbados, el rodillo de entintar (el
-     * caucho negro, el armazón de alambre y el mango) y la gubia de mango de madera.
+     * El gramófono de maleta del club (el patefón): la caja forrada de tela granate con sus cantoneras de metal, la tapa abierta de
+     * pie detrás, forrada de tela cruda por dentro, el disco negro con sus surcos y su etiqueta, el brazo cromado con la cabeza
+     * apoyada en el disco y la manivela del costado; a su lado, un disco en su funda de papel apoyado contra la pared.
      */
-    private fun DrawScope.linoleo(z: Rect, l: LuzUrss, hacia: Float, g: MarcoUrss) {
+    private fun DrawScope.gramofono(z: Rect, l: LuzUrss, hacia: Float, g: MarcoUrss) {
         val w = g.w; val u = density
         val pie = z.bottom
-        val pw = minOf(z.width * 0.74f, w * 0.17f); val ph = z.height * 0.8f
-        val r = Rect(z.left + z.width * 0.12f, pie - ph, z.left + z.width * 0.12f + pw, pie)
-        val lp = g.luz(r.center, 0.025f)
-        rotate(3f, Offset(r.right, r.bottom)) {
-            sombras(Path().apply { addRect(r) }, r.left, r.right, pie, lp, hacia)
-            // El taco de madera (se ve su canto) y el linóleo encima.
-            drawRect(lp.c(P.ROBLE_LUZ), Offset(r.left, r.top + 2f * u), Size(r.width + 2.5f * u, r.height - 2f * u))
-            drawRect(lp.s(0.3f), Offset(r.right, r.top + 2f * u), Size(2.5f * u, r.height - 2f * u))
-            val lino = Rect(r.left, r.top, r.right, r.bottom - 2f * u)
-            drawRect(lp.c(mezcla(P.PARQUET, P.ACERO_OSC, 0.4f)), lino.topLeft, lino.size)
-            // Lo entintado (negro) y lo tallado (el linóleo que se ve): un disco, una banda, una cuña.
-            clipRect(lino.left, lino.top, lino.right, lino.bottom) {
-                val tinta = lp.c(P.NEGRO)
-                val f = Path().apply {
-                    addRect(Rect(lino.left, lino.top, lino.right, lino.top + lino.height * 0.4f))
-                    addRect(Rect(lino.left, lino.top + lino.height * 0.56f, lino.left + lino.width * 0.4f, lino.bottom))
-                }
-                drawPath(f, tinta)
-                drawCircle(lp.c(mezcla(P.PARQUET, P.ACERO_OSC, 0.4f)), lino.width * 0.22f, Offset(lino.left + lino.width * 0.62f, lino.top + lino.height * 0.22f))
-                drawPath(poligonoUrss(Offset(lino.left + lino.width * 0.45f, lino.bottom), Offset(lino.right, lino.top + lino.height * 0.5f), Offset(lino.right, lino.bottom)), tinta)
-                // Las marcas de la gubia en lo tallado.
-                for (j in 0 until 7) {
-                    val x = lino.left + lino.width * (0.45f + 0.08f * j)
-                    drawLine(lp.s(0.25f), Offset(x, lino.top + lino.height * 0.45f), Offset(x - lino.width * 0.04f, lino.top + lino.height * 0.55f), 0.7f * u)
-                }
-                drawRect(lp.b(0.15f), lino.topLeft, Size(lino.width * 0.3f, lino.height))
-            }
-            drawRect(lp.b(0.5f), lino.topLeft, Size(lino.width, 1f * u))
-            if (lp.k > 0.05f) drawRect(lp.filo(0.8f), Offset(if (hacia < 0f) r.left else r.right - 1.4f * u, r.top), Size(1.4f * u, r.height))
+        val an = minOf(z.width * 0.78f, w * 0.2f)
+        val x0 = z.left + z.width * 0.04f
+        val alCaja = z.height * 0.24f
+        val yc = pie - alCaja
+        val lg = g.luz(x0 + an * 0.5f, pie - z.height * 0.4f, 0.04f)
+        val tela = mezcla(P.GRANATE, P.ROJO, 0.15f)
+        // El disco en su funda, de pie contra la pared, a la derecha (detrás de la caja).
+        val fx = x0 + an * 0.78f
+        val funda = Rect(fx, pie - z.height * 0.62f, fx + minOf(z.width * 0.3f, z.height * 0.6f), pie)
+        val lf = g.luz(funda.center, 0.02f)
+        rotate(4f, Offset(funda.left, funda.bottom)) {
+            drawPath(corridoUrss(Path().apply { addRect(funda) }, -hacia * 5f * u, 2.5f * u), lf.s(0.3f))
+            drawRect(lf.c(P.ESTRAZA), funda.topLeft, funda.size)
+            drawCircle(lf.c(P.NEGRO), funda.width * 0.2f, funda.center)
+            drawCircle(lf.c(P.CARTULINA_OSC), funda.width * 0.08f, funda.center)
+            drawRect(Brush.horizontalGradient(listOf(lf.b(0.2f), Color.Transparent, lf.s(0.25f)), funda.left, funda.right), funda.topLeft, funda.size)
         }
-        // El rodillo de entintar, tumbado delante: el caucho negro con la tinta brillante, el armazón y el mango.
-        val ro = Rect(z.left + z.width * 0.3f, pie - z.height * 0.13f, z.left + z.width * 0.66f, pie - z.height * 0.01f)
-        val lr = g.luz(ro.center, 0.05f)
-        sombras(rr(ro, ro.height * 0.5f), ro.left, ro.right + z.width * 0.3f, pie, lr, hacia)
-        val cau = rr(ro, ro.height * 0.5f)
-        drawPath(cau, Brush.verticalGradient(listOf(lr.c(P.NEGRO), lr.c(mezcla(P.NEGRO, P.OLEO_OSC, 0.4f)), lr.c(P.NEGRO)), ro.top, ro.bottom))
-        drawLine(lr.b(0.7f), Offset(ro.left + ro.height * 0.4f, ro.top + ro.height * 0.28f), Offset(ro.right - ro.height * 0.4f, ro.top + ro.height * 0.28f), 1.2f * u, StrokeCap.Round)
-        val arm = Path().apply {
-            moveTo(ro.left, ro.center.y); lineTo(ro.left - z.width * 0.02f, ro.center.y)
-            lineTo(ro.left - z.width * 0.02f, ro.top - z.height * 0.04f); lineTo(ro.right + z.width * 0.04f, ro.top - z.height * 0.04f)
-            lineTo(ro.right + z.width * 0.04f, ro.center.y); lineTo(ro.right, ro.center.y)
+        // La tapa abierta, de pie detrás de la caja, y su tela cruda por dentro.
+        val tapa = Rect(x0 + an * 0.04f, pie - z.height * 0.86f, x0 + an * 0.96f, yc + alCaja * 0.2f)
+        drawPath(corridoUrss(Path().apply { addRect(tapa) }, -hacia * 6f * u, 3f * u), lg.s(0.32f))
+        drawRect(lg.c(tela), tapa.topLeft, tapa.size)
+        val dentro = tapa.deflate(an * 0.05f)
+        drawRect(lg.c(mezcla(P.BRAMANTE, P.CARTULINA, 0.3f)), dentro.topLeft, dentro.size)
+        drawRect(Brush.verticalGradient(listOf(lg.s(0.3f), Color.Transparent), dentro.top, dentro.top + dentro.height * 0.4f), dentro.topLeft, dentro.size)
+        drawRect(lg.b(0.4f), tapa.topLeft, Size(tapa.width, 1f * u))
+        // El cierre y la bisagra.
+        drawRect(lg.c(P.METAL), Offset(tapa.center.x - an * 0.05f, tapa.top + 1f * u), Size(an * 0.1f, an * 0.04f))
+        // La caja forrada de tela, con sus cantoneras.
+        val caja = Rect(x0, yc, x0 + an, pie)
+        drawOval(lg.s(0.55f), Offset(caja.left - hacia * 2f * u, pie - 2.6f * u), Size(caja.width + 4f * u, 4.4f * u))
+        planosUrss(Path().apply { addRect(caja) }, lg.c(tela), lg, hacia, 0.18f, 0.22f)
+        drawRect(lg.c(P.METAL), Offset(caja.left, caja.top + caja.height * 0.45f), Size(caja.width, 1.2f * u))
+        listOf(caja.left, caja.right - an * 0.08f).forEach { x ->
+            drawRect(lg.c(P.METAL), Offset(x, caja.top), Size(an * 0.08f, an * 0.05f))
+            drawRect(lg.c(P.METAL), Offset(x, caja.bottom - an * 0.05f), Size(an * 0.08f, an * 0.05f))
         }
-        drawPath(arm, lr.c(P.METAL), style = Stroke(1.4f * u))
-        val mango = Rect(ro.right + z.width * 0.04f, ro.top - z.height * 0.06f, ro.right + z.width * 0.3f, ro.top - z.height * 0.0f)
-        drawRoundRect(lr.c(P.ROBLE_LUZ), mango.topLeft, mango.size, CornerRadius(mango.height * 0.5f))
-        drawRoundRect(lr.b(0.4f), mango.topLeft, Size(mango.width, mango.height * 0.35f), CornerRadius(mango.height * 0.3f))
-        // La gubia, tumbada sobre la tabla delante de la plancha.
-        val gb = Offset(z.left + z.width * 0.06f, pie - z.height * 0.02f)
-        drawLine(lr.s(0.3f), gb + Offset(1f * u, 1.4f * u), gb + Offset(z.width * 0.22f + 1f * u, -z.height * 0.03f + 1.4f * u), 3f * u, StrokeCap.Round)
-        drawLine(lr.c(mezcla(P.ROBLE, P.TE, 0.3f)), gb, gb + Offset(z.width * 0.16f, -z.height * 0.022f), 3.6f * u, StrokeCap.Round)
-        drawLine(lr.c(P.METAL), gb + Offset(z.width * 0.16f, -z.height * 0.022f), gb + Offset(z.width * 0.24f, -z.height * 0.032f), 1.4f * u, StrokeCap.Round)
+        // La cara de arriba, vista desde arriba: el plato con el disco, sus surcos y su etiqueta, y el brazo.
+        val top = Rect(x0 + an * 0.04f, yc - alCaja * 0.42f, x0 + an * 0.96f, yc + alCaja * 0.04f)
+        drawPath(poligonoUrss(Offset(x0, yc), Offset(x0 + an, yc), Offset(x0 + an * 0.96f, top.top), Offset(x0 + an * 0.04f, top.top)), lg.c(mezcla(tela, P.NEGRO, 0.3f)))
+        val disco = Rect(x0 + an * 0.12f, top.top + top.height * 0.08f, x0 + an * 0.7f, top.bottom - top.height * 0.08f)
+        drawOval(lg.c(P.NEGRO), disco.topLeft, disco.size)
+        val surcos = Path()
+        for (k in 1..3) surcos.addOval(disco.deflate(disco.height * 0.1f * k).let { Rect(it.left - disco.width * 0.04f * k + disco.width * 0.1f * k * 0.6f, it.top, it.right + disco.width * 0.04f * k - disco.width * 0.1f * k * 0.6f, it.bottom) })
+        drawPath(surcos, lg.b(0.18f), style = Stroke(0.6f * u))
+        drawArc(lg.b(0.5f), 200f, 70f, false, disco.topLeft, disco.size, style = Stroke(1.2f * u))
+        drawOval(lg.c(mezcla(P.ROJO, P.CARTULINA, 0.15f)), Offset(disco.center.x - disco.width * 0.13f, disco.center.y - disco.height * 0.13f), Size(disco.width * 0.26f, disco.height * 0.26f))
+        // El brazo cromado: del pivote de atrás a la derecha hasta la cabeza, apoyada en el disco.
+        val piv = Offset(x0 + an * 0.86f, top.top + top.height * 0.25f)
+        val cab = Offset(x0 + an * 0.58f, disco.center.y + disco.height * 0.15f)
+        drawCircle(lg.c(P.METAL), an * 0.05f, piv)
+        val brazo = abiertaUrss(listOf(piv, Offset(x0 + an * 0.82f, disco.center.y + disco.height * 0.3f), cab))
+        drawPath(corridoUrss(brazo, 1.2f * u, 1.4f * u), lg.s(0.35f), style = Stroke(2.2f * u))
+        drawPath(brazo, lg.c(P.METAL), style = Stroke(2.2f * u, cap = StrokeCap.Round))
+        drawRoundRect(lg.c(P.METAL), Offset(cab.x - an * 0.05f, cab.y - an * 0.025f), Size(an * 0.08f, an * 0.05f), CornerRadius(an * 0.01f))
+        // La manivela del costado.
+        val mv = Offset(caja.right, caja.top + caja.height * 0.5f)
+        drawLine(lg.c(P.METAL), mv, mv + Offset(an * 0.1f, -alCaja * 0.1f), 1.8f * u, StrokeCap.Round)
+        drawLine(lg.c(P.NEGRO), mv + Offset(an * 0.1f, -alCaja * 0.1f), mv + Offset(an * 0.1f, alCaja * 0.25f), 3f * u, StrokeCap.Round)
+        if (lg.k > 0.05f) drawRect(lg.filo(0.8f), Offset(tapa.left, tapa.top), Size(tapa.width, 1.4f * u))
     }
 }

@@ -80,8 +80,20 @@ internal object PieEstanteUrss {
         val ym = (y0 + suelo) / 2
         drawRect(Brush.horizontalGradient(xs.map { g.luz(it, ym, 0.035f).c(mezcla(P.NEGRO, P.ROBLE_OSC, 0.2f)) }, 0f, w), Offset(0f, y0), Size(w, suelo - y0))
         drawRect(TexturasUrss.vetaH(u), Offset(0f, y0), Size(w, suelo - y0), alpha = 0.3f)
-        // El canto de arriba con su luz y el retranqueo de abajo, en sombra.
-        drawRect(Brush.horizontalGradient(xs.map { g.luz(it, y0, 0.035f).b(0.5f) }, 0f, w), Offset(0f, y0 + 1f * u), Size(w, 1.2f * u))
+        // El brillo del esmalte negro, a lo largo, y las juntas de las tres tablas del zócalo.
+        drawRect(Brush.horizontalGradient(xs.map { g.luz(it, ym, 0.035f).b(0.16f) }, 0f, w), Offset(0f, y0 + (suelo - y0) * 0.42f), Size(w, (suelo - y0) * 0.12f))
+        listOf(0.335f, 0.668f).forEach { f ->
+            val x = w * f
+            drawLine(g.a.sombra(0.6f), Offset(x, y0), Offset(x, suelo), 1.4f * u)
+            drawLine(g.luz(x, ym, 0.035f).b(0.25f), Offset(x + 1.4f * u, y0), Offset(x + 1.4f * u, suelo), 0.7f * u)
+        }
+        // La moldura de roble de arriba: el canto con su luz y la sombra que deja en lo negro.
+        val mold = w * 0.012f
+        drawRect(Brush.horizontalGradient(xs.map { g.luz(it, y0, 0.04f).c(mezcla(P.ROBLE, P.ROBLE_LUZ, 0.25f)) }, 0f, w), Offset(0f, y0), Size(w, mold))
+        drawRect(TexturasUrss.vetaH(u), Offset(0f, y0), Size(w, mold), alpha = 0.7f)
+        drawRect(Brush.horizontalGradient(xs.map { g.luz(it, y0, 0.04f).b(0.55f) }, 0f, w), Offset(0f, y0 + 1f * u), Size(w, 1.2f * u))
+        drawRect(g.a.sombra(0.45f), Offset(0f, y0 + mold), Size(w, 2f * u))
+        // El retranqueo de abajo, en sombra.
         drawRect(g.a.sombra(0.4f), Offset(0f, suelo - (suelo - y0) * 0.22f), Size(w, (suelo - y0) * 0.22f))
         // Los golpes de las escobas y los zapatos: la pintura negra saltada deja ver el roble.
         for (k in 0 until 7) {
