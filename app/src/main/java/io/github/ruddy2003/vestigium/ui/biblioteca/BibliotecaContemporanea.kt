@@ -7638,7 +7638,6 @@ object EstanteAbismo : DisenoBiblioteca {
     private val LATON_OSC = Color(0xFF7E6128)
     private val AGUA = Color(0xFF0C2338)
     private val AGUA_HONDA = Color(0xFF061426)
-    private val SILUETA = Color(0xFF020A14)
     private val BIOLUZ = Color(0xFF5FF2E0)
     private val BIOLUZ_VERDE = Color(0xFF9CF27A)
     private val GOMA = Color(0xFF26292B)
@@ -7659,34 +7658,6 @@ object EstanteAbismo : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.34f
-    override val base = 0.1f
-    override val lado = 0.06f
-    override val altoRepisa: Dp = 106.dp
-    override val tabla: Dp = 18.dp
-    override val separa: Dp = 3.dp
-    override val letra: FontFamily = LetraExtra.batiscafo
-
-    override fun ancho(palabras: Int): Dp = (24 + (palabras / 50).coerceAtMost(16)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.8f + 0.14f * azar(semilla, 11)
-
-    /** Las planchas del casco: costuras con sus filas de remaches. */
-    private fun DrawScope.planchas(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        drawRect(t(CASCO, oscuro, noche), r.topLeft, r.size)
-        drawRect(Color.Black.copy(alpha = 0.08f), r.topLeft, Size(r.width * 0.12f, r.height))
-        drawRect(Color.Black.copy(alpha = 0.08f), Offset(r.right - r.width * 0.12f, r.top), Size(r.width * 0.12f, r.height))
-        var y = r.top + 60 * u
-        while (y < r.bottom) {
-            drawLine(t(CASCO_SOMBRA, oscuro, noche), Offset(r.left, y), Offset(r.right, y), 1.2f * u)
-            var rx = r.left + 4 * u
-            while (rx < r.right) { drawCircle(t(REMACHE, oscuro, noche), 1.1f * u, Offset(rx, y - 3.5f * u)); rx += 10 * u }
-            y += 60 * u
-        }
-        var x = r.left + r.width * 0.5f
-        while (x < r.right) { drawLine(t(CASCO_SOMBRA, oscuro, noche), Offset(x, r.top), Offset(x, r.bottom), 1.2f * u); x += r.width * 0.5f }
-    }
-
     /** Un punto de bioluminiscencia con su halo en anillos (sin degradados). */
     private fun DrawScope.destello(o: Offset, r: Float, color: Color) {
         drawCircle(color.copy(alpha = 0.1f), r * 3.5f, o)
@@ -7694,219 +7665,27 @@ object EstanteAbismo : DisenoBiblioteca {
         drawCircle(color, r, o)
     }
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El casco del fondo, con sus planchas remachadas.
-        val cuerpo = Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, d.base.top)
-        planchas(cuerpo, oscuro, noche)
-        // De noche, el reflejo cian de la bioluminiscencia que entra por el ojo de buey.
-        if (noche) {
-            val alcanceLuz = minOf(cuerpo.height, 220 * u)
-            for (k in 1..3) drawRect(BIOLUZ.copy(alpha = 0.03f), cuerpo.topLeft, Size(cuerpo.width * (0.4f + 0.2f * k), alcanceLuz * k / 3f))
-        }
-        // Cada repisa: la sombra de la tabla de arriba y de los costados.
-        d.repisas.forEach { rep ->
-            drawRect(Color.Black.copy(alpha = if (noche) 0.4f else 0.26f), rep.topLeft, Size(rep.width, 7 * u))
-            drawRect(Color.Black.copy(alpha = 0.12f), rep.topLeft, Size(rep.width, 14 * u))
-            drawRect(Color.Black.copy(alpha = 0.16f), rep.topLeft, Size(7 * u, rep.height))
-            drawRect(Color.Black.copy(alpha = 0.16f), Offset(rep.right - 7 * u, rep.top), Size(7 * u, rep.height))
-        }
-        // Los costados de teca, con cantoneras de latón y los pernos que los sujetan al casco.
-        listOf(d.izquierda, d.derecha).forEachIndexed { j, lad ->
-            drawRoundRect(c(TECA), lad.topLeft, lad.size, CornerRadius(3 * u))
-            vetas(lad, c(TECA_VETA).copy(alpha = 0.55f), 300 + j, densidad = 1f, vertical = true, grosor = 0.6f)
-            drawRect(c(TECA_LUZ), Offset(lad.left + lad.width * 0.15f, lad.top), Size(lad.width * 0.08f, lad.height))
-            var py = lad.top + 24 * u
-            while (py < lad.bottom - 10 * u) {
-                drawCircle(c(LATON), 2 * u, Offset(lad.center.x, py))
-                drawLine(c(LATON_OSC), Offset(lad.center.x - 1.4f * u, py), Offset(lad.center.x + 1.4f * u, py), 0.6f * u)
-                py += 70 * u
-            }
-            bisel(lad, Color.White.copy(alpha = 0.14f), Color.Black.copy(alpha = 0.25f), 1.2f * u)
-        }
-        // Las tablas de teca, con su barandilla de latón sobre postes.
-        d.tablas.forEachIndexed { k, tb ->
-            drawRect(c(TECA), tb.topLeft, tb.size)
-            vetas(tb, c(TECA_VETA).copy(alpha = 0.5f), 310 + k, densidad = 0.7f, grosor = 0.7f)
-            drawRect(c(TECA_LUZ), tb.topLeft, Size(tb.width, 1.6f * u))
-            drawRect(Color.Black.copy(alpha = 0.28f), Offset(tb.left, tb.bottom), Size(tb.width, 3 * u))
-            val ry = tb.top + tb.height * 0.28f
-            drawLine(c(LATON), Offset(tb.left, ry), Offset(tb.right, ry), 2 * u)
-            drawLine(c(LATON_LUZ), Offset(tb.left, ry - 0.6f * u), Offset(tb.right, ry - 0.6f * u), 0.6f * u)
-            var px = tb.left + 20 * u
-            while (px < tb.right - 10 * u) { drawRect(c(LATON_OSC), Offset(px - 1.2f * u, ry), Size(2.4f * u, tb.height * 0.4f)); px += 60 * u }
-        }
-        // La cinta de rotular de cada mes, con las letras en relieve.
-        d.placas.forEach { p ->
-            val r = Rect(p.r.left, p.r.top + p.r.height * 0.36f, p.r.right, p.r.bottom)
-            drawRect(Color.Black.copy(alpha = 0.3f), Offset(r.left + 1 * u, r.top + 1 * u), r.size)
-            drawRect(c(CINTA), r.topLeft, r.size)
-            drawRect(Color.White.copy(alpha = 0.1f), r.topLeft, Size(r.width, 1 * u))
-            textoEn(medidor, p.texto, Rect(r.left + 4 * u, r.top, r.right - 4 * u, r.bottom), letra, c(CASCO), 9f, peso = FontWeight.SemiBold, espaciado = 1.4f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el zócalo de teca con su placa de latón, sobre la alfombra de goma de botones.
-        val b = d.base
-        val piso = b.top + b.height * 0.6f
-        drawRect(c(GOMA), Offset(0f, piso), Size(w, h - piso))
-        var gy = piso + 4 * u; var fila = 0
-        while (gy < h) {
-            var gx = if (fila % 2 == 0) 4 * u else 9 * u
-            while (gx < w) { drawCircle(Color.White.copy(alpha = 0.08f), 2 * u, Offset(gx, gy)); drawCircle(Color.Black.copy(alpha = 0.3f), 2 * u, Offset(gx + 0.6f * u, gy + 0.6f * u), style = Stroke(0.5f * u)); gx += 10 * u }
-            gy += 6 * u; fila++
-        }
-        if (noche) for (k in 0 until 5) destello(Offset(w * (0.1f + 0.8f * azar(320, k)), piso + (h - piso) * azar(321, k)), 0.8f * u, BIOLUZ)
-        val zocalo = Rect(b.left, b.top, b.right, piso)
-        drawRect(c(TECA), zocalo.topLeft, zocalo.size)
-        vetas(zocalo, c(TECA_VETA).copy(alpha = 0.5f), 330, densidad = 0.7f, grosor = 0.7f)
-        drawRect(c(LATON), Offset(zocalo.left, zocalo.bottom - zocalo.height * 0.3f), Size(zocalo.width, zocalo.height * 0.3f))
-        drawRect(c(LATON_LUZ), Offset(zocalo.left, zocalo.bottom - zocalo.height * 0.3f), Size(zocalo.width, 1 * u))
-        var bx = zocalo.left + 8 * u
-        while (bx < zocalo.right) { drawCircle(c(LATON_OSC), 1 * u, Offset(bx, zocalo.bottom - zocalo.height * 0.15f)); bx += 22 * u }
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(zocalo.left, piso), Size(zocalo.width, 3 * u))
-    }
+    override val corona = MuebleEstanteAbismo.CORONA
+    override val base = MuebleEstanteAbismo.BASE
+    override val lado = MuebleEstanteAbismo.LADO
+    override val altoRepisa: Dp = MuebleEstanteAbismo.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteAbismo.TABLA
+    override val separa: Dp = MuebleEstanteAbismo.SEPARA
+    override val letra: FontFamily = LetraExtra.batiscafo
 
-    /** El casco curvo con el ojo de buey y sus criaturas, la lámpara de la cabina y el profundímetro. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        planchas(r, oscuro, noche)
-        // La curva del techo del casco.
-        val techo = Path().apply { moveTo(r.left, r.top); lineTo(r.right, r.top); lineTo(r.right, r.top + r.height * 0.2f); quadraticTo(r.center.x, r.top - r.height * 0.08f, r.left, r.top + r.height * 0.2f); close() }
-        drawPath(techo, c(CASCO_SOMBRA))
-        drawPath(techo, Color.Black.copy(alpha = 0.15f))
-        // El ojo de buey: el agua honda, la nieve marina, el pez abisal y la medusa.
-        val co = Offset(r.left + r.width * 0.32f, r.top + r.height * 0.54f)
-        val ro = r.height * 0.34f
-        val vidrio = Path().apply { addOval(Rect(co, ro)) }
-        drawPath(vidrio, if (noche) AGUA_HONDA else AGUA)
-        clipPath(vidrio) {
-            if (!noche) {
-                // El haz del reflector, de día, alumbra la nieve marina.
-                val haz = Path().apply { moveTo(co.x - ro, co.y - ro * 0.2f); lineTo(co.x + ro, co.y - ro * 0.9f); lineTo(co.x + ro, co.y + ro * 0.5f); close() }
-                drawPath(haz, Color.White.copy(alpha = 0.08f))
-            }
-            for (k in 0 until 30) {
-                val o = Offset(co.x - ro + 2 * ro * azar(340, k), co.y - ro + 2 * ro * azar(341, k))
-                if (noche && k % 3 == 0) destello(o, 0.7f * u, if (k % 2 == 0) BIOLUZ else BIOLUZ_VERDE)
-                else drawCircle(Color.White.copy(alpha = if (noche) 0.12f else 0.35f), (0.4f + 0.6f * azar(342, k)) * u, o)
-            }
-            // El pez abisal: cuerpo, cola, la mandíbula con dientes y su señuelo luminoso.
-            val pz = Offset(co.x - ro * 0.15f, co.y + ro * 0.25f)
-            val pr = ro * 0.36f
-            drawOval(SILUETA, Offset(pz.x - pr, pz.y - pr * 0.6f), Size(pr * 2, pr * 1.2f))
-            val cola = Path().apply { moveTo(pz.x + pr * 0.8f, pz.y); lineTo(pz.x + pr * 1.5f, pz.y - pr * 0.5f); lineTo(pz.x + pr * 1.4f, pz.y + pr * 0.5f); close() }
-            drawPath(cola, SILUETA)
-            val boca = Path().apply { moveTo(pz.x - pr, pz.y - pr * 0.05f); lineTo(pz.x - pr * 0.45f, pz.y + pr * 0.05f); lineTo(pz.x - pr * 0.95f, pz.y + pr * 0.35f); close() }
-            drawPath(boca, Color.Black)
-            for (j in 0 until 4) drawLine(Color.White.copy(alpha = if (noche) 0.35f else 0.6f), Offset(pz.x - pr * (0.92f - 0.12f * j), pz.y), Offset(pz.x - pr * (0.88f - 0.12f * j), pz.y + pr * 0.12f), 0.6f * u)
-            drawCircle(Color.White.copy(alpha = 0.6f), pr * 0.08f, Offset(pz.x - pr * 0.5f, pz.y - pr * 0.25f))
-            val sen = Offset(pz.x - pr * 1.3f, pz.y - pr * 0.9f)
-            val cana = Path().apply { moveTo(pz.x - pr * 0.4f, pz.y - pr * 0.55f); quadraticTo(pz.x - pr * 0.6f, pz.y - pr * 1.3f, sen.x, sen.y) }
-            drawPath(cana, SILUETA, style = Stroke(1 * u))
-            if (noche) mancha(sen, ro * 0.4f, BIOLUZ.copy(alpha = 0.6f))
-            drawCircle(if (noche) BIOLUZ else BIOLUZ.copy(alpha = 0.6f), pr * 0.12f, sen)
-            // La medusa arriba a la derecha.
-            val md = Offset(co.x + ro * 0.45f, co.y - ro * 0.4f)
-            val mr = ro * 0.2f
-            val colMedusa = if (noche) BIOLUZ_VERDE else Color.White.copy(alpha = 0.4f)
-            drawArc(colMedusa.copy(alpha = if (noche) 0.5f else 0.3f), 180f, 180f, true, Offset(md.x - mr, md.y - mr), Size(mr * 2, mr * 2))
-            drawArc(colMedusa, 180f, 180f, false, Offset(md.x - mr, md.y - mr), Size(mr * 2, mr * 2), style = Stroke(0.8f * u))
-            for (j in 0 until 4) {
-                val tx = md.x - mr * 0.7f + mr * 0.46f * j
-                val tentaculo = Path().apply { moveTo(tx, md.y); quadraticTo(tx - mr * 0.3f, md.y + mr * 0.8f, tx + mr * 0.1f, md.y + mr * 1.6f) }
-                drawPath(tentaculo, colMedusa.copy(alpha = 0.7f), style = Stroke(0.6f * u))
-            }
-            drawLine(Color.White.copy(alpha = 0.1f), Offset(co.x - ro * 0.8f, co.y + ro * 0.4f), Offset(co.x - ro * 0.2f, co.y - ro * 0.9f), 4 * u)
-        }
-        // El anillo de latón y sus pernos.
-        drawCircle(c(LATON), ro + 4 * u, co, style = Stroke(8 * u))
-        drawCircle(c(LATON_LUZ), ro + 7.5f * u, co, style = Stroke(1 * u))
-        drawCircle(c(LATON_OSC), ro, co, style = Stroke(1.2f * u))
-        if (noche) drawCircle(BIOLUZ.copy(alpha = 0.2f), ro + 4 * u, co, style = Stroke(2 * u))
-        for (k in 0 until 10) {
-            val a = (k * Math.PI / 5).toFloat()
-            drawCircle(c(LATON_OSC), 1.8f * u, Offset(co.x + (ro + 4 * u) * cos(a), co.y + (ro + 4 * u) * sin(a)))
-        }
-        // La lámpara enjaulada de la cabina: de día encendida, de noche apagada.
-        val lc = Offset(r.left + r.width * 0.6f, r.top + r.height * 0.3f)
-        val lr = r.height * 0.07f
-        drawRect(c(LATON_OSC), Offset(lc.x - lr * 1.2f, lc.y - lr * 1.3f), Size(lr * 2.4f, lr * 0.4f))
-        drawCircle(if (noche) c(CASCO_SOMBRA) else LUZ_CABINA, lr, lc)
-        if (!noche) drawCircle(LUZ_CABINA.copy(alpha = 0.2f), lr * 2.4f, lc)
-        for (j in -1..1) drawLine(c(LATON_OSC), Offset(lc.x + j * lr * 0.6f, lc.y - lr), Offset(lc.x + j * lr * 0.6f, lc.y + lr), 0.8f * u)
-        drawLine(c(LATON_OSC), Offset(lc.x - lr, lc.y), Offset(lc.x + lr, lc.y), 0.8f * u)
-        // El profundímetro con su contador de profundidad (cifras como casillas, no letras).
-        val cp = Offset(r.right - r.width * 0.2f, r.top + r.height * 0.46f)
-        val rp = r.height * 0.22f
-        drawCircle(Color.Black.copy(alpha = 0.2f), rp + 3 * u, Offset(cp.x + 1.5f * u, cp.y + 2 * u))
-        manometro(cp, rp, c(LATON), c(CASCO), c(ROJO), if (noche) 0.88f else 0.74f)
-        drawCircle(c(LATON_OSC), rp, cp, style = Stroke(1 * u))
-        val contador = Rect(cp.x - rp * 0.9f, cp.y + rp + 4 * u, cp.x + rp * 0.9f, cp.y + rp + 4 * u + r.height * 0.1f)
-        drawRect(c(TINTA), contador.topLeft, contador.size)
-        for (j in 0 until 4) {
-            val cw = contador.width / 4
-            drawRect(c(ALUMINIO), Offset(contador.left + cw * j + 1 * u, contador.top + 1 * u), Size(cw - 2 * u, contador.height - 2 * u))
-            drawRect(c(TINTA), Offset(contador.left + cw * j + cw * 0.35f, contador.top + contador.height * 0.25f), Size(cw * 0.3f, contador.height * 0.5f))
-        }
-        drawRect(c(LATON), contador.inflate(1 * u).topLeft, contador.inflate(1 * u).size, style = Stroke(1 * u))
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(r.left, r.bottom - 3 * u), Size(r.width, 3 * u))
-    }
+    /** Estante rehecho: el aura solo sale al tocar (ver [DisenoBiblioteca.auraEnReposo]). */
+    override val auraEnReposo = false
 
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val base = GOMAS[(v.semilla and 0x7fffffff) % GOMAS.size]
-        val goma = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        val arriba = h * 0.05f
-        // La tapa de goma amarilla, con sus esquinas redondeadas y su textura de puntos.
-        drawRoundRect(goma, Offset(0f, arriba), Size(w, h - arriba), CornerRadius(4 * u))
-        var py = arriba + 3 * u
-        while (py < h - 2 * u) {
-            var px = 3 * u
-            while (px < w - 2 * u) { drawCircle(Color.Black.copy(alpha = 0.08f), 0.5f * u, Offset(px, py)); px += 3.5f * u }
-            py += 3.5f * u
-        }
-        drawRect(Color.Black.copy(alpha = 0.18f), Offset(0f, arriba + 3 * u), Size(w * 0.08f, h - arriba - 6 * u))
-        // Las hojas de la libreta que asoman por el canto: más cuanto más escribiste.
-        val hojas = 1 + (v.lleno * 4).toInt()
-        for (j in 0 until hojas) drawLine(c(ALUMINIO).copy(alpha = 0.9f), Offset(w - 1 * u - j * 1.3f * u, arriba + 6 * u), Offset(w - 1 * u - j * 1.3f * u, h - 6 * u), 0.7f * u)
-        // La pinza de metal arriba, con su resorte.
-        val pinza = Rect(w * 0.24f, 0f, w * 0.76f, h * 0.11f)
-        drawRoundRect(c(ALUMINIO), pinza.topLeft, pinza.size, CornerRadius(1.5f * u))
-        drawRect(Color.White.copy(alpha = 0.3f), pinza.topLeft, Size(pinza.width, 1 * u))
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(pinza.left, pinza.bottom - 1.2f * u), Size(pinza.width, 1.2f * u))
-        drawCircle(c(TINTA), minOf(pinza.height * 0.22f, 2 * u), Offset(pinza.center.x, pinza.top + pinza.height * 0.4f))
-        // La placa remachada con el día.
-        val placa = Rect(w * 0.14f, h * 0.18f, w * 0.86f, h * 0.38f)
-        drawRect(c(ALUMINIO), placa.topLeft, placa.size)
-        drawRect(Color.White.copy(alpha = 0.3f), placa.topLeft, Size(placa.width, 1 * u))
-        drawRect(c(TINTA).copy(alpha = 0.4f), placa.topLeft, placa.size, style = Stroke(0.6f * u))
-        val rr = minOf(1.1f * u, placa.width * 0.06f)
-        listOf(placa.left + rr * 2, placa.right - rr * 2).forEach { x -> drawCircle(c(TINTA).copy(alpha = 0.5f), rr, Offset(x, placa.center.y)) }
-        textoEn(medidor, v.dia, Rect(placa.left + rr * 3.5f, placa.top + 1 * u, placa.right - rr * 3.5f, placa.bottom - 1 * u), letra, c(TINTA), 13f, peso = FontWeight.Bold)
-        // El mes a lo largo.
-        textoEn(medidor, v.mes, Rect(w * 0.18f, h * 0.42f, w * 0.82f, h * 0.76f), letra, c(TINTA), 8f, vertical = true, minimo = 4f, peso = FontWeight.SemiBold)
-        // La bandera de buceo; de noche, una medusa luminosa.
-        val bc = Offset(w * 0.5f, h * 0.86f)
-        val bs = minOf(w * 0.3f, 7 * u)
-        if (v.noche) {
-            destello(Offset(bc.x, bc.y - bs * 0.2f), bs * 0.18f, BIOLUZ)
-            drawArc(BIOLUZ, 180f, 180f, false, Offset(bc.x - bs * 0.4f, bc.y - bs * 0.5f), Size(bs * 0.8f, bs * 0.6f), style = Stroke(0.8f * u))
-            for (j in 0 until 3) drawLine(BIOLUZ.copy(alpha = 0.7f), Offset(bc.x - bs * 0.25f + bs * 0.25f * j, bc.y - bs * 0.2f), Offset(bc.x - bs * 0.25f + bs * 0.25f * j, bc.y + bs * 0.4f), 0.6f * u)
-        } else {
-            val bandera = Rect(bc.x - bs * 0.6f, bc.y - bs * 0.4f, bc.x + bs * 0.6f, bc.y + bs * 0.4f)
-            drawRect(c(ROJO), bandera.topLeft, bandera.size)
-            val diagonal = Path().apply {
-                moveTo(bandera.left, bandera.top); lineTo(bandera.left + bandera.width * 0.22f, bandera.top)
-                lineTo(bandera.right, bandera.bottom); lineTo(bandera.right - bandera.width * 0.22f, bandera.bottom); close()
-            }
-            drawPath(diagonal, c(Color.White))
-        }
-    }
+    override fun ancho(palabras: Int): Dp = MuebleEstanteAbismo.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteAbismo.alto(semilla, palabras)
+
+    /** El armario de las bitácoras del pañol, con su pared, su bodegón y su pie: está en [MuebleEstanteAbismo]. */
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteAbismo) { estante(d, medidor, oscuro, noche) }
+
+    /** La bitácora, el petate o los rollos de cartas: en [MuebleEstanteAbismo]. */
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteAbismo) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
