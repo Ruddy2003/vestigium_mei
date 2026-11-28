@@ -22,9 +22,9 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * El bodegón de la corona de Orden, sobre la cornisa: manda la reliquia bajo su fanal de vidrio (una válvula de vacío de antes
- * de la guerra, con sus placas y su zócalo, sobre un cojín de terciopelo carmesí con borlas y una base de acero con aro de
- * latón); detrás, a la derecha, los dos manuales tumbados con su cadena que cae por el canto y el candelero de púa con su vela
+ * El bodegón de la corona de Orden, sobre la cornisa: manda la reliquia bajo su fanal de vidrio (en [ReliquiaEstanteOrden]: una
+ * válvula de vacío de antes de la guerra, con sus placas y su zócalo, sobre un cojín de terciopelo carmesí con borlas y una base
+ * de acero con aro de latón); detrás, a la derecha, los dos manuales tumbados con su cadena que cae por el canto y el candelero de púa con su vela
  * gruesa (la luz de arriba de noche); a la izquierda, el rollo de planos grande apoyado en diagonal contra el muro, con otro más
  * fino; delante, una pesa de latón de las del Ideario. En el muro, el plano enmarcado colgado de su riel y el manojo de llaves del
  * archivo en su gancho, con su cordón carmesí. Cada cosa con su sombra en la pared.
@@ -220,9 +220,9 @@ internal object CoronaEstanteOrden {
         rollos(w, apoyo, a, cerca, frio)
         manuales(w, apoyo, a, cerca, frio)
         candelero(w, apoyo, a, cerca, frio)
-        fanal(w, apoyo, a, cerca, frio)
-        tintero(Offset(w * 0.15f, apoyo), w, apoyo, a, cerca, frio)
-        pesa(Offset(w * 0.215f, apoyo + w * 0.002f), w, a, cerca, frio)
+        with(ReliquiaEstanteOrden) { fanal(w, apoyo, a, cerca, frio) }
+        tintero(Offset(w * 0.14f, apoyo), w, apoyo, a, cerca, frio)
+        pesa(Offset(w * 0.6f, apoyo + w * 0.003f), w, a, cerca, frio)
         if (a.lumbre) llama(Offset(w * M.VELA_X, w * (M.VELA_Y + 0.0095f)), w * (if (a.oscuro && !a.dormida) 0.0105f else 0.0085f), a)
     }
 
@@ -277,10 +277,10 @@ internal object CoronaEstanteOrden {
 
     /** El rollo de planos grande apoyado en diagonal contra el muro y otro más fino al lado. */
     private fun DrawScope.rollos(w: Float, apoyo: Float, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
-        rollo(Offset(w * 0.3f, apoyo - w * 0.002f), w * 0.33f, w * 0.03f, 22f, w, apoyo, mezcla(P.AZUL_PLANO, P.TRAZO, 0.08f), a, cerca, frio, 71)
-        rollo(Offset(w * 0.245f, apoyo - w * 0.002f), w * 0.41f, w * 0.046f, 12f, w, apoyo, P.AZUL_PLANO, a, cerca, frio, 72)
+        rollo(Offset(w * 0.27f, apoyo - w * 0.002f), w * 0.25f, w * 0.028f, 24f, w, apoyo, mezcla(P.AZUL_PLANO, P.PAVON, 0.3f), a, cerca, frio, 71)
+        rollo(Offset(w * 0.215f, apoyo - w * 0.002f), w * 0.3f, w * 0.04f, 14f, w, apoyo, mezcla(P.AZUL_PLANO, P.PAVON, 0.2f), a, cerca, frio, 72)
         // Su pie en la cornisa.
-        contactoOrden(Offset(w * 0.27f, apoyo), w * 0.11f, w * 0.008f, a, 0.4f)
+        contactoOrden(Offset(w * 0.24f, apoyo), w * 0.1f, w * 0.008f, a, 0.4f)
     }
 
     /** Los dos manuales tumbados, uno encima del otro, con sus cantoneras y la cadena del de arriba que cae por el canto. */
@@ -448,100 +448,6 @@ internal object CoronaEstanteOrden {
             close()
         }, P.CORAZON)
         drawOval(P.AZUL_PLANO.copy(alpha = 0.5f), Offset(p.x - s * 0.22f, p.y - s * 0.12f), Size(s * 0.44f, s * 0.26f))
-    }
-
-    /**
-     * El fanal con la reliquia: la base de acero con su aro de latón, el cojín de terciopelo carmesí con sus borlas, la válvula de
-     * vacío de pie (el zócalo de baquelita, la ampolla con la placa, las micas, la rejilla y el espejo del getter arriba) y la
-     * campana de vidrio con su pomo, que deja ver el muro y coge la luz en sus cantos.
-     */
-    private fun DrawScope.fanal(w: Float, apoyo: Float, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
-        val u = density
-        val cx = w * 0.44f
-        val base = Rect(cx - w * 0.088f, apoyo - w * 0.026f, cx + w * 0.088f, apoyo)
-        val cojin = Rect(cx - w * 0.07f, base.top - w * 0.036f, cx + w * 0.07f, base.top + w * 0.004f)
-        val campana = Rect(cx - w * 0.074f, apoyo - w * 0.31f, cx + w * 0.074f, base.top + w * 0.002f)
-        val sil = Path().apply { addRoundRect(RoundRect(campana, CornerRadius(campana.width / 2, campana.width / 2))); addRect(base) }
-        sombraEnMuro(sil, Offset(cx, apoyo - w * 0.15f), apoyo, a, cerca, 0.55f, 0.9f)
-        val k = cerca(Offset(cx, apoyo - w * 0.12f)); val fr = frio(Offset(cx, apoyo - w * 0.12f))
-        contactoOrden(Offset(cx, apoyo), base.width * 1.05f, w * 0.011f, a, 0.5f)
-        // La base: la cara de arriba en escorzo, el frente de acero y el aro de latón.
-        drawOval(en(P.PAVON_LUZ, 0.05f, base.center, a, cerca, frio), Offset(base.left, base.top - w * 0.008f), Size(base.width, w * 0.016f))
-        drawRect(en(P.PAVON, 0f, base.center, a, cerca, frio), Offset(base.left, base.top), Size(base.width, base.height))
-        redondoOrden(Rect(base.left, base.top + base.height * 0.45f, base.right, base.top + base.height * 0.8f), en(P.LATON, 0f, base.center, a, cerca, frio),
-            en(P.LATON_BRILLO, 0f, base.center, a, cerca, frio), en(P.LATON_HONDO, 0f, base.center, a, cerca, frio), if (a.oscuro && !a.dormida) 1f else -1f, 0.9f)
-        drawRect(a.sombra(0.4f), Offset(base.left, base.bottom - 1.4f * u), Size(base.width, 1.4f * u))
-        drawRect(a.destello(0.4f, k, fr), Offset(base.left, base.top), Size(base.width, 1f * u))
-        // El cojín de terciopelo carmesí: panzón, con su luz arriba a la izquierda y sus borlas.
-        val cj = Path().apply { addRoundRect(RoundRect(cojin, CornerRadius(cojin.height * 0.5f, cojin.height * 0.42f))) }
-        drawPath(cj, en(P.GRANA, 0f, cojin.center, a, cerca, frio))
-        clipPath(cj) {
-            drawOval(en(P.GRANA_LUZ, 0f, cojin.center, a, cerca, frio).copy(alpha = 0.55f), Offset(cojin.left + cojin.width * 0.08f, cojin.top + cojin.height * 0.08f), Size(cojin.width * 0.5f, cojin.height * 0.42f))
-            drawRect(en(P.GRANA_HONDA, 0f, cojin.center, a, cerca, frio).copy(alpha = 0.7f), Offset(cojin.left, cojin.bottom - cojin.height * 0.32f), Size(cojin.width, cojin.height * 0.32f))
-            drawRect(en(P.GRANA_HONDA, 0f, cojin.center, a, cerca, frio).copy(alpha = 0.45f), Offset(cojin.right - cojin.width * 0.22f, cojin.top), Size(cojin.width * 0.22f, cojin.height))
-            // La costura del borde, en latón.
-            drawLine(en(P.LATON, 0f, cojin.center, a, cerca, frio).copy(alpha = 0.7f), Offset(cojin.left + 3f * u, cojin.center.y + cojin.height * 0.1f), Offset(cojin.right - 3f * u, cojin.center.y + cojin.height * 0.1f), 0.8f * u)
-        }
-        listOf(cojin.left + 2f * u, cojin.right - 2f * u).forEach { x ->
-            val b0 = Offset(x, cojin.center.y + cojin.height * 0.1f)
-            val bor = poligonoOrden(b0.x - w * 0.003f, b0.y, b0.x + w * 0.003f, b0.y, b0.x + w * 0.006f, b0.y + w * 0.024f, b0.x - w * 0.006f, b0.y + w * 0.024f)
-            drawPath(bor, en(P.LATON, 0f, b0, a, cerca, frio))
-            drawLine(en(P.LATON_HONDO, 0f, b0, a, cerca, frio), Offset(b0.x + w * 0.002f, b0.y + w * 0.006f), Offset(b0.x + w * 0.003f, b0.y + w * 0.024f), 0.6f * u)
-            drawCircle(en(P.LATON_HONDO, 0f, b0, a, cerca, frio), w * 0.004f, b0)
-        }
-        // La válvula: el zócalo de baquelita con su guía y la ampolla de vidrio con su punta.
-        val zocalo = Rect(cx - w * 0.024f, cojin.top + w * 0.004f - w * 0.028f, cx + w * 0.024f, cojin.top + w * 0.006f)
-        val bq = en(P.BAQUELITA, 0f, zocalo.center, a, cerca, frio)
-        redondoOrden(zocalo, bq, mezcla(bq, P.LUZ_FRIA, if (a.oscuro) 0.06f else 0.28f), mezcla(bq, P.NOCHE, 0.4f), -1f)
-        drawRect(a.sombra(0.4f), Offset(zocalo.left, zocalo.bottom - 1.4f * u), Size(zocalo.width, 1.4f * u))
-        val amp = Rect(cx - w * 0.033f, zocalo.top - w * 0.16f, cx + w * 0.033f, zocalo.top + w * 0.002f)
-        val ampolla = Path().apply {
-            moveTo(amp.left, amp.bottom); lineTo(amp.left, amp.top + amp.width * 0.5f)
-            cubicTo(amp.left, amp.top + amp.width * 0.1f, amp.right, amp.top + amp.width * 0.1f, amp.right, amp.top + amp.width * 0.5f)
-            lineTo(amp.right, amp.bottom); close()
-        }
-        // Por dentro: el espejo del getter arriba, la placa con su ranura, las dos micas, la rejilla y los hilos.
-        clipPath(ampolla) {
-            drawRect(en(Color(0xFF3A4048), 0f, amp.center, a, cerca, frio).copy(alpha = 0.22f), amp.topLeft, amp.size)
-            drawRect(en(Color(0xFFB8BEC6), 0.1f, amp.center, a, cerca, frio), Offset(amp.left, amp.top), Size(amp.width, amp.width * 0.38f))
-            drawRect(en(Color(0xFF5E636B), 0f, amp.center, a, cerca, frio), Offset(amp.left, amp.top + amp.width * 0.3f), Size(amp.width, amp.width * 0.1f))
-        }
-        val placa = Rect(cx - w * 0.02f, amp.top + amp.height * 0.36f, cx + w * 0.02f, amp.bottom - amp.height * 0.16f)
-        val gris = en(Color(0xFF4A4F57), 0f, placa.center, a, cerca, frio)
-        drawRect(gris, placa.topLeft, placa.size)
-        drawRect(mezcla(gris, P.LUZ_FRIA, if (a.oscuro) 0.06f else 0.3f), placa.topLeft, Size(placa.width * 0.3f, placa.height))
-        drawRect(mezcla(gris, P.NOCHE, 0.45f), Offset(placa.center.x - 0.8f * u, placa.top + placa.height * 0.12f), Size(1.6f * u, placa.height * 0.76f))
-        listOf(placa.top - w * 0.004f, placa.bottom).forEach { y ->
-            drawRect(en(Color(0xFFE6E2D4), 0f, placa.center, a, cerca, frio).copy(alpha = 0.85f), Offset(amp.left + w * 0.003f, y), Size(amp.width - w * 0.006f, w * 0.004f))
-        }
-        val hilo = en(P.ACERO_CLARO, 0f, placa.center, a, cerca, frio).copy(alpha = 0.7f)
-        listOf(-0.027f, 0.027f).forEach { dx -> drawLine(hilo, Offset(cx + w * dx * 0.95f, placa.top - w * 0.004f), Offset(cx + w * dx * 0.95f, amp.bottom), 0.6f * u) }
-        for (q in 0 until 5) drawLine(hilo.copy(alpha = 0.35f), Offset(placa.left - w * 0.003f, placa.top + placa.height * (q + 0.5f) / 5), Offset(placa.right + w * 0.003f, placa.top + placa.height * (q + 0.5f) / 5), 0.5f * u)
-        // El vidrio de la ampolla: su canto y sus brillos.
-        drawPath(ampolla, a.luz(P.VIDRIO, k, fr).copy(alpha = 0.55f), style = Stroke(1f * u))
-        drawLine(a.brillo(0.75f, k), Offset(amp.left + amp.width * 0.18f, amp.top + amp.width * 0.4f), Offset(amp.left + amp.width * 0.18f, amp.bottom - amp.height * 0.1f), 1.4f * u, StrokeCap.Round)
-        drawLine(en(P.VIDRIO, 0f, amp.center, a, cerca, frio), Offset(cx, amp.top + amp.width * 0.24f), Offset(cx, amp.top - w * 0.005f), 1.6f * u, StrokeCap.Round)
-        // La campana de vidrio: casi transparente, con el muro detrás un punto más frío; sus cantos y brillos.
-        val cam = Path().apply { addRoundRect(RoundRect(campana, CornerRadius(campana.width / 2, campana.width / 2))) }
-        drawPath(cam, a.luz(P.VIDRIO, k * 0.5f, fr).copy(alpha = if (a.oscuro) 0.12f else 0.14f))
-        clipPath(cam) {
-            // Los reflejos: una banda ancha a la izquierda (la luminaria) y una fina a la derecha.
-            val luzV = if (a.oscuro) (if (a.dormida) P.GUARDIA.copy(alpha = 0.28f) else P.LLAMA.copy(alpha = 0.12f + 0.3f * k)) else (if (a.noche) P.VIGILIA else P.LUZ_FRIA).copy(alpha = 0.42f)
-            drawRect(luzV, Offset(campana.left + campana.width * 0.1f, campana.top + campana.width * 0.22f), Size(campana.width * 0.1f, campana.height * 0.7f))
-            drawRect(luzV.copy(alpha = luzV.alpha * 0.5f), Offset(campana.left + campana.width * 0.23f, campana.top + campana.width * 0.3f), Size(campana.width * 0.03f, campana.height * 0.6f))
-            // De noche, el reflejo de la vela en el lado que la mira.
-            if (a.oscuro && !a.dormida) drawRect(P.LLAMA.copy(alpha = 0.5f), Offset(campana.right - campana.width * 0.16f, campana.top + campana.height * 0.32f), Size(campana.width * 0.05f, campana.height * 0.16f))
-            drawRect(a.sombra(0.14f), Offset(campana.right - campana.width * 0.12f, campana.top), Size(campana.width * 0.12f, campana.height))
-        }
-        drawPath(cam, a.luz(mezcla(P.VIDRIO, P.ACERO_CLARO, 0.3f), maxOf(k, 0.35f), fr).copy(alpha = if (a.oscuro) 0.6f else 0.65f), style = Stroke(1.6f * u))
-        drawArc(a.brillo(0.8f, maxOf(k, 0.3f)), 200f, 60f, false, Offset(campana.left + campana.width * 0.12f, campana.top + campana.width * 0.12f), Size(campana.width * 0.76f, campana.width * 0.76f), style = Stroke(1.6f * u))
-        // El pomo de vidrio de arriba.
-        val pomo = Offset(cx, campana.top - w * 0.006f)
-        drawCircle(a.luz(P.VIDRIO, k, fr).copy(alpha = 0.55f), w * 0.009f, pomo)
-        drawCircle(a.brillo(0.85f, maxOf(k, 0.3f)), w * 0.003f, pomo - Offset(w * 0.003f, w * 0.003f))
-        drawRect(a.luz(P.VIDRIO, k, fr).copy(alpha = 0.5f), Offset(cx - w * 0.004f, campana.top - w * 0.002f), Size(w * 0.008f, w * 0.004f))
-        // El canto de abajo de la campana, donde asienta en la base.
-        drawRect(a.luz(mezcla(P.VIDRIO, P.ACERO_CLARO, 0.4f), k, fr).copy(alpha = 0.7f), Offset(campana.left, campana.bottom - w * 0.004f), Size(campana.width, w * 0.004f))
     }
 
     /**

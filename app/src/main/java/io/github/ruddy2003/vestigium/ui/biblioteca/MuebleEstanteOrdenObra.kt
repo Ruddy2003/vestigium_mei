@@ -22,7 +22,7 @@ import kotlin.math.floor
 /**
  * El mueble de Orden: la librería encadenada, del mismo taller que la cajonera del Ideario (el mismo pavonado, los mismos
  * remaches de cabeza grande y el mismo latón). La cornisa honda con su canto de latón, la gola remachada, el friso de esmalte
- * carmesí en paneles y el arquitrabe, con dos torrecillas sobre los pilares; los pilares de viga de doble T remachada con su
+ * carmesí en paneles y el arquitrabe, con dos pináculos de acero sobre los pilares; los pilares de viga de doble T remachada con su
  * capitel y su basa de latón; las repisas de perfil en U con la barra de latón de las cadenas y sus soportes; bajo cada tabla, el
  * guardapolvo de chapa calada en arquitos apuntados y las cartelas de las esquinas. Por detrás, el muro de placas.
  */
@@ -86,19 +86,19 @@ internal object ObraEstanteOrden {
         return FloatArray(n + 1) { i -> r.top + r.height * i / n }
     }
 
-    // ---------------------------------------------------------------- la cornisa y las torrecillas
+    // ---------------------------------------------------------------- la cornisa y los pináculos
 
     /**
      * La cornisa en [r] (de donde pisan las cosas de arriba hasta el primer casillero): la cara de arriba, el canto con su filo
      * de latón, la gola remachada, el junquillo, el friso de esmalte carmesí en paneles y el arquitrabe; los capiteles de los
-     * pilares la cortan a los lados. Encima de los pilares, las dos torrecillas.
+     * pilares la cortan a los lados. Encima de los pilares, los dos pináculos.
      */
     fun DrawScope.cornisa(r: Rect, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
         val u = density
         val w = size.width
         val y0 = r.top
         val l = M.LADO * w
-        listOf(true, false).forEach { izq -> torrecilla(if (izq) Rect(w * ORILLA, y0 - w * 0.14f, l, y0) else Rect(w - l, y0 - w * 0.14f, w - w * ORILLA, y0), izq, a, cerca, frio) }
+        listOf(true, false).forEach { izq -> torrecilla(if (izq) Rect(w * ORILLA, y0 - w * 0.25f, l, y0) else Rect(w - l, y0 - w * 0.25f, w - w * ORILLA, y0), izq, a, cerca, frio) }
         val x0 = w * 0.004f; val x1 = w * 0.996f
         // La cara de arriba, vista apenas desde arriba: donde pisan las cosas.
         franjaH(Rect(x0, y0 - w * 0.006f, x1, y0 + w * 0.006f), P.PAVON_LUZ, 0.12f, a, cerca, frio, 0.6f)
@@ -212,53 +212,57 @@ internal object ObraEstanteOrden {
         drawRect(a.sombra(0.4f), Offset(col.left, col.bottom - 1.2f * u), Size(col.width, 1.2f * u))
     }
 
-    /** Una torrecilla en [r], sobre un pilar: el fuste remachado con su banda de latón, el chapitel en pirámide y la bola de latón. */
+    /**
+     * El pináculo sobre un pilar, en [r]: el dado remachado, el collar de latón, la aguja de acero en pirámide alta y fina (la cara
+     * de la luz y la de la sombra, su arista y dos anillos de latón) y la bola de latón del remate. Con su sombra en el muro.
+     */
     private fun DrawScope.torrecilla(r: Rect, izq: Boolean, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
         val u = density
         val w = size.width
         val cx = r.center.x
-        val fw = r.width * 0.78f
-        val fuste = Rect(cx - fw / 2, r.top + r.height * 0.4f, cx + fw / 2, r.bottom)
-        // Su sombra en el muro, abajo a la derecha (de noche, la que tiende la vela).
-        if (!a.oscuro) drawRect(a.sombra(0.22f), Offset(fuste.left + w * 0.018f, fuste.top + w * 0.012f), Size(fuste.width, fuste.height))
-        val ys = floatArrayOf(fuste.top, fuste.bottom)
-        drawRect(pincelV(fuste, P.PAVON, 0.04f, ys, a, cerca, frio, 0.5f), fuste.topLeft, fuste.size)
-        drawRect(a.destello(0.45f, cerca(fuste.center), frio(fuste.center)), fuste.topLeft, Size(1.4f * u, fuste.height))
-        drawRect(a.sombra(0.4f), Offset(fuste.right - fuste.width * 0.26f, fuste.top), Size(fuste.width * 0.26f, fuste.height))
-        listOf(0.3f, 0.7f).forEach { fx ->
-            var y = fuste.top + w * 0.014f
-            while (y < fuste.bottom - w * 0.006f) {
-                val p = Offset(fuste.left + fuste.width * fx, y)
-                roblonOrden(p, w * 0.0036f, a, cerca(p), P.ACERO_MEDIO, frio(p))
-                y += w * 0.026f
-            }
+        val dw = r.width * 0.86f
+        val dado = Rect(cx - dw / 2, r.bottom - w * 0.042f, cx + dw / 2, r.bottom)
+        val collar = Rect(dado.left - w * 0.004f, dado.top - w * 0.01f, dado.right + w * 0.004f, dado.top)
+        val aw = dw * 0.78f
+        val punta = Offset(cx, r.top + w * 0.014f)
+        val aguja = poligonoOrden(cx - aw / 2, collar.top, cx + aw / 2, collar.top, punta.x, punta.y)
+        // La sombra en el muro, abajo a la derecha (de noche no hay luz que la tienda hasta aquí).
+        if (!a.oscuro || a.dormida) translate(w * 0.02f, w * 0.012f) {
+            drawPath(aguja, a.sombra(0.2f))
+            drawRect(a.sombra(0.22f), dado.topLeft, dado.size)
         }
-        // La banda de latón.
-        val banda = Rect(fuste.left - 1.4f * u, fuste.top + fuste.height * 0.12f, fuste.right + 1.4f * u, fuste.top + fuste.height * 0.12f + w * 0.009f)
-        franjaH(banda, P.LATON, 0f, a, cerca, frio, 0.5f)
-        drawRect(a.brillo(0.5f, cerca(banda.center)), Offset(banda.left, banda.top + 0.4f * u), Size(banda.width, 0.9f * u))
-        drawRect(a.sombra(0.4f), Offset(banda.left, banda.bottom - 1f * u), Size(banda.width, 1f * u))
-        // La cornisilla del fuste y el chapitel en pirámide: la cara de la luz y la de la sombra.
-        val cor = Rect(fuste.left - w * 0.006f, fuste.top - w * 0.008f, fuste.right + w * 0.006f, fuste.top)
-        franjaH(cor, P.PAVON_LUZ, 0f, a, cerca, frio, 0.6f)
-        drawRect(a.sombra(0.4f), Offset(cor.left, cor.bottom - 1f * u), Size(cor.width, 1f * u))
-        val punta = Offset(cx, r.top + r.height * 0.06f)
-        val izqC = poligonoOrden(cor.left + w * 0.003f, cor.top, cx, cor.top, punta.x, punta.y)
-        val derC = poligonoOrden(cx, cor.top, cor.right - w * 0.003f, cor.top, punta.x, punta.y)
-        val kp = cerca(Offset(cx, cor.top)); val fp = frio(Offset(cx, cor.top))
-        if (!a.oscuro) drawPath(poligonoOrden(cx + w * 0.02f, cor.top + w * 0.01f, cor.right + w * 0.02f, cor.top + w * 0.01f, punta.x + w * 0.02f, punta.y + w * 0.01f), a.sombra(0.18f))
-        drawPath(izqC, a.dia(P.PAVON_LUZ, 0.1f, kp, fp).let { if (!a.oscuro) a.luminaria(it, M.luminaria(cx / w, cor.top / w) * 0.5f) else it })
-        drawPath(derC, a.dia(P.PAVON, -0.25f, kp, fp))
-        drawLine(a.destello(0.5f, kp, fp), Offset(cor.left + w * 0.003f, cor.top), punta, 1f * u)
-        // Las tres escamas de chapa del chapitel, una fila de remaches.
-        listOf(0.35f, 0.62f).forEach { f ->
-            val y = punta.y + (cor.top - punta.y) * f
-            val dx = (cor.width / 2 - w * 0.003f) * f
-            drawLine(a.sombra(0.35f), Offset(cx - dx, y), Offset(cx + dx, y), 1f * u)
+        // El dado remachado.
+        val ys = floatArrayOf(dado.top, dado.bottom)
+        drawRect(pincelV(dado, P.PAVON, 0.04f, ys, a, cerca, frio, 0.5f), dado.topLeft, dado.size)
+        drawRect(a.destello(0.45f, cerca(dado.center), frio(dado.center)), dado.topLeft, Size(1.4f * u, dado.height))
+        drawRect(a.sombra(0.4f), Offset(dado.right - dado.width * 0.24f, dado.top), Size(dado.width * 0.24f, dado.height))
+        listOf(0.28f, 0.72f).forEach { fx ->
+            val p = Offset(dado.left + dado.width * fx, dado.center.y)
+            roblonOrden(p, w * 0.0042f, a, cerca(p), P.ACERO_MEDIO, frio(p))
+        }
+        // El collar de latón.
+        franjaH(collar, P.LATON, 0f, a, cerca, frio, 0.5f)
+        drawRect(a.brillo(0.55f, cerca(collar.center)), Offset(collar.left, collar.top + 0.5f * u), Size(collar.width, 1f * u))
+        drawRect(a.sombra(0.45f), Offset(collar.left, collar.bottom - 1.2f * u), Size(collar.width, 1.2f * u))
+        // La aguja: la cara de la luz, la de la sombra y la arista.
+        val kp = cerca(Offset(cx, collar.top)); val fp = frio(Offset(cx, collar.top))
+        val izqC = poligonoOrden(cx - aw / 2, collar.top, cx, collar.top, punta.x, punta.y)
+        val derC = poligonoOrden(cx, collar.top, cx + aw / 2, collar.top, punta.x, punta.y)
+        drawPath(izqC, a.dia(P.PAVON_LUZ, 0.12f, kp, fp).let { if (!a.oscuro) a.luminaria(it, M.luminaria(cx / w, collar.top / w) * 0.5f) else it })
+        drawPath(derC, a.dia(P.PAVON, -0.3f, kp, fp))
+        drawLine(a.destello(0.55f, kp, fp), Offset(cx - aw / 2, collar.top), punta, 1f * u)
+        drawLine(a.sombra(0.3f), Offset(cx, collar.top), punta, 0.8f * u)
+        // Los dos anillos de latón de la aguja.
+        listOf(0.38f, 0.68f).forEach { f ->
+            val y = collar.top + (punta.y - collar.top) * f
+            val dx = aw / 2 * (1f - f) + w * 0.002f
+            val an = Rect(cx - dx, y - w * 0.0035f, cx + dx, y + w * 0.0035f)
+            franjaH(an, P.LATON, 0f, a, cerca, frio, 0.5f)
+            drawRect(a.sombra(0.35f), Offset(an.left, an.bottom - 0.8f * u), Size(an.width, 0.8f * u))
         }
         // La bola de latón del remate.
-        val br = w * 0.0085f
-        val bc = Offset(cx, punta.y - br * 0.6f)
+        val br = w * 0.011f
+        val bc = Offset(cx, punta.y - br * 0.4f)
         drawCircle(a.sombra(0.3f), br, bc + Offset(br * 0.4f, br * 0.4f))
         drawCircle(a.dia(P.LATON, 0f, cerca(bc), frio(bc)), br, bc)
         drawCircle(a.dia(P.LATON_HONDO, 0f, cerca(bc), frio(bc)), br * 0.75f, bc + Offset(br * 0.25f, br * 0.25f))
@@ -497,7 +501,49 @@ internal object ObraEstanteOrden {
         drawRect(a.brillo(0.5f, cerca(basa.center)), Offset(basa.left, basa.top + 0.5f * u), Size(basa.width, 1f * u))
         drawRect(a.sombra(0.35f), Offset(basa.left, basa.top + basa.height * 0.45f), Size(basa.width, 1.2f * u))
         drawRect(a.sombra(0.4f), Offset(basa.right - basa.width * 0.2f, basa.top), Size(basa.width * 0.2f, basa.height))
-        if (izq) piloto(ala, d, a, cerca, frio)
+        if (izq) piloto(ala, d, a, cerca, frio) else M.repisasAplique(d, w).forEach { k -> aplique(ala, d.repisas[k], a, cerca, frio) }
+    }
+
+    /**
+     * Un aplique de vela del pilar de la derecha, en la repisa [rep] que quedaría honda entre las demás luces: la placa
+     * remachada, el brazo de hierro, la arandela de latón y la vela con su llama; de noche, su charco en el pilar y el casillero.
+     */
+    private fun DrawScope.aplique(ala: Rect, rep: Rect, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
+        val u = density
+        val w = size.width
+        val cx = ala.center.x
+        val llamaY = rep.top + rep.height * M.APLIQUE_Y
+        val tope = llamaY + w * 0.012f
+        val arandela = tope + w * 0.05f
+        val kk = cerca(Offset(cx, arandela)); val fr = frio(Offset(cx, arandela))
+        if (a.lumbre) {
+            val rr = w * 0.24f
+            val f = if (a.dormida) 0.5f else if (a.oscuro) 1f else 0.45f
+            drawCircle(Brush.radialGradient(0f to P.LLAMA.copy(alpha = 0.4f * f), 0.3f to P.LLAMA.copy(alpha = 0.14f * f), 1f to P.LLAMA.copy(alpha = 0f),
+                center = Offset(cx, llamaY), radius = rr), rr, Offset(cx, llamaY))
+        }
+        // La placa remachada al pilar y el brazo que sale y sube a la arandela.
+        val placa = Rect(cx - w * 0.014f, arandela + w * 0.02f, cx + w * 0.014f, arandela + w * 0.06f)
+        drawRect(a.sombra(0.4f), placa.topLeft + Offset(1.2f * u, 1.4f * u), placa.size)
+        drawRect(a.dia(P.ACERO_HONDO, 0f, kk, fr), placa.topLeft, placa.size)
+        drawRect(a.destello(0.4f, kk, fr), placa.topLeft, Size(placa.width, 0.8f * u))
+        listOf(placa.top + w * 0.008f, placa.bottom - w * 0.008f).forEach { y -> roblonOrden(Offset(cx, y), w * 0.0035f, a, cerca(Offset(cx, y)), P.ACERO_MEDIO, fr) }
+        val brazo = Path().apply { moveTo(cx, placa.top + w * 0.01f); cubicTo(cx - w * 0.02f, placa.top, cx - w * 0.016f, arandela + w * 0.012f, cx, arandela + w * 0.004f) }
+        translate(1.2f * u, 1.4f * u) { drawPath(brazo, a.sombra(0.4f), style = Stroke(2.2f * u)) }
+        drawPath(brazo, a.dia(P.ACERO_HONDO, 0f, kk, fr), style = Stroke(2.2f * u))
+        // La arandela de latón y la vela con sus chorreras.
+        val ar = Rect(cx - w * 0.02f, arandela - w * 0.004f, cx + w * 0.02f, arandela + w * 0.005f)
+        drawOval(a.dia(P.LATON, 0f, kk, fr), ar.topLeft, ar.size)
+        drawOval(a.dia(P.LATON_BRILLO, 0f, kk, fr), Offset(ar.left + ar.width * 0.1f, ar.top), Size(ar.width * 0.5f, ar.height * 0.45f))
+        val vela = Rect(cx - w * 0.01f, tope, cx + w * 0.01f, arandela - w * 0.002f)
+        val cera = a.dia(P.CERA, 0f, kk, fr)
+        drawRect(cera, vela.topLeft, vela.size)
+        if (a.lumbre) drawRect(Brush.verticalGradient(listOf(P.LLAMA.copy(alpha = (if (a.oscuro) 0.45f else 0.25f) * kk), Color.Transparent), vela.top, vela.bottom), vela.topLeft, vela.size)
+        else drawRect(P.LUZ_FRIA.copy(alpha = 0.4f), vela.topLeft, Size(vela.width * 0.3f, vela.height))
+        drawRect(a.sombra(0.2f), Offset(vela.right - vela.width * 0.3f, vela.top), Size(vela.width * 0.3f, vela.height))
+        drawLine(mezcla(cera, P.LUZ_FRIA, 0.2f), Offset(vela.left + vela.width * 0.25f, vela.top + 0.6f * u), Offset(vela.left + vela.width * 0.25f, vela.top + vela.height * 0.6f), vela.width * 0.22f, StrokeCap.Round)
+        drawLine(a.dia(P.BETUN, 0f, kk, fr), Offset(cx, vela.top + 0.6f * u), Offset(cx + w * 0.001f, vela.top - w * 0.006f), 1.1f * u, StrokeCap.Round)
+        if (a.lumbre) with(CoronaEstanteOrden) { llama(Offset(cx, vela.top - w * 0.002f), w * (if (a.oscuro && !a.dormida) 0.009f else 0.0075f), a) }
     }
 
     /** El piloto rojo del Ideario, atornillado al pilar a media altura: su caja con remaches, el cristal y la rejilla. */
@@ -550,6 +596,6 @@ internal object ObraEstanteOrden {
             drawCircle(mezcla(color, P.LATON_HONDO, 0.5f), 1.2f * u, it)
             drawLine(mezcla(color, P.LATON_HONDO, 0.8f), it - Offset(0.9f * u, 0.5f * u), it + Offset(0.9f * u, 0.5f * u), 0.5f * u)
         }
-        textoEn(medidor, p.texto.uppercase(), Rect(r.left + 7f * u, r.top + 1f * u, r.right - 7f * u, r.bottom - 1f * u), P.LETRA, a.tinta(), 11.5f, peso = FontWeight.Bold, espaciado = 0.6f, minimo = 7f)
+        textoEn(medidor, p.texto.uppercase(), Rect(r.left + 7f * u, r.top + 1f * u, r.right - 7f * u, r.bottom - 1f * u), P.LETRA, a.tintaSobre(color), 11.5f, peso = FontWeight.Bold, espaciado = 0.6f, minimo = 7f)
     }
 }

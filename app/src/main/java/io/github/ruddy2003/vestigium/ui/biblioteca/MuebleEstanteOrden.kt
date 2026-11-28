@@ -70,7 +70,7 @@ internal object MuebleEstanteOrden {
 
     fun ancho(palabras: Int): Dp = (30 + (palabras / 45).coerceAtMost(16)).dp
 
-    /** Cuál de las tres es una entrada: 0, el manual encadenado; 1, el carcaj de planos; 2, la carpeta de campaña. */
+    /** Cuál de las tres es una entrada: 0, el manual encadenado; 1, el carcaj de planos; 2, el relicario técnico. */
     fun clase(semilla: Int): Int {
         var x = semilla * 0x2C1B3C6D
         x = x xor (x ushr 13)
@@ -78,11 +78,11 @@ internal object MuebleEstanteOrden {
         return if (k < 3) 0 else if (k < 5) 1 else 2
     }
 
-    /** Qué alto tiene cada una, en fracción del casillero: el carcaj con sus rollos, el más alto; la carpeta, la más baja. */
+    /** Qué alto tiene cada una, en fracción del casillero: el carcaj con sus rollos, el más alto; el relicario, el más bajo. */
     fun alto(semilla: Int, palabras: Int): Float = when (clase(semilla)) {
         0 -> 0.83f + 0.08f * azar(semilla, 1)
-        1 -> 0.86f + 0.06f * azar(semilla, 1)
-        else -> 0.8f + 0.07f * azar(semilla, 1)
+        1 -> 0.87f + 0.06f * azar(semilla, 1)
+        else -> 0.8f + 0.06f * azar(semilla, 1)
     }
 
     // ---------------------------------------------------------------- la luz
@@ -102,7 +102,9 @@ internal object MuebleEstanteOrden {
     /** En la base: dónde acaba el zócalo y empieza el suelo, en fracción de su alto. */
     const val ZOCALO = 0.36f
     /** La vela de un hueco: a qué alto de su repisa arde la llama (en fracción del hueco, desde abajo). */
-    const val VELA_HUECO_Y = 0.56f
+    const val VELA_HUECO_Y = 0.72f
+    /** El aplique de vela del pilar de la derecha: a qué alto de su repisa arde (en fracción del hueco, desde arriba). */
+    const val APLIQUE_Y = 0.3f
 
     /** La luz de la vela del candelero en el cuerpo: cuánta llega (de 1 a 0) a un punto a [dx] y [dy] de la llama, en anchos. */
     fun vela(dx: Float, dy: Float): Float =
@@ -186,6 +188,29 @@ internal object MuebleEstanteOrden {
         return mejor
     }
 
+    /**
+     * En qué repisas va un aplique de vela del pilar de la derecha (ninguna, si no hace falta): donde, con el candelero (arriba), el
+     * farol (abajo), las velas de los huecos y el piloto, todavía quedan dos repisas seguidas sin luz propia; uno en medio de cada
+     * tramo así, hasta dos, para que no quede en el hondo más de una repisa seguida.
+     */
+    fun repisasAplique(d: DisposicionEstante, w: Float): IntArray {
+        val n = d.repisas.size
+        if (n < 4) return IntArray(0)
+        val velas = velasEn(d, w)
+        val luz = BooleanArray(n) { k -> k == 0 || k == n - 1 || velas[k] >= 0f }
+        luz[repisaPiloto(n, velas)] = true
+        val r = ArrayList<Int>()
+        var k = 1
+        while (k < n - 1 && r.size < 2) {
+            if (luz[k]) { k++; continue }
+            var fin = k
+            while (fin + 1 < n && !luz[fin + 1]) fin++
+            if (fin > k) r.add((k + fin + 1) / 2)
+            k = fin + 1
+        }
+        return r.toIntArray()
+    }
+
     /** Cuánto rojo del piloto llega a un punto a [dx] y [dy] de él, en anchos: corto. */
     fun piloto(dx: Float, dy: Float): Float = (1.1f * exp(-6.5f * sqrt(dx * dx + dy * dy * 1.3f))).coerceIn(0f, 1f)
 
@@ -199,19 +224,20 @@ internal object MuebleEstanteOrden {
         val b = d.base
         val apoyo = ch - w * CORNISA
         val yF = (b.top + b.height * FAROL_Y) / w
-        // Las velas de los huecos: se apuntan para que cada volumen sepa cuánta luz le dan.
-        val centros = FloatArray(d.repisas.size) { -1f }
+        // Las velas de los huecos y la del aplique del pilar: se apuntan (en anchos) para que cada volumen sepa cuánta luz le dan.
         val velL = ArrayList<Float>()
-        val inter = d.derecha.left - d.izquierda.right
         val xs = velasEn(d, w)
         d.repisas.forEachIndexed { k, r ->
             val x = xs[k]
             if (x < 0f) return@forEachIndexed
-            centros[k] = ((x - d.izquierda.right) / maxOf(1f, inter)).coerceIn(0f, 1f)
             velL.add(x / w); velL.add((r.bottom - r.height * VELA_HUECO_Y) / w)
         }
+        repisasAplique(d, w).forEach { k ->
+            val r = d.repisas[k]
+            velL.add(1f - (LADO + ObraEstanteOrden.ORILLA) / 2f); velL.add((r.top + r.height * APLIQUE_Y) / w)
+        }
         val velas = if (a.lumbre) velL.toFloatArray() else FloatArray(0)
-        LucesOrden.poner(LucesOrden.clave(d.repisas.size, oscuro, noche), centros, w / density, repisaPiloto(d.repisas.size, xs))
+        LucesOrden.poner(LucesOrden.clave(d.repisas.size, oscuro, noche), velL.toFloatArray(), w / density, repisaPiloto(d.repisas.size, xs))
         val cerca: (Offset) -> Float = { p ->
             if (!a.lumbre) 0f
             else if (p.y < apoyo) velaArriba(p.x / w - VELA_X, p.y / w - VELA_Y) * (if (a.dormida) 0.5f else 1f)
@@ -293,33 +319,27 @@ internal object MuebleEstanteOrden {
                     else manual(v, medidor, a, k, kf, hacia, sol, material)
                 }
                 1 -> carcaj(v, medidor, a, k, kf, hacia, sol, material)
-                else -> {
-                    // Blanda: casi siempre recostada, contra la vecina de un lado o del otro.
-                    val r = azar(v.semilla, 23)
-                    if (r > 0.6f) rotate(-5f, Offset(0f, size.height)) { carpeta(v, medidor, a, k, kf, hacia, sol, material) }
-                    else if (r > 0.22f) rotate(4f, Offset(size.width, size.height)) { carpeta(v, medidor, a, k, kf, hacia, sol, material) }
-                    else carpeta(v, medidor, a, k, kf, hacia, sol, material)
-                }
+                else -> relicario(v, medidor, a, k, kf, hacia, sol, material)
             }
         }
     }
 }
 
 /**
- * Dónde arden las velas de los huecos y cuánto mide el estante, apuntado por el estante al dibujarse para que cada volumen (que
- * se dibuja después, en su propio lienzo, y no sabe dónde acaba su repisa) sepa cuánta luz le dan. Por repisa, el centro de la
- * vela en la misma medida que [Volumen.centro], o -1 si esa repisa no tiene. La clave es el número de repisas y el momento.
+ * Dónde arden las velas de los huecos y la del aplique, en qué repisa está el piloto y cuánto mide el estante, apuntado por el
+ * estante al dibujarse para que cada volumen (que se dibuja después, en su propio lienzo, y no sabe dónde acaba su repisa) sepa
+ * cuánta luz le dan. Las velas, en anchos del estante (x, y, x, y…). La clave es el número de repisas y el momento.
  */
 internal object LucesOrden {
     @Volatile private var clave = ""
-    @Volatile private var centros = FloatArray(0)
+    @Volatile private var velas = FloatArray(0)
     @Volatile private var ancho = MuebleEstanteOrden.ANCHO_NOMINAL
 
     fun clave(repisas: Int, oscuro: Boolean, noche: Boolean) = "$repisas:$oscuro:$noche"
 
     @Volatile private var piloto = -1
 
-    fun poner(clave: String, c: FloatArray, anchoDp: Float, repisaPiloto: Int) { centros = c; ancho = anchoDp.coerceAtLeast(100f); piloto = repisaPiloto; this.clave = clave }
+    fun poner(clave: String, v: FloatArray, anchoDp: Float, repisaPiloto: Int) { velas = v; ancho = anchoDp.coerceAtLeast(100f); piloto = repisaPiloto; this.clave = clave }
 
     /** En qué repisa está el piloto rojo, si se apuntó para este estante; si no, la que diría el estante sin velas. */
     fun piloto(repisas: Int, oscuro: Boolean, noche: Boolean): Int =
@@ -329,18 +349,7 @@ internal object LucesOrden {
     fun anchoDp(repisas: Int, oscuro: Boolean, noche: Boolean): Float =
         if (clave == clave(repisas, oscuro, noche)) ancho else MuebleEstanteOrden.ANCHO_NOMINAL
 
-    /** Las velas de los huecos de un estante de [repisas] repisas, en anchos (x, y, x, y…), o ninguna si no se apuntaron. */
-    fun velas(repisas: Int, oscuro: Boolean, noche: Boolean): FloatArray {
-        val c = centros
-        if (clave != clave(repisas, oscuro, noche)) return FloatArray(0)
-        val l = ArrayList<Float>()
-        val m = MuebleEstanteOrden
-        val an = ancho
-        for (k in c.indices) {
-            if (c[k] < 0f) continue
-            l.add(m.LADO + c[k] * (1f - 2 * m.LADO))
-            l.add(m.CORONA + k * m.FILA / an + (m.ALTO_REPISA.value * (1f - m.VELA_HUECO_Y)) / an)
-        }
-        return l.toFloatArray()
-    }
+    /** Las velas de los huecos y del aplique de un estante de [repisas] repisas, en anchos (x, y, x, y…), o ninguna si no se apuntaron. */
+    fun velas(repisas: Int, oscuro: Boolean, noche: Boolean): FloatArray =
+        if (clave == clave(repisas, oscuro, noche)) velas else FloatArray(0)
 }

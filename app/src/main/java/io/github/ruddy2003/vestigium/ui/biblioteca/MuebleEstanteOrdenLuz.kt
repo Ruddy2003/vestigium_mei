@@ -39,8 +39,12 @@ internal object PaletaOrden {
     val LATON = Color(0xFFCBA24C)
     val LATON_BRILLO = Color(0xFFF2DA92)
     val LATON_HONDO = Color(0xFF73541F)
-    /** El latón de las placas del día: un punto más hondo, para que no hagan una reja de cuadros claros. */
-    val LATON_PLACA = Color(0xFFBA9343)
+    /** El latón de las placas del día: viejo y un punto más hondo, para que no hagan una reja de cuadros claros. */
+    val LATON_PLACA = Color(0xFFA68A4C)
+    /** De noche, lejos de las velas, la placa es bronce hondo (y el número va en claro). */
+    val BRONCE_HONDO = Color(0xFF3B3226)
+    /** El número en claro sobre el bronce hondo. */
+    val TINTA_CLARA = Color(0xFFE2D2A4)
     /** La placa de latón de noche: de lejos (sigue dando contraste con la tinta) a junto a la vela. */
     val PLACA_NOCHE = Color(0xFF9C8248)
     val PLACA_VELA = Color(0xFFE8C677)
@@ -198,13 +202,21 @@ internal class AireOrden(val oscuro: Boolean, val noche: Boolean) {
     fun placa(k: Float, frio: Float = 0f): Color {
         val q = k.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) enVigilia(p.LATON_PLACA, q) else p.LATON_PLACA
-        val b = mezcla(p.PLACA_NOCHE, p.PLACA_VELA, (q * 1.3f).coerceAtMost(1f))
-        val lejos = mezcla(b, Color(0xFF4E4838), 0.6f * (1f - q))
-        return if (frio > 0.05f) mezcla(lejos, Color(0xFF7E8A98), (0.5f * frio).coerceAtMost(0.4f) * (1f - q)) else lejos
+        val b = mezcla(p.BRONCE_HONDO, p.PLACA_VELA, (q * 1.35f).coerceAtMost(1f).toDouble().pow(1.15).toFloat())
+        return if (frio > 0.05f) mezcla(b, Color(0xFF55606E), (0.6f * frio).coerceAtMost(0.45f) * (1f - q)) else b
     }
 
     /** La tinta de las placas: siempre más honda que el latón. */
     fun tinta(): Color = if (oscuro) Color(0xFF15120C) else p.TINTA
+
+    /**
+     * La tinta del día sobre una placa de color [placa]: oscura sobre el latón; en claro sobre el bronce hondo de noche (así
+     * guarda el contraste de 4.5 a 1 sin que la placa se aclare).
+     */
+    fun tintaSobre(placa: Color): Color {
+        val l = placa.red * 0.2126f + placa.green * 0.7152f + placa.blue * 0.0722f
+        return if (oscuro && l < 0.42f) p.TINTA_CLARA else tinta()
+    }
 }
 
 /** Un polígono cerrado por sus puntos (x, y, x, y…). */

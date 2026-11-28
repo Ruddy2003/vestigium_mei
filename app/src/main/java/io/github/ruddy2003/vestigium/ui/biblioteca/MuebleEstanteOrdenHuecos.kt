@@ -420,7 +420,7 @@ internal object HuecosEstanteOrden {
 
     // ---------------------------------------------------------------- la vela de media altura
 
-    /** La palmatoria con su vela (la luz de este hueco), los tres manuales tumbados detrás y la lupa apoyada en ellos. */
+    /** El candelero con su vela alta (la luz de este hueco), los tres manuales tumbados detrás y la lupa apoyada en ellos. */
     private fun DrawScope.vela(x0: Float, r: Rect, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
         val u = density
         val w = size.width
@@ -492,7 +492,7 @@ internal object HuecosEstanteOrden {
         drawCircle(a.luz(P.VIDRIO, cerca(lc), frio(lc)).copy(alpha = 0.2f), lr, lc)
         drawCircle(en(P.LATON, 0f, lc, a, cerca, frio), lr, lc, style = Stroke(w * 0.006f))
         drawArc(a.brillo(0.7f, maxOf(0.3f, cerca(lc))), 200f, 70f, false, Offset(lc.x - lr * 0.7f, lc.y - lr * 0.7f), Size(lr * 1.4f, lr * 1.4f), style = Stroke(1.4f * u))
-        // La palmatoria: el plato de acero con su asa de anillo y la vela.
+        // El candelero: el plato de acero con su asa de anillo, el fuste, la arandela y la vela.
         val cx = x0 + w * 0.055f
         val plato = Rect(cx - w * 0.04f, y - hh * 0.05f, cx + w * 0.04f, y)
         contactoOrden(Offset(cx, y), w * 0.1f, 4f * u, a, 0.45f)
@@ -502,7 +502,18 @@ internal object HuecosEstanteOrden {
         drawRect(en(P.ACERO_HONDO, 0f, plato.center, a, cerca, frio), Offset(plato.left + w * 0.006f, plato.top + plato.height * 0.3f), Size(plato.width - w * 0.012f, plato.height * 0.7f))
         drawOval(a.brillo(0.5f, maxOf(k, 0.2f)), Offset(plato.left + w * 0.006f, plato.top + 0.5f * u), Size(plato.width * 0.5f, plato.height * 0.25f))
         val topeVela = r.bottom - hh * M.VELA_HUECO_Y + w * 0.012f
-        val vela = Rect(cx - w * 0.011f, topeVela, cx + w * 0.011f, plato.top + plato.height * 0.2f)
+        val arandela = topeVela + hh * 0.27f
+        // El fuste de hierro con su nudo, del plato a la arandela.
+        val fuste = Rect(cx - w * 0.0045f, arandela, cx + w * 0.0045f, plato.top + plato.height * 0.3f)
+        val hierro = en(P.ACERO_HONDO, 0f, fuste.center, a, cerca, frio)
+        redondoOrden(fuste, hierro, mezcla(hierro, P.LUZ_FRIA, if (a.oscuro) 0.06f else 0.4f), mezcla(hierro, P.NOCHE, 0.5f), -1f)
+        drawOval(hierro, Offset(cx - w * 0.01f, fuste.top + fuste.height * 0.45f), Size(w * 0.02f, w * 0.012f))
+        drawOval(a.destello(0.45f, k, fr), Offset(cx - w * 0.007f, fuste.top + fuste.height * 0.45f + w * 0.002f), Size(w * 0.006f, w * 0.004f))
+        val ar = Rect(cx - w * 0.02f, arandela - w * 0.004f, cx + w * 0.02f, arandela + w * 0.005f)
+        drawOval(a.sombra(0.35f), ar.topLeft + Offset(1f * u, 1.4f * u), ar.size)
+        drawOval(en(P.LATON, 0f, ar.center, a, cerca, frio), ar.topLeft, ar.size)
+        drawOval(en(P.LATON_BRILLO, 0f, ar.center, a, cerca, frio), Offset(ar.left + ar.width * 0.1f, ar.top), Size(ar.width * 0.5f, ar.height * 0.45f))
+        val vela = Rect(cx - w * 0.011f, topeVela, cx + w * 0.011f, arandela - w * 0.002f)
         val cera = en(P.CERA, 0f, vela.center, a, cerca, frio)
         drawRect(cera, vela.topLeft, vela.size)
         if (a.lumbre) drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(P.LLAMA.copy(alpha = (if (a.oscuro) 0.45f else 0.25f) * k), Color.Transparent), vela.top, vela.bottom), vela.topLeft, vela.size)

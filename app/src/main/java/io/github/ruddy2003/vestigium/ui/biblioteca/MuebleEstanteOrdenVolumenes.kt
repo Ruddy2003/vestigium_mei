@@ -1,7 +1,9 @@
 package io.github.ruddy2003.vestigium.ui.biblioteca
 
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -12,18 +14,19 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontWeight
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /**
- * Las entradas del estante de Orden ([MuebleEstanteOrden]), tres cosas del archivo de la orden según la semilla: el manual
- * encadenado (alto, de cuero del color del ánimo, con sus nervios, las cantoneras de acero, la placa de latón con el día y la
- * cadena que baja de su grapa a la barra de la repisa), el carcaj de planos (un cilindro de cuero del color del ánimo con su aro
- * y su pie de latón, la correa con hebilla y los rollos de plano que asoman, más cuanto más escribiste) y la carpeta de campaña
- * (de lona encerada del color del ánimo, blanda y panzona, con los pliegos que asoman arriba, la correa con su hebilla y las
- * puntas de latón). Sin ánimo: cuero pardo y lona cruda. En los Sueños, una media luna de plata.
+ * Las entradas del estante de Orden ([MuebleEstanteOrden]), tres cosas del archivo de la orden según la semilla, cada una con su
+ * silueta: el manual encadenado (alto y recto, de cuero del color del ánimo, con sus nervios, las cantoneras de acero, la placa
+ * de latón con el día y la cadena que baja de su grapa a la barra de la repisa), el carcaj de planos (un cilindro de cuero del
+ * color del ánimo, con la boca en elipse, el pie en curva y los rollos de plano saliendo en abanico, más cuanto más escribiste) y
+ * el relicario técnico (la urna de vidrio de remate apuntado sobre su zócalo esmaltado del color del ánimo, con lo que guarda
+ * sobre un cojín). Sin ánimo: cuero pardo y acero pintado. En los Sueños, una media luna de plata.
  */
 internal object VolumenEstanteOrden {
     private val P = PaletaOrden
@@ -83,7 +86,7 @@ internal object VolumenEstanteOrden {
         drawRect(mezcla(color, P.LATON_HONDO, 0.35f), Offset(r.left + 2.2f * u, r.top + 2.2f * u), Size(r.width - 4.4f * u, r.height - 4.4f * u), style = Stroke(0.6f * u))
         listOf(Offset(r.left + 1.6f * u, r.top + 1.6f * u), Offset(r.right - 1.6f * u, r.top + 1.6f * u), Offset(r.left + 1.6f * u, r.bottom - 1.6f * u), Offset(r.right - 1.6f * u, r.bottom - 1.6f * u))
             .forEach { drawCircle(hondo, 0.8f * u, it) }
-        diaYMes(v, medidor, Rect(r.left + 1.4f * u, r.top + 1.2f * u, r.right - 1.4f * u, r.bottom - 1f * u), a.tinta())
+        diaYMes(v, medidor, Rect(r.left + 1.2f * u, r.top + 0.6f * u, r.right - 1.2f * u, r.bottom - 0.5f * u), a.tintaSobre(color))
     }
 
     /** Lo de todas: la sombra que dejan en el muro por la rendija con la vecina y la de contacto en la repisa. */
@@ -207,10 +210,10 @@ internal object VolumenEstanteOrden {
         cantonera(Rect(0f, 0f, w, capA), capA + h * 0.045f, true, l, hacia2)
         // La placa de latón del día: en unos, bajo la cantonera; en otros, a media altura entre los nervios (así la repisa no
         // hace una fila de placas). Su alto, el justo para el día a 16 sp y el mes.
-        val alto = 29f * u
+        val alto = 27.5f * u
         val baja = azar(s, 12) > 0.62f
         val py = if (baja) h * (0.34f + 0.06f * azar(s, 6)) else capA + h * 0.06f + h * 0.025f * azar(s, 6)
-        val mx = w * 0.08f
+        val mx = w * 0.12f
         val pl = Rect(mx, py, w - mx, py + alto)
         // Los nervios en relieve: con la placa arriba, uno sobre ella y dos o tres debajo; con la placa en medio, dos arriba y
         // uno debajo.
@@ -251,9 +254,9 @@ internal object VolumenEstanteOrden {
     // ---------------------------------------------------------------- el carcaj de planos
 
     /**
-     * El carcaj de planos: el cilindro de cuero del color del ánimo, su pie y su aro de latón, la costura a pespunte, la correa con
-     * su hebilla, la banda de latón con el día y, por la boca, los rollos de plano (azules, alguno de papel crudo) abiertos en
-     * abanico, más cuanto más escribiste.
+     * El carcaj de planos, un cilindro: la boca en elipse con su aro de latón y su hondo, los rollos de plano que salen en abanico
+     * bien por encima (azules, alguno de papel crudo; más cuanto más escribiste), el cuerpo de cuero del color del ánimo con su
+     * labio y su fondo en curva, el pie de latón, la costura a pespunte, la correa con su hebilla y la chapa de latón con el día.
      */
     fun DrawScope.carcaj(v: Volumen, medidor: TextMeasurer, a: AireOrden, k: Float, kf: Float, hacia: Float, sol: Float, material: Color?) {
         val u = density
@@ -261,169 +264,221 @@ internal object VolumenEstanteOrden {
         val s = v.semilla
         val l = Luz(a, k, kf, sol)
         val hacia2 = if (a.oscuro && !a.dormida) hacia else -1f
-        val boca = h * (0.27f + 0.05f * azar(s, 5))
+        val boca = h * (0.38f + 0.05f * azar(s, 5))
         alrededor(a, hacia, boca)
         val t = tinte(material, P.CUERO_PARDO, l, (azar(s, 4) - 0.5f) * 0.12f)
-        val cuerpo = Rect(w * 0.05f, boca, w * 0.95f, h - 1f * u)
-        // Los rollos de plano que asoman, abiertos en abanico: de atrás (los más altos) adelante.
-        val n = 2 + (v.lleno * 3.6f).toInt().coerceAtMost(3)
-        val d = cuerpo.width * (if (n <= 2) 0.46f else 0.4f)
-        for (i in 0 until n) {
-            val f = if (n == 1) 0.5f else i / (n - 1f)
-            val cx = cuerpo.left + d * 0.5f + (cuerpo.width - d) * f
-            val top = boca - h * (0.14f + 0.12f * azar(s, 70 + i))
-            val giro = (f - 0.5f) * 14f + (azar(s, 75 + i) - 0.5f) * 4f
-            rotate(giro, Offset(cx, boca + 4f * u)) {
-                val r = Rect(cx - d / 2, top, cx + d / 2, boca + 4f * u)
-                val crudo = azar(s, 80 + i) > 0.72f
-                val papel = if (crudo) P.PAPEL else mezcla(P.AZUL_PLANO, P.TRAZO, 0.14f * azar(s, 90 + i))
+        val izq = w * 0.04f; val der = w * 0.96f
+        val eh = (der - izq) * 0.34f
+        // La boca por dentro: el aro de atrás y el hondo.
+        val bo = Rect(izq, boca - eh / 2, der, boca + eh / 2)
+        drawOval(l.c(P.LATON_HONDO), bo.topLeft, bo.size)
+        drawOval(l.c(P.BETUN), Offset(bo.left + 1.6f * u, bo.top + 1.2f * u), Size(bo.width - 3.2f * u, bo.height - 2.4f * u))
+        // Los rollos, en abanico desde el fondo de la boca: de atrás (los más altos, al medio) adelante.
+        val n = 3 + (v.lleno * 3.4f).toInt().coerceAtMost(3)
+        val d = (der - izq) * (if (n <= 3) 0.36f else 0.3f)
+        val pivote = Offset(w / 2, boca + eh * 0.9f)
+        val orden = (0 until n).sortedBy { kotlin.math.abs(it - (n - 1) / 2f) }.reversed()
+        for (i in orden) {
+            val f = if (n == 1) 0f else i / (n - 1f) - 0.5f
+            val giro = f * 30f + (azar(s, 75 + i) - 0.5f) * 5f
+            val largo = boca + eh * 0.9f - h * (0.02f + 0.13f * azar(s, 70 + i) + 0.06f * kotlin.math.abs(f))
+            withTransform({ rotate(giro, pivote) }) {
+                val r = Rect(pivote.x - d / 2, pivote.y - largo, pivote.x + d / 2, pivote.y)
+                val crudo = azar(s, 80 + i) > 0.74f
+                val papel = if (crudo) P.PAPEL else mezcla(P.AZUL_PLANO, P.TRAZO, 0.16f * azar(s, 90 + i))
                 val c = l.c(papel)
-                redondoOrden(r, c, mezcla(c, if (a.oscuro) P.LLAMA else P.LUZ_FRIA, if (a.oscuro) 0.25f * k else 0.35f), mezcla(c, P.NOCHE, 0.5f), hacia2, 0.85f)
-                // La orilla de la última vuelta, en espiral, y la atadura.
-                drawLine(a.sombra(0.4f), Offset(r.left, r.top + r.height * 0.55f), Offset(r.right, r.top + r.height * 0.42f), 0.9f * u)
-                drawLine(a.brillo(0.45f, k), Offset(r.left, r.top + r.height * 0.55f - 0.9f * u), Offset(r.right, r.top + r.height * 0.42f - 0.9f * u), 0.6f * u)
-                drawRect(l.c(if (crudo) P.GRANA else P.PAPEL), Offset(r.left, r.top + r.height * 0.24f), Size(r.width, 1.3f * u))
-                val bo = Rect(r.left, top - d * 0.17f, r.right, top + d * 0.17f)
-                drawOval(l.c(mezcla(papel, P.TRAZO, 0.5f), 0.05f), bo.topLeft, bo.size)
-                drawOval(c, Offset(bo.center.x - bo.width * 0.34f, bo.center.y - bo.height * 0.34f), Size(bo.width * 0.68f, bo.height * 0.68f), style = Stroke(0.7f * u))
-                drawOval(c, Offset(bo.center.x - bo.width * 0.16f, bo.center.y - bo.height * 0.16f), Size(bo.width * 0.32f, bo.height * 0.32f), style = Stroke(0.6f * u))
-                drawOval(a.sombra(0.4f), bo.topLeft, bo.size, style = Stroke(0.6f * u))
+                redondoOrden(r, c, mezcla(c, if (a.oscuro) P.LLAMA else P.LUZ_FRIA, if (a.oscuro) 0.25f * k else 0.38f), mezcla(c, P.NOCHE, 0.5f), hacia2, 0.85f)
+                // La orilla de la última vuelta, en espiral, el trazo del plano y la atadura.
+                drawLine(a.sombra(0.4f), Offset(r.left, r.top + r.height * 0.3f), Offset(r.right, r.top + r.height * 0.22f), 0.9f * u)
+                drawLine(a.brillo(0.45f, k), Offset(r.left, r.top + r.height * 0.3f - 0.9f * u), Offset(r.right, r.top + r.height * 0.22f - 0.9f * u), 0.6f * u)
+                if (!crudo) drawLine(a.luz(P.TRAZO, k, kf).copy(alpha = 0.45f), Offset(r.center.x, r.top + d * 0.4f), Offset(r.center.x, r.top + r.height * 0.5f), 0.6f * u)
+                drawRect(l.c(if (crudo) P.GRANA else P.PAPEL), Offset(r.left, r.top + r.height * 0.14f), Size(r.width, 1.3f * u))
+                // La boca del rollo, con su espiral.
+                val rb = Rect(r.left, r.top - d * 0.17f, r.right, r.top + d * 0.17f)
+                drawOval(l.c(mezcla(papel, P.TRAZO, 0.5f), 0.05f), rb.topLeft, rb.size)
+                drawOval(c, Offset(rb.center.x - rb.width * 0.34f, rb.center.y - rb.height * 0.34f), Size(rb.width * 0.68f, rb.height * 0.68f), style = Stroke(0.7f * u))
+                drawOval(c, Offset(rb.center.x - rb.width * 0.15f, rb.center.y - rb.height * 0.15f), Size(rb.width * 0.3f, rb.height * 0.3f), style = Stroke(0.6f * u))
+                drawOval(a.sombra(0.4f), rb.topLeft, rb.size, style = Stroke(0.6f * u))
             }
         }
-        // El cilindro de cuero.
-        redondoOrden(cuerpo, t.cara, t.claro, t.hondo, hacia2)
-        // La costura a pespunte, del lado de la sombra.
-        val xc = cuerpo.left + cuerpo.width * (if (hacia2 < 0f) 0.76f else 0.24f)
-        drawLine(t.hondo, Offset(xc, cuerpo.top + 4f * u), Offset(xc, cuerpo.bottom - 4f * u), 1.4f * u)
-        drawLine(t.claro.copy(alpha = 0.7f), Offset(xc + 1.2f * u, cuerpo.top + 4f * u), Offset(xc + 1.2f * u, cuerpo.bottom - 4f * u), 0.7f * u,
+        // El cuerpo: un cilindro con el labio de delante y el fondo en curva.
+        val fondo = h - eh * 0.5f - 1f * u
+        val cuerpo = Path().apply {
+            moveTo(izq, boca)
+            arcTo(bo, 180f, -180f, false)
+            lineTo(der, fondo)
+            arcTo(Rect(izq, fondo - eh / 2, der, fondo + eh / 2), 0f, 180f, false)
+            close()
+        }
+        val caja = Rect(izq, boca, der, fondo + eh / 2)
+        clipPath(cuerpo) { redondoOrden(caja, t.cara, t.claro, t.hondo, hacia2) }
+        // El roce del cuero y la costura a pespunte, del lado de la sombra.
+        val xc = izq + (der - izq) * (if (hacia2 < 0f) 0.76f else 0.24f)
+        drawLine(t.hondo, Offset(xc, boca + eh * 0.6f), Offset(xc, fondo + eh * 0.4f), 1.4f * u)
+        drawLine(t.claro.copy(alpha = 0.7f), Offset(xc + 1.2f * u, boca + eh * 0.6f), Offset(xc + 1.2f * u, fondo + eh * 0.4f), 0.7f * u,
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f * u, 1.6f * u)))
-        // El aro de latón de la boca, en escorzo, por delante de los rollos.
-        val aro = Rect(cuerpo.left - 0.6f * u, boca - 3.4f * u, cuerpo.right + 0.6f * u, boca + 3.4f * u)
-        redondoOrden(aro, l.c(P.LATON), l.c(P.LATON_BRILLO), l.c(P.LATON_HONDO), hacia2, 0.9f)
-        drawRect(a.sombra(0.45f), Offset(cuerpo.left, aro.bottom), Size(cuerpo.width, 1.4f * u))
-        drawRect(a.destello(0.55f, k, kf), Offset(aro.left, aro.top), Size(aro.width, 0.8f * u))
-        // El pie de latón.
-        val pie = Rect(cuerpo.left - 0.6f * u, h - h * 0.06f, cuerpo.right + 0.6f * u, h)
-        redondoOrden(pie, l.c(P.LATON), l.c(P.LATON_BRILLO), l.c(P.LATON_HONDO), hacia2, 0.9f)
-        drawRect(a.sombra(0.4f), Offset(cuerpo.left, pie.top - 1f * u), Size(cuerpo.width, 1f * u))
-        // La banda de latón con el día, a media altura (otro sitio que en el manual).
-        val alto = 29f * u
-        val py = boca + 7f * u + (h - boca - alto - 30f * u) * (0.15f + 0.35f * azar(s, 6))
-        val mx = w * 0.08f
+        // El labio de latón de la boca, por delante de los rollos.
+        drawArc(a.sombra(0.4f), 0f, 180f, false, Offset(bo.left, bo.top + 1.6f * u), bo.size, style = Stroke(2.4f * u))
+        drawArc(l.c(P.LATON), 0f, 180f, false, bo.topLeft, bo.size, style = Stroke(2.6f * u))
+        drawArc(a.brillo(0.6f, maxOf(k, 0.25f)), 110f, 60f, false, bo.topLeft, bo.size, style = Stroke(1f * u))
+        // El pie de latón, en curva.
+        val pie = Rect(izq - 0.6f * u, fondo - eh / 2, der + 0.6f * u, fondo + eh / 2)
+        drawArc(l.c(P.LATON_HONDO), 0f, 180f, false, Offset(pie.left, pie.top - 2.2f * u), pie.size, style = Stroke(4.4f * u))
+        drawArc(l.c(P.LATON), 20f, 140f, false, Offset(pie.left, pie.top - 2.8f * u), pie.size, style = Stroke(1.6f * u))
+        // La chapa de latón con el día, a media altura del cuerpo.
+        val alto = 27.5f * u
+        val py = boca + eh * 0.55f + 2f * u + maxOf(0f, (fondo - boca - eh * 0.55f - alto - 8f * u)) * (0.2f + 0.4f * azar(s, 6))
+        val mx = w * 0.12f
         val pl = Rect(mx, py, w - mx, py + alto)
         placa(v, medidor, pl, l)
-        // La correa del lado de la luz, con su hebilla bajo la placa.
-        val xa = if (hacia2 < 0f) cuerpo.left + cuerpo.width * 0.16f else cuerpo.right - cuerpo.width * 0.16f - 4.4f * u
+        // La correa del lado de la luz, con su hebilla bajo la chapa.
+        val xa = if (hacia2 < 0f) izq + (der - izq) * 0.1f else der - (der - izq) * 0.1f - 4.4f * u
         val correa = l.c(mezcla(P.CUERO, P.BETUN, 0.2f))
-        listOf(Rect(xa, aro.bottom, xa + 4.4f * u, pl.top - 0.5f * u), Rect(xa, pl.bottom + 0.5f * u, xa + 4.4f * u, pie.top)).forEach { cr ->
+        listOf(Rect(xa, boca + eh * 0.5f + 1f * u, xa + 4.4f * u, pl.top - 0.5f * u), Rect(xa, pl.bottom + 0.5f * u, xa + 4.4f * u, fondo + eh * 0.42f)).forEach { cr ->
             if (cr.height <= 0f) return@forEach
             drawRect(a.sombra(0.35f), Offset(cr.right, cr.top), Size(1.2f * u, cr.height))
             drawRect(correa, cr.topLeft, cr.size)
             drawRect(a.brillo(0.2f, k), cr.topLeft, Size(1f * u, cr.height))
         }
-        val hb = Rect(xa - 1.2f * u, pl.bottom + 5f * u, xa + 5.6f * u, pl.bottom + 11f * u)
-        drawRect(l.c(P.LATON), hb.topLeft, hb.size, style = Stroke(1.3f * u))
-        drawLine(l.c(P.LATON_HONDO), Offset(hb.center.x, hb.top), Offset(hb.center.x, hb.bottom), 0.9f * u)
-        if (v.noche) lunaPlataOrden(Offset(w * (if (hacia2 < 0f) 0.64f else 0.36f), (pl.bottom + pie.top) / 2 + 3f * u), minOf(w * 0.17f, 4.6f * u), a)
-        filos(cuerpo, a, k, kf, hacia)
+        val hb = Rect(xa - 1.2f * u, pl.bottom + 4f * u, xa + 5.6f * u, pl.bottom + 10f * u)
+        if (hb.bottom < fondo) {
+            drawRect(l.c(P.LATON), hb.topLeft, hb.size, style = Stroke(1.3f * u))
+            drawLine(l.c(P.LATON_HONDO), Offset(hb.center.x, hb.top), Offset(hb.center.x, hb.bottom), 0.9f * u)
+        }
+        if (v.noche) lunaPlataOrden(Offset(w * (if (hacia2 < 0f) 0.64f else 0.36f), minOf(fondo - 2f * u, pl.bottom + 9f * u)), minOf(w * 0.16f, 4.4f * u), a)
+        filos(Rect(izq, boca, der, fondo), a, k, kf, hacia)
     }
 
-    // ---------------------------------------------------------------- la carpeta de campaña
+    // ---------------------------------------------------------------- el relicario
+
+    /** Una bobina de hilo de cobre de pie, vista de lado, en [r]: las dos alas de acero y el hilo con sus vueltas. */
+    private fun DrawScope.bobinaChica(r: Rect, l: Luz) {
+        val u = density
+        val a = l.a
+        val hilo = Rect(r.left + r.width * 0.12f, r.top + r.height * 0.14f, r.right - r.width * 0.12f, r.bottom - r.height * 0.14f)
+        val cobre = l.c(P.OXIDO, 0.15f)
+        redondoOrden(hilo, cobre, mezcla(cobre, P.LATON_BRILLO, if (a.oscuro) 0.2f * l.k else 0.45f), mezcla(cobre, P.NOCHE, 0.5f), -1f)
+        var y = hilo.top + 1.2f * u
+        var q = 0
+        while (y < hilo.bottom && q < 20) { drawLine(mezcla(cobre, P.NOCHE, 0.35f).copy(alpha = 0.5f), Offset(hilo.left, y), Offset(hilo.right, y - 0.5f * u), 0.5f * u); y += 1.4f * u; q++ }
+        listOf(r.top, r.bottom - r.height * 0.14f).forEach { yy ->
+            drawRect(l.c(P.ACERO_MEDIO), Offset(r.left, yy), Size(r.width, r.height * 0.14f))
+            drawRect(a.destello(0.45f, l.k, l.kf), Offset(r.left, yy), Size(r.width, 0.7f * u))
+        }
+    }
 
     /**
-     * La carpeta de campaña: blanda y panzona, de lona encerada del color del ánimo, con el doblez del lomo a la izquierda, la
-     * trama de la lona y sus arrugas, los pliegos de plano y de papel que asoman arriba (más cuanto más escribiste), las dos cintas
-     * atadas, el portaetiquetas de latón con el día y las dos puntas de latón de abajo.
+     * El relicario técnico: el zócalo esmaltado del color del ánimo, con su moldura de latón, su pie de acero y la chapa con el día;
+     * encima, la urna de vidrio de remate apuntado en su marco de acero, con la anilla arriba; dentro, sobre un cojín del color del
+     * ánimo, lo que guarda (una válvula, una bobina; más piezas cuanto más escribiste). En los Sueños, la media luna en el vidrio.
      */
-    fun DrawScope.carpeta(v: Volumen, medidor: TextMeasurer, a: AireOrden, k: Float, kf: Float, hacia: Float, sol: Float, material: Color?) {
+    fun DrawScope.relicario(v: Volumen, medidor: TextMeasurer, a: AireOrden, k: Float, kf: Float, hacia: Float, sol: Float, material: Color?) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla
         val l = Luz(a, k, kf, sol)
         val hacia2 = if (a.oscuro && !a.dormida) hacia else -1f
-        val arriba = h * (0.2f + 0.05f * azar(s, 5))
-        alrededor(a, hacia, arriba)
-        val t = tinte(material, P.LONA, l, (azar(s, 4) - 0.5f) * 0.12f)
-        val panza = w * 0.07f
-        // Los pliegos que asoman por arriba, en abanico, de atrás adelante: planos azules con su trazo y papel crudo.
-        val n = 3 + (v.lleno * 4f).toInt().coerceAtMost(4)
-        for (i in 0 until n) {
-            val x0 = w * (0.08f + 0.08f * azar(s, 60 + i)); val x1 = w * (0.92f - 0.1f * azar(s, 61 + i))
-            val top = arriba - h * (0.04f + 0.13f * azar(s, 62 + i))
-            val gir = (azar(s, 63 + i) - 0.5f) * 8f
-            rotate(gir, Offset(w / 2, arriba + 4f * u)) {
-                val pr = Rect(x0, top, x1, arriba + 6f * u)
-                val azul = (i + s) % 3 != 0
-                val papel = if (azul) P.AZUL_PLANO else P.PAPEL
-                drawRect(a.sombra(0.4f), pr.topLeft + Offset(1f * u, 1f * u), pr.size)
-                drawRect(l.c(papel), pr.topLeft, pr.size)
-                if (azul) {
-                    val tr = a.luz(P.TRAZO, k, kf).copy(alpha = 0.55f)
-                    drawLine(tr, Offset(pr.left + pr.width * 0.15f, pr.top + 3f * u), Offset(pr.right - pr.width * 0.2f, pr.top + 3f * u), 0.6f * u)
-                    drawRect(tr, Offset(pr.left + pr.width * 0.25f, pr.top + 5f * u), Size(pr.width * 0.3f, 3f * u), style = Stroke(0.5f * u))
-                } else drawLine(a.sombra(0.25f), Offset(pr.left + 2f * u, pr.top + 3.5f * u), Offset(pr.right - 3f * u, pr.top + 3.5f * u), 0.5f * u)
-                drawRect(a.brillo(0.45f, k), pr.topLeft, Size(pr.width, 0.8f * u))
+        val alto = 27.5f * u
+        val zArriba = maxOf(h * 0.42f, h - alto - 12f * u)
+        alrededor(a, hacia, zArriba)
+        val t = tinte(material, P.PINTURA, l, (azar(s, 4) - 0.5f) * 0.1f)
+        // La urna: lados rectos y remate apuntado, un poco más angosta que el zócalo.
+        val mu = w * (0.04f + 0.03f * azar(s, 5))
+        val urna = Rect(mu, h * (0.05f + 0.05f * azar(s, 6)), w - mu, zArriba + 1f * u)
+        val hombro = urna.top + urna.width * 0.62f
+        val forma = Path().apply {
+            moveTo(urna.left, urna.bottom); lineTo(urna.left, hombro)
+            cubicTo(urna.left, hombro - urna.width * 0.35f, urna.center.x - urna.width * 0.18f, urna.top + urna.width * 0.08f, urna.center.x, urna.top)
+            cubicTo(urna.center.x + urna.width * 0.18f, urna.top + urna.width * 0.08f, urna.right, hombro - urna.width * 0.35f, urna.right, hombro)
+            lineTo(urna.right, urna.bottom); close()
+        }
+        // Por dentro: el muro de detrás un punto más frío, el cojín y lo que guarda.
+        drawPath(forma, l.c(P.PAVON_HONDO, -0.1f))
+        drawPath(forma, a.luz(P.VIDRIO, k * 0.5f, kf).copy(alpha = if (a.oscuro) 0.12f else 0.22f))
+        clipPath(forma) {
+            val cj = Rect(urna.left + 1.4f * u, urna.bottom - urna.height * 0.24f, urna.right - 1.4f * u, urna.bottom + 3f * u)
+            val cojin = Path().apply { addRoundRect(RoundRect(cj, CornerRadius(cj.height * 0.5f))) }
+            drawPath(cojin, t.cara)
+            drawOval(t.claro.copy(alpha = 0.8f), Offset(cj.left + cj.width * 0.1f, cj.top + cj.height * 0.08f), Size(cj.width * 0.5f, cj.height * 0.35f))
+            drawRect(t.hondo.copy(alpha = 0.6f), Offset(cj.left, cj.bottom - cj.height * 0.45f), Size(cj.width, cj.height * 0.45f))
+            // Lo que guarda: la pieza principal (según la semilla) y, si escribiste más, otras más chicas.
+            val piezas = 1 + (v.lleno * 2.2f).toInt().coerceAtMost(2)
+            val suelo = cj.top + cj.height * 0.25f
+            val hueco = urna.bottom - urna.height * 0.24f - (urna.top + urna.width * 0.3f)
+            val valvulaPrimero = azar(s, 7) > 0.4f
+            val ancho = urna.width
+            fun valvula(cx: Float, alto: Float) {
+                val vw = minOf(ancho * 0.4f, alto * 0.42f)
+                valvulaOrden(Rect(cx - vw / 2, suelo - alto, cx + vw / 2, suelo), { col, f -> l.c(col, f) }, a, k)
             }
-        }
-        // La lona, panzona: el borde de arriba hundido y los costados abombados.
-        val lona = Path().apply {
-            moveTo(0.8f * u, arriba)
-            quadraticTo(w * 0.5f, arriba + h * 0.04f, w - 0.8f * u, arriba)
-            quadraticTo(w + panza * 0.35f, h * 0.55f, w - 1.4f * u, h - 3f * u)
-            quadraticTo(w - 1.4f * u, h, w - 5f * u, h)
-            lineTo(5f * u, h)
-            quadraticTo(1.4f * u, h, 1.4f * u, h - 3f * u)
-            quadraticTo(-panza * 0.35f, h * 0.55f, 0.8f * u, arriba)
-            close()
-        }
-        drawPath(lona, t.cara)
-        clipPath(lona) {
-            // Su volumen: la luz del lado de la luminaria (o de la vela), la sombra del otro y el hondo abajo.
-            val claroX = if (hacia2 < 0f) 0f else w * 0.6f
-            drawRect(t.claro.copy(alpha = 0.75f), Offset(claroX, 0f), Size(w * 0.4f, h))
-            drawRect(t.hondo.copy(alpha = 0.8f), Offset(if (hacia2 < 0f) w * 0.74f else 0f, 0f), Size(w * 0.26f, h))
-            drawRect(t.hondo.copy(alpha = 0.45f), Offset(0f, h * 0.84f), Size(w, h * 0.16f))
-            drawRect(t.hondo.copy(alpha = 0.5f), Offset(0f, arriba), Size(w, 3f * u))
-            // La trama de la lona, en un solo camino.
-            val trama = Path()
-            var y = arriba + 2f * u
-            var q = 0
-            while (y < h && q < 200) { trama.moveTo(0f, y); trama.lineTo(w, y); y += 2.2f * u; q++ }
-            drawPath(trama, t.hondo.copy(alpha = 0.2f), style = Stroke(0.5f * u))
-            // El doblez del lomo, a la izquierda, y las arrugas de la panza, que bajan en diagonal.
-            drawRect(t.hondo.copy(alpha = 0.65f), Offset(w * 0.1f, 0f), Size(1.6f * u, h))
-            drawRect(t.claro.copy(alpha = 0.7f), Offset(w * 0.1f + 1.6f * u, 0f), Size(0.9f * u, h))
-            listOf(0.4f, 0.66f).forEachIndexed { i, f ->
-                val x = w * (f + 0.06f * azar(s, 70 + i))
-                drawLine(t.hondo.copy(alpha = 0.5f), Offset(x, arriba + h * 0.03f), Offset(x + w * 0.08f, h * 0.42f), 1.4f * u, StrokeCap.Round)
-                drawLine(t.claro.copy(alpha = 0.5f), Offset(x - 1.2f * u, arriba + h * 0.03f), Offset(x + w * 0.08f - 1.2f * u, h * 0.42f), 0.8f * u, StrokeCap.Round)
+            fun bobina(cx: Float, alto: Float) {
+                val bw = minOf(ancho * 0.48f, alto * 0.9f)
+                drawOval(a.sombra(0.35f), Offset(cx - bw * 0.55f, suelo - 1.2f * u), Size(bw * 1.1f, 2.4f * u))
+                bobinaChica(Rect(cx - bw / 2, suelo - alto, cx + bw / 2, suelo), l)
             }
+            when (piezas) {
+                1 -> if (valvulaPrimero) valvula(urna.center.x, hueco * 0.86f) else bobina(urna.center.x, hueco * 0.5f)
+                2 -> {
+                    if (valvulaPrimero) { bobina(urna.left + ancho * 0.72f, hueco * 0.36f); valvula(urna.left + ancho * 0.36f, hueco * 0.84f) }
+                    else { valvula(urna.left + ancho * 0.7f, hueco * 0.62f); bobina(urna.left + ancho * 0.32f, hueco * 0.46f) }
+                }
+                else -> {
+                    valvula(urna.left + ancho * 0.26f, hueco * 0.6f)
+                    valvula(urna.left + ancho * 0.74f, hueco * 0.52f)
+                    bobina(urna.center.x, hueco * 0.36f)
+                }
+            }
+            // El vidrio: el reflejo ancho de la izquierda, el canto hondo de la derecha y un reflejo en diagonal.
+            val luzV = when {
+                a.dormida -> P.GUARDIA.copy(alpha = 0.3f)
+                a.oscuro -> P.LLAMA.copy(alpha = 0.06f + 0.2f * k)
+                a.noche -> P.VIGILIA.copy(alpha = 0.38f)
+                else -> P.LUZ_FRIA.copy(alpha = 0.42f)
+            }
+            drawRect(luzV, Offset(urna.left + urna.width * 0.1f, urna.top), Size(urna.width * 0.12f, urna.height))
+            drawPath(poligonoOrden(urna.left + urna.width * 0.35f, urna.top + urna.height * 0.25f, urna.left + urna.width * 0.48f, urna.top + urna.height * 0.25f,
+                urna.right, urna.top + urna.height * 0.55f, urna.right, urna.top + urna.height * 0.66f), luzV.copy(alpha = luzV.alpha * 0.45f))
+            drawRect(a.sombra(0.2f), Offset(urna.right - urna.width * 0.14f, urna.top), Size(urna.width * 0.14f, urna.height))
+            // De noche, el vidrio guarda un filo frío aunque esté lejos de la vela (si no, la urna se lee como una losa).
+            if (a.oscuro) drawRect(a.destello(0.55f, k, maxOf(kf, 0.5f)), Offset(urna.left + urna.width * 0.13f, urna.top + urna.width * 0.3f), Size(1.1f * u, urna.height * 0.55f))
         }
-        drawPath(lona, a.sombra(0.45f), style = Stroke(0.8f * u))
-        // Las dos cintas de cierre, atadas en el canto de arriba, con sus cabos que cuelgan.
-        listOf(w * 0.3f, w * 0.7f).forEachIndexed { i, x ->
-            val c0 = Offset(x, arriba + h * 0.02f)
-            val cinta = l.c(mezcla(P.GRANA_HONDA, P.CUERO, 0.4f))
-            val c1 = Offset(x + (if (i == 0) -1f else 1f) * w * 0.06f, c0.y + h * 0.09f)
-            drawLine(a.sombra(0.35f), c0 + Offset(0.8f * u, 1f * u), c1 + Offset(0.8f * u, 1f * u), 1.4f * u, StrokeCap.Round)
-            drawLine(cinta, c0, c1, 1.4f * u, StrokeCap.Round)
-            drawCircle(cinta, 1.5f * u, c0)
+        // El marco de la urna, esmaltado del color del ánimo, con su filo de acero; el remate con su anilla.
+        val marco = l.c(P.ACERO_MEDIO)
+        drawPath(forma, a.sombra(0.45f), style = Stroke(3.6f * u))
+        drawPath(forma, t.hondo, style = Stroke(3f * u))
+        drawPath(forma, t.cara, style = Stroke(1.8f * u))
+        drawLine(a.destello(0.55f, k, kf), Offset(urna.left + 0.4f * u, urna.bottom), Offset(urna.left + 0.4f * u, hombro), 0.8f * u)
+        val ap = Offset(urna.center.x, urna.top)
+        val ar = minOf(w * 0.12f, 3.4f * u)
+        drawCircle(a.sombra(0.4f), ar, ap + Offset(0.7f * u, -ar * 0.9f + 0.9f * u), style = Stroke(1.4f * u))
+        drawCircle(marco, ar, ap - Offset(0f, ar * 0.9f), style = Stroke(1.4f * u))
+        drawCircle(l.c(P.LATON), 1.8f * u, ap)
+        drawCircle(a.destello(0.7f, k, kf), 0.6f * u, ap - Offset(0.5f * u, 0.5f * u))
+        if (v.noche) lunaPlataOrden(Offset(urna.center.x, urna.top + urna.height * 0.36f), minOf(w * 0.15f, 4.2f * u), a)
+        // El zócalo esmaltado: la moldura de latón arriba, el esmalte del color del ánimo y el pie de acero.
+        val z = Rect(0.5f * u, zArriba, w - 0.5f * u, h)
+        redondoOrden(Rect(z.left + 1.2f * u, z.top + 3f * u, z.right - 1.2f * u, z.bottom - 5.6f * u), t.cara, t.claro, t.hondo, hacia2, 0.7f)
+        val mol = Rect(z.left, z.top, z.right, z.top + 3f * u)
+        redondoOrden(mol, l.c(P.LATON), l.c(P.LATON_BRILLO), l.c(P.LATON_HONDO), hacia2, 0.9f)
+        drawRect(a.sombra(0.4f), Offset(mol.left + 1.2f * u, mol.bottom), Size(mol.width - 2.4f * u, 1f * u))
+        val pie = Rect(z.left - 0.4f * u, z.bottom - 5.6f * u, z.right + 0.4f * u, z.bottom - 2.6f * u)
+        redondoOrden(pie, l.c(P.PAVON), l.c(P.PAVON_LUZ), l.c(P.PAVON_HONDO), hacia2, 0.8f)
+        drawRect(a.destello(0.45f, k, kf), Offset(pie.left, pie.top), Size(pie.width, 0.7f * u))
+        // Las dos patas de bola, de latón.
+        listOf(z.left + 3f * u, z.right - 3f * u).forEach { x ->
+            val pa = Rect(x - 2.6f * u, pie.bottom - 0.6f * u, x + 2.6f * u, h)
+            drawOval(l.c(P.LATON_HONDO), pa.topLeft, pa.size)
+            drawOval(l.c(P.LATON), Offset(pa.left + 0.4f * u, pa.top), Size(pa.width * 0.7f, pa.height * 0.75f))
+            drawCircle(a.destello(0.6f, k, kf), 0.6f * u, Offset(pa.left + pa.width * 0.32f, pa.top + pa.height * 0.3f))
         }
-        // El portaetiquetas de latón con el día, a media altura.
-        val alto = 29f * u
-        val py = arriba + h * 0.13f + h * 0.08f * azar(s, 6)
-        val mx = w * 0.09f
-        val pl = Rect(mx, py, w - mx, py + alto)
+        // El esmalte saltado en las aristas.
+        for (q in 0 until 3) {
+            val x = z.left + z.width * azar(s, 30 + q)
+            drawOval(l.c(P.ACERO_MEDIO).copy(alpha = 0.7f), Offset(x, if (q % 2 == 0) z.top + 3.4f * u else pie.top - 2f * u), Size(w * 0.1f, 1.4f * u))
+        }
+        val mx = w * 0.16f
+        val pl = Rect(mx, z.top + 4.2f * u, w - mx, minOf(z.top + 4.2f * u + alto, pie.top - 0.6f * u))
         placa(v, medidor, pl, l)
-        // Las dos puntas de latón de abajo.
-        listOf(true, false).forEach { izq ->
-            val x = if (izq) 1.4f * u else w - 1.4f * u
-            val sg = if (izq) 1f else -1f
-            val punta = poligonoOrden(x, h - 9f * u, x, h - 0.5f * u, x + sg * 9f * u, h - 0.5f * u)
-            drawPath(punta, l.c(P.LATON))
-            drawLine(a.destello(0.5f, k, kf), Offset(x, h - 9f * u), Offset(x + sg * 9f * u, h - 0.5f * u), 0.7f * u)
-        }
-        if (v.noche) lunaPlataOrden(Offset(w * 0.5f, minOf(h - 12f * u, pl.bottom + 9f * u)), minOf(w * 0.17f, 4.6f * u), a)
-        filos(Rect(0f, arriba, w, h), a, k, kf, hacia)
+        filos(Rect(0f, urna.top, w, h), a, k, kf, hacia)
     }
 }
