@@ -55,7 +55,8 @@ internal object CapaAbismo {
  * dos volantes trincada a la balda, con el cabo de vida, el mirafondos, la caracola y la aceitera; colgados, la red de las
  * esponjas y el farol. Al pie, sobre la cubierta calafateada, el cofre de marinero con el sombrero de hule, el anafe de barro con
  * el cazo de café y la garrafa de mimbre. De noche arden el farol, el farolillo de un hueco y las brasas del anafe. La paleta y
- * la luz están en [PaletaAbismo] y [AireAbismo]; la pared, el ojo de buey y lo colgado, en [MuroEstanteAbismo]; el mueble, en
+ * la luz están en [PaletaAbismo] y [AireAbismo]; la pared, el ojo de buey y lo colgado, en [MuroEstanteAbismo]; el farol, en
+ * [FarolEstanteAbismo]; el mueble, en
  * [ObraEstanteAbismo]; el bodegón, en [CoronaEstanteAbismo]; lo de los huecos, en [HuecosEstanteAbismo]; el pie, en
  * [PieEstanteAbismo]; las entradas, en [VolumenEstanteAbismo].
  */
@@ -205,7 +206,7 @@ internal object MuebleEstanteAbismo {
                 with(MuroEstanteAbismo) { colgado(a, apoyo, cercaArriba, m) }
                 with(ObraEstanteAbismo) { cornisa(Rect(0f, apoyo, w, ch + 2f), a, cercaArriba, m) }
                 with(CoronaEstanteAbismo) { encima(a, apoyo, cercaArriba, m) }
-                with(MuroEstanteAbismo) { farolYLuz(a, apoyo, cercaArriba) }
+                with(FarolEstanteAbismo) { farolYLuz(a, apoyo, cercaArriba) }
                 granoMueble(Rect(0f, 0f, w, ch + 2f), oscuro)
             }
         }
