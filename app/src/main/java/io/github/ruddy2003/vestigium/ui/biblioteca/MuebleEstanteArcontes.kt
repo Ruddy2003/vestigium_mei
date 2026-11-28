@@ -105,6 +105,27 @@ internal object MuebleEstanteArcontes {
     /** La lámpara de un hueco: a qué alto arde (en fracción del hueco, desde abajo). */
     const val VELA_Y = 0.32f
 
+    /** La lámpara de la ménsula del costado derecho: dónde arde, a lo ancho (anchos) y a lo alto (en fracción de su hueco, desde arriba). */
+    const val MENSULA_X = 0.985f
+    const val MENSULA_Y = 0.4f
+
+    /**
+     * En qué repisa va la lámpara de la ménsula, o -1: solo cuando hay tres o más repisas seguidas, entre la de arriba y la de abajo,
+     * sin lámpara de hueco ([xs]); entonces va en la de en medio de ese tramo, para que no quede a oscuras.
+     */
+    fun mensulaEn(xs: FloatArray): Int {
+        var mejor = -1; var largo = 0
+        var k = 1
+        while (k < xs.size - 1) {
+            if (xs[k] >= 0f) { k++; continue }
+            var j = k
+            while (j < xs.size - 1 && xs[j] < 0f) j++
+            if (j - k > largo) { largo = j - k; mejor = k + (j - k) / 2 }
+            k = j
+        }
+        return if (largo >= 3) mejor else -1
+    }
+
     /** La luz de la lámpara de arriba en el cuerpo: cuánta llega (de 1 a 0) a un punto a [dx] y [dy] de la llama, en anchos. */
     fun lampara(dx: Float, dy: Float, suenos: Boolean): Float =
         ((if (suenos) 0.9f else 1.7f) * exp(-4.6f * sqrt(dx * dx * 1.05f + dy * dy * (if (dy > 0f) 0.6f else 1f)))).coerceIn(0f, 1f)
@@ -145,6 +166,17 @@ internal object MuebleEstanteArcontes {
         return (kb / (kl + kb + kv + 0.05f)).coerceIn(0f, 1f)
     }
 
+    /** La lumbre de ([x], [y]) y la parte de ella que es brasa, de una vez, en [o] (o[0] y o[1]). */
+    fun lumbre(x: Float, y: Float, yBrasero: Float, suenos: Boolean, velas: FloatArray, o: FloatArray) {
+        val kl = lampara(x - LAMP_X, y - LAMP_Y, suenos)
+        val kb = brasero(x - BRASERO_X, y - yBrasero, suenos)
+        val kv = velaMayor(x, y, velas, suenos)
+        o[0] = (1f - (1f - kl) * (1f - kb) * (1f - kv)).coerceIn(0.02f, 1f)
+        o[1] = (kb / (kl + kb + kv + 0.05f)).coerceIn(0f, 1f)
+    }
+
+    private val SIN_VELAS = FloatArray(0)
+
     /** Dónde arde el brasero, a lo alto y en anchos, en un estante de [repisas] repisas (lo usa cada volumen). */
     fun yBraseroNominal(repisas: Int): Float = CORONA + repisas * FILA / ANCHO_NOMINAL + BASE * BRASERO_Y
 
@@ -184,15 +216,15 @@ internal object MuebleEstanteArcontes {
             centros[k] = ((x - d.izquierda.right) / maxOf(1f, inter)).coerceIn(0f, 1f)
             velasL.add(x / w); velasL.add((r.bottom - r.height * VELA_Y) / w)
         }
+        val mensula = mensulaEn(xs)
+        d.repisas.getOrNull(mensula)?.let { r -> velasL.add(MENSULA_X); velasL.add((r.top + r.height * MENSULA_Y) / w) }
         val velas = if (a.lumbre) velasL.toFloatArray() else FloatArray(0)
-        LucesHuecoArcontes.poner(LucesHuecoArcontes.clave(d.repisas.size, oscuro, noche), centros)
-        val cerca: (Offset) -> Float = { p ->
-            if (!a.lumbre) 0f
-            else if (p.y < ch) lamparaArriba(p.x / w - LAMP_X, p.y / w - LAMP_Y, noche)
-            else calor(p.x / w, p.y / w, yB, noche, velas)
+        LucesHuecoArcontes.poner(LucesHuecoArcontes.clave(d.repisas.size, oscuro, noche), centros, mensula)
+        val s = SitioArcontes(a, w) { x, y, o ->
+            if (!a.lumbre) { o[0] = 0f; o[1] = 0f }
+            else if (y < ch) { o[0] = lamparaArriba(x / w - LAMP_X, y / w - LAMP_Y, noche); o[1] = 0f }
+            else lumbre(x / w, y / w, yB, noche, velas, o)
         }
-        val brasa: (Offset) -> Float = { p -> if (!a.lumbre || p.y < ch) 0f else rojez(p.x / w, p.y / w, yB, noche, velas) }
-        val s = SitioArcontes(a, w, cerca, brasa)
         val clave = "${w.toInt()}:$ch:${b.top}:$h:$oscuro:$noche:$density"
 
         // Lo de arriba: la pared, el techo, lo colgado, el bodegón y la cornisa, en una imagen que llega al píxel entero de debajo.
@@ -215,7 +247,7 @@ internal object MuebleEstanteArcontes {
             if (!HuecosEstanteArcontes.conSitio(oc, d.derecha.left, w)) return@forEachIndexed
             grupos[k] = j % HuecosEstanteArcontes.GRUPOS; j++
         }
-        val q = a.parche
+        val q = if (a.parche === AireArcontes.OCASO_Q) a.parche else null
         if (q != null) a.forzar = 0f
         cuerpo(d, s, xs, grupos, medidor, null)
         if (q != null) {
@@ -235,9 +267,7 @@ internal object MuebleEstanteArcontes {
         val arriba = floor(minOf(b.top, d.tablas.lastOrNull()?.bottom ?: b.top))
         drawRect(s.t(Offset(w / 2, b.top), true).c(PaletaArcontes.CALIZA_SOMBRA), Offset(0f, arriba), Size(w, ceil(h) - arriba + 1f))
         val suelo = b.top + b.height * SUELO
-        val cercaPie: (Offset) -> Float = { p -> if (!a.lumbre) 0f else calor(p.x / w, p.y / w, yB, noche, FloatArray(0)) }
-        val brasaPie: (Offset) -> Float = { p -> if (!a.lumbre) 0f else rojez(p.x / w, p.y / w, yB, noche, FloatArray(0)) }
-        val sp = SitioArcontes(a, w, cercaPie, brasaPie)
+        val sp = SitioArcontes(a, w) { x, y, o -> if (!a.lumbre) { o[0] = 0f; o[1] = 0f } else lumbre(x / w, y / w, yB, noche, SIN_VELAS, o) }
         with(PieEstanteArcontes) { suelo(sp, b, suelo, h) }
         with(ObraEstanteArcontes) { zocalo(Rect(0f, arriba, w, suelo), sp) }
         with(PieEstanteArcontes) { objetos(sp, b, suelo, h) }
@@ -278,6 +308,8 @@ internal object MuebleEstanteArcontes {
             d.placas.forEach { p -> if (toca(p.r)) placa(p, medidor, s) }
         }
         with(HuecosEstanteArcontes) { d.repisas.forEachIndexed { k, r -> if (xs[k] >= 0f && toca(r)) llamaHueco(xs[k], r, s) } }
+        val m = mensulaEn(xs)
+        d.repisas.getOrNull(m)?.let { r -> if (toca(Rect(d.derecha.left, r.top, d.derecha.right, r.bottom))) with(HuecosEstanteArcontes) { mensula(r, d.derecha, s) } }
     }
 
     fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
@@ -308,8 +340,7 @@ internal object MuebleEstanteArcontes {
             when (clase(v.semilla)) {
                 0 -> codice(v, medidor, t, hacia, tinte)
                 // Alguno, ladeado contra el vecino de la izquierda.
-                1 -> if (azar(v.semilla, 21) > 0.72f) rotate(-3.2f, Offset(0f, size.height)) { rollo(v, medidor, t, hacia, tinte) }
-                    else rollo(v, medidor, t, hacia, tinte)
+                1 -> rollo(v, medidor, t, hacia, tinte, if (azar(v.semilla, 21) > 0.72f) -3.2f else 0f)
                 else -> envoltorio(v, medidor, t, hacia, tinte)
             }
         }
@@ -324,10 +355,11 @@ internal object MuebleEstanteArcontes {
 internal object LucesHuecoArcontes {
     @Volatile private var clave = ""
     @Volatile private var centros = FloatArray(0)
+    @Volatile private var mensula = -1
 
     fun clave(repisas: Int, oscuro: Boolean, noche: Boolean) = "$repisas:$oscuro:$noche"
 
-    fun poner(clave: String, c: FloatArray) { centros = c; this.clave = clave }
+    fun poner(clave: String, c: FloatArray, m: Int) { centros = c; mensula = m; this.clave = clave }
 
     /** Las lámparas de un estante de [repisas] repisas, en anchos (x, y, x, y…), o ninguna si no se apuntaron. */
     fun velas(repisas: Int, oscuro: Boolean, noche: Boolean): FloatArray {
@@ -339,6 +371,10 @@ internal object LucesHuecoArcontes {
             if (c[k] < 0f) continue
             l.add(m.LADO + c[k] * (1f - 2 * m.LADO))
             l.add(m.CORONA + k * m.FILA / m.ANCHO_NOMINAL + (m.ALTO_REPISA.value * (1f - m.VELA_Y)) / m.ANCHO_NOMINAL)
+        }
+        if (mensula >= 0) {
+            l.add(m.MENSULA_X)
+            l.add(m.CORONA + mensula * m.FILA / m.ANCHO_NOMINAL + m.ALTO_REPISA.value * m.MENSULA_Y / m.ANCHO_NOMINAL)
         }
         return l.toFloatArray()
     }

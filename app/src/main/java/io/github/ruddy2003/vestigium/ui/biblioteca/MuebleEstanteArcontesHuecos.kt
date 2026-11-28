@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.drawscope.translate
 import io.github.ruddy2003.vestigium.ui.TrazosArcontes
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.contornoIrregular
-import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /**
  * Lo que hay en los huecos libres de las repisas del estante de Arcontes ([MuebleEstanteArcontes]): grupos de dos o tres cosas
@@ -50,8 +49,12 @@ internal object HuecosEstanteArcontes {
         }
         if (fin - x0 < w * 0.1f) return
         val ancho = fin - x0
-        // Uno o dos grupos, según el sitio.
-        if (ancho > w * 0.46f) {
+        // Uno, dos o tres grupos, según el sitio.
+        if (ancho > w * 0.7f) {
+            dibujar(g, x0, x0 + ancho * 0.31f, piso, h, k, s)
+            dibujar((g + 1) % GRUPOS, x0 + ancho * 0.35f, x0 + ancho * 0.64f, piso, h, k + 5, s)
+            dibujar((g + 2) % GRUPOS, x0 + ancho * 0.68f, fin, piso, h, k + 7, s)
+        } else if (ancho > w * 0.46f) {
             dibujar(g, x0, x0 + ancho * 0.48f, piso, h, k, s)
             dibujar((g + 2) % GRUPOS, x0 + ancho * 0.52f, fin, piso, h, k + 7, s)
         } else dibujar(g, x0, fin, piso, h, k, s)
@@ -96,9 +99,46 @@ internal object HuecosEstanteArcontes {
         with(CoronaEstanteArcontes) { alcuza(Offset(pi.right + w * 0.028f, piso), w * 0.075f, s) }
         val t = s.t(c)
         val enc = s.a.lumbre
-        val barro = if (enc && s.a.oscuro) mezcla(t.c(P.BARRO_CLARO), P.LLAMA, 0.25f) else t.c(P.BARRO_CLARO)
+        val barro = if (enc && s.a.oscuro) mezclaRapida(t.c(P.BARRO_CLARO), P.LLAMA, 0.25f) else t.c(P.BARRO_CLARO)
         with(TrazosArcontes) { lampara(c, lw, barro, if (enc) (if (s.a.oscuro && !s.a.noche) 1f else 0.7f) else 0f) }
         if (!enc) drawCircle(P.TINTA.copy(alpha = 0.45f), lw * 0.05f, Offset(c.x + lw * 0.4f, c.y - lw * 0.36f * 0.36f))
+    }
+
+    /**
+     * La lámpara de la ménsula: una tablilla de olivo clavada al costado derecho [c] con su jabalcón, a media altura de la repisa
+     * [r], con la lámpara de barro encima (el pico hacia fuera) y el tizne en el costado. Solo va donde las repisas de en medio se
+     * quedarían sin luz ([MuebleEstanteArcontes.mensulaEn]).
+     */
+    fun DrawScope.mensula(r: Rect, c: Rect, s: SitioArcontes) {
+        val w = size.width; val u = density
+        val lw = w * 0.085f
+        val fuego = Offset(MuebleEstanteArcontes.MENSULA_X * w, r.top + r.height * MuebleEstanteArcontes.MENSULA_Y)
+        val lc = Offset(fuego.x - lw * 0.39f, fuego.y + lw * 0.264f)
+        val tabla = Rect(lc.x - lw * 0.5f, lc.y + lw * 0.162f, minOf(lc.x + lw * 0.42f, w - 1f), lc.y + lw * 0.162f + w * 0.011f)
+        val t = s.t(Offset(tabla.center.x, tabla.top), true)
+        // El tizne en el costado, encima de la llama.
+        drawCircle(Brush.radialGradient(listOf(P.TINTA.copy(alpha = if (s.a.oscuro) 0.3f else 0.2f), P.TINTA.copy(alpha = 0f)), fuego - Offset(0f, w * 0.04f), w * 0.035f), w * 0.035f, fuego - Offset(0f, w * 0.04f))
+        // El jabalcón: la pieza en diagonal que sostiene la tablilla, y su sombra.
+        val j0 = Offset(tabla.left + tabla.width * 0.25f, tabla.bottom + w * 0.05f); val j1 = Offset(tabla.right - tabla.width * 0.2f, tabla.bottom)
+        drawLine(t.s(0.4f), j0 + Offset(1.5f * u, 1.5f * u), j1 + Offset(1.5f * u, 1.5f * u), 3.2f * u, StrokeCap.Round)
+        drawLine(t.c(P.OLIVO_OSC), j0, j1, 3f * u, StrokeCap.Round)
+        drawLine(t.b(0.3f), j0 + Offset(-0.6f * u, -0.6f * u), j1 + Offset(-0.6f * u, -0.6f * u), 0.7f * u)
+        // La tablilla, con su canto y sus dos clavijas.
+        drawRect(t.s(0.45f), Offset(tabla.left + 1.5f * u, tabla.bottom), Size(tabla.width, 2.4f * u))
+        drawRect(t.c(P.OLIVO, 0.02f), tabla.topLeft, tabla.size)
+        drawRect(t.b(0.5f), tabla.topLeft, Size(tabla.width, 0.9f * u))
+        listOf(tabla.left + tabla.width * 0.3f, tabla.left + tabla.width * 0.7f).forEach { x -> clavoArcontes(Offset(x, tabla.center.y), 1.1f * u, t, P.OLIVO_HONDO) }
+        // La lámpara: apagada de día (con el pico tiznado), encendida de noche.
+        val tl = s.t(lc)
+        val enc = s.a.lumbre
+        val barro = if (enc && s.a.oscuro) mezclaRapida(tl.c(P.BARRO_CLARO), P.LLAMA, 0.25f) else tl.c(P.BARRO_CLARO)
+        with(TrazosArcontes) { lampara(lc, lw, barro, if (enc) (if (s.a.oscuro && !s.a.noche) 1f else 0.7f) else 0f) }
+        if (!enc) drawCircle(P.TINTA.copy(alpha = 0.45f), lw * 0.05f, Offset(lc.x + lw * 0.4f, lc.y - lw * 0.36f * 0.36f))
+        if (enc) {
+            val fuerza = if (s.a.oscuro && !s.a.noche) 1f else 0.5f
+            charcoArcontes(fuego, w * 0.2f, P.LLAMA_HALO, 0.5f * fuerza)
+            charcoArcontes(fuego, w * 0.07f, P.LLAMA_HALO, 0.9f * fuerza)
+        }
     }
 
     /** El aire caliente alrededor de la llama del hueco, de noche (después de las tablas, para que tiña también sus cantos). */
@@ -163,7 +203,7 @@ internal object HuecosEstanteArcontes {
             val pr = Rect(pe.x - r * 0.55f, pe.y - r * 0.85f, pe.x + r * 0.55f, pe.y)
             val tp = s.t(pe)
             contactoArcontes(Offset(pe.x, piso), r * 1.4f, w * 0.008f, tp, 0.4f)
-            drawRoundRect(tp.c(mezcla(P.CALIZA_SOMBRA, P.PLOMO, 0.4f)), pr.topLeft, pr.size, androidx.compose.ui.geometry.CornerRadius(r * 0.3f))
+            drawRoundRect(tp.c(mezclaRapida(P.CALIZA_SOMBRA, P.PLOMO, 0.4f)), pr.topLeft, pr.size, androidx.compose.ui.geometry.CornerRadius(r * 0.3f))
             drawRect(tp.b(0.4f), Offset(pr.left + r * 0.1f, pr.top), Size(pr.width * 0.6f, 1f * u))
             drawRect(tp.s(0.3f), Offset(pr.right - pr.width * 0.3f, pr.top), Size(pr.width * 0.3f, pr.height))
             drawCircle(tp.s(0.4f), 1.2f * u, Offset(pe.x, pr.top + 2f * u))
@@ -184,7 +224,7 @@ internal object HuecosEstanteArcontes {
             val a0 = Offset(hx + j * 1.6f * u, piso)
             val a1 = Offset(hx - h * 0.26f + j * 2.2f * u, piso - h * (0.82f + 0.05f * azar(8011 + k, j)))
             drawLine(t.s(0.3f), a0 + Offset(2f * u, 0f), a1 + Offset(2f * u, 0f), 2f * u, StrokeCap.Round)
-            drawLine(t.c(if (j % 2 == 0) P.JUNCO else mezcla(P.JUNCO, P.OLIVO_LUZ, 0.4f)), a0, a1, 1.8f * u, StrokeCap.Round)
+            drawLine(t.c(if (j % 2 == 0) P.JUNCO else mezclaRapida(P.JUNCO, P.OLIVO_LUZ, 0.4f)), a0, a1, 1.8f * u, StrokeCap.Round)
         }
         val mitad = Offset(hx - h * 0.12f, piso - h * 0.42f)
         drawLine(t.c(P.CORDEL), mitad + Offset(-3f * u, -1f * u), mitad + Offset(9f * u, 1f * u), 1.6f * u, StrokeCap.Round)
@@ -197,7 +237,7 @@ internal object HuecosEstanteArcontes {
             val hr = Rect(x - an * 0.14f, boca.center.y - ha, x + an * 0.14f, boca.center.y + al * 0.2f)
             rotate(-20f + 40f * azar(8022 + k, j), Offset(x, boca.center.y)) {
                 val f = contornoIrregular(hr, 8023 + j + k, 22, 0.03f)
-                drawPath(f, t.etiqueta(mezcla(P.PAPIRO, P.PAPIRO_OSC, 0.15f * (j % 3))))
+                drawPath(f, t.etiqueta(mezclaRapida(P.PAPIRO, P.PAPIRO_OSC, 0.15f * (j % 3))))
                 drawPath(f, t.c(P.FIBRA).copy(alpha = 0.5f), style = Stroke(0.6f * u))
                 for (l in 0 until 3) drawLine(t.c(P.TINTA).copy(alpha = 0.32f), Offset(hr.left + hr.width * 0.2f, hr.top + hr.height * (0.14f + 0.08f * l)),
                     Offset(hr.left + hr.width * (0.45f + 0.35f * azar(8024 + k, j * 3 + l)), hr.top + hr.height * (0.14f + 0.08f * l)), 0.6f * u)
@@ -242,7 +282,7 @@ internal object HuecosEstanteArcontes {
         contactoArcontes(Offset(tb.center.x, piso), tb.width * 1.1f, w * 0.012f, tt, 0.42f)
         for (j in 0 until 4) {
             val r = Rect(tb.left + (azar(8031 + k, j) - 0.5f) * 3f * u, tb.top + tb.height * j / 4f, tb.right + (azar(8032 + k, j) - 0.5f) * 3f * u, tb.top + tb.height * (j + 1) / 4f)
-            drawRect(tt.c(if (j % 2 == 0) P.OLIVO else mezcla(P.OLIVO, P.OLIVO_OSC, 0.35f)), r.topLeft, r.size)
+            drawRect(tt.c(if (j % 2 == 0) P.OLIVO else mezclaRapida(P.OLIVO, P.OLIVO_OSC, 0.35f)), r.topLeft, r.size)
             drawRect(tt.b(0.4f), r.topLeft, Size(r.width, 0.8f * u))
             drawRect(tt.c(P.CERA).copy(alpha = 0.5f), Offset(r.left + r.width * 0.05f, r.center.y - 0.4f * u), Size(r.width * 0.9f, 0.9f * u))
         }
@@ -263,7 +303,7 @@ internal object HuecosEstanteArcontes {
             lineTo(x + ja * 0.14f, y); close()
         }
         sombraFondo(jarra, t, hacia)
-        drawPath(jarra, Brush.horizontalGradient(listOf(t.c(P.CALIZA, if (hacia < 0f) 0.02f else -0.3f), t.c(mezcla(P.CALIZA, P.CALIZA_SOMBRA, 0.3f)), t.c(P.CALIZA_SOMBRA, if (hacia < 0f) -0.2f else 0.05f)),
+        drawPath(jarra, Brush.horizontalGradient(listOf(t.c(P.CALIZA, if (hacia < 0f) 0.02f else -0.3f), t.c(mezclaRapida(P.CALIZA, P.CALIZA_SOMBRA, 0.3f)), t.c(P.CALIZA_SOMBRA, if (hacia < 0f) -0.2f else 0.05f)),
             jb.x - ja * 0.32f, jb.x + ja * 0.32f))
         // Las molduras del torno, el labio y la boca honda.
         listOf(0.1f, 0.22f, 0.82f, 0.9f).forEach { f ->
@@ -278,7 +318,7 @@ internal object HuecosEstanteArcontes {
         val tv = s.t(vb - Offset(0f, va / 2))
         val vaso = Rect(vb.x - va * 0.32f, vb.y - va, vb.x + va * 0.32f, vb.y)
         drawLine(tv.c(P.CALIZA_SOMBRA, -0.1f), Offset(vaso.right, vaso.top + va * 0.25f), Offset(vaso.right + va * 0.14f, vaso.top + va * 0.5f), va * 0.12f, StrokeCap.Round)
-        drawRect(Brush.horizontalGradient(listOf(tv.c(P.CALIZA, 0.02f), tv.c(mezcla(P.CALIZA, P.CALIZA_SOMBRA, 0.3f)), tv.c(P.CALIZA_SOMBRA, -0.15f)), vaso.left, vaso.right), vaso.topLeft, vaso.size)
+        drawRect(Brush.horizontalGradient(listOf(tv.c(P.CALIZA, 0.02f), tv.c(mezclaRapida(P.CALIZA, P.CALIZA_SOMBRA, 0.3f)), tv.c(P.CALIZA_SOMBRA, -0.15f)), vaso.left, vaso.right), vaso.topLeft, vaso.size)
         // Las facetas del cincel: el vaso se labraba a mano, a golpes verticales.
         for (j in 1..4) drawLine(tv.s(0.18f), Offset(vaso.left + vaso.width * j / 5f, vaso.top + 2f * u), Offset(vaso.left + vaso.width * j / 5f, vaso.bottom), 0.7f * u)
         drawOval(tv.c(P.HUECO_HONDO, -0.2f), Offset(vaso.left + 1f * u, vaso.top - va * 0.05f), Size(vaso.width - 2f * u, va * 0.1f))
@@ -296,7 +336,7 @@ internal object HuecosEstanteArcontes {
         contactoArcontes(Offset(m.center.x, piso), m.width * 1.08f, w * 0.012f, tm, 0.42f)
         for (j in 0 until 3) {
             val r = Rect(m.left + j * 1.6f * u, m.top + m.height * j / 3f, m.right - j * 1.2f * u, m.top + m.height * (j + 1) / 3f + 1f)
-            drawRoundRect(tm.c(if (j == 1) mezcla(P.LANA, P.LANA_CRUDA, 0.3f) else P.LANA, if (j == 0) 0.06f else 0f), r.topLeft, r.size, androidx.compose.ui.geometry.CornerRadius(r.height * 0.45f))
+            drawRoundRect(tm.c(if (j == 1) mezclaRapida(P.LANA, P.LANA_CRUDA, 0.3f) else P.LANA, if (j == 0) 0.06f else 0f), r.topLeft, r.size, androidx.compose.ui.geometry.CornerRadius(r.height * 0.45f))
             drawLine(tm.s(0.3f), Offset(r.left + r.height * 0.4f, r.bottom - 0.6f * u), Offset(r.right - r.height * 0.4f, r.bottom - 0.6f * u), 0.9f * u)
             listOf(0.26f, 0.7f).forEach { f -> drawLine(tm.c(P.FRANJA), Offset(r.left + r.width * f, r.top + 0.5f * u), Offset(r.left + r.width * f, r.bottom - 0.5f * u), 2f * u) }
         }

@@ -206,7 +206,7 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
     }
 
     /** La lumbre del sitio: la llama, o la brasa si le llega más del brasero. */
-    private val lumbre: Color get() = if (rojo > 0f) mezcla(p.LLAMA, p.BRASA, rojo * 0.7f) else p.LLAMA
+    private val lumbre: Color get() = if (rojo > 0f) mezclaRapida(p.LLAMA, p.BRASA, rojo * 0.7f) else p.LLAMA
 
     /** El color propio hundido: oscuro, de su mismo tono (no gris), con el aire de la noche. */
     private fun hundido(c: Color): Color {
@@ -223,28 +223,28 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
     fun c(c: Color, f: Float = 0f): Color {
         if (!a.oscuro) {
             val b = if (a.noche) Color(c.red * 0.92f, c.green * 0.89f, c.blue * 0.88f, c.alpha) else c
-            val d = if (f > 0f) mezcla(b, LUZ_MUEBLE, f)
-                else if (f < 0f) (if (a.noche) mezcla(b, Color(b.red * 0.5f, b.green * 0.5f, b.blue * 0.6f, b.alpha), -f * 1.3f) else mezcla(b, hondo, -f))
+            val d = if (f > 0f) mezclaRapida(b, LUZ_MUEBLE, f)
+                else if (f < 0f) (if (a.noche) mezclaRapida(b, Color(b.red * 0.5f, b.green * 0.5f, b.blue * 0.6f, b.alpha), -f * 1.3f) else mezclaRapida(b, hondo, -f))
                 else b
             if (a.noche) {
                 // El último sol pinta solo donde cae: el mismo color virado a melocotón y un paso más claro.
                 val l = Color((d.red * 1.13f + 0.07f).coerceAtMost(1f), (d.green * 1.04f + 0.035f).coerceAtMost(1f), (d.blue * 0.95f + 0.02f).coerceAtMost(1f), c.alpha)
-                return mezcla(mezcla(d, mezcla(l, p.OCASO, 0.26f), sol * 0.9f), p.LLAMA, 0.12f * k)
+                return mezclaRapida(mezclaRapida(d, mezclaRapida(l, p.OCASO, 0.26f), sol * 0.9f), p.LLAMA, 0.12f * k)
             }
             // De día: lo cercano a la boca más claro y tibio; lo lejano, más hondo; y donde cae el sol, el oro de más.
             val luz = amb - 0.45f
-            var v = if (luz > 0f) mezcla(d, LUZ_MUEBLE, 0.3f * luz) else mezcla(d, SOMBRA_MUEBLE, -0.22f * luz)
+            var v = if (luz > 0f) mezclaRapida(d, LUZ_MUEBLE, 0.3f * luz) else mezclaRapida(d, SOMBRA_MUEBLE, -0.22f * luz)
             if (sol > 0f) {
                 val dorado = Color((v.red * 1.07f + 0.07f).coerceAtMost(1f), (v.green * 1.04f + 0.055f).coerceAtMost(1f), (v.blue * 0.92f + 0.03f).coerceAtMost(1f), c.alpha)
-                v = mezcla(v, mezcla(dorado, p.SOL, 0.06f), sol * 0.88f)
+                v = mezclaRapida(v, mezclaRapida(dorado, p.SOL, 0.06f), sol * 0.88f)
             }
             return v
         }
-        val base = if (f > 0f) mezcla(c, LUZ_MUEBLE, f * 0.4f) else if (f < 0f) mezcla(c, hondo, -f * 0.6f) else c
+        val base = if (f > 0f) mezclaRapida(c, LUZ_MUEBLE, f * 0.4f) else if (f < 0f) mezclaRapida(c, hondo, -f * 0.6f) else c
         val e = if (cuerpo) 1.9 else 1.6
         val kk = (1.12f * Math.pow(k.toDouble(), e).toFloat()).coerceAtMost(0.93f)
-        var v = mezcla(hundido(base), mezcla(base, aLaLlama(base), 0.6f), kk)
-        v = mezcla(v, lumbre, 0.13f * k)
+        var v = mezclaRapida(hundido(base), mezclaRapida(base, aLaLlama(base), 0.6f), kk)
+        v = mezclaRapida(v, lumbre, 0.13f * k)
         if (sol > 0f) {
             // La luna: el mismo color, un poco más claro y frío donde toca (la caliza sigue caliza; no vela lo demás).
             val q = 0.15f * sol * sol
@@ -260,8 +260,8 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
 
     /** El brillo de lo que mira a la luz: de día, crema (dorado en la mancha); al ocaso, melocotón; de noche, el filo de la llama. */
     fun b(al: Float): Color = when {
-        !a.oscuro && a.noche -> mezcla(LUZ_MUEBLE, p.OCASO, 0.55f).copy(alpha = (al * (0.25f + 0.7f * sol)).coerceIn(0f, 1f))
-        !a.oscuro -> mezcla(LUZ_MUEBLE, p.SOL, 0.5f * sol).copy(alpha = (al * (0.7f + 0.3f * amb + 0.3f * sol)).coerceIn(0f, 1f))
+        !a.oscuro && a.noche -> mezclaRapida(LUZ_MUEBLE, p.OCASO, 0.55f).copy(alpha = (al * (0.25f + 0.7f * sol)).coerceIn(0f, 1f))
+        !a.oscuro -> mezclaRapida(LUZ_MUEBLE, p.SOL, 0.5f * sol).copy(alpha = (al * (0.7f + 0.3f * amb + 0.3f * sol)).coerceIn(0f, 1f))
         sol > 0.05f && sol > k -> p.LUNA_RAS.copy(alpha = (al * 0.8f * sol).coerceIn(0f, 1f))
         else -> lumbre.copy(alpha = (al * 0.95f * k).coerceIn(0f, 1f))
     }
@@ -282,10 +282,10 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
      */
     fun animo(t: Color): Color {
         if (!a.oscuro) return c(t)
-        val apagado = mezcla(Color(t.red * 0.26f, t.green * 0.26f, t.blue * 0.27f, t.alpha), hondo, 0.28f)
-        val encendido = mezcla(t, aLaLlama(t), 0.45f)
-        var v = mezcla(apagado, encendido, (1.12f * Math.pow(k.toDouble(), 1.35).toFloat()).coerceAtMost(1f))
-        if (sol > 0f) v = mezcla(v, mezcla(t, p.LUNA, 0.35f), 0.4f * sol)
+        val apagado = mezclaRapida(Color(t.red * 0.26f, t.green * 0.26f, t.blue * 0.27f, t.alpha), hondo, 0.28f)
+        val encendido = mezclaRapida(t, aLaLlama(t), 0.45f)
+        var v = mezclaRapida(apagado, encendido, (1.12f * Math.pow(k.toDouble(), 1.35).toFloat()).coerceAtMost(1f))
+        if (sol > 0f) v = mezclaRapida(v, mezclaRapida(t, p.LUNA, 0.35f), 0.4f * sol)
         return v
     }
 
@@ -295,41 +295,75 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
      */
     fun etiqueta(col: Color): Color {
         if (!a.oscuro) return c(col)
-        val lejos = mezcla(Color(col.red * 0.4f, col.green * 0.36f, col.blue * 0.3f, col.alpha), p.NOCHE.copy(alpha = col.alpha), 0.12f)
+        val lejos = mezclaRapida(Color(col.red * 0.4f, col.green * 0.36f, col.blue * 0.3f, col.alpha), p.NOCHE.copy(alpha = col.alpha), 0.12f)
         val alumbrado = Color((col.red * 1.04f).coerceAtMost(1f), col.green * 0.92f, col.blue * 0.7f, col.alpha)
-        var v = mezcla(lejos, alumbrado, (1.1f * Math.pow(k.toDouble(), 1.7).toFloat()).coerceAtMost(1f))
-        if (sol > 0f) v = mezcla(v, mezcla(col, p.LUNA, 0.3f).let { Color(it.red * 0.7f, it.green * 0.74f, it.blue * 0.82f, it.alpha) }, 0.45f * sol)
+        var v = mezclaRapida(lejos, alumbrado, (1.1f * Math.pow(k.toDouble(), 1.7).toFloat()).coerceAtMost(1f))
+        if (sol > 0f) v = mezclaRapida(v, mezclaRapida(col, p.LUNA, 0.3f).let { Color(it.red * 0.7f, it.green * 0.74f, it.blue * 0.82f, it.alpha) }, 0.45f * sol)
         return v
     }
 
     /** La tinta del día sobre [etiqueta]: siempre oscura y legible. */
-    fun tinta(): Color = if (a.oscuro) Color(0xFF110C08) else c(p.TINTA)
+    fun tinta(): Color = if (a.oscuro) Color(0xFF110C08) else if (a.noche) Color(0xFF231B27) else p.TINTA
 }
 
 /**
  * Dónde está cada cosa para la luz: el aire del momento, el ancho del mueble, cuánta lumbre llega a cada punto ([cerca]) y qué
  * parte de ella es del brasero ([brasa]). Con [t] se saca el tono de un sitio.
  */
-internal class SitioArcontes(val a: AireArcontes, val w: Float, private val cerca: (Offset) -> Float, private val brasa: (Offset) -> Float) {
-    fun k(p: Offset): Float = cerca(p)
-    fun t(p: Offset, cuerpo: Boolean = false): TonoArcontes = a.en(p.x / w, p.y / w, cerca(p), brasa(p), cuerpo)
+internal class SitioArcontes(val a: AireArcontes, val w: Float, private val luz: (Float, Float, FloatArray) -> Unit) {
+    private val buf = FloatArray(2)
+    fun k(p: Offset): Float { luz(p.x, p.y, buf); return buf[0] }
+    fun t(p: Offset, cuerpo: Boolean = false): TonoArcontes { luz(p.x, p.y, buf); return a.en(p.x / w, p.y / w, buf[0], buf[1], cuerpo) }
+
+    // Los tonos de la última fila y de la última columna, para no volver a calcularlos en las piezas que pintan varias capas.
+    private var claveFila = ""
+    private var fila: List<TonoArcontes> = emptyList()
+    private var claveColumna = ""
+    private var columna: List<TonoArcontes> = emptyList()
+
+    private fun tonosFila(x0: Float, x1: Float, y: Float, cuerpo: Boolean): List<TonoArcontes> {
+        val clave = "$x0:$x1:$y:$cuerpo"
+        if (clave != claveFila) {
+            val n = ((x1 - x0) / (w * 0.12f)).toInt().coerceIn(3, 9)
+            fila = List(n) { i -> t(Offset(x0 + (x1 - x0) * i / (n - 1), y), cuerpo) }
+            claveFila = clave
+        }
+        return fila
+    }
+
+    private fun tonosColumna(y0: Float, y1: Float, x: Float, cuerpo: Boolean): List<TonoArcontes> {
+        val clave = "$y0:$y1:$x:$cuerpo"
+        if (clave != claveColumna) {
+            val n = ((y1 - y0) / (w * 0.1f)).toInt().coerceIn(3, 16)
+            columna = List(n) { i -> t(Offset(x, y0 + (y1 - y0) * i / (n - 1)), cuerpo) }
+            claveColumna = clave
+        }
+        return columna
+    }
 
     /** Un degradado a lo ancho con el color de cada punto (de noche); de día, el color del medio, liso. */
     fun aLoAncho(x0: Float, x1: Float, y: Float, cuerpo: Boolean = false, col: (TonoArcontes) -> Color): Brush {
         if (x1 - x0 < 2f || !a.lumbre) return SolidColor(col(t(Offset((x0 + x1) / 2, y), cuerpo)))
-        val n = ((x1 - x0) / (w * 0.07f)).toInt().coerceIn(3, 16)
-        return Brush.horizontalGradient(List(n) { i -> col(t(Offset(x0 + (x1 - x0) * i / (n - 1), y), cuerpo)) }, x0, x1)
+        return Brush.horizontalGradient(tonosFila(x0, x1, y, cuerpo).map(col), x0, x1)
     }
 
-    /** Lo mismo a lo alto, de [y0] a [y1] en la [x] dada (de día también, por la mancha del sol). */
+    /** Lo mismo a lo alto, de [y0] a [y1] en la [x] dada (de día también en lo alto, por la luz de fondo). */
     fun aLoAlto(y0: Float, y1: Float, x: Float, cuerpo: Boolean = false, col: (TonoArcontes) -> Color): Brush {
-        if (y1 - y0 < 2f) return SolidColor(col(t(Offset(x, (y0 + y1) / 2), cuerpo)))
-        val n = ((y1 - y0) / (w * 0.05f)).toInt().coerceIn(3, 40)
-        return Brush.verticalGradient(List(n) { i -> col(t(Offset(x, y0 + (y1 - y0) * i / (n - 1)), cuerpo)) }, y0, y1)
+        if (y1 - y0 < 2f || (!a.lumbre && y1 - y0 < w * 0.5f)) return SolidColor(col(t(Offset(x, (y0 + y1) / 2), cuerpo)))
+        return Brush.verticalGradient(tonosColumna(y0, y1, x, cuerpo).map(col), y0, y1)
     }
 }
 
 // ---------------------------------------------------------------- ayudantes de dibujo
+
+/**
+ * La mezcla de dos colores en RGB, sin pasar por Oklab como `mezcla` (la de Compose): para lo que se calcula miles de veces por
+ * dibujo (el tono de cada punto); en mezclas cortas apenas se distingue.
+ */
+internal fun mezclaRapida(a: Color, b: Color, f: Float): Color {
+    val k = f.coerceIn(0f, 1f)
+    return Color(a.red + (b.red - a.red) * k, a.green + (b.green - a.green) * k, a.blue + (b.blue - a.blue) * k, a.alpha + (b.alpha - a.alpha) * k)
+}
 
 /** Un polígono cerrado por sus puntos (x, y, x, y…). */
 internal fun poligonoArcontes(vararg xy: Float) = Path().apply {

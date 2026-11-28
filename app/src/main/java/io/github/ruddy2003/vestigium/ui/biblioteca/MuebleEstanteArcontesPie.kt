@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import io.github.ruddy2003.vestigium.ui.ideario.azar
-import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
@@ -49,10 +48,10 @@ internal object PieEstanteArcontes {
         // La sombra del zócalo en el suelo y la tierra más hundida junto a él.
         val t0 = s.t(Offset(w / 2, suelo))
         drawRect(Brush.verticalGradient(listOf(t0.s(0.55f), t0.s(0f)), suelo, suelo + w * 0.035f), Offset(0f, suelo), Size(w, w * 0.035f))
-        pinceladas(r, if (s.a.oscuro) P.NOCHE else mezcla(P.TIERRA, P.CALIZA_LUZ, 0.4f), 8101, 22, u, 0.12f)
-        pinceladas(r, if (s.a.oscuro) P.NOCHE else P.TIERRA_OSC, 8102, 16, u, 0.14f)
+        pinceladas(r, if (s.a.oscuro) P.NOCHE else mezclaRapida(P.TIERRA, P.CALIZA_LUZ, 0.4f), 8101, 12, u, 0.14f)
+        pinceladas(r, if (s.a.oscuro) P.NOCHE else P.TIERRA_OSC, 8102, 9, u, 0.16f)
         // Las piedrecitas: un óvalo con su luz y su sombra.
-        for (k in 0 until 14) {
+        for (k in 0 until 9) {
             val p = Offset(w * azar(8103, k), suelo + (h - suelo) * (0.15f + 0.8f * azar(8104, k)))
             val rr = (0.9f + 2.2f * azar(8105, k)) * u
             val t = s.t(p)
@@ -84,8 +83,6 @@ internal object PieEstanteArcontes {
                 while (x < w * 0.95f && j < 40) { drawImage(b, Offset(x, y), alpha = al); x += b.width; j++ }
                 y += b.height; k++
             }
-            // La luz de fondo: más viva a la izquierda (de día) o junto al brasero (de noche).
-            if (!s.a.oscuro) drawRect(Brush.horizontalGradient(listOf(t.b(0.12f), Color.Transparent, t.s(0.14f)), w * 0.12f, w * 0.93f), Offset(w * 0.12f, y0), Size(w * 0.81f, h - y0 + 2f))
         }
         // La orilla atada, del fondo.
         drawLine(s.aLoAncho(w * 0.2f, w * 0.86f, y0) { it.c(P.JUNCO_OSC, -0.1f) }, Offset(w * 0.2f, y0), Offset(w * 0.86f, y0), 2.4f * u)
@@ -228,12 +225,9 @@ internal object PieEstanteArcontes {
         }
         // El cordón de dedos apretados, a media altura.
         val cordon = top + al * 0.38f
-        var x = pie.x - an * 0.42f; var j = 0
-        while (x < pie.x + an * 0.42f && j < 40) {
-            drawCircle(t.c(P.BARRO_CLARO, if (s.a.oscuro) 0f else 0.06f), 1.7f * u, Offset(x, cordon))
-            drawCircle(t.s(0.35f), 0.8f * u, Offset(x + 0.6f * u, cordon + 0.6f * u))
-            x += 3.6f * u; j++
-        }
+        val puntos = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(0.01f, 3.6f * u))
+        drawLine(t.s(0.35f), Offset(pie.x - an * 0.42f + 0.6f * u, cordon + 0.6f * u), Offset(pie.x + an * 0.42f + 0.6f * u, cordon + 0.6f * u), 1.8f * u, StrokeCap.Round, puntos)
+        drawLine(t.c(P.BARRO_CLARO, if (s.a.oscuro) 0f else 0.06f), Offset(pie.x - an * 0.42f, cordon), Offset(pie.x + an * 0.42f, cordon), 3.4f * u, StrokeCap.Round, puntos)
         // La boca del tiro, en arco, abajo: lo que arde de noche.
         val ab = Rect(fuego.x - an * 0.17f, fuego.y - al * 0.16f, fuego.x + an * 0.17f, pie.y - 1f * u)
         val arco = Path().apply {
@@ -311,9 +305,9 @@ internal object PieEstanteArcontes {
             cubicTo(pie.x + an * 0.2f, pie.y - al * 1.1f, pie.x + an * 0.5f, pie.y - al * 0.8f, pie.x + an * 0.6f, pie.y - al * 0.5f)
             lineTo(pie.x + an * 0.6f, pie.y); close()
         }
-        val cuerda = mezcla(P.CORDEL, P.JUNCO_OSC, 0.35f)
+        val cuerda = mezclaRapida(P.CORDEL, P.JUNCO_OSC, 0.35f)
         // Lo de dentro del montón, en sombra, y la malla encima.
-        drawPath(bulto, s.aLoAncho(pie.x - an * 0.5f, pie.x + an * 0.6f, pie.y - al * 0.5f) { it.c(mezcla(P.TIERRA_OSC, cuerda, 0.3f), -0.2f) })
+        drawPath(bulto, s.aLoAncho(pie.x - an * 0.5f, pie.x + an * 0.6f, pie.y - al * 0.5f) { it.c(mezclaRapida(P.TIERRA_OSC, cuerda, 0.3f), -0.2f) })
         clipPath(bulto) {
             // Los pliegues del montón: bandas de luz y sombra que siguen la curva.
             for (k in 0 until 5) {

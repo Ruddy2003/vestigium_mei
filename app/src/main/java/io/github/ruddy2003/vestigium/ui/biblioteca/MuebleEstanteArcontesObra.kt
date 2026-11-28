@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.contornoIrregular
-import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
 import kotlin.math.ceil
@@ -206,7 +205,7 @@ internal object ObraEstanteArcontes {
         drawRect(t.c(P.CARDENILLO).copy(alpha = 0.45f), Offset(r.left, r.bottom - r.height * 0.22f), Size(r.width * 0.45f, r.height * 0.22f))
         drawRect(t.b(0.5f), r.topLeft, Size(r.width, 0.8f * u))
         val m = minOf(r.width, r.height) * 0.2f
-        listOf(Offset(r.left + m, r.top + m), Offset(r.right - m, r.top + m), Offset(r.left + m, r.bottom - m), Offset(r.right - m, r.bottom - m)).forEach {
+        listOf(Offset(r.left + m, r.top + m), Offset(r.right - m, r.bottom - m)).forEach {
             clavoArcontes(it, minOf(1.3f * u, m * 0.7f), t, P.BRONCE_OSC)
         }
     }
@@ -283,9 +282,9 @@ internal object ObraEstanteArcontes {
         drawRect(s.aLoAncho(f.left, f.right, r.center.y, true) { it.c(P.OLIVO) }, f.topLeft, f.size)
         veta(f, false, 0.5f, 97f * k + 13f)
         val bocel = r.height * 0.28f
-        drawRect(s.aLoAncho(f.left, f.right, r.top, true) { it.c(P.OLIVO_LUZ, 0.08f) }, Offset(f.left, r.top), Size(f.width, bocel))
+        drawRect(s.aLoAncho(f.left, f.right, r.center.y, true) { it.c(P.OLIVO_LUZ, 0.08f) }, Offset(f.left, r.top), Size(f.width, bocel))
         drawRect(tc.s(0.3f), Offset(f.left, r.top + bocel), Size(f.width, 1.2f * u))
-        drawRect(s.aLoAncho(f.left, f.right, r.top, true) { it.b(0.6f) }, Offset(f.left, r.top + bocel * 0.25f), Size(f.width, 0.9f * u))
+        drawRect(s.aLoAncho(f.left, f.right, r.center.y, true) { it.b(0.6f) }, Offset(f.left, r.top + bocel * 0.25f), Size(f.width, 0.9f * u))
         drawRect(tc.s(0.38f), Offset(f.left, r.bottom - 2f * u), Size(f.width, 2f * u))
         // Gastado: rozones claros en el canto, donde se apoyan las manos.
         for (j in 0 until 4) {
@@ -308,7 +307,7 @@ internal object ObraEstanteArcontes {
         val r = p.r
         val t = s.t(r.center, true)
         val tam = 8.6f
-        val ancho = (capaEn(medidor, p.texto, Rect(0f, 0f, 4000f, r.height), P.LETRA, Color.Black, tam, peso = FontWeight.Bold)?.size?.width?.toFloat() ?: r.width) + 20f * u
+        val ancho = (capaEn(medidor, p.texto, Rect(0f, 0f, 4000f, r.height + 4f * u), P.LETRA, t.tinta(), tam, peso = FontWeight.Bold)?.size?.width?.toFloat() ?: r.width) + 26f * u
         val an = ancho.coerceIn(r.width * 0.5f, r.width * 1.5f)
         val tira = Rect(r.center.x - an / 2, r.top - 1f * u, r.center.x + an / 2, r.bottom + 1f * u)
         val forma = contornoIrregular(tira, 83 + p.texto.length, 44, 0.022f)
@@ -332,7 +331,7 @@ internal object ObraEstanteArcontes {
                 drawLine(t.b(0.4f), Offset(xx - 0.3f * u, r.top - 2f * u), Offset(xx + 0.2f * u, r.bottom + 2f * u), 0.4f * u)
             }
         }
-        textoEn(medidor, p.texto, Rect(tira.left + 10f * u, tira.top, tira.right - 10f * u, tira.bottom), P.LETRA, t.tinta(), tam, peso = FontWeight.Bold, minimo = 5f)
+        textoEn(medidor, p.texto, Rect(tira.left + 10f * u, tira.top - 2f * u, tira.right - 10f * u, tira.bottom + 2f * u), P.LETRA, t.tinta(), tam, peso = FontWeight.Bold, minimo = 5f)
     }
 
     // ---------------------------------------------------------------- los costados
@@ -344,10 +343,13 @@ internal object ObraEstanteArcontes {
     fun DrawScope.costado(r: Rect, izquierda: Boolean, d: DisposicionEstante, s: SitioArcontes) {
         val w = size.width; val u = density
         val roca = w * MuebleEstanteArcontes.ROCA_LADO
-        // La roca de fuera (se dibuja una vez, con el costado de la izquierda, para los dos lados).
-        if (izquierda) with(RocaEstanteArcontes) { bordes(s, r.top - 2f, r.bottom + 2f) }
+        // La roca de fuera: debajo, todo el lado del color de la roca honda (así la junta con el costado no deja asomar nada) y,
+        // encima, el borde de la cueva.
         val x0 = if (izquierda) roca else r.left
         val x1 = if (izquierda) r.right else w - roca
+        val lado = if (izquierda) Rect(0f, r.top, x1, r.bottom) else Rect(x0, r.top, w, r.bottom)
+        drawRect(s.aLoAlto(lado.top, lado.bottom, lado.center.x) { it.c(mezclaRapida(P.CALIZA_SOMBRA, P.ROCA, 0.7f), -0.2f) }, lado.topLeft, lado.size)
+        with(RocaEstanteArcontes) { bordes(s, r.top - 2f, r.bottom + 2f, listOf(!izquierda)) }
         val f = Rect(x0, r.top - 1f, x1, r.bottom + 1f)
         // La sombra que el costado de la derecha echa en la roca de fuera.
         if (!izquierda) drawRect(s.t(Offset(x1, r.center.y)).s(0.3f), Offset(x1, r.top), Size(minOf(roca, 4f * u), r.height))
@@ -355,12 +357,12 @@ internal object ObraEstanteArcontes {
         veta(f, true, 0.5f, if (izquierda) 23f else 151f)
         // La ranura a lo largo: el surco en sombra y su labio en luz.
         val xr = f.left + f.width * (if (izquierda) 0.36f else 0.64f)
-        drawRect(s.aLoAlto(f.top, f.bottom, xr, true) { it.s(0.4f) }, Offset(xr - 1.1f * u, f.top), Size(2.2f * u, f.height))
-        drawRect(s.aLoAlto(f.top, f.bottom, xr, true) { it.b(0.4f) }, Offset(xr + 1.1f * u, f.top), Size(0.8f * u, f.height))
+        drawRect(s.aLoAlto(f.top, f.bottom, f.center.x, true) { it.s(0.4f) }, Offset(xr - 1.1f * u, f.top), Size(2.2f * u, f.height))
+        drawRect(s.aLoAlto(f.top, f.bottom, f.center.x, true) { it.b(0.4f) }, Offset(xr + 1.1f * u, f.top), Size(0.8f * u, f.height))
         // Los cantos: el que mira a la boca (a la izquierda), en luz; el otro, en sombra.
-        drawRect(s.aLoAlto(f.top, f.bottom, f.left, true) { it.b(0.55f) }, Offset(f.left, f.top), Size(1.3f * u, f.height))
-        drawRect(s.aLoAlto(f.top, f.bottom, f.right, true) { it.s(0.4f) }, Offset(f.right - 1.6f * u, f.top), Size(1.6f * u, f.height))
-        if (s.a.oscuro) drawRect(s.aLoAlto(f.top, f.bottom, if (izquierda) f.right else f.left, true) { it.filo(0.4f) },
+        drawRect(s.aLoAlto(f.top, f.bottom, f.center.x, true) { it.b(0.55f) }, Offset(f.left, f.top), Size(1.3f * u, f.height))
+        drawRect(s.aLoAlto(f.top, f.bottom, f.center.x, true) { it.s(0.4f) }, Offset(f.right - 1.6f * u, f.top), Size(1.6f * u, f.height))
+        if (s.a.oscuro) drawRect(s.aLoAlto(f.top, f.bottom, f.center.x, true) { it.filo(0.4f) },
             Offset(if (izquierda) f.right - 1.4f * u else f.left, f.top), Size(1.4f * u, f.height))
         // En cada tabla: la chapa de bronce clavada sobre la junta y las cabezas de las dos clavijas.
         d.tablas.forEach { tb ->
@@ -411,18 +413,18 @@ internal object ObraEstanteArcontes {
         val w = size.width; val u = density
         val t = s.t(b.center)
         val margen = minOf(w * 0.01f, b.height * 0.2f)
-        val tono = mezcla(P.CALIZA, P.CALIZA_SOMBRA, 0.12f + 0.22f * azar(7811, semilla))
+        val tono = mezclaRapida(P.CALIZA, P.CALIZA_SOMBRA, 0.12f + 0.22f * azar(7811, semilla))
         drawRect(s.aLoAncho(b.left, b.right, b.center.y) { it.c(tono, 0.07f) }, b.topLeft, Size(b.width + 1f, b.height + 1f))
         val al = Rect(b.left + margen, b.top + margen * 0.9f, b.right - margen, b.bottom - margen * 1.1f)
         if (al.width > 4f && al.height > 4f) {
-            val boss = contornoIrregular(al, 7816 + semilla, 30, 0.045f)
-            translate(1.4f * u, 1.6f * u) { drawPath(boss, t.s(0.35f)) }
-            drawPath(boss, s.aLoAncho(al.left, al.right, al.center.y) { it.c(tono, -0.02f) })
+            val radio = androidx.compose.ui.geometry.CornerRadius(margen * (0.6f + 0.6f * azar(7816, semilla)))
+            drawRoundRect(t.s(0.35f), al.topLeft + Offset(1.4f * u, 1.6f * u), al.size, radio)
+            drawRoundRect(t.c(tono, -0.02f), al.topLeft, al.size, radio)
             clipRect(al.left + 1f * u, al.top + 1f * u, al.right - 1f * u, al.bottom - 1f * u) {
                 with(RocaEstanteArcontes) { textura(al, if (s.a.oscuro) 0.7f else 1f, semilla * 13f) }
                 // El picado de la almohadilla, más bruto que el margen: golpes sueltos.
                 val golpes = Path()
-                for (j in 0 until (al.width * al.height / (u * u * 30f)).toInt().coerceIn(6, 80)) {
+                for (j in 0 until (al.width * al.height / (u * u * 90f)).toInt().coerceIn(4, 26)) {
                     val p = Offset(al.left + al.width * azar(7812 + semilla, j), al.top + al.height * azar(7813 + semilla, j))
                     val a = 0.6f + 1.6f * azar(7817 + semilla, j)
                     golpes.moveTo(p.x, p.y); golpes.lineTo(p.x + kotlin.math.cos(a) * 2f * u, p.y + kotlin.math.sin(a) * 2f * u)
@@ -430,7 +432,7 @@ internal object ObraEstanteArcontes {
                 drawPath(golpes, t.s(0.22f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
                 drawRect(t.s(0.18f), Offset(al.left, al.bottom - al.height * 0.3f), Size(al.width, al.height * 0.3f))
             }
-            translate(-0.6f * u, -0.6f * u) { drawPath(boss, t.b(0.35f), style = Stroke(0.8f * u)) }
+            drawRoundRect(t.b(0.35f), al.topLeft - Offset(0.6f * u, 0.6f * u), al.size, radio, style = Stroke(0.8f * u))
         }
         // La junta: honda, de grueso desparejo.
         drawRect(t.s(0.5f), Offset(b.left - 0.3f * u, b.top), Size(1.2f * u + 0.6f * u * azar(7818, semilla), b.height))
