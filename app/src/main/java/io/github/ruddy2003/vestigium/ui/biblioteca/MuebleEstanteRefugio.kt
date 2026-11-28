@@ -424,19 +424,7 @@ internal object MuebleEstanteRefugio {
             with(CoronaEstanteRefugio) { delante(g) }
             // Al anochecer, lo mismo otra vez dentro del paño de las luminarias bajadas: la pared con el paño, y lo que está delante
             // (lo de encima y la cornisa) con el paño corrido hacia la luz, así el borde se quiebra al cambiar de plano.
-            if (a.tarde) {
-                val p0 = panoRefugio(w, 0f, 0f)
-                val p1 = panoRefugio(w, -0.03f, -0.012f)
-                // La pared dentro del paño (tapa lo que había debajo: así nada translúcido se pinta dos veces).
-                g.pano = 1f
-                clipPath(p0) { with(ParedEstanteRefugio) { paredArriba(g) } }
-                // Lo de delante, otra vez: sin paño en la franja del borde (donde la pared ya tiene paño y ello no) y con paño dentro.
-                g.pano = 0f
-                clipPath(p0) { clipPath(p1, androidx.compose.ui.graphics.ClipOp.Difference) { delanteDeLaPared(g) } }
-                g.pano = 1f
-                clipPath(p0) { clipPath(p1) { delanteDeLaPared(g) } }
-                g.pano = null
-            }
+            if (a.tarde) pintarPano(g)
             granoMueble(Rect(0f, 0f, w, ch), oscuro)
         }
         if (n == 0) return
@@ -463,11 +451,44 @@ internal object MuebleEstanteRefugio {
         granoMueble(Rect(0f, fondo, w, h), oscuro)
     }
 
-    /** Lo que está delante de la pared en la corona: el cable, la cornisa y lo que pisa el tablero. */
-    private fun DrawScope.delanteDeLaPared(g: MarcoRefugio) {
-        with(CoronaEstanteRefugio) { detras(g) }
-        with(MuebleRefugio) { cornisa(g) }
-        with(CoronaEstanteRefugio) { delante(g) }
+    /** Cuántas bandas tiene la penumbra del paño. */
+    private const val BANDAS = 6
+
+    /**
+     * El paño de las luminarias bajadas (los Sueños en claro), pintado encima de la corona ya pintada sin él: la pared otra vez
+     * dentro del paño, con su núcleo entero y la penumbra en bandas (cada una con algo menos de paño), que se ensancha hacia abajo,
+     * lejos de la luminaria; y lo de delante otra vez donde la pared se repintó, con el paño corrido hacia la luz según lo lejos que
+     * esté de la pared (el cable apenas, lo que pisa el tablero más y la cornisa, que vuela, más aún), así el borde no sigue en
+     * línea recta. Cada zona se pinta una sola vez: nada translúcido queda pintado dos veces.
+     */
+    private fun DrawScope.pintarPano(g: MarcoRefugio) {
+        val w = g.w
+        fun t(i: Int) = -0.5f + i / BANDAS.toFloat()
+        fun valor(i: Int) = if (i == 0) 1f else 1f - (i - 0.5f) / BANDAS
+        val fuera = panoRefugio(w, 0f, 0f, t(BANDAS))
+        fun DrawScope.porBandas(dx: Float, dy: Float, pieza: DrawScope.() -> Unit) {
+            for (i in 0..BANDAS) {
+                g.pano = valor(i)
+                val dentro = panoRefugio(w, dx, dy, t(i))
+                if (i == 0) clipPath(dentro) { pieza() }
+                else clipPath(dentro) { clipPath(panoRefugio(w, dx, dy, t(i - 1)), androidx.compose.ui.graphics.ClipOp.Difference) { pieza() } }
+            }
+        }
+        // La pared, con su paño y su penumbra.
+        porBandas(0f, 0f) { with(ParedEstanteRefugio) { paredArriba(g) } }
+        // Lo de delante, solo donde la pared se repintó: fuera de su paño corrido, sin paño; dentro, por bandas.
+        listOf<Triple<Float, Float, DrawScope.() -> Unit>>(
+            Triple(-0.01f, -0.004f) { with(CoronaEstanteRefugio) { detras(g) } },
+            Triple(-0.045f, -0.018f) { with(MuebleRefugio) { cornisa(g) } },
+            Triple(-0.026f, -0.01f) { with(CoronaEstanteRefugio) { delante(g) } },
+        ).forEach { (dx, dy, pieza) ->
+            clipPath(fuera) {
+                g.pano = 0f
+                clipPath(panoRefugio(w, dx, dy, t(BANDAS)), androidx.compose.ui.graphics.ClipOp.Difference) { pieza() }
+                porBandas(dx, dy, pieza)
+            }
+        }
+        g.pano = null
     }
 
     fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) = volumenRefugio(v, medidor, oscuro)
@@ -512,9 +533,11 @@ internal class MarcoRefugio(val w: Float, val h: Float, val ch: Float, val x0: F
  * El paño de luz de las luminarias bajadas (los Sueños en claro): entra de arriba a la izquierda, fuera del cuadro, y cae hacia la
  * derecha y abajo, cortado por la campana de la luminaria en un borde inclinado. En píxeles, corrido [dx] y [dy] anchos.
  */
-internal fun panoRefugio(w: Float, dx: Float, dy: Float): androidx.compose.ui.graphics.Path = androidx.compose.ui.graphics.Path().apply {
+internal fun panoRefugio(w: Float, dx: Float, dy: Float, t: Float = 0f): androidx.compose.ui.graphics.Path = androidx.compose.ui.graphics.Path().apply {
     fun p(x: Float, y: Float) = Offset((x + dx) * w, (y + dy) * w)
-    val a = p(-0.1f, 0.035f); val b = p(0.43f, 0.035f); val c = p(0.74f, 0.62f); val d = p(-0.1f, 0.62f)
+    // El borde inclinado, movido [t] (de -0.5, el núcleo, a 0.5, lo último de la penumbra): estrecho arriba, cerca de la
+    // luminaria, y ancho abajo.
+    val a = p(-0.1f, 0.035f); val b = p(0.43f + 0.012f * t, 0.035f); val c = p(0.74f + 0.042f * t, 0.62f); val d = p(-0.1f, 0.62f)
     moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c.x, c.y); lineTo(d.x, d.y); close()
 }
 
