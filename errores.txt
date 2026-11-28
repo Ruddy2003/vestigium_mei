@@ -1,0 +1,5 @@
+e: org.jetbrains.kotlin.backend.common.BackendException: Backend Internal error: Exception during IR lowering
+Caused by: org.jetbrains.kotlin.codegen.CompilationException: Back-end (JVM) Internal error: Couldn't inline method call: CALL 'public final fun rotate-Rg1IO4c (degrees: kotlin.Float, pivot: androidx.compose.ui.geometry.Offset, block: @[ExtensionFunctionType] kotlin.Function1<androidx.compose.ui.graphics.drawscope.DrawScope, kotlin.Unit>): kotlin.Unit [inline] declared in androidx.compose.ui.graphics.drawscope.DrawScopeKt' type=kotlin.Unit origin=null
+> Task :app:compileReleaseKotlin FAILED
+* What went wrong:
+BUILD FAILED in 22m 4s
