@@ -1,0 +1,529 @@
+package io.github.ruddy2003.vestigium.ui.biblioteca
+
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.translate
+import io.github.ruddy2003.vestigium.ui.ideario.azar
+import io.github.ruddy2003.vestigium.ui.ideario.mezcla
+
+/**
+ * Lo que acompaña en los huecos libres de las repisas de Orden, en grupos de dos o tres cosas solapadas que cambian de un hueco
+ * a otro: el estuche del micrómetro abierto (el del Ideario, aquí en la repisa) con el cartabón de acero apoyado detrás; los
+ * rollos de plano atados, tumbados en pirámide, con otro de pie y una pesa; la arqueta blindada de las reliquias con el candado
+ * grande en su aldabón, su cadena y su llave; la caja de válvulas de repuesto con la bobina de hilo de cobre; y, donde arde la vela de media altura, la palmatoria con su vela, tres manuales tumbados y la
+ * lupa apoyada.
+ */
+internal object HuecosEstanteOrden {
+    private val P = PaletaOrden
+    private val M = MuebleEstanteOrden
+
+    /** El color de [c] en [p] con la luz del momento. */
+    private fun en(c: Color, f: Float, p: Offset, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float): Color =
+        if (a.oscuro) { val b = a.luz(c, cerca(p), frio(p)); if (f < 0f) mezcla(b, P.NOCHE, -f * 0.45f) else b } else a.dia(c, f, cerca(p))
+
+    /**
+     * Llena el hueco de la repisa [r] desde [ocupado] hasta [derecha] con grupos; [n] es cuántos se pusieron antes (los cuatro
+     * se turnan por orden, así no se repiten de un hueco al siguiente) y [xVela], dónde arde la vela de este hueco (o -1). Si el
+     * que toca no cabe, va el siguiente que quepa. Devuelve cuántos grupos puso (la vela no cuenta).
+     */
+    fun DrawScope.hueco(n: Int, r: Rect, ocupado: Float, derecha: Float, xVela: Float, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float): Int {
+        val w = size.width
+        val u = density
+        var x = ocupado + w * 0.02f
+        val fin = derecha - 8f * u
+        if (xVela >= 0f && fin - x >= w * 0.16f) {
+            vela(x, r, a, cerca, frio)
+            x += w * 0.2f
+        }
+        fun ancho(clase: Int) = when (clase) { 0 -> w * 0.2f; 1 -> w * 0.2f; 2 -> w * 0.24f; else -> w * 0.23f }
+        var puestos = 0
+        while (puestos < 3) {
+            var clase = -1
+            for (t in 0 until 4) {
+                val c = Math.floorMod(n + puestos + t, 4)
+                if (fin - x >= ancho(c)) { clase = c; break }
+            }
+            if (clase < 0) break
+            when (clase) {
+                0 -> estuche(x, r, a, cerca, frio)
+                1 -> rollos(x, r, a, cerca, frio, n + puestos)
+                2 -> candado(x, r, a, cerca, frio)
+                else -> valvulas(x, r, a, cerca, frio)
+            }
+            x += ancho(clase) + w * 0.025f
+            puestos++
+        }
+        return puestos
+    }
+
+    // ---------------------------------------------------------------- el estuche del micrómetro y el cartabón
+
+    private fun DrawScope.estuche(x0: Float, r: Rect, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
+        val u = density
+        val w = size.width
+        val hh = r.height
+        val y = r.bottom - 2.5f * u
+        // El cartabón de latón apoyado contra el muro, detrás: un triángulo con su calado.
+        val c0 = Offset(x0 + w * 0.09f, y)
+        rotate(8f, c0) {
+            val t = poligonoOrden(x0 + w * 0.06f, y, x0 + w * 0.185f, y, x0 + w * 0.06f, y - hh * 0.86f)
+            val hueco = poligonoOrden(x0 + w * 0.078f, y - hh * 0.1f, x0 + w * 0.142f, y - hh * 0.1f, x0 + w * 0.078f, y - hh * 0.55f)
+            translate(w * 0.012f, w * 0.004f) { drawPath(t, a.sombra(0.3f)) }
+            val lat = en(P.ACERO_CLARO, 0f, Offset(x0 + w * 0.1f, y - hh * 0.4f), a, cerca, frio)
+            drawPath(t, lat)
+            drawPath(t, en(P.LATON, 0f, Offset(x0 + w * 0.1f, y - hh * 0.4f), a, cerca, frio), style = Stroke(1.6f * u))
+            drawPath(hueco, en(P.PARED, -0.45f, Offset(x0 + w * 0.1f, y - hh * 0.3f), a, cerca, frio))
+            drawPath(hueco, a.sombra(0.4f), style = Stroke(1f * u))
+            drawLine(a.destello(0.6f, cerca(c0), frio(c0)), Offset(x0 + w * 0.06f, y), Offset(x0 + w * 0.06f, y - hh * 0.86f), 1.2f * u)
+            drawLine(a.sombra(0.4f), Offset(x0 + w * 0.185f, y), Offset(x0 + w * 0.06f, y - hh * 0.86f), 1f * u)
+            // Las marcas de la graduación, sin cifras.
+            var yy = y - hh * 0.06f
+            var q = 0
+            while (yy > y - hh * 0.8f && q < 40) {
+                drawLine(en(P.LATON_HONDO, 0f, c0, a, cerca, frio), Offset(x0 + w * 0.06f, yy), Offset(x0 + w * (if (q % 4 == 0) 0.07f else 0.065f), yy), 0.6f * u)
+                yy -= hh * 0.035f; q++
+            }
+        }
+        // El estuche: la caja de cuero con su cierre y la tapa abierta forrada de fieltro carmesí, con el micrómetro en su hueco.
+        val caja = Rect(x0, y - hh * 0.2f, x0 + w * 0.15f, y)
+        val tapa = Rect(caja.left + w * 0.004f, caja.top - hh * 0.4f, caja.right - w * 0.004f, caja.top)
+        val k = cerca(tapa.center); val fr = frio(tapa.center)
+        contactoOrden(Offset(caja.center.x, y), caja.width * 1.1f, 4f * u, a, 0.45f)
+        translate(w * 0.008f, w * 0.004f) { drawPath(poligonoOrden(tapa.left, tapa.bottom, tapa.right, tapa.bottom, tapa.right - w * 0.006f, tapa.top, tapa.left + w * 0.006f, tapa.top), a.sombra(0.25f)) }
+        drawPath(poligonoOrden(tapa.left, tapa.bottom, tapa.right, tapa.bottom, tapa.right - w * 0.006f, tapa.top, tapa.left + w * 0.006f, tapa.top), en(P.CUERO, 0f, tapa.center, a, cerca, frio))
+        val fieltro = Rect(tapa.left + w * 0.007f, tapa.top + hh * 0.03f, tapa.right - w * 0.007f, tapa.bottom - hh * 0.02f)
+        drawRect(en(mezcla(P.GRANA, P.GRANA_HONDA, 0.35f), 0f, fieltro.center, a, cerca, frio), fieltro.topLeft, fieltro.size)
+        drawRect(a.sombra(0.3f), fieltro.topLeft, Size(fieltro.width, 2.4f * u))
+        drawRect(a.sombra(0.25f), fieltro.topLeft, Size(2.4f * u, fieltro.height))
+        drawLine(a.destello(0.35f, k, fr), Offset(tapa.left + w * 0.006f, tapa.top + 0.5f * u), Offset(tapa.right - w * 0.006f, tapa.top + 0.5f * u), 0.9f * u)
+        // El micrómetro: el arco, el yunque, el husillo, el tambor graduado y el trinquete.
+        val my = fieltro.top + fieltro.height * 0.45f
+        val ax = fieltro.left + fieltro.width * 0.1f
+        val s = fieltro.width
+        val arco = Path().apply {
+            moveTo(ax, my - s * 0.04f); lineTo(ax + s * 0.07f, my - s * 0.04f)
+            cubicTo(ax + s * 0.07f, my + s * 0.16f, ax + s * 0.36f, my + s * 0.18f, ax + s * 0.38f, my - s * 0.04f)
+            lineTo(ax + s * 0.45f, my - s * 0.04f)
+            cubicTo(ax + s * 0.44f, my + s * 0.28f, ax + s * 0.01f, my + s * 0.28f, ax, my - s * 0.04f)
+            close()
+        }
+        translate(1f * u, 1.2f * u) { drawPath(arco, a.sombra(0.45f)) }
+        drawPath(arco, en(mezcla(P.ACERO_HONDO, P.CUERO, 0.2f), 0f, fieltro.center, a, cerca, frio))
+        drawRect(en(P.ACERO_CLARO, 0f, fieltro.center, a, cerca, frio), Offset(ax, my - s * 0.08f), Size(s * 0.07f, s * 0.06f))
+        drawRect(en(P.ACERO_CLARO, 0f, fieltro.center, a, cerca, frio), Offset(ax + s * 0.14f, my - s * 0.065f), Size(s * 0.31f, s * 0.04f))
+        val tambor = Rect(ax + s * 0.45f, my - s * 0.09f, ax + s * 0.62f, my + s * 0.005f)
+        redondoOrden(Rect(tambor.left, tambor.top, tambor.right, tambor.bottom), en(P.ACERO_CLARO, 0f, fieltro.center, a, cerca, frio), en(P.LUZ_FRIA, 0f, fieltro.center, a, cerca, frio), en(P.ACERO_HONDO, 0f, fieltro.center, a, cerca, frio), -1f, 0.8f)
+        for (q in 0 until 5) drawLine(en(P.ACERO_HONDO, 0f, fieltro.center, a, cerca, frio), Offset(tambor.left + s * 0.03f * (q + 0.5f), tambor.center.y), Offset(tambor.left + s * 0.03f * (q + 0.5f), tambor.top + 0.5f * u), 0.5f * u)
+        val dedal = Rect(tambor.right, my - s * 0.11f, tambor.right + s * 0.14f, my + s * 0.025f)
+        redondoOrden(dedal, en(P.ACERO_MEDIO, 0f, fieltro.center, a, cerca, frio), en(P.ACERO_CLARO, 0f, fieltro.center, a, cerca, frio), en(P.ACERO_HONDO, 0f, fieltro.center, a, cerca, frio), -1f)
+        for (q in 0 until 4) drawLine(a.sombra(0.4f), Offset(dedal.left + dedal.width * (q + 0.6f) / 4.4f, dedal.top), Offset(dedal.left + dedal.width * (q + 0.6f) / 4.4f, dedal.bottom), 0.5f * u)
+        // La caja, con su canto de luz, su cierre de latón y su desgaste.
+        drawRect(en(P.CUERO, 0f, caja.center, a, cerca, frio), caja.topLeft, caja.size)
+        drawRect(en(mezcla(P.CUERO, P.LUZ_FRIA, 0.12f), 0.05f, caja.center, a, cerca, frio), caja.topLeft, Size(caja.width, caja.height * 0.16f))
+        drawRect(a.sombra(0.4f), Offset(caja.right - caja.width * 0.08f, caja.top), Size(caja.width * 0.08f, caja.height))
+        drawRect(a.sombra(0.35f), Offset(caja.left, caja.bottom - 1.4f * u), Size(caja.width, 1.4f * u))
+        val cierre = Rect(caja.center.x - w * 0.008f, caja.top + caja.height * 0.2f, caja.center.x + w * 0.008f, caja.top + caja.height * 0.56f)
+        drawRect(en(P.LATON, 0f, cierre.center, a, cerca, frio), cierre.topLeft, cierre.size)
+        drawRect(a.destello(0.6f, k, fr), cierre.topLeft, Size(cierre.width, 0.9f * u))
+        drawRect(a.sombra(0.4f), Offset(cierre.left, cierre.bottom - 1f * u), Size(cierre.width, 1f * u))
+        listOf(caja.left, caja.right - w * 0.014f).forEach { xc ->
+            drawRect(en(P.LATON, 0f, caja.center, a, cerca, frio), Offset(xc, caja.bottom - w * 0.014f), Size(w * 0.014f, w * 0.014f))
+        }
+        for (q in 0 until 4) {
+            val xx = caja.left + caja.width * azar(771, q); val yy = caja.top + caja.height * (0.3f + 0.6f * azar(772, q))
+            drawLine(a.destello(0.25f, k, fr), Offset(xx, yy), Offset(xx + w * 0.012f, yy + 0.3f * u), 0.6f * u)
+        }
+    }
+
+    // ---------------------------------------------------------------- los rollos atados
+
+    /** Un rollo de plano tumbado a lo largo, de [r]: el cuerpo redondo de arriba abajo, la boca con su espiral y su atadura. */
+    private fun DrawScope.rolloTumbado(r: Rect, papel: Color, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
+        val u = density
+        val c = en(papel, 0f, r.center, a, cerca, frio)
+        val luz = if (a.oscuro) mezcla(c, P.LLAMA, 0.2f * cerca(r.center)) else mezcla(c, P.LUZ_FRIA, 0.35f)
+        // Por franjas de arriba abajo: la luz arriba, la sombra abajo.
+        val bandas = floatArrayOf(0f, 0.15f, 0.35f, 0.6f, 0.82f, 1f)
+        val tonos = floatArrayOf(0.4f, 0.12f, -0.1f, -0.35f, -0.6f)
+        for (i in 0 until 5) {
+            val m = tonos[i]
+            drawRect(if (m >= 0f) mezcla(c, luz, m) else mezcla(c, mezcla(c, P.NOCHE, 0.7f), -m), Offset(r.left, r.top + r.height * bandas[i]), Size(r.width, r.height * (bandas[i + 1] - bandas[i]) + 1f))
+        }
+        drawLine(a.luz(P.TRAZO, cerca(r.center), frio(r.center)).copy(alpha = 0.35f), Offset(r.left + r.width * 0.15f, r.top + r.height * 0.42f), Offset(r.right - r.width * 0.2f, r.top + r.height * 0.42f), 0.6f * u)
+        // La atadura.
+        val ax = r.left + r.width * 0.62f
+        drawRect(en(P.PAPEL, 0f, r.center, a, cerca, frio), Offset(ax, r.top), Size(1.8f * u, r.height))
+        drawRect(a.sombra(0.35f), Offset(ax + 1.8f * u, r.top), Size(1f * u, r.height))
+        // La boca a la izquierda, con su espiral.
+        val bo = Rect(r.left - r.height * 0.18f, r.top, r.left + r.height * 0.18f, r.bottom)
+        drawOval(en(mezcla(papel, P.TRAZO, 0.45f), 0.05f, r.center, a, cerca, frio), bo.topLeft, bo.size)
+        for (q in 1..3) {
+            val f = 1f - q * 0.24f
+            drawOval(c.copy(alpha = 0.85f), Offset(bo.center.x - bo.width / 2 * f, bo.center.y - bo.height / 2 * f), Size(bo.width * f, bo.height * f), style = Stroke(0.7f * u))
+        }
+        drawOval(a.sombra(0.35f), bo.topLeft, bo.size, style = Stroke(0.7f * u))
+    }
+
+    private fun DrawScope.rollos(x0: Float, r: Rect, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float, n: Int) {
+        val u = density
+        val w = size.width
+        val hh = r.height
+        val y = r.bottom - 2.5f * u
+        val d = hh * 0.2f
+        // Uno de pie, apoyado contra el muro, detrás.
+        val pie = Offset(x0 + w * 0.165f, y)
+        rotate(-9f, pie) {
+            val cuerpo = Rect(pie.x - d * 0.42f, y - hh * 0.84f, pie.x + d * 0.42f, y)
+            translate(w * 0.012f, w * 0.004f) { drawRect(a.sombra(0.28f), cuerpo.topLeft, cuerpo.size) }
+            val c = en(mezcla(P.AZUL_PLANO, P.TRAZO, 0.06f), 0f, cuerpo.center, a, cerca, frio)
+            redondoOrden(cuerpo, c, if (a.oscuro) mezcla(c, P.LLAMA, 0.2f * cerca(cuerpo.center)) else mezcla(c, P.LUZ_FRIA, 0.35f), mezcla(c, P.NOCHE, 0.55f), -1f)
+            listOf(0.2f, 0.75f).forEach { f -> drawRect(en(P.PAPEL, 0f, cuerpo.center, a, cerca, frio), Offset(cuerpo.left, cuerpo.top + cuerpo.height * f), Size(cuerpo.width, 1.6f * u)) }
+            val bo = Rect(cuerpo.left, cuerpo.top - d * 0.15f, cuerpo.right, cuerpo.top + d * 0.15f)
+            drawOval(en(mezcla(P.AZUL_PLANO, P.TRAZO, 0.45f), 0f, cuerpo.center, a, cerca, frio), bo.topLeft, bo.size)
+            drawOval(c, Offset(bo.center.x - bo.width * 0.3f, bo.center.y - bo.height * 0.3f), Size(bo.width * 0.6f, bo.height * 0.6f), style = Stroke(0.7f * u))
+        }
+        // La pirámide de tres rollos tumbados, atados.
+        contactoOrden(Offset(x0 + w * 0.08f, y), w * 0.16f, 4.5f * u, a, 0.5f)
+        val papelA = P.AZUL_PLANO; val papelB = mezcla(P.AZUL_PLANO, P.TRAZO, 0.12f); val papelC = if (n % 2 == 0) P.PAPEL else mezcla(P.AZUL_PLANO, P.NOCHE, 0.15f)
+        rolloTumbado(Rect(x0 + w * 0.012f, y - d, x0 + w * 0.08f, y), papelA, a, cerca, frio)
+        rolloTumbado(Rect(x0 + w * 0.012f + d * 0.4f + w * 0.068f - d * 0.36f, y - d, x0 + w * 0.15f, y), papelB, a, cerca, frio)
+        rolloTumbado(Rect(x0 + w * 0.04f, y - d * 1.86f, x0 + w * 0.125f, y - d * 0.86f), papelC, a, cerca, frio)
+        // El cordón que los ata juntos.
+        drawLine(en(P.PAPEL, 0f, Offset(x0, y), a, cerca, frio), Offset(x0 + w * 0.1f, y - d * 1.85f), Offset(x0 + w * 0.1f, y), 1.6f * u)
+        // La pesa de latón delante.
+        val px = x0 + w * 0.175f
+        contactoOrden(Offset(px, y), w * 0.04f, 3.5f * u, a, 0.45f)
+        val cuerpo = Rect(px - w * 0.014f, y - hh * 0.13f, px + w * 0.014f, y)
+        redondoOrden(cuerpo, en(P.LATON, 0f, cuerpo.center, a, cerca, frio), en(P.LATON_BRILLO, 0f, cuerpo.center, a, cerca, frio), en(P.LATON_HONDO, 0f, cuerpo.center, a, cerca, frio), -1f)
+        drawOval(en(P.LATON_BRILLO, 0f, cuerpo.center, a, cerca, frio), Offset(cuerpo.left, cuerpo.top - w * 0.004f), Size(cuerpo.width, w * 0.008f))
+        drawOval(en(P.LATON, 0f, cuerpo.center, a, cerca, frio), Offset(px - w * 0.0055f, cuerpo.top - w * 0.012f), Size(w * 0.011f, w * 0.01f))
+        drawCircle(a.destello(0.7f, cerca(cuerpo.center), frio(cuerpo.center)), w * 0.002f, Offset(px - w * 0.002f, cuerpo.top - w * 0.008f))
+    }
+
+    // ---------------------------------------------------------------- la arqueta y el candado
+
+    /**
+     * La arqueta blindada de las reliquias, pintada del gris azulado de las gavetas del Ideario: el cuerpo con sus dos flejes de
+     * latón remachados, la tapa abombada, el aldabón con el candado grande colgado, la cadena enrollada a su pie y una llave
+     * tumbada delante.
+     */
+    private fun DrawScope.candado(x0: Float, r: Rect, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
+        val u = density
+        val w = size.width
+        val hh = r.height
+        val y = r.bottom - 2.5f * u
+        val cuerpo = Rect(x0 + w * 0.008f, y - hh * 0.4f, x0 + w * 0.178f, y)
+        val tapa = Rect(cuerpo.left - w * 0.004f, cuerpo.top - hh * 0.3f, cuerpo.right + w * 0.004f, cuerpo.top + 1f * u)
+        val k = cerca(cuerpo.center); val fr = frio(cuerpo.center)
+        // Su sombra en el muro y en la repisa.
+        translate(w * 0.012f, w * 0.004f) { drawRect(a.sombra(0.26f), Offset(cuerpo.left, tapa.top + hh * 0.05f), Size(cuerpo.width, y - tapa.top - hh * 0.05f)) }
+        contactoOrden(Offset(cuerpo.center.x, y), cuerpo.width * 1.12f, 5f * u, a, 0.5f)
+        // El cuerpo pintado, con su luz a la izquierda y su sombra a la derecha, y la pintura gastada en las aristas.
+        val pint = en(P.PINTURA, 0f, cuerpo.center, a, cerca, frio)
+        redondoOrden(cuerpo, pint, mezcla(pint, if (a.oscuro) P.LLAMA else P.LUZ_FRIA, if (a.oscuro) 0.15f * k else 0.22f), mezcla(pint, P.NOCHE, 0.45f), -1f, 0.45f)
+        drawRect(a.sombra(0.35f), Offset(cuerpo.left, cuerpo.bottom - 2f * u), Size(cuerpo.width, 2f * u))
+        val gastes = Path()
+        for (q in 0 until 9) {
+            val x = cuerpo.left + cuerpo.width * azar(1311, q)
+            val yy = if (q % 2 == 0) cuerpo.top + 1.5f * u else cuerpo.bottom - 3.5f * u
+            gastes.addOval(Rect(x, yy, x + w * (0.006f + 0.01f * azar(1312, q)), yy + 2f * u))
+        }
+        drawPath(gastes, en(P.ACERO_CLARO, 0f, cuerpo.center, a, cerca, frio).copy(alpha = 0.6f))
+        // La tapa abombada: su luz arriba, su canto y su sombra sobre el cuerpo.
+        val tp = Path().apply {
+            moveTo(tapa.left, tapa.bottom); lineTo(tapa.left, tapa.top + tapa.height * 0.62f)
+            cubicTo(tapa.left, tapa.top - tapa.height * 0.18f, tapa.right, tapa.top - tapa.height * 0.18f, tapa.right, tapa.top + tapa.height * 0.62f)
+            lineTo(tapa.right, tapa.bottom); close()
+        }
+        drawPath(tp, pint)
+        clipPath(tp) {
+            drawRect(mezcla(pint, if (a.oscuro) P.LLAMA else P.LUZ_FRIA, if (a.oscuro) 0.2f * k else 0.3f), tapa.topLeft, Size(tapa.width, tapa.height * 0.3f))
+            drawRect(mezcla(pint, if (a.oscuro) P.LLAMA else P.LUZ_FRIA, if (a.oscuro) 0.1f * k else 0.14f), Offset(tapa.left, tapa.top + tapa.height * 0.3f), Size(tapa.width, tapa.height * 0.2f))
+            // Su canto de abajo, que vuela un poco sobre el cuerpo.
+            drawRect(mezcla(pint, P.NOCHE, 0.2f), Offset(tapa.left, tapa.bottom - 3f * u), Size(tapa.width, 3f * u))
+            drawRect(mezcla(pint, P.NOCHE, 0.4f), Offset(tapa.left, tapa.bottom - tapa.height * 0.3f), Size(tapa.width, tapa.height * 0.3f))
+            drawRect(mezcla(pint, P.NOCHE, 0.3f), Offset(tapa.right - tapa.width * 0.2f, tapa.top), Size(tapa.width * 0.2f, tapa.height))
+        }
+        drawRect(a.sombra(0.5f), Offset(cuerpo.left, cuerpo.top), Size(cuerpo.width, 2.2f * u))
+        // Los dos flejes de latón, de la tapa al suelo, con sus remaches.
+        listOf(0.2f, 0.8f).forEach { f ->
+            val x = cuerpo.left + cuerpo.width * f
+            val fl = Path().apply {
+                moveTo(x - w * 0.007f, cuerpo.bottom); lineTo(x - w * 0.007f, tapa.top + tapa.height * 0.3f)
+                cubicTo(x - w * 0.007f, tapa.top + tapa.height * 0.12f, x + w * 0.007f, tapa.top + tapa.height * 0.12f, x + w * 0.007f, tapa.top + tapa.height * 0.3f)
+                lineTo(x + w * 0.007f, cuerpo.bottom); close()
+            }
+            translate(1f * u, 0f) { drawPath(fl, a.sombra(0.35f)) }
+            drawPath(fl, en(P.LATON, 0f, Offset(x, cuerpo.center.y), a, cerca, frio))
+            drawLine(a.destello(0.55f, k, fr), Offset(x - w * 0.006f, tapa.top + tapa.height * 0.3f), Offset(x - w * 0.006f, cuerpo.bottom), 0.8f * u)
+            var yy = tapa.top + tapa.height * 0.5f
+            var q = 0
+            while (yy < cuerpo.bottom - 3f * u && q < 12) { drawCircle(en(P.LATON_HONDO, 0f, Offset(x, yy), a, cerca, frio), 1.2f * u, Offset(x, yy)); yy += hh * 0.11f; q++ }
+        }
+        // El aldabón en el centro y el candado colgado de él.
+        val ax = cuerpo.center.x
+        val ald = Rect(ax - w * 0.009f, tapa.bottom - hh * 0.08f, ax + w * 0.009f, cuerpo.top + hh * 0.1f)
+        drawRect(a.sombra(0.4f), ald.topLeft + Offset(1f * u, 1.2f * u), ald.size)
+        drawRect(en(P.ACERO_HONDO, 0f, ald.center, a, cerca, frio), ald.topLeft, ald.size)
+        drawRect(a.destello(0.45f, k, fr), ald.topLeft, Size(ald.width, 0.8f * u))
+        val ojo = Offset(ax, ald.bottom - hh * 0.03f)
+        drawCircle(en(P.BETUN, 0f, ojo, a, cerca, frio), w * 0.0035f, ojo)
+        val cu = Rect(ax - w * 0.032f, ojo.y + hh * 0.07f, ax + w * 0.032f, ojo.y + hh * 0.07f + w * 0.07f)
+        val arco = Path().apply {
+            val l = cu.left + cu.width * 0.2f; val rr = cu.right - cu.width * 0.2f
+            moveTo(l, cu.top); lineTo(l, ojo.y + hh * 0.01f)
+            cubicTo(l, ojo.y - hh * 0.06f, rr, ojo.y - hh * 0.06f, rr, ojo.y + hh * 0.01f)
+            lineTo(rr, cu.top)
+        }
+        translate(1.2f * u, 1.4f * u) { drawPath(arco, a.sombra(0.4f), style = Stroke(w * 0.008f)) }
+        drawPath(arco, en(P.ACERO_CLARO, 0f, ojo, a, cerca, frio), style = Stroke(w * 0.008f))
+        drawPath(arco, a.destello(0.55f, k, fr), style = Stroke(0.8f * u))
+        translate(1.6f * u, 2f * u) { drawRoundRect(a.sombra(0.45f), cu.topLeft, cu.size, androidx.compose.ui.geometry.CornerRadius(cu.width * 0.18f)) }
+        val ccu = Path().apply { addRoundRect(RoundRect(cu, CornerRadius(cu.width * 0.18f))) }
+        drawPath(ccu, en(P.ACERO_MEDIO, 0f, cu.center, a, cerca, frio))
+        clipPath(ccu) {
+            drawRect(a.brillo(0.3f, k), cu.topLeft, Size(cu.width * 0.22f, cu.height))
+            drawRect(a.sombra(0.4f), Offset(cu.right - cu.width * 0.25f, cu.top), Size(cu.width * 0.25f, cu.height))
+        }
+        val bc = Offset(cu.center.x, cu.top + cu.height * 0.55f)
+        drawCircle(en(P.LATON, 0f, bc, a, cerca, frio), cu.width * 0.2f, bc)
+        drawCircle(en(P.BETUN, 0f, bc, a, cerca, frio), cu.width * 0.06f, bc - Offset(0f, cu.width * 0.03f))
+        drawRect(en(P.BETUN, 0f, bc, a, cerca, frio), Offset(bc.x - cu.width * 0.025f, bc.y - cu.width * 0.03f), Size(cu.width * 0.05f, cu.width * 0.13f))
+        // La cadena enrollada a su pie, del lado de la luz.
+        val cc = Offset(x0 + w * 0.205f, y - hh * 0.035f)
+        val acero = en(P.ACERO_MEDIO, 0f, cc, a, cerca, frio)
+        val luz = a.destello(0.55f, cerca(cc), frio(cc))
+        contactoOrden(Offset(cc.x, y), w * 0.08f, 4f * u, a, 0.45f)
+        var t = 0.0
+        var q = 0
+        while (t < Math.PI * 2 && q < 40) {
+            val p = Offset(cc.x + w * 0.03f * kotlin.math.cos(t).toFloat(), cc.y + hh * 0.03f * kotlin.math.sin(t).toFloat())
+            rotate(Math.toDegrees(t + Math.PI / 2).toFloat(), p) {
+                if (q % 2 == 0) {
+                    drawOval(acero, Offset(p.x - w * 0.006f, p.y - w * 0.0035f), Size(w * 0.012f, w * 0.007f), style = Stroke(1.5f * u))
+                    drawArc(luz, 190f, 90f, false, Offset(p.x - w * 0.006f, p.y - w * 0.0035f), Size(w * 0.012f, w * 0.007f), style = Stroke(0.6f * u))
+                } else drawLine(acero, Offset(p.x - w * 0.005f, p.y), Offset(p.x + w * 0.005f, p.y), 1.8f * u, StrokeCap.Round)
+            }
+            t += 0.55; q++
+        }
+        // La llave tumbada delante: el anillo, la caña y el paletón.
+        val ky = y - 1.6f * u
+        val kx = x0 + w * 0.03f
+        drawLine(a.sombra(0.4f), Offset(kx + 1f * u, ky + 1.2f * u), Offset(kx + w * 0.07f, ky + 1.2f * u), 2.2f * u)
+        val hierro = en(mezcla(P.ACERO_HONDO, P.OXIDO, 0.2f), 0f, Offset(kx, ky), a, cerca, frio)
+        drawOval(hierro, Offset(kx - w * 0.012f, ky - w * 0.007f), Size(w * 0.024f, w * 0.014f), style = Stroke(1.8f * u))
+        drawLine(hierro, Offset(kx + w * 0.012f, ky), Offset(kx + w * 0.07f, ky), 2.2f * u)
+        drawRect(hierro, Offset(kx + w * 0.058f, ky - w * 0.012f), Size(w * 0.012f, w * 0.012f))
+        drawLine(a.destello(0.45f, cerca(Offset(kx, ky)), frio(Offset(kx, ky))), Offset(kx + w * 0.014f, ky - 0.8f * u), Offset(kx + w * 0.066f, ky - 0.8f * u), 0.6f * u)
+    }
+
+    // ---------------------------------------------------------------- la caja de válvulas de repuesto
+
+    /** Una válvula de vacío de pie en [r]: el zócalo de baquelita, la ampolla con su placa, el espejo del getter y su punta. */
+    private fun DrawScope.valvula(r: Rect, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
+        val u = density
+        val k = cerca(r.center); val fr = frio(r.center)
+        val zh = r.height * 0.2f
+        val zo = Rect(r.left + r.width * 0.12f, r.bottom - zh, r.right - r.width * 0.12f, r.bottom)
+        val bq = en(P.BAQUELITA, 0f, zo.center, a, cerca, frio)
+        redondoOrden(zo, bq, mezcla(bq, P.LUZ_FRIA, if (a.oscuro) 0.06f else 0.28f), mezcla(bq, P.NOCHE, 0.4f), -1f)
+        val amp = Rect(r.left, r.top + r.height * 0.04f, r.right, zo.top + 1f * u)
+        val ampolla = Path().apply {
+            moveTo(amp.left, amp.bottom); lineTo(amp.left, amp.top + amp.width * 0.5f)
+            cubicTo(amp.left, amp.top + amp.width * 0.05f, amp.right, amp.top + amp.width * 0.05f, amp.right, amp.top + amp.width * 0.5f)
+            lineTo(amp.right, amp.bottom); close()
+        }
+        clipPath(ampolla) {
+            drawRect(en(Color(0xFF3A4048), 0f, amp.center, a, cerca, frio).copy(alpha = 0.25f), amp.topLeft, amp.size)
+            drawRect(en(Color(0xFFB8BEC6), 0.1f, amp.center, a, cerca, frio), amp.topLeft, Size(amp.width, amp.width * 0.42f))
+        }
+        val placa = Rect(amp.left + amp.width * 0.22f, amp.top + amp.height * 0.4f, amp.right - amp.width * 0.22f, amp.bottom - amp.height * 0.12f)
+        val gris = en(Color(0xFF4A4F57), 0f, placa.center, a, cerca, frio)
+        drawRect(gris, placa.topLeft, placa.size)
+        drawRect(mezcla(gris, P.LUZ_FRIA, if (a.oscuro) 0.06f else 0.3f), placa.topLeft, Size(placa.width * 0.3f, placa.height))
+        drawRect(en(Color(0xFFE6E2D4), 0f, placa.center, a, cerca, frio).copy(alpha = 0.8f), Offset(amp.left + 1f * u, placa.top - 1.6f * u), Size(amp.width - 2f * u, 1.6f * u))
+        drawPath(ampolla, a.luz(P.VIDRIO, k, fr).copy(alpha = 0.6f), style = Stroke(0.9f * u))
+        drawLine(a.brillo(0.75f, maxOf(k, 0.3f)), Offset(amp.left + amp.width * 0.2f, amp.top + amp.width * 0.45f), Offset(amp.left + amp.width * 0.2f, amp.bottom - amp.height * 0.12f), 1.2f * u, StrokeCap.Round)
+        drawLine(en(P.VIDRIO, 0f, amp.center, a, cerca, frio), Offset(amp.center.x, amp.top + amp.width * 0.12f), Offset(amp.center.x, amp.top - r.height * 0.03f), 1.4f * u, StrokeCap.Round)
+    }
+
+    /**
+     * La caja de válvulas de repuesto, guardadas como reliquias: la caja de acero pintada con sus cantoneras de latón y, de pie en
+     * sus huecos, cuatro válvulas de distinto alto; delante, una tumbada en su envoltorio de papel y la bobina de hilo de cobre.
+     */
+    private fun DrawScope.valvulas(x0: Float, r: Rect, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
+        val u = density
+        val w = size.width
+        val hh = r.height
+        val y = r.bottom - 2.5f * u
+        val caja = Rect(x0 + w * 0.01f, y - hh * 0.3f, x0 + w * 0.17f, y)
+        val k = cerca(caja.center); val fr = frio(caja.center)
+        // Las válvulas, de pie dentro de la caja: de distintos altos y gruesos.
+        val altos = floatArrayOf(0.62f, 0.5f, 0.7f, 0.44f)
+        val gruesos = floatArrayOf(0.034f, 0.03f, 0.038f, 0.028f)
+        translate(w * 0.012f, w * 0.004f) { drawRect(a.sombra(0.24f), Offset(caja.left, y - hh * 0.7f), Size(caja.width, hh * 0.4f)) }
+        for (i in 0 until 4) {
+            val cx = caja.left + caja.width * (0.14f + 0.24f * i)
+            val g = w * gruesos[i]
+            valvula(Rect(cx - g / 2, y - hh * altos[i], cx + g / 2, caja.top + hh * 0.12f), a, cerca, frio)
+        }
+        contactoOrden(Offset(caja.center.x, y), caja.width * 1.1f, 5f * u, a, 0.5f)
+        // La caja: el frente pintado, su canto de arriba y sus cantoneras.
+        val pint = en(P.PINTURA, 0f, caja.center, a, cerca, frio)
+        redondoOrden(caja, pint, mezcla(pint, if (a.oscuro) P.LLAMA else P.LUZ_FRIA, if (a.oscuro) 0.15f * k else 0.2f), mezcla(pint, P.NOCHE, 0.45f), -1f, 0.4f)
+        drawRect(en(P.PAVON_LUZ, 0.05f, caja.center, a, cerca, frio), Offset(caja.left, caja.top), Size(caja.width, 2.4f * u))
+        drawRect(a.destello(0.5f, k, fr), Offset(caja.left, caja.top), Size(caja.width, 0.8f * u))
+        drawRect(a.sombra(0.35f), Offset(caja.left, caja.bottom - 2f * u), Size(caja.width, 2f * u))
+        listOf(caja.left, caja.right - w * 0.016f).forEach { xc ->
+            listOf(caja.top, caja.bottom - w * 0.016f).forEach { yc ->
+                drawRect(en(P.LATON, 0f, Offset(xc, yc), a, cerca, frio), Offset(xc, yc), Size(w * 0.016f, w * 0.016f))
+                drawCircle(en(P.LATON_HONDO, 0f, Offset(xc, yc), a, cerca, frio), 1f * u, Offset(xc + w * 0.008f, yc + w * 0.008f))
+            }
+        }
+        // El asa de cuerda del costado.
+        drawArc(en(P.PAPEL, -0.1f, caja.center, a, cerca, frio), 200f, 140f, false, Offset(caja.center.x - w * 0.025f, caja.top + hh * 0.08f), Size(w * 0.05f, hh * 0.12f), style = Stroke(1.6f * u))
+        // Delante: una válvula tumbada en su papel y la bobina de hilo de cobre.
+        val tum = Rect(x0 + w * 0.12f, y - w * 0.026f, x0 + w * 0.21f, y)
+        drawRect(a.sombra(0.35f), tum.topLeft + Offset(1f * u, 1.4f * u), tum.size)
+        drawRect(en(P.PAPEL, 0f, tum.center, a, cerca, frio), tum.topLeft, tum.size)
+        drawRect(a.sombra(0.2f), Offset(tum.left, tum.bottom - tum.height * 0.35f), Size(tum.width, tum.height * 0.35f))
+        listOf(0.3f, 0.7f).forEach { f -> drawLine(a.sombra(0.3f), Offset(tum.left + tum.width * f, tum.top), Offset(tum.left + tum.width * f + 1f * u, tum.bottom), 0.7f * u) }
+        // La bobina de hilo de cobre, de pie y vista de lado (de frente, sus anillos se leían como una diana): las dos alas de
+        // acero y el hilo enrollado, con sus vueltas.
+        val bx = x0 + w * 0.205f
+        val bo = Rect(bx - w * 0.024f, y - w * 0.05f, bx + w * 0.024f, y)
+        contactoOrden(Offset(bx, y), bo.width * 1.3f, 3.5f * u, a, 0.45f)
+        val hilo = Rect(bo.left + w * 0.005f, bo.top + w * 0.006f, bo.right - w * 0.005f, bo.bottom - w * 0.006f)
+        val cobre = en(P.OXIDO, 0.15f, hilo.center, a, cerca, frio)
+        redondoOrden(hilo, cobre, mezcla(cobre, P.LATON_BRILLO, if (a.oscuro) 0.2f * k else 0.45f), mezcla(cobre, P.NOCHE, 0.5f), -1f)
+        val vueltas = Path()
+        var vy = hilo.top + 1.4f * u
+        var q = 0
+        while (vy < hilo.bottom && q < 30) { vueltas.moveTo(hilo.left, vy); vueltas.lineTo(hilo.right, vy - 0.6f * u); vy += 1.6f * u; q++ }
+        drawPath(vueltas, mezcla(cobre, P.NOCHE, 0.35f).copy(alpha = 0.55f), style = Stroke(0.5f * u))
+        listOf(bo.top, bo.bottom - w * 0.006f).forEach { yy ->
+            val ala = Rect(bo.left, yy, bo.right, yy + w * 0.006f)
+            drawRect(en(P.ACERO_MEDIO, 0f, ala.center, a, cerca, frio), ala.topLeft, ala.size)
+            drawRect(a.destello(0.45f, k, frio(ala.center)), ala.topLeft, Size(ala.width, 0.8f * u))
+        }
+    }
+
+    // ---------------------------------------------------------------- la vela de media altura
+
+    /** El candelero con su vela alta (la luz de este hueco), los tres manuales tumbados detrás y la lupa apoyada en ellos. */
+    private fun DrawScope.vela(x0: Float, r: Rect, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
+        val u = density
+        val w = size.width
+        val hh = r.height
+        val y = r.bottom - 2.5f * u
+        // Detrás, un pliego de plano suelto clavado al muro con una chincheta, con la esquina de abajo levantada: de noche, la vela
+        // lo alumbra desde abajo.
+        val hoja = Rect(x0 + w * 0.03f, r.top + hh * 0.13f, x0 + w * 0.165f, r.top + hh * 0.66f)
+        val kh = cerca(Offset(hoja.center.x, hoja.bottom)); val fh = frio(hoja.center)
+        val hp = Path().apply {
+            moveTo(hoja.left, hoja.top); lineTo(hoja.right, hoja.top + hh * 0.01f); lineTo(hoja.right - w * 0.002f, hoja.bottom - hh * 0.08f)
+            lineTo(hoja.right - w * 0.03f, hoja.bottom); lineTo(hoja.left + w * 0.003f, hoja.bottom - hh * 0.01f); close()
+        }
+        translate(w * 0.01f, w * 0.005f) { drawPath(hp, a.sombra(0.25f)) }
+        drawPath(hp, en(P.AZUL_PLANO, 0f, hoja.center, a, cerca, frio))
+        clipPath(hp) {
+            val tr = a.luz(P.TRAZO, kh, fh).copy(alpha = 0.45f)
+            val rej = Path()
+            var gx = hoja.left + w * 0.008f
+            while (gx < hoja.right) { rej.moveTo(gx, hoja.top); rej.lineTo(gx, hoja.bottom); gx += w * 0.012f }
+            var gy = hoja.top + w * 0.008f
+            while (gy < hoja.bottom) { rej.moveTo(hoja.left, gy); rej.lineTo(hoja.right, gy); gy += w * 0.012f }
+            drawPath(rej, tr.copy(alpha = 0.13f), style = Stroke(0.5f * u))
+            val pc = Offset(hoja.left + hoja.width * 0.42f, hoja.top + hoja.height * 0.36f)
+            val pw = hoja.width * 0.26f; val ph = hoja.height * 0.16f
+            drawRect(tr, Offset(pc.x - pw, pc.y - ph), Size(pw * 2f, ph * 2f), style = Stroke(0.9f * u))
+            drawRect(tr, Offset(pc.x - pw * 0.45f, pc.y - ph * 1.6f), Size(pw * 0.9f, ph * 0.6f), style = Stroke(0.8f * u))
+            drawCircle(tr, ph * 0.5f, Offset(pc.x + pw * 0.35f, pc.y + ph * 0.1f), style = Stroke(0.8f * u))
+            drawLine(tr, Offset(pc.x - pw, pc.y + ph * 1.45f), Offset(pc.x + pw, pc.y + ph * 1.45f), 0.6f * u)
+            drawLine(tr, Offset(pc.x - pw, pc.y + ph * 1.25f), Offset(pc.x - pw, pc.y + ph * 1.65f), 0.6f * u)
+            drawLine(tr, Offset(pc.x + pw, pc.y + ph * 1.25f), Offset(pc.x + pw, pc.y + ph * 1.65f), 0.6f * u)
+            drawLine(tr, Offset(pc.x + pw * 1.3f, pc.y - ph), Offset(pc.x + pw * 1.3f, pc.y + ph), 0.6f * u)
+            drawRect(tr, Offset(hoja.left + hoja.width * 0.12f, hoja.bottom - hoja.height * 0.28f), Size(hoja.width * 0.5f, hoja.height * 0.12f), style = Stroke(0.6f * u))
+            if (a.lumbre) drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color.Transparent, P.LLAMA.copy(alpha = (if (a.oscuro) 0.3f else 0.15f) * kh)), hoja.top, hoja.bottom), hoja.topLeft, hoja.size)
+        }
+        // La esquina levantada y la chincheta.
+        drawPath(poligonoOrden(hoja.right - w * 0.002f, hoja.bottom - hh * 0.08f, hoja.right - w * 0.03f, hoja.bottom, hoja.right - w * 0.024f, hoja.bottom - hh * 0.06f), en(mezcla(P.AZUL_PLANO, P.TRAZO, 0.35f), 0f, hoja.center, a, cerca, frio))
+        val ch = Offset(hoja.center.x, hoja.top + hh * 0.03f)
+        drawCircle(a.sombra(0.4f), 2.2f * u, ch + Offset(0.8f * u, 1f * u))
+        drawCircle(en(P.LATON, 0f, ch, a, cerca, frio), 2.2f * u, ch)
+        drawCircle(a.destello(0.7f, cerca(ch), frio(ch)), 0.7f * u, ch - Offset(0.6f * u, 0.6f * u))
+        // Los tres manuales tumbados, uno sobre otro.
+        val m0 = Rect(x0 + w * 0.065f, y - hh * 0.14f, x0 + w * 0.205f, y)
+        val m1 = Rect(x0 + w * 0.075f, m0.top - hh * 0.12f, x0 + w * 0.195f, m0.top)
+        val m2 = Rect(x0 + w * 0.085f, m1.top - hh * 0.11f, x0 + w * 0.185f, m1.top)
+        contactoOrden(Offset(m0.center.x, y), m0.width * 1.08f, 4f * u, a, 0.45f)
+        listOf(m0 to P.CUERO, m1 to P.CUERO_PARDO, m2 to P.GRANA_HONDA).forEach { (m, cuero) ->
+            val c = en(cuero, 0f, m.center, a, cerca, frio)
+            drawRect(c, m.topLeft, m.size)
+            drawRect(mezcla(c, if (a.oscuro) P.LLAMA else P.LUZ_FRIA, if (a.oscuro) 0.25f * cerca(m.center) else 0.2f), m.topLeft, Size(m.width, m.height * 0.25f))
+            drawRect(mezcla(c, P.NOCHE, 0.4f), Offset(m.left, m.bottom - m.height * 0.25f), Size(m.width, m.height * 0.25f))
+            for (q in 1..2) {
+                val xx = m.left + m.width * q / 3f
+                drawRect(a.sombra(0.35f), Offset(xx + 1.2f * u, m.top), Size(1.2f * u, m.height))
+                drawRect(mezcla(c, P.LUZ_FRIA, if (a.oscuro) 0.05f else 0.22f), Offset(xx - 1.2f * u, m.top), Size(2.2f * u, m.height))
+            }
+            listOf(m.left, m.right - w * 0.016f).forEach { xc ->
+                drawRect(en(P.ACERO_MEDIO, 0f, m.center, a, cerca, frio), Offset(xc, m.top), Size(w * 0.016f, m.height))
+                drawRect(a.destello(0.4f, cerca(m.center), frio(m.center)), Offset(xc, m.top), Size(w * 0.016f, 0.9f * u))
+            }
+        }
+        // La lupa de latón apoyada en los manuales.
+        val lc = Offset(x0 + w * 0.17f, m2.top - hh * 0.13f)
+        val lr = hh * 0.14f
+        rotate(18f, lc) {
+            drawLine(en(P.CUERO, 0f, lc, a, cerca, frio), Offset(lc.x, lc.y + lr), Offset(lc.x, lc.y + lr + hh * 0.17f), w * 0.011f, StrokeCap.Round)
+            drawLine(a.destello(0.3f, cerca(lc), frio(lc)), Offset(lc.x - w * 0.003f, lc.y + lr + 2f * u), Offset(lc.x - w * 0.003f, lc.y + lr + hh * 0.15f), 0.7f * u)
+        }
+        drawCircle(a.luz(P.VIDRIO, cerca(lc), frio(lc)).copy(alpha = 0.2f), lr, lc)
+        drawCircle(en(P.LATON, 0f, lc, a, cerca, frio), lr, lc, style = Stroke(w * 0.006f))
+        drawArc(a.brillo(0.7f, maxOf(0.3f, cerca(lc))), 200f, 70f, false, Offset(lc.x - lr * 0.7f, lc.y - lr * 0.7f), Size(lr * 1.4f, lr * 1.4f), style = Stroke(1.4f * u))
+        // El candelero: el plato de acero con su asa de anillo, el fuste, la arandela y la vela.
+        val cx = x0 + w * 0.055f
+        val plato = Rect(cx - w * 0.04f, y - hh * 0.05f, cx + w * 0.04f, y)
+        contactoOrden(Offset(cx, y), w * 0.1f, 4f * u, a, 0.45f)
+        val k = cerca(Offset(cx, plato.top)); val fr = frio(Offset(cx, plato.top))
+        drawCircle(en(P.ACERO_HONDO, 0f, plato.center, a, cerca, frio), w * 0.013f, Offset(plato.right + w * 0.006f, plato.center.y), style = Stroke(1.8f * u))
+        drawOval(en(P.ACERO_MEDIO, 0f, plato.center, a, cerca, frio), Offset(plato.left, plato.top), Size(plato.width, plato.height * 0.6f))
+        drawRect(en(P.ACERO_HONDO, 0f, plato.center, a, cerca, frio), Offset(plato.left + w * 0.006f, plato.top + plato.height * 0.3f), Size(plato.width - w * 0.012f, plato.height * 0.7f))
+        drawOval(a.brillo(0.5f, maxOf(k, 0.2f)), Offset(plato.left + w * 0.006f, plato.top + 0.5f * u), Size(plato.width * 0.5f, plato.height * 0.25f))
+        val topeVela = r.bottom - hh * M.VELA_HUECO_Y + w * 0.012f
+        val arandela = topeVela + hh * 0.27f
+        // El fuste de hierro con su nudo, del plato a la arandela.
+        val fuste = Rect(cx - w * 0.0045f, arandela, cx + w * 0.0045f, plato.top + plato.height * 0.3f)
+        val hierro = en(P.ACERO_HONDO, 0f, fuste.center, a, cerca, frio)
+        redondoOrden(fuste, hierro, mezcla(hierro, P.LUZ_FRIA, if (a.oscuro) 0.06f else 0.4f), mezcla(hierro, P.NOCHE, 0.5f), -1f)
+        drawOval(hierro, Offset(cx - w * 0.01f, fuste.top + fuste.height * 0.45f), Size(w * 0.02f, w * 0.012f))
+        drawOval(a.destello(0.45f, k, fr), Offset(cx - w * 0.007f, fuste.top + fuste.height * 0.45f + w * 0.002f), Size(w * 0.006f, w * 0.004f))
+        val ar = Rect(cx - w * 0.02f, arandela - w * 0.004f, cx + w * 0.02f, arandela + w * 0.005f)
+        drawOval(a.sombra(0.35f), ar.topLeft + Offset(1f * u, 1.4f * u), ar.size)
+        drawOval(en(P.LATON, 0f, ar.center, a, cerca, frio), ar.topLeft, ar.size)
+        drawOval(en(P.LATON_BRILLO, 0f, ar.center, a, cerca, frio), Offset(ar.left + ar.width * 0.1f, ar.top), Size(ar.width * 0.5f, ar.height * 0.45f))
+        val vela = Rect(cx - w * 0.011f, topeVela, cx + w * 0.011f, arandela - w * 0.002f)
+        val cera = en(P.CERA, 0f, vela.center, a, cerca, frio)
+        drawRect(cera, vela.topLeft, vela.size)
+        if (a.lumbre) drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(P.LLAMA.copy(alpha = (if (a.oscuro) 0.45f else 0.25f) * k), Color.Transparent), vela.top, vela.bottom), vela.topLeft, vela.size)
+        else drawRect(P.LUZ_FRIA.copy(alpha = 0.4f), vela.topLeft, Size(vela.width * 0.3f, vela.height))
+        drawRect(a.sombra(0.2f), Offset(vela.right - vela.width * 0.3f, vela.top), Size(vela.width * 0.3f, vela.height))
+        listOf(0.2f to 0.5f, 0.75f to 0.3f).forEach { (fx, fl) ->
+            val xx = vela.left + vela.width * fx
+            drawLine(mezcla(cera, P.LUZ_FRIA, 0.2f), Offset(xx, vela.top + 0.6f * u), Offset(xx + 0.3f * u, vela.top + vela.height * fl), vela.width * 0.2f, StrokeCap.Round)
+        }
+        drawLine(en(P.BETUN, 0f, vela.center, a, cerca, frio), Offset(cx, vela.top + 0.6f * u), Offset(cx + w * 0.001f, vela.top - w * 0.006f), 1.1f * u, StrokeCap.Round)
+        if (a.lumbre) with(CoronaEstanteOrden) { llama(Offset(cx, vela.top - w * 0.002f), w * (if (a.oscuro && !a.dormida) 0.0092f else 0.0075f), a) }
+    }
+}
