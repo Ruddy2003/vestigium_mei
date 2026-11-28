@@ -172,10 +172,7 @@ internal object VolumenEstanteOrden {
             close()
         }
         translate(0.8f * u, 1.2f * u) { drawPath(forma, a.sombra(0.45f)) }
-        drawPath(forma, l.c(P.ACERO_MEDIO))
-        clipPath(forma) {
-            redondoOrden(Rect(r.left, minOf(r.top, punta), r.right, maxOf(r.bottom, punta)), l.c(P.ACERO_MEDIO), l.c(P.ACERO_CLARO, 0.1f), l.c(P.ACERO_HONDO), hacia, 0.9f)
-        }
+        drawPath(forma, pincelRedondoOrden(r, l.c(P.ACERO_MEDIO), l.c(P.ACERO_CLARO, 0.1f), l.c(P.ACERO_HONDO), hacia, 0.9f))
         drawPath(forma, a.sombra(0.35f), style = Stroke(0.7f * u))
         drawRect(a.destello(0.55f, l.k, l.kf), Offset(r.left, if (arriba) r.top else r.bottom - 1f * u), Size(r.width, 0.9f * u))
         val ry = if (arriba) r.top + (punta - r.top) * 0.45f else r.bottom - (r.bottom - punta) * 0.45f
@@ -311,7 +308,7 @@ internal object VolumenEstanteOrden {
             close()
         }
         val caja = Rect(izq, boca, der, fondo + eh / 2)
-        clipPath(cuerpo) { redondoOrden(caja, t.cara, t.claro, t.hondo, hacia2) }
+        drawPath(cuerpo, pincelRedondoOrden(caja, t.cara, t.claro, t.hondo, hacia2))
         // El roce del cuero y la costura a pespunte, del lado de la sombra.
         val xc = izq + (der - izq) * (if (hacia2 < 0f) 0.76f else 0.24f)
         drawLine(t.hondo, Offset(xc, boca + eh * 0.6f), Offset(xc, fondo + eh * 0.4f), 1.4f * u)
@@ -395,7 +392,7 @@ internal object VolumenEstanteOrden {
         // Por dentro: el muro de detrás un punto más frío, el cojín y lo que guarda.
         drawPath(forma, l.c(P.PAVON_HONDO, -0.1f))
         drawPath(forma, a.luz(P.VIDRIO, k * 0.5f, kf).copy(alpha = if (a.oscuro) 0.12f else 0.22f))
-        clipPath(forma) {
+        run {
             val cj = Rect(urna.left + 1.4f * u, urna.bottom - urna.height * 0.24f, urna.right - 1.4f * u, urna.bottom + 3f * u)
             val cojin = Path().apply { addRoundRect(RoundRect(cj, CornerRadius(cj.height * 0.5f))) }
             drawPath(cojin, t.cara)
@@ -435,12 +432,13 @@ internal object VolumenEstanteOrden {
                 a.noche -> P.VIGILIA.copy(alpha = 0.38f)
                 else -> P.LUZ_FRIA.copy(alpha = 0.42f)
             }
-            drawRect(luzV, Offset(urna.left + urna.width * 0.1f, urna.top), Size(urna.width * 0.12f, urna.height))
-            drawPath(poligonoOrden(urna.left + urna.width * 0.35f, urna.top + urna.height * 0.25f, urna.left + urna.width * 0.48f, urna.top + urna.height * 0.25f,
-                urna.right, urna.top + urna.height * 0.55f, urna.right, urna.top + urna.height * 0.66f), luzV.copy(alpha = luzV.alpha * 0.45f))
-            drawRect(a.sombra(0.2f), Offset(urna.right - urna.width * 0.14f, urna.top), Size(urna.width * 0.14f, urna.height))
+            val recto = hombro - urna.width * 0.12f
+            drawRect(luzV, Offset(urna.left + urna.width * 0.1f, recto), Size(urna.width * 0.12f, urna.bottom - recto))
+            drawPath(poligonoOrden(urna.left + urna.width * 0.3f, hombro + 1f * u, urna.left + urna.width * 0.46f, hombro + 1f * u,
+                urna.right - 1f * u, hombro + (urna.bottom - hombro) * 0.4f, urna.right - 1f * u, hombro + (urna.bottom - hombro) * 0.55f), luzV.copy(alpha = luzV.alpha * 0.45f))
+            drawRect(a.sombra(0.2f), Offset(urna.right - urna.width * 0.14f, recto), Size(urna.width * 0.14f, urna.bottom - recto))
             // De noche, el vidrio guarda un filo frío aunque esté lejos de la vela (si no, la urna se lee como una losa).
-            if (a.oscuro) drawRect(a.destello(0.55f, k, maxOf(kf, 0.5f)), Offset(urna.left + urna.width * 0.13f, urna.top + urna.width * 0.3f), Size(1.1f * u, urna.height * 0.55f))
+            if (a.oscuro) drawRect(a.destello(0.55f, k, maxOf(kf, 0.5f)), Offset(urna.left + urna.width * 0.13f, recto), Size(1.1f * u, (urna.bottom - recto) * 0.7f))
         }
         // El marco de la urna, esmaltado del color del ánimo, con su filo de acero; el remate con su anilla.
         val marco = l.c(P.ACERO_MEDIO)

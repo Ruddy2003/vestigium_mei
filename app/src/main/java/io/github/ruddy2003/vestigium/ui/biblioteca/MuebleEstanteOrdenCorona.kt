@@ -221,7 +221,7 @@ internal object CoronaEstanteOrden {
         manuales(w, apoyo, a, cerca, frio)
         candelero(w, apoyo, a, cerca, frio)
         with(ReliquiaEstanteOrden) { fanal(w, apoyo, a, cerca, frio) }
-        tintero(Offset(w * 0.14f, apoyo), w, apoyo, a, cerca, frio)
+        tintero(Offset(w * 0.165f, apoyo), w, apoyo, a, cerca, frio)
         pesa(Offset(w * 0.6f, apoyo + w * 0.003f), w, a, cerca, frio)
         if (a.lumbre) llama(Offset(w * M.VELA_X, w * (M.VELA_Y + 0.0095f)), w * (if (a.oscuro && !a.dormida) 0.0105f else 0.0085f), a)
     }

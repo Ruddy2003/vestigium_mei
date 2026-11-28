@@ -38,12 +38,16 @@ internal fun DrawScope.valvulaOrden(r: Rect, c: (Color, Float) -> Color, a: Aire
         lineTo(amp.right, amp.bottom); close()
     }
     // Por dentro: el aire del vidrio, el espejo del getter arriba y su borde.
-    clipPath(ampolla) {
-        drawRect(c(Color(0xFF3A4048), 0f).copy(alpha = 0.3f), amp.topLeft, amp.size)
-        drawRect(c(Color(0xFFC2C8D0), 0.1f), amp.topLeft, Size(amp.width, amp.width * 0.42f))
-        drawRect(c(Color(0xFF6A7078), 0f), Offset(amp.left, amp.top + amp.width * 0.34f), Size(amp.width, amp.width * 0.1f))
-        drawRect(a.brillo(0.6f, maxOf(k, 0.3f)), Offset(amp.left + amp.width * 0.22f, amp.top + amp.width * 0.12f), Size(amp.width * 0.12f, amp.width * 0.24f))
+    drawPath(ampolla, c(Color(0xFF3A4048), 0f).copy(alpha = 0.3f))
+    val corte = amp.top + amp.width * 0.44f
+    val casquete = Path().apply {
+        moveTo(amp.left, corte); lineTo(amp.left, amp.top + amp.width * 0.5f)
+        cubicTo(amp.left, amp.top + amp.width * 0.06f, amp.right, amp.top + amp.width * 0.06f, amp.right, amp.top + amp.width * 0.5f)
+        lineTo(amp.right, corte); close()
     }
+    drawPath(casquete, c(Color(0xFFC2C8D0), 0.1f))
+    drawRect(c(Color(0xFF6A7078), 0f), Offset(amp.left, corte - amp.width * 0.1f), Size(amp.width, amp.width * 0.1f))
+    drawRect(a.brillo(0.6f, maxOf(k, 0.3f)), Offset(amp.left + amp.width * 0.22f, amp.top + amp.width * 0.18f), Size(amp.width * 0.12f, amp.width * 0.18f))
     // La placa: gris, con su luz a la izquierda, dos nervios y la ranura del medio.
     val pl = Rect(amp.left + amp.width * 0.2f, amp.top + amp.height * 0.38f, amp.right - amp.width * 0.2f, amp.bottom - amp.height * 0.15f)
     val gris = c(Color(0xFF4E535B), 0f)

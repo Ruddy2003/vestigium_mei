@@ -3,6 +3,7 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
@@ -255,6 +256,21 @@ internal fun DrawScope.redondoOrden(r: Rect, cara: Color, claro: Color, hondo: C
         val x0 = if (hacia < 0f) r.left + r.width * f0 else r.right - r.width * f1 - mas
         drawRect(c, Offset(x0, r.top), Size(r.width * (f1 - f0) + mas, r.height))
     }
+}
+
+/**
+ * El pincel de [redondoOrden]: las mismas franjas, de borde neto, en un degradado a lo ancho de [r], para pintar con él una figura
+ * cualquiera (un camino) sin recortarla.
+ */
+internal fun pincelRedondoOrden(r: Rect, cara: Color, claro: Color, hondo: Color, hacia: Float, suave: Float = 1f): Brush {
+    val paradas = ArrayList<Pair<Float, Color>>(14)
+    for (i in 0 until 7) {
+        val m = TONOS_FRANJA_ORDEN[i] * suave
+        val c = if (m >= 0f) mezcla(cara, claro, m) else mezcla(cara, hondo, -m)
+        val f0 = FRANJAS_ORDEN[i]; val f1 = FRANJAS_ORDEN[i + 1]
+        if (hacia < 0f) { paradas.add(f0 to c); paradas.add(f1 to c) } else { paradas.add(0, (1f - f0) to c); paradas.add(0, (1f - f1) to c) }
+    }
+    return Brush.horizontalGradient(*paradas.toTypedArray(), startX = r.left, endX = maxOf(r.left + 1f, r.right))
 }
 
 /** La media luna recortada de los Sueños, de radio [r] centrada en el origen, armada una vez por tamaño. */
