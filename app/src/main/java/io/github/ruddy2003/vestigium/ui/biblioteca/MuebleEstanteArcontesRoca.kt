@@ -319,6 +319,8 @@ internal object RocaEstanteArcontes {
             // En bandas lisas: la sombra franca de la tabla de arriba, su penumbra, la roca y, abajo, la luz que rebota en la tabla.
             val y0 = fr.top; val y1 = fr.top + techo + r.height * 0.2f + 1f; val y2 = fr.top + techo + r.height * 0.34f + 1f
             val y3 = fr.top + fr.height * 0.85f
+            // Debajo, todo el fondo de un color opaco: las bandas se tocan a medio píxel y, si no, asomaría lo de detrás.
+            drawRect(c, fr.topLeft, fr.size)
             drawRect(sombra, Offset(fr.left, y0), Size(fr.width, y1 - y0))
             drawRect(mezclaRapida(c, sombra, 0.45f), Offset(fr.left, y1), Size(fr.width, y2 - y1))
             drawRect(c, Offset(fr.left, y2), Size(fr.width, y3 - y2))
@@ -327,7 +329,7 @@ internal object RocaEstanteArcontes {
             // Detrás de las entradas solo asoman las rendijas: ahí va liso; arriba y en el hueco libre, con la luz que cambia.
             val xo = oc.coerceIn(fr.left, fr.right)
             val yo = r.top + r.height * 0.34f
-            drawRect(s.t(Offset((fr.left + xo) / 2, r.center.y)).c(roca, -0.05f), Offset(fr.left, yo), Size(xo - fr.left, fr.bottom - yo))
+            drawRect(s.t(Offset((fr.left + xo) / 2, r.center.y)).c(roca, -0.05f), fr.topLeft, fr.size)
             drawRect(s.aLoAncho(fr.left, fr.right, r.center.y + r.height * 0.15f) { it.c(roca, -0.05f) }, fr.topLeft, Size(fr.width, yo - fr.top))
             if (fr.right > xo) drawRect(s.aLoAncho(xo, fr.right, r.center.y + r.height * 0.15f) { it.c(roca, -0.05f) }, Offset(xo, yo), Size(fr.right - xo, fr.bottom - yo))
             val tc = s.t(r.center)
