@@ -2133,16 +2133,9 @@ object EstanteNeon : DisenoBiblioteca {
 }
 
 /**
- * Refugio: el armario de taquillas del refugio, de chapa pintada de verde azulado (el optimismo atómico del tema), contra el
- * muro de hormigón crema. Arriba corren las tuberías del techo (una gruesa de acero y una de cobre, con sus bridas, la
- * válvula de volante roja y el manómetro), y sobre el armario está la sirena enjaulada junto a la placa amarilla del refugio
- * (un triángulo y barras: formas, no letras) y sus rejillas. Los costados son los marcos de las puertas: a la izquierda las
- * bisagras, la rejilla y la placa del número; a la derecha el pasador con su candado. El fondo de cada taquilla es de chapa
- * perforada; las tablas llevan remaches y cada mes va en una pantallita de fósforo verde. Abajo, el zócalo con su rejilla y el
- * piso de hormigón con la franja amarilla y la coladera. Cada entrada es un carrete de cinta abierto en su estuche (no un
- * cartucho): la brida con sus seis ventanas deja ver la cinta, más gruesa cuanto más escribiste, y arriba va la etiqueta del
- * día. De noche se enciende la luz roja de emergencia. Distinto del Ideario, que es el armario de cartuchos con la puerta de la
- * bóveda.
+ * Refugio. El estante y sus entradas están en `MuebleEstanteRefugio*.kt`: la librería de pared de la sala de lectura, de chapa
+ * esmaltada verde agua de los años cincuenta, en la otra pared del mismo cuarto de registros del Ideario; las entradas son la
+ * carpeta de vinilo, el tarro de conserva y la bolsa de papel del economato.
  * La tapa del diario es el estuche del carrete cerrado, con la etiqueta de la bitácora y la ventanilla al carrete; al
  * abrirse, la tapa se levanta.
  */
@@ -2185,231 +2178,26 @@ object EstanteRefugio : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.27f
-    override val base = 0.1f
-    override val lado = 0.07f
-    override val altoRepisa: Dp = 96.dp
-    override val tabla: Dp = 15.dp
-    override val separa: Dp = 5.dp
-    override val letra: FontFamily = LetraExtra.vt323
+    // ---------------------------------------------------------------- el estante y las entradas (en MuebleEstanteRefugio*.kt)
 
-    override fun ancho(palabras: Int): Dp = (46 + (palabras / 100).coerceAtMost(8)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.58f + 0.08f * azar(semilla, 4)
+    override val corona = MuebleEstanteRefugio.CORONA
+    override val base = MuebleEstanteRefugio.BASE
+    override val lado = MuebleEstanteRefugio.LADO
+    override val altoRepisa: Dp = MuebleEstanteRefugio.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteRefugio.TABLA
+    override val separa: Dp = MuebleEstanteRefugio.SEPARA
+    override val letra: FontFamily = MuebleEstanteRefugio.LETRA
+    /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoBiblioteca.auraEnReposo]). */
+    override val auraEnReposo = false
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El muro de hormigón pintado del refugio, detrás de todo.
-        drawRect(c(MURO), Offset.Zero, size)
-        // El fondo de las taquillas: chapa perforada en tresbolillo, con la sombra de la tabla de arriba.
-        val cuerpo = Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, d.base.top)
-        drawRect(c(INTERIOR), cuerpo.topLeft, cuerpo.size)
-        d.repisas.forEach { r ->
-            var py = r.top + 16 * u; var fila = 0
-            while (py < r.bottom - 4 * u) {
-                var px = r.left + (if (fila % 2 == 0) 6 * u else 12 * u)
-                while (px < r.right - 3 * u) { drawCircle(Color.Black.copy(alpha = 0.4f), 1.1f * u, Offset(px, py)); px += 12 * u }
-                py += 9 * u; fila++
-            }
-            drawRect(Color.Black.copy(alpha = if (noche) 0.45f else 0.32f), r.topLeft, Size(r.width, 9 * u))
-        }
-        // Los costados: los marcos de las puertas, con bisagras, rejilla y número a la izquierda, y el candado a la derecha.
-        listOf(d.izquierda to true, d.derecha to false).forEach { (r, izq) ->
-            drawRect(c(PINTURA), r.topLeft, r.size)
-            drawRect(c(PINTURA_LUZ), Offset(if (izq) r.left else r.right - 2 * u, r.top), Size(2 * u, r.height))
-            drawRect(c(PINTURA_OSC), Offset(if (izq) r.right - 2.5f * u else r.left, r.top), Size(2.5f * u, r.height))
-            d.repisas.forEachIndexed { k, rep ->
-                val ry = if (izq) rep.top + rep.height * 0.62f else rep.top + 10 * u
-                for (j in 0 until 3) drawRoundRect(c(PINTURA_OSC), Offset(r.left + r.width * 0.22f, ry + j * 4 * u), Size(r.width * 0.56f, 1.8f * u), CornerRadius(0.9f * u))
-                if (izq) {
-                    listOf(rep.top + 4 * u, rep.bottom - 12 * u).forEach { y ->
-                        drawRect(c(TUBO_OSC), Offset(r.right - 4.5f * u, y), Size(4.5f * u, 8 * u))
-                        drawLine(c(TUBO), Offset(r.right - 2.2f * u, y), Offset(r.right - 2.2f * u, y + 8 * u), 0.8f * u)
-                    }
-                    // El número de la taquilla: una placa amarilla con sus rayas (formas, no cifras).
-                    val np = Rect(r.left + r.width * 0.2f, rep.top + rep.height * 0.38f, r.right - r.width * 0.3f, rep.top + rep.height * 0.38f + 9 * u)
-                    drawRect(c(AMARILLO), np.topLeft, np.size)
-                    for (j in 0..(k % 3)) drawRect(c(NEGRO), Offset(np.left + 2 * u + j * 3 * u, np.top + 2 * u), Size(1.6f * u, np.height - 4 * u))
-                } else {
-                    val pc = Offset(r.left + r.width * 0.45f, rep.center.y)
-                    drawArc(c(TUBO), 180f, 180f, false, Offset(pc.x - 2.5f * u, pc.y + 2 * u), Size(5 * u, 6 * u), style = Stroke(1.2f * u))
-                    drawRect(c(TUBO), Offset(pc.x - 3 * u, pc.y - 5 * u), Size(6 * u, 8 * u))
-                    drawRoundRect(c(AMARILLO), Offset(pc.x - 3.5f * u, pc.y + 5 * u), Size(7 * u, 7 * u), CornerRadius(1.2f * u))
-                    drawCircle(c(NEGRO), 0.8f * u, Offset(pc.x, pc.y + 8.5f * u))
-                }
-            }
-        }
-        // Las tablas: chapa doblada con sus remaches.
-        d.tablas.forEach { r ->
-            drawRect(c(PINTURA), r.topLeft, r.size)
-            drawRect(c(PINTURA_LUZ), r.topLeft, Size(r.width, 2 * u))
-            drawRect(c(PINTURA_OSC), Offset(r.left, r.bottom - 3 * u), Size(r.width, 3 * u))
-            var rx = r.left + 8 * u
-            while (rx < r.right) { drawCircle(c(PINTURA_LUZ), 1.1f * u, Offset(rx, r.center.y)); rx += 26 * u }
-            drawRect(Color.Black.copy(alpha = 0.25f), Offset(r.left, r.bottom), Size(r.width, 3 * u))
-        }
-        // El rótulo de cada mes: una pantallita de fósforo verde en su marco, con las líneas de barrido.
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRect(c(TUBO_OSC), r.inflate(1.5f * u).topLeft, r.inflate(1.5f * u).size)
-            drawRect(Color(0xFF061108), r.topLeft, r.size)
-            var sy = r.top + 1 * u
-            while (sy < r.bottom) { drawLine(FOSFORO.copy(alpha = 0.07f), Offset(r.left, sy), Offset(r.right, sy), 0.5f * u); sy += 2 * u }
-            drawRect(Color.White.copy(alpha = 0.06f), r.topLeft, Size(r.width, r.height * 0.3f))
-            textoEn(medidor, p.texto.uppercase(), Rect(r.left + 3 * u, r.top, r.right - 3 * u, r.bottom), letra, FOSFORO, 12f, espaciado = 0.6f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el zócalo con su rejilla baja y el piso de hormigón con su franja amarilla y la coladera.
-        val b = d.base
-        val piso = b.top + b.height * 0.55f
-        drawRect(c(PINTURA_OSC), b.topLeft, Size(b.width, piso - b.top))
-        var zx = b.left + b.width * 0.1f
-        while (zx < b.right - b.width * 0.1f) {
-            drawRoundRect(Color.Black.copy(alpha = 0.35f), Offset(zx, b.top + (piso - b.top) * 0.3f), Size(2 * u, (piso - b.top) * 0.4f), CornerRadius(1 * u))
-            zx += 5 * u
-        }
-        drawRect(c(PISO), Offset(0f, piso), Size(w, h - piso))
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(0f, piso), Size(w, 2.5f * u))
-        drawRect(c(AMARILLO).copy(alpha = 0.85f), Offset(0f, piso + (h - piso) * 0.55f), Size(w, (h - piso) * 0.16f))
-        val dc = Offset(w * 0.78f, piso + (h - piso) * 0.32f)
-        drawOval(c(TUBO_OSC), Offset(dc.x - 9 * u, dc.y - 2.5f * u), Size(18 * u, 5 * u))
-        for (j in -2..2) drawLine(Color.Black.copy(alpha = 0.6f), Offset(dc.x + j * 3 * u, dc.y - 2 * u), Offset(dc.x + j * 3 * u, dc.y + 2 * u), 0.8f * u)
-        // De noche, la luz roja de emergencia lo baña todo.
-        if (noche) drawRect(SIRENA.copy(alpha = 0.07f), Offset.Zero, size)
-    }
+    override fun ancho(palabras: Int): Dp = MuebleEstanteRefugio.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteRefugio.alto(semilla, palabras)
 
-    /** Las tuberías del techo, la cabecera del armario con su placa y la sirena. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        // Las dos tuberías, con sus bridas y las abrazaderas que bajan del techo.
-        val y1 = r.top + r.height * 0.16f
-        val y2 = r.top + r.height * 0.32f
-        val g1 = r.height * 0.1f; val g2 = r.height * 0.055f
-        listOf(0.22f, 0.78f).forEach { f -> drawLine(c(TUBO_OSC), Offset(r.left + r.width * f, r.top), Offset(r.left + r.width * f, y2), 1.6f * u) }
-        drawRect(c(TUBO), Offset(r.left, y1 - g1 / 2), Size(r.width, g1))
-        drawRect(Color.White.copy(alpha = 0.18f), Offset(r.left, y1 - g1 * 0.35f), Size(r.width, g1 * 0.18f))
-        drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, y1 + g1 * 0.2f), Size(r.width, g1 * 0.3f))
-        drawRect(c(COBRE), Offset(r.left, y2 - g2 / 2), Size(r.width, g2))
-        drawRect(Color.White.copy(alpha = 0.2f), Offset(r.left, y2 - g2 * 0.35f), Size(r.width, g2 * 0.2f))
-        listOf(0.08f, 0.36f, 0.64f, 0.92f).forEach { f ->
-            val x = r.left + r.width * f
-            drawRect(c(TUBO_OSC), Offset(x - 3 * u, y1 - g1 * 0.7f), Size(6 * u, g1 * 1.4f))
-            drawRect(c(TUBO_OSC), Offset(x + r.width * 0.1f - 2 * u, y2 - g2 * 0.75f), Size(4 * u, g2 * 1.5f))
-        }
-        // La válvula de volante roja, en el tubo de cobre.
-        val rv = r.height * 0.08f
-        val vc = Offset(r.left + r.width * 0.16f, y2 + g2 * 0.5f + rv + 2 * u)
-        drawLine(c(COBRE), Offset(vc.x, y2), vc, 2.5f * u)
-        drawCircle(c(ROJO), rv, vc, style = Stroke(2 * u))
-        for (k in 0 until 3) rotate(k * 60f, vc) { drawLine(c(ROJO), Offset(vc.x - rv, vc.y), Offset(vc.x + rv, vc.y), 1.2f * u) }
-        drawCircle(c(TUBO_OSC), rv * 0.28f, vc)
-        // El manómetro, en el tubo grueso.
-        val rm = r.height * 0.09f
-        val mc = Offset(r.left + r.width * 0.86f, y1 + g1 * 0.5f + rm + 3 * u)
-        drawLine(c(TUBO), Offset(mc.x, y1), mc, 2.5f * u)
-        manometro(mc, rm, c(TUBO_OSC), papel(CREMA, oscuro, noche), c(ROJO), if (noche) 0.88f else 0.32f)
-        // La cabecera del armario, con sus rejillas y la placa amarilla del refugio (un triángulo y barras: formas, no letras).
-        val cab = Rect(r.left, r.top + r.height * 0.56f, r.right, r.bottom)
-        drawRect(c(PINTURA), cab.topLeft, cab.size)
-        drawRect(c(PINTURA_LUZ), cab.topLeft, Size(cab.width, 2.5f * u))
-        drawRect(c(PINTURA_OSC), Offset(cab.left, cab.bottom - 3 * u), Size(cab.width, 3 * u))
-        listOf(0.06f, 0.66f).forEach { f ->
-            val rej = Rect(cab.left + cab.width * f, cab.top + cab.height * 0.3f, cab.left + cab.width * (f + 0.28f), cab.top + cab.height * 0.72f)
-            var x = rej.left
-            while (x < rej.right) { drawRoundRect(c(PINTURA_OSC), Offset(x, rej.top), Size(2.2f * u, rej.height), CornerRadius(1.1f * u)); x += 5 * u }
-        }
-        val placa = Rect(cab.center.x - cab.width * 0.13f, cab.top + cab.height * 0.22f, cab.center.x + cab.width * 0.13f, cab.top + cab.height * 0.8f)
-        drawRect(c(AMARILLO), placa.topLeft, placa.size)
-        drawRect(c(NEGRO), placa.deflate(1.6f * u).topLeft, placa.deflate(1.6f * u).size, style = Stroke(1 * u))
-        val tc = Offset(placa.left + placa.height * 0.55f, placa.center.y)
-        val tr = placa.height * 0.3f
-        drawPath(Path().apply { moveTo(tc.x, tc.y - tr); lineTo(tc.x + tr, tc.y + tr * 0.8f); lineTo(tc.x - tr, tc.y + tr * 0.8f); close() }, c(NEGRO))
-        val barras = placa.right - placa.left - placa.height * 1.25f
-        for (j in 0 until 3) drawRect(c(NEGRO), Offset(placa.left + placa.height * 1.05f, placa.top + placa.height * (0.27f + 0.2f * j)), Size(barras * (1f - 0.25f * j), placa.height * 0.1f))
-        // La sirena sobre el armario: su base y su cúpula enjaulada; de día apagada, de noche roja, encendida y girando.
-        val sc = Offset(r.center.x, cab.top)
-        val sr = r.height * 0.13f
-        if (noche) {
-            mancha(Offset(sc.x, sc.y - sr * 0.6f), sr * 5f, SIRENA.copy(alpha = 0.35f))
-            listOf(-1f, 1f).forEach { hacia ->
-                val haz = Path().apply {
-                    moveTo(sc.x, sc.y - sr * 0.6f)
-                    lineTo(sc.x + hacia * r.width * 0.45f, sc.y - sr * 0.6f - r.height * 0.3f)
-                    lineTo(sc.x + hacia * r.width * 0.45f, sc.y - sr * 0.6f + r.height * 0.2f); close()
-                }
-                drawPath(haz, SIRENA.copy(alpha = 0.12f))
-            }
-        }
-        val domo = Rect(sc.x - sr * 0.85f, sc.y - sr * 1.15f, sc.x + sr * 0.85f, sc.y + sr * 0.55f)
-        drawArc(if (noche) SIRENA else c(Color(0xFF9A3A28)), 180f, 180f, true, domo.topLeft, domo.size)
-        drawArc(Color.White.copy(alpha = 0.3f), 200f, 50f, false, domo.deflate(sr * 0.2f).topLeft, domo.deflate(sr * 0.2f).size, style = Stroke(1.2f * u))
-        drawArc(c(TUBO_OSC), 180f, 180f, false, domo.topLeft, domo.size, style = Stroke(1.2f * u))
-        for (j in -1..1) drawLine(c(TUBO_OSC), Offset(sc.x + j * sr * 0.5f, sc.y - sr * 0.3f), Offset(sc.x + j * sr * 0.28f, sc.y - sr * 1.05f), 1 * u)
-        drawRect(c(TUBO_OSC), Offset(sc.x - sr * 1.1f, sc.y - sr * 0.3f), Size(sr * 2.2f, sr * 0.3f))
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteRefugio) { estante(d, medidor, oscuro, noche) }
 
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val base = ESTUCHES[(v.semilla and 0x7fffffff) % ESTUCHES.size]
-        val estuche = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        // El estuche abierto: la caja, la tapa abatida a la izquierda (un filo) y el fondo hundido donde va el carrete.
-        drawRoundRect(estuche, Offset.Zero, size, CornerRadius(2 * u))
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset.Zero, Size(w * 0.07f, h))
-        drawRect(Color.White.copy(alpha = 0.12f), Offset(w * 0.07f, 0f), Size(w * 0.93f, 1.4f * u))
-        val fondo = Rect(w * 0.12f, h * 0.24f, w * 0.95f, h * 0.96f)
-        val hueco = mezcla(estuche, Color.Black, 0.45f)
-        drawRect(mezcla(estuche, Color.Black, 0.3f), fondo.topLeft, fondo.size)
-        // La etiqueta de arriba: el día grande y el mes, con su filete rojo.
-        val eti = Rect(w * 0.12f, h * 0.04f, w * 0.95f, h * 0.21f)
-        drawRect(papel(CREMA, oscuro, v.noche), eti.topLeft, eti.size)
-        drawLine(c(ROJO).copy(alpha = 0.7f), Offset(eti.left, eti.bottom - 1 * u), Offset(eti.right, eti.bottom - 1 * u), 0.8f * u)
-        textoEn(medidor, v.dia, Rect(eti.left + 1 * u, eti.top, eti.left + eti.width * 0.36f, eti.bottom - 1 * u), letra, c(NEGRO), 14f)
-        textoEn(medidor, v.mes.uppercase(), Rect(eti.left + eti.width * 0.38f, eti.top, eti.right - 1 * u, eti.bottom - 1 * u), letra, c(NEGRO).copy(alpha = 0.8f), 9f, minimo = 4.5f)
-        // El carrete: la brida, la cinta que se ve por sus seis ventanas (más gruesa cuanto más escribiste) y el cubo.
-        val cc = fondo.center
-        val rc = minOf(fondo.width, fondo.height) * 0.46f
-        val brida = c(BRIDAS[(v.semilla ushr 3) % BRIDAS.size])
-        drawCircle(Color.Black.copy(alpha = 0.3f), rc, Offset(cc.x + 1 * u, cc.y + 1.2f * u))
-        drawCircle(brida, rc, cc)
-        val cubo = rc * 0.24f
-        val cinta = cubo + (rc * 0.92f - cubo) * (0.2f + 0.8f * v.lleno)
-        val rIn = cubo * 1.35f; val rOut = rc * 0.84f
-        val rMed = (rIn + rOut) / 2
-        for (k in 0 until 6) {
-            val a0 = -90f + k * 60f - 16f
-            drawArc(hueco, a0, 32f, false, Offset(cc.x - rMed, cc.y - rMed), Size(rMed * 2, rMed * 2), style = Stroke(rOut - rIn))
-            if (cinta > rIn) {
-                val tOut = minOf(cinta, rOut)
-                val tMed = (rIn + tOut) / 2
-                drawArc(c(CINTA), a0, 32f, false, Offset(cc.x - tMed, cc.y - tMed), Size(tMed * 2, tMed * 2), style = Stroke(tOut - rIn))
-                var vuelta = rIn + 1.6f * u
-                while (vuelta < tOut) { drawArc(Color.Black.copy(alpha = 0.2f), a0, 32f, false, Offset(cc.x - vuelta, cc.y - vuelta), Size(vuelta * 2, vuelta * 2), style = Stroke(0.4f * u)); vuelta += 2 * u }
-            }
-        }
-        drawCircle(Color.Black.copy(alpha = 0.25f), rc, cc, style = Stroke(0.8f * u))
-        drawCircle(Color.White.copy(alpha = 0.18f), rc * 0.9f, cc, style = Stroke(0.6f * u))
-        drawCircle(c(TUBO), cubo, cc)
-        drawCircle(Color.Black.copy(alpha = 0.7f), cubo * 0.42f, cc)
-        for (k in 0 until 3) rotate(k * 120f, cc) { drawRect(Color.Black.copy(alpha = 0.7f), Offset(cc.x - cubo * 0.1f, cc.y - cubo * 0.62f), Size(cubo * 0.2f, cubo * 0.24f)) }
-        // La punta de la cinta, que sale del carrete hacia el borde del estuche.
-        drawLine(c(CINTA), Offset(cc.x + rc * 0.62f, cc.y - rc * 0.78f), Offset(fondo.right - 1 * u, fondo.top + 2 * u), 1.4f * u)
-        // El sello de revisado en la esquina (un círculo con su palomita); de noche, una luna y dos estrellas.
-        val so = Offset(fondo.left + 4 * u, fondo.bottom - 4 * u)
-        val sr = 3 * u
-        if (v.noche) {
-            drawCircle(papel(CREMA, oscuro, true), sr, so)
-            drawCircle(mezcla(estuche, Color.Black, 0.3f), sr * 0.8f, Offset(so.x + sr * 0.45f, so.y - sr * 0.3f))
-            drawCircle(papel(CREMA, oscuro, true), 0.6f * u, Offset(so.x + sr * 1.8f, so.y + sr * 0.6f))
-            drawCircle(papel(CREMA, oscuro, true), 0.5f * u, Offset(so.x + sr * 2.8f, so.y + sr * 0.2f))
-        } else {
-            drawCircle(c(ROJO).copy(alpha = 0.7f), sr, so, style = Stroke(0.8f * u))
-            drawPath(Path().apply { moveTo(so.x - sr * 0.5f, so.y); lineTo(so.x - sr * 0.1f, so.y + sr * 0.4f); lineTo(so.x + sr * 0.55f, so.y - sr * 0.45f) }, c(ROJO).copy(alpha = 0.7f), style = Stroke(0.8f * u))
-        }
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteRefugio) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
