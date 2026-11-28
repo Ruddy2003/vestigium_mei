@@ -240,7 +240,7 @@ internal object CoronaEstanteArcontes {
         }
         val t = s.t(Offset(w * 0.4f, y - w * 0.1f))
         if (!s.a.oscuro) {
-            translate(w * 0.028f, -w * 0.006f) { drawPath(izq, t.s(0.16f)); drawPath(der, t.s(0.16f)) }
+            translate(w * 0.018f, -w * 0.004f) { drawPath(izq, t.s(0.17f)); drawPath(der, t.s(0.17f)) }
         } else {
             // De noche: lo de la izquierda de la lámpara echa su sombra a la izquierda, larga; lo de la derecha, a la derecha.
             translate(-w * 0.04f, -w * 0.012f) { drawPath(izq, t.s(0.28f)) }

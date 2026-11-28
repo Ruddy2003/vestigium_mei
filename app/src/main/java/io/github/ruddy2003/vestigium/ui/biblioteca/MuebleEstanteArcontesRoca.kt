@@ -144,7 +144,7 @@ internal object RocaEstanteArcontes {
             val n = 6
             val cs = List(n) { i ->
                 val f = i / (n - 1f)
-                s.t(Offset(r.left + r.width * f, r.top + r.height * f)).c(P.CALIZA)
+                s.t(Offset(r.left + r.width * f, r.top + r.height * f)).c(mezcla(P.CALIZA, P.CALIZA_LUZ, 0.5f))
             }
             drawRect(Brush.linearGradient(cs, r.topLeft, r.bottomRight), r.topLeft, r.size)
         } else {
@@ -307,7 +307,7 @@ internal object RocaEstanteArcontes {
      * La roca del fondo de un hueco [r] (el armario no tiene fondo): la caliza en sombra, con su textura, la sombra franca de la
      * tabla de arriba y su penumbra, la del costado de la izquierda y, en la primera repisa, la grieta que vuelve a asomar.
      */
-    fun DrawScope.fondoHueco(k: Int, r: Rect, s: SitioArcontes, techo: Float) {
+    fun DrawScope.fondoHueco(k: Int, r: Rect, s: SitioArcontes, techo: Float, oc: Float) {
         val u = density; val w = size.width
         val fr = Rect(r.left - 1f, r.top - 1f, r.right + 1f, r.bottom + 1f)
         val roca = mezcla(P.HUECO, P.CALIZA_SOMBRA, 0.1f)
@@ -319,15 +319,16 @@ internal object RocaEstanteArcontes {
             val s1 = (techo + r.height * 0.34f + 1f) / fr.height
             drawRect(Brush.verticalGradient(0f to sombra, s0 to sombra, s0 + 0.001f to mezcla(c, sombra, 0.45f), s1 to mezcla(c, sombra, 0.45f),
                 s1 + 0.001f to c, 0.85f to tc.c(roca, 0.04f), 1f to c, startY = fr.top, endY = fr.bottom), fr.topLeft, fr.size)
-            // La luz de fondo baja a la derecha: lo de la izquierda del hueco, más vivo.
-            drawRect(Brush.horizontalGradient(listOf(tc.b(0.1f), Color.Transparent, tc.s(0.08f)), fr.left, fr.right), fr.topLeft, fr.size)
         } else {
             drawRect(s.aLoAncho(fr.left, fr.right, r.center.y + r.height * 0.15f) { it.c(roca, -0.05f) }, fr.topLeft, fr.size)
             val tc = s.t(r.center)
             drawRect(tc.s(0.55f), Offset(r.left, r.top), Size(r.width, techo + r.height * 0.2f))
             drawRect(tc.s(0.25f), Offset(r.left, r.top + techo + r.height * 0.2f), Size(r.width, r.height * 0.14f))
         }
-        textura(r, if (s.a.oscuro) 0.3f else 0.6f, 53f * k + 11f)
+        val fz = if (s.a.oscuro) 0.3f else 0.6f
+        val x = oc.coerceIn(r.left, r.right)
+        textura(Rect(r.left, r.top, x, r.top + r.height * 0.26f), fz, 53f * k + 11f)
+        textura(Rect(x, r.top, r.right, r.bottom), fz, 53f * k + 11f)
         // Una mancha de humedad o una lasca saltada, distinta en cada hueco.
         val dc = Offset(r.left + r.width * (0.15f + 0.7f * azar(7401, k)), r.top + r.height * (0.45f + 0.25f * azar(7402, k)))
         val td = s.t(dc)

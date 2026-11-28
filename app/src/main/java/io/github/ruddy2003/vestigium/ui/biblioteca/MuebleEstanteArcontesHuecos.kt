@@ -107,7 +107,7 @@ internal object HuecosEstanteArcontes {
         val w = size.width
         val f = Offset(xv, r.bottom - r.height * MuebleEstanteArcontes.VELA_Y)
         val fuerza = if (s.a.oscuro && !s.a.noche) 1f else 0.5f
-        charcoArcontes(f, w * 0.3f, P.LLAMA_HALO, 0.5f * fuerza)
+        charcoArcontes(f, w * 0.2f, P.LLAMA_HALO, 0.55f * fuerza)
         charcoArcontes(f, w * 0.08f, P.LLAMA_HALO, 0.9f * fuerza)
     }
 

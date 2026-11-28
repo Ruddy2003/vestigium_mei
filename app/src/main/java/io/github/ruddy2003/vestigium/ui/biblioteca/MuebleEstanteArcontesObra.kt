@@ -242,7 +242,7 @@ internal object ObraEstanteArcontes {
     fun DrawScope.hueco(k: Int, r: Rect, d: DisposicionEstante, s: SitioArcontes) {
         val w = size.width; val u = density
         val techo = w * TECHO; val canto = w * CANTO; val piso = w * PISO
-        with(RocaEstanteArcontes) { fondoHueco(k, r, s, techo) }
+        with(RocaEstanteArcontes) { fondoHueco(k, r, s, techo, d.ocupado.getOrNull(k) ?: r.left) }
         val tc = s.t(r.center, true)
         // La tabla de arriba, por debajo: olivo en sombra.
         val arriba = poligonoArcontes(r.left - 1f, r.top - 1f, r.right + 1f, r.top - 1f, r.right - canto, r.top + techo, r.left + canto, r.top + techo)
@@ -254,8 +254,8 @@ internal object ObraEstanteArcontes {
         val ti = s.t(Offset(r.left, r.center.y), true); val td = s.t(Offset(r.right, r.center.y), true)
         drawPath(izq, s.aLoAlto(r.top, r.bottom, r.left + canto / 2, true) { it.c(P.OLIVO_OSC, if (it.a.oscuro) 0f else -0.18f) })
         drawPath(der, s.aLoAlto(r.top, r.bottom, r.right - canto / 2, true) { it.c(P.OLIVO, if (it.a.oscuro) 0f else 0.06f) })
-        clipPath(izq) { veta(Rect(r.left, r.top, r.left + canto, r.bottom), true, 0.3f, 31f * k) }
-        clipPath(der) { veta(Rect(r.right - canto, r.top, r.right, r.bottom), true, 0.35f, 47f * k) }
+        veta(Rect(r.left, r.top + techo, r.left + canto, r.bottom - piso), true, 0.3f, 31f * k)
+        veta(Rect(r.right - canto, r.top + techo, r.right, r.bottom - piso), true, 0.35f, 47f * k)
         drawLine(ti.s(0.3f), Offset(r.left + canto, r.top + techo), Offset(r.left + canto, r.bottom - piso), 0.8f * u)
         drawLine(td.b(0.4f), Offset(r.right - canto, r.top + techo), Offset(r.right - canto, r.bottom - piso), 0.8f * u)
         // De noche, la lumbre de la llama en el canto que la mira (el filo).
@@ -266,7 +266,7 @@ internal object ObraEstanteArcontes {
         // La tabla de abajo, vista desde arriba: el olivo gastado por lo que se saca y se pone, con su veta.
         val suelo = poligonoArcontes(r.left - 1f, r.bottom + 1f, r.left + canto, r.bottom - piso, r.right - canto, r.bottom - piso, r.right + 1f, r.bottom + 1f)
         drawPath(suelo, s.aLoAncho(r.left, r.right, r.bottom, true) { it.c(P.OLIVO_LUZ, if (it.a.oscuro) 0f else -0.04f) })
-        clipPath(suelo) { veta(Rect(r.left, r.bottom - piso, r.right, r.bottom + 1f), false, 0.35f, 71f * k) }
+        veta(Rect(r.left + canto, r.bottom - piso, r.right - canto, r.bottom), false, 0.35f, 71f * k)
         drawLine(tc.s(0.3f), Offset(r.left + canto, r.bottom - piso), Offset(r.right - canto, r.bottom - piso), 0.8f * u)
         // La sombra de la tabla de arriba en el fondo, más larga a la derecha (la luz baja desde la izquierda).
         if (!s.a.lumbre) drawPath(poligonoArcontes(r.left + canto, r.top + techo, r.right - canto, r.top + techo, r.right - canto, r.top + techo + w * 0.03f,
@@ -314,13 +314,13 @@ internal object ObraEstanteArcontes {
         val forma = contornoIrregular(tira, 83 + p.texto.length, 44, 0.022f)
         translate(1f * u, 1.4f * u) { drawPath(forma, t.s(0.4f)) }
         drawPath(forma, t.etiqueta(P.PAPIRO_ETIQUETA))
-        clipPath(forma) {
-            var y = tira.top + 1.4f * u; var j = 0
-            while (y < tira.bottom && j < 20) {
-                drawLine(P.FIBRA.copy(alpha = 0.18f), Offset(tira.left, y), Offset(tira.right, y + (azar(7701, j) - 0.5f) * u), 0.5f * u)
-                y += 1.7f * u; j++
-            }
+        val fibras = Path()
+        var yf = tira.top + 1.4f * u; var jf = 0
+        while (yf < tira.bottom - 1f * u && jf < 20) {
+            fibras.moveTo(tira.left + 1.5f * u, yf); fibras.lineTo(tira.right - 1.5f * u, yf + (azar(7701, jf) - 0.5f) * u)
+            yf += 1.7f * u; jf++
         }
+        drawPath(fibras, P.FIBRA.copy(alpha = 0.18f), style = Stroke(0.5f * u))
         drawPath(forma, P.FIBRA.copy(alpha = 0.5f), style = Stroke(0.6f * u))
         // El cordel: dos vueltas a cada punta, por encima y por debajo de la tabla.
         val cordel = t.c(P.CORDEL)
@@ -418,7 +418,7 @@ internal object ObraEstanteArcontes {
             val boss = contornoIrregular(al, 7816 + semilla, 30, 0.045f)
             translate(1.4f * u, 1.6f * u) { drawPath(boss, t.s(0.35f)) }
             drawPath(boss, s.aLoAncho(al.left, al.right, al.center.y) { it.c(tono, -0.02f) })
-            clipPath(boss) {
+            clipRect(al.left + 1f * u, al.top + 1f * u, al.right - 1f * u, al.bottom - 1f * u) {
                 with(RocaEstanteArcontes) { textura(al, if (s.a.oscuro) 0.7f else 1f, semilla * 13f) }
                 // El picado de la almohadilla, más bruto que el margen: golpes sueltos.
                 val golpes = Path()

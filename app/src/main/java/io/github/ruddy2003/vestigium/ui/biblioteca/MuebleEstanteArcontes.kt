@@ -91,7 +91,7 @@ internal object MuebleEstanteArcontes {
     val LAMP_Y get() = CORONA - CORNISA - 0.088f
     /** Dónde arde el brasero del pie: a lo ancho, y a lo alto en fracción del pie (desde su borde de arriba). */
     const val BRASERO_X = 0.5f
-    const val BRASERO_Y = 0.76f
+    const val BRASERO_Y = 0.72f
     /** El ancho con que un volumen pasa su repisa a anchos del mueble (no sabe cuánto mide el estante): el de un teléfono. */
     const val ANCHO_NOMINAL = 380f
     /** Una repisa con su tabla, en dp. */
@@ -119,7 +119,7 @@ internal object MuebleEstanteArcontes {
 
     /** La luz de la lámpara de un hueco: corta, para sus vecinos, la roca del fondo y el canto de las tablas. */
     fun vela(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.8f else 1.35f) * exp(-6.2f * sqrt(dx * dx + dy * dy * 1.4f))).coerceIn(0f, 1f)
+        ((if (suenos) 0.8f else 1.35f) * exp(-5.6f * sqrt(dx * dx + dy * dy * 0.9f))).coerceIn(0f, 1f)
 
     /** La lámpara de hueco que más alumbra ([x], [y]) entre [velas] (x, y, x, y… en anchos). */
     private fun velaMayor(x: Float, y: Float, velas: FloatArray, suenos: Boolean): Float {
@@ -217,15 +217,16 @@ internal object MuebleEstanteArcontes {
         }
         val q = a.parche
         if (q != null) a.forzar = 0f
-        cuerpo(d, s, xs, grupos, medidor, d.repisas.size - 1)
+        cuerpo(d, s, xs, grupos, medidor, null)
         if (q != null) {
-            var bajo = 0f
-            var i = 1
-            while (i < q.size) { bajo = maxOf(bajo, q[i]); i += 2 }
-            val hasta = d.repisas.indexOfLast { it.top < (bajo + 0.03f) * w }
-            if (hasta >= 0) {
+            // El rectángulo que encierra la mancha (con su borde movido), en el lienzo.
+            var x0 = Float.MAX_VALUE; var x1 = -Float.MAX_VALUE; var y0 = Float.MAX_VALUE; var y1 = -Float.MAX_VALUE
+            var i = 0
+            while (i + 1 < q.size) { x0 = minOf(x0, q[i]); x1 = maxOf(x1, q[i]); y0 = minOf(y0, q[i + 1]); y1 = maxOf(y1, q[i + 1]); i += 2 }
+            val caja = Rect((x0 - 0.02f) * w, maxOf(y0 - 0.02f, 0f) * w, (x1 + 0.02f) * w, (y1 + 0.02f) * w)
+            if (caja.bottom > ch) {
                 a.forzar = 1f
-                clipPath(caminoManchaArcontes(q, w, true)) { cuerpo(d, s, xs, grupos, medidor, hasta) }
+                clipPath(caminoManchaArcontes(q, w, false)) { cuerpo(d, s, xs, grupos, medidor, caja) }
             }
             a.forzar = -1f
         }
@@ -240,28 +241,43 @@ internal object MuebleEstanteArcontes {
         with(PieEstanteArcontes) { suelo(sp, b, suelo, h) }
         with(ObraEstanteArcontes) { zocalo(Rect(0f, arriba, w, suelo), sp) }
         with(PieEstanteArcontes) { objetos(sp, b, suelo, h) }
-        granoMueble(Rect(0f, ch, w, h), oscuro, 0.8f)
+        d.repisas.forEachIndexed { k, r ->
+            val x = (d.ocupado.getOrNull(k) ?: r.left).coerceIn(r.left, r.right)
+            granoMueble(Rect(r.left, r.top, x, r.top + r.height * 0.26f), oscuro, 0.8f)
+            granoMueble(Rect(x, r.top, r.right, r.bottom), oscuro, 0.8f)
+        }
+        d.tablas.forEach { r -> granoMueble(r, oscuro, 0.8f) }
+        granoMueble(Rect(0f, ch, d.izquierda.right, b.top), oscuro, 0.8f)
+        granoMueble(Rect(d.derecha.left, ch, w, b.top), oscuro, 0.8f)
+        granoMueble(Rect(0f, b.top, w, h), oscuro, 0.8f)
     }
 
-    /** El cuerpo, de la repisa de arriba a la [hasta]: los huecos, lo que hay en ellos, las tablas, los costados y los rótulos. */
-    private fun DrawScope.cuerpo(d: DisposicionEstante, s: SitioArcontes, xs: FloatArray, grupos: IntArray, medidor: TextMeasurer, hasta: Int) {
+    /**
+     * El cuerpo: los huecos, lo que hay en ellos, las tablas, los costados y los rótulos. Con [solo], únicamente lo que cae en ese
+     * rectángulo (la segunda pasada, dentro de la mancha de la boca).
+     */
+    private fun DrawScope.cuerpo(d: DisposicionEstante, s: SitioArcontes, xs: FloatArray, grupos: IntArray, medidor: TextMeasurer, solo: Rect?) {
         val ch = d.corona.bottom
         val b = d.base
-        with(ObraEstanteArcontes) { d.repisas.forEachIndexed { k, r -> if (k <= hasta) hueco(k, r, d, s) } }
+        fun toca(r: Rect) = solo == null || r.overlaps(solo)
+        with(ObraEstanteArcontes) { d.repisas.forEachIndexed { k, r -> if (toca(r)) hueco(k, r, d, s) } }
         with(HuecosEstanteArcontes) {
             d.repisas.forEachIndexed { k, r ->
-                if (k > hasta || grupos[k] < 0) return@forEachIndexed
+                if (grupos[k] < 0) return@forEachIndexed
+                if (!toca(Rect(d.ocupado[k], r.top, d.derecha.left, r.bottom))) return@forEachIndexed
                 grupo(k, r, d.ocupado[k], d.derecha.left, xs[k], grupos[k], s)
             }
         }
-        val fin = d.tablas.getOrNull(hasta)?.bottom ?: b.top
+        val fondo = if (solo == null) b.top else minOf(b.top, solo.bottom + 4f)
         with(ObraEstanteArcontes) {
-            d.tablas.forEachIndexed { k, r -> if (k <= hasta) tabla(k, r, d, s) }
-            costado(Rect(d.izquierda.left, ch, d.izquierda.right, b.top), true, d, s)
-            costado(Rect(d.derecha.left, ch, d.derecha.right, b.top), false, d, s)
-            d.placas.forEach { p -> if (p.r.top < fin) placa(p, medidor, s) }
+            d.tablas.forEachIndexed { k, r -> if (toca(r)) tabla(k, r, d, s) }
+            val izq = Rect(d.izquierda.left, ch, d.izquierda.right, fondo)
+            val der = Rect(d.derecha.left, ch, d.derecha.right, fondo)
+            if (toca(izq)) costado(izq, true, d, s)
+            if (toca(der)) costado(der, false, d, s)
+            d.placas.forEach { p -> if (toca(p.r)) placa(p, medidor, s) }
         }
-        with(HuecosEstanteArcontes) { d.repisas.forEachIndexed { k, r -> if (k <= hasta && xs[k] >= 0f) llamaHueco(xs[k], r, s) } }
+        with(HuecosEstanteArcontes) { d.repisas.forEachIndexed { k, r -> if (xs[k] >= 0f && toca(r)) llamaHueco(xs[k], r, s) } }
     }
 
     fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {

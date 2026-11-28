@@ -4,16 +4,23 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
+import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
+import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 import kotlin.math.sin
 
@@ -45,7 +52,7 @@ internal object PieEstanteArcontes {
         pinceladas(r, if (s.a.oscuro) P.NOCHE else mezcla(P.TIERRA, P.CALIZA_LUZ, 0.4f), 8101, 22, u, 0.12f)
         pinceladas(r, if (s.a.oscuro) P.NOCHE else P.TIERRA_OSC, 8102, 16, u, 0.14f)
         // Las piedrecitas: un óvalo con su luz y su sombra.
-        for (k in 0 until 22) {
+        for (k in 0 until 14) {
             val p = Offset(w * azar(8103, k), suelo + (h - suelo) * (0.15f + 0.8f * azar(8104, k)))
             val rr = (0.9f + 2.2f * azar(8105, k)) * u
             val t = s.t(p)
@@ -68,22 +75,15 @@ internal object PieEstanteArcontes {
         translate(0f, 2f * u) { drawPath(forma, t.s(0.35f)) }
         drawPath(forma, s.aLoAncho(w * 0.12f, w * 0.93f, (y0 + h) / 2) { it.c(P.JUNCO, -0.02f) })
         clipPath(forma) {
-            // La espiga: hileras de juncos en ángulo, una hacia un lado y la siguiente hacia el otro.
-            val hondos = Path(); val claros = Path()
-            val fila = 5f * u
+            // La espiga: hileras de juncos en ángulo, una hacia un lado y la siguiente hacia el otro (en una baldosa).
+            val b = baldosaEspiga(u)
+            val al = if (s.a.oscuro) 0.75f else 1f
             var y = y0; var k = 0
-            while (y < h + fila && k < 80) {
-                val sx = if (k % 2 == 0) 1f else -1f
+            while (y < h + 1f && k < 80) {
                 var x = w * 0.1f; var j = 0
-                while (x < w * 0.95f && j < 300) {
-                    hondos.moveTo(x, y); hondos.lineTo(x + sx * fila * 0.9f, y + fila)
-                    claros.moveTo(x + 1.2f * u, y); claros.lineTo(x + 1.2f * u + sx * fila * 0.9f, y + fila)
-                    x += fila * 0.75f; j++
-                }
-                y += fila; k++
+                while (x < w * 0.95f && j < 40) { drawImage(b, Offset(x, y), alpha = al); x += b.width; j++ }
+                y += b.height; k++
             }
-            drawPath(hondos, t.s(0.3f), style = Stroke(0.9f * u))
-            drawPath(claros, t.b(0.28f), style = Stroke(0.6f * u))
             // La luz de fondo: más viva a la izquierda (de día) o junto al brasero (de noche).
             if (!s.a.oscuro) drawRect(Brush.horizontalGradient(listOf(t.b(0.12f), Color.Transparent, t.s(0.14f)), w * 0.12f, w * 0.93f), Offset(w * 0.12f, y0), Size(w * 0.81f, h - y0 + 2f))
         }
@@ -94,6 +94,34 @@ internal object PieEstanteArcontes {
             val x = w * (0.22f + 0.07f * k)
             drawLine(s.t(Offset(x, y0)).c(P.CORDEL), Offset(x, y0 - 1.6f * u), Offset(x + 0.8f * u, y0 + 1.6f * u), 1.2f * u, StrokeCap.Round)
         }
+    }
+
+    private var densidadEspiga = -1f
+    private var espiga: ImageBitmap? = null
+
+    /** El tejido en espiga de la estera, neutro (sombra violeta y luz crema), pintado una vez por densidad y pegado en mosaico. */
+    private fun baldosaEspiga(u: Float): ImageBitmap {
+        val hecha = espiga
+        if (hecha != null && densidadEspiga == u) return hecha
+        val fila = 5f * u; val paso = fila * 0.75f
+        val ancho = paso * 16; val alto = fila * 4
+        val img = ImageBitmap(kotlin.math.ceil(ancho).toInt().coerceAtLeast(1), kotlin.math.ceil(alto).toInt().coerceAtLeast(1))
+        CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(img), Size(ancho, alto)) {
+            val hondos = Path(); val claros = Path()
+            for (k in 0 until 4) {
+                val sx = if (k % 2 == 0) 1f else -1f
+                val y = fila * k
+                for (j in -2 until 18) {
+                    val x = paso * j
+                    hondos.moveTo(x, y); hondos.lineTo(x + sx * fila * 0.9f, y + fila)
+                    claros.moveTo(x + 1.2f * u, y); claros.lineTo(x + 1.2f * u + sx * fila * 0.9f, y + fila)
+                }
+            }
+            drawPath(hondos, SOMBRA_MUEBLE.copy(alpha = 0.32f), style = Stroke(0.9f * u))
+            drawPath(claros, LUZ_MUEBLE.copy(alpha = 0.3f), style = Stroke(0.6f * u))
+        }
+        espiga = img; densidadEspiga = u
+        return img
     }
 
     /** Lo que hay en el suelo: el ánfora, el brasero y la red. */
@@ -143,10 +171,15 @@ internal object PieEstanteArcontes {
             clipPath(cuerpo) {
                 // Las marcas del torno y el engobe claro que chorreó del hombro.
                 for (k in 1..9) drawLine(t.s(0.1f), Offset(x - an * 0.6f, y - al * 0.09f * k), Offset(x + an * 0.6f, y - al * 0.09f * k), 0.6f * u)
-                for (k in 0 until 4) {
-                    val cx = x - an * 0.3f + an * 0.2f * k
-                    val l = al * (0.18f + 0.14f * azar(8111, k))
-                    drawRoundRect(t.c(P.CALIZA_LUZ).copy(alpha = 0.35f), Offset(cx, y - al * 0.8f), Size(an * 0.07f, l), androidx.compose.ui.geometry.CornerRadius(an * 0.035f))
+                listOf(Triple(-0.26f, 0.3f, 0.09f), Triple(-0.02f, 0.14f, 0.05f), Triple(0.14f, 0.22f, 0.07f)).forEachIndexed { k, (dx, l, g) ->
+                    val c0 = Offset(x + an * dx, y - al * 0.8f)
+                    val chorro = Path().apply {
+                        moveTo(c0.x, c0.y); lineTo(c0.x + an * g, c0.y)
+                        quadraticTo(c0.x + an * g * 1.2f, c0.y + al * l * 0.6f, c0.x + an * g * 0.8f, c0.y + al * l)
+                        quadraticTo(c0.x + an * g * 0.4f, c0.y + al * l * 1.08f, c0.x + an * g * 0.1f, c0.y + al * l * 0.92f)
+                        quadraticTo(c0.x - an * g * 0.2f, c0.y + al * l * 0.5f, c0.x, c0.y); close()
+                    }
+                    drawPath(chorro, t.c(P.CALIZA_LUZ).copy(alpha = 0.28f + 0.1f * k))
                 }
                 drawLine(t.b(0.4f), Offset(x - an * 0.36f, y - al * 0.7f), Offset(x - an * 0.4f, y - al * 0.35f), an * 0.06f, StrokeCap.Round)
             }
@@ -166,11 +199,12 @@ internal object PieEstanteArcontes {
      */
     private fun DrawScope.brasero(pie: Offset, b: Rect, s: SitioArcontes) {
         val w = size.width; val u = density
-        val an = w * 0.17f
+        val an = w * 0.19f
         val fuego = Offset(pie.x, b.top + b.height * MuebleEstanteArcontes.BRASERO_Y)
-        val al = ((pie.y - fuego.y) / 0.3f).coerceIn(w * 0.06f, w * 0.15f)
+        val al = ((pie.y - fuego.y) / 0.3f).coerceIn(w * 0.06f, w * 0.19f)
         val top = pie.y - al
-        val t = s.t(Offset(pie.x, pie.y - al * 0.5f))
+        fun tb(p: Offset) = s.a.en(p.x / w, p.y / w, s.k(p) * 0.4f, 0.8f)
+        val t = tb(Offset(pie.x, pie.y - al * 0.5f))
         val viva = s.a.lumbre
         val fuerza = if (s.a.oscuro && !s.a.noche) 1f else 0.6f
         contactoArcontes(Offset(pie.x, pie.y), an * 1.3f, w * 0.022f, t, 0.5f)
@@ -181,7 +215,8 @@ internal object PieEstanteArcontes {
             cubicTo(pie.x + an * 0.56f, pie.y - al * 0.3f, pie.x + an * 0.46f, top + al * 0.2f, pie.x + an * 0.36f, top)
             close()
         }
-        drawPath(cuerpo, s.aLoAncho(pie.x - an * 0.5f, pie.x + an * 0.5f, pie.y - al * 0.5f) { it.c(P.BARRO_CLARO, -0.04f) })
+        drawPath(cuerpo, Brush.horizontalGradient(listOf(tb(Offset(pie.x - an * 0.45f, pie.y - al * 0.5f)).c(P.BARRO_CLARO, -0.04f), t.c(P.BARRO_CLARO, -0.04f),
+            tb(Offset(pie.x + an * 0.45f, pie.y - al * 0.5f)).c(P.BARRO_CLARO, -0.04f)), pie.x - an * 0.5f, pie.x + an * 0.5f))
         clipPath(cuerpo) {
             // Redondo: el lado que mira a la boca de la cueva, claro; el otro, en sombra; y el tizne de la boca de arriba.
             if (!s.a.oscuro) {
@@ -237,7 +272,7 @@ internal object PieEstanteArcontes {
         drawArc(t.b(0.4f), 180f, 120f, false, boca.topLeft, boca.size, style = Stroke(1f * u))
         val oc = Offset(pie.x + an * 0.06f, top - al * 0.04f)
         val orr = minOf(al * 0.4f, an * 0.3f)
-        val to = s.t(oc)
+        val to = tb(oc)
         rotate(-5f, oc) {
             val olla = Path().apply {
                 moveTo(oc.x - orr * 0.7f, oc.y - orr * 0.9f); lineTo(oc.x + orr * 0.7f, oc.y - orr * 0.9f)
@@ -253,7 +288,7 @@ internal object PieEstanteArcontes {
         }
         // El resplandor de las brasas en el aire, de noche.
         if (viva) {
-            charcoArcontes(Offset(fuego.x, fuego.y + al * 0.05f), w * 0.3f, P.BRASA, 0.45f * fuerza)
+            charcoArcontes(Offset(fuego.x, fuego.y + al * 0.05f), w * 0.22f, P.BRASA, 0.5f * fuerza)
             charcoArcontes(Offset(fuego.x, fuego.y + al * 0.05f), w * 0.09f, P.LLAMA_HALO, 0.8f * fuerza)
         }
     }
@@ -267,7 +302,7 @@ internal object PieEstanteArcontes {
     private fun DrawScope.red(pie: Offset, b: Rect, s: SitioArcontes) {
         val w = size.width; val u = density
         val an = w * 0.32f
-        val al = minOf(pie.y - b.top - w * 0.03f, w * 0.16f)
+        val al = minOf(pie.y - b.top - w * 0.02f, w * 0.2f)
         val t = s.t(Offset(pie.x, pie.y - al * 0.5f))
         contactoArcontes(Offset(pie.x, pie.y), an * 1.05f, w * 0.02f, t, 0.48f)
         val bulto = Path().apply {

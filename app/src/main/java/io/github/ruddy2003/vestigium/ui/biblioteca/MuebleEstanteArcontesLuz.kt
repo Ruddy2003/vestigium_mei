@@ -222,7 +222,7 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
     /** El color de [c] con la luz del momento; [f] más claro (positivo) o más hondo (negativo), como lo pinta la luz. */
     fun c(c: Color, f: Float = 0f): Color {
         if (!a.oscuro) {
-            val b = if (a.noche) Color(c.red * 0.9f, c.green * 0.89f, c.blue * 0.92f, c.alpha) else c
+            val b = if (a.noche) Color(c.red * 0.92f, c.green * 0.89f, c.blue * 0.88f, c.alpha) else c
             val d = if (f > 0f) mezcla(b, LUZ_MUEBLE, f)
                 else if (f < 0f) (if (a.noche) mezcla(b, Color(b.red * 0.5f, b.green * 0.5f, b.blue * 0.6f, b.alpha), -f * 1.3f) else mezcla(b, hondo, -f))
                 else b
@@ -247,9 +247,9 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
         v = mezcla(v, lumbre, 0.13f * k)
         if (sol > 0f) {
             // La luna: el mismo color, un poco más claro y frío donde toca (la caliza sigue caliza; no vela lo demás).
-            val q = 0.24f * sol * sol
-            v = Color((v.red + (c.red * 0.78f + 0.02f) * q).coerceAtMost(1f), (v.green + (c.green * 0.86f + 0.04f) * q).coerceAtMost(1f),
-                (v.blue + (c.blue * 0.98f + 0.12f) * q).coerceAtMost(1f), c.alpha)
+            val q = 0.15f * sol * sol
+            v = Color((v.red + (c.red * 0.62f + 0.02f) * q).coerceAtMost(1f), (v.green + (c.green * 0.78f + 0.05f) * q).coerceAtMost(1f),
+                (v.blue + (c.blue * 0.95f + 0.16f) * q).coerceAtMost(1f), c.alpha)
         }
         return v
     }
@@ -295,7 +295,7 @@ internal class TonoArcontes(val a: AireArcontes, val k: Float, val sol: Float, v
      */
     fun etiqueta(col: Color): Color {
         if (!a.oscuro) return c(col)
-        val lejos = Color(col.red * 0.42f, col.green * 0.38f, col.blue * 0.32f, col.alpha)
+        val lejos = mezcla(Color(col.red * 0.4f, col.green * 0.36f, col.blue * 0.3f, col.alpha), p.NOCHE.copy(alpha = col.alpha), 0.12f)
         val alumbrado = Color((col.red * 1.04f).coerceAtMost(1f), col.green * 0.92f, col.blue * 0.7f, col.alpha)
         var v = mezcla(lejos, alumbrado, (1.1f * Math.pow(k.toDouble(), 1.7).toFloat()).coerceAtMost(1f))
         if (sol > 0f) v = mezcla(v, mezcla(col, p.LUNA, 0.3f).let { Color(it.red * 0.7f, it.green * 0.74f, it.blue * 0.82f, it.alpha) }, 0.45f * sol)
