@@ -7,7 +7,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -118,19 +121,27 @@ internal object RocaEstanteArcontes {
         return img
     }
 
-    /** La textura de la caliza sobre [r], en mosaico; [fuerza] la baja (de noche y en los fondos en sombra). */
+    private var densidadBrocha = -1f
+    private var brocha: ShaderBrush? = null
+
+    /** La baldosa de la caliza como brocha que se repite (hecha una vez): pegarla trozo a trozo pesaba mucho al grabar. */
+    private fun brochaCaliza(u: Float): ShaderBrush {
+        val hecha = brocha
+        if (hecha != null && densidadBrocha == u) return hecha
+        val b = ShaderBrush(ImageShader(baldosaCaliza(u), TileMode.Repeated, TileMode.Repeated))
+        brocha = b; densidadBrocha = u
+        return b
+    }
+
+    /**
+     * La textura de la caliza sobre [r], con la baldosa repetida en un solo rectángulo (corrida [desfase] para que cada pieza
+     * tenga la suya); [fuerza] la baja (de noche y en los fondos en sombra).
+     */
     fun DrawScope.textura(r: Rect, fuerza: Float, desfase: Float = 0f) {
         if (r.width < 1f || r.height < 1f) return
-        val b = baldosaCaliza(density)
-        val a = fuerza.coerceIn(0f, 1f)
-        clipRect(r.left, r.top, r.right, r.bottom) {
-            var y = r.top - (desfase % b.height)
-            while (y < r.bottom) {
-                var x = r.left - ((desfase * 1.7f) % b.width)
-                while (x < r.right) { drawImage(b, Offset(x, y), alpha = a); x += b.width }
-                y += b.height
-            }
-        }
+        val b = brochaCaliza(density)
+        val dx = (desfase * 1.7f) % (BW * density); val dy = desfase % (BH * density)
+        translate(-dx, -dy) { drawRect(b, Offset(r.left + dx, r.top + dy), r.size, alpha = fuerza.coerceIn(0f, 1f)) }
     }
 
     // ---------------------------------------------------------------- la pared de la corona
@@ -176,7 +187,7 @@ internal object RocaEstanteArcontes {
         val (luz, fuerza) = when {
             a.oscuro -> P.LUNA_RAS to 0.2f
             a.noche -> P.OCASO to 0.34f
-            else -> Color(0xFFFFF1CC) to 0.62f
+            else -> Color(0xFFFFEDC2) to 0.74f
         }
         // La penumbra: la mancha agrandada en cinco pasos, cada uno con un poco de luz.
         for (j in 5 downTo 1) {

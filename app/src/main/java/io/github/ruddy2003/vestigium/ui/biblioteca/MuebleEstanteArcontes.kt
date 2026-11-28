@@ -5,6 +5,9 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.ImageShader
+import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -29,21 +32,25 @@ import kotlin.math.sqrt
  */
 internal object CapaArcontes {
     private var clave: String? = null
-    private var imagen: ImageBitmap? = null
+    private var brocha: ShaderBrush? = null
 
-    /** Pega la imagen de las filas [arriba] a [abajo] (enteras) de todo el ancho; la pinta antes con [pintar] si cambió. */
+    /**
+     * Pega la imagen de las filas [arriba] a [abajo] (enteras) de todo el ancho; la pinta antes con [pintar] si cambió. Se pega
+     * como brocha hecha una vez con la imagen (pegar la imagen misma en cada dibujo la volvía a copiar al grabar).
+     */
     fun DrawScope.pegar(cual: String, arriba: Int, abajo: Int, pintar: DrawScope.() -> Unit) {
         val ancho = ceil(size.width).toInt(); val alto = abajo - arriba
         if (ancho < 1 || alto < 1) return
-        var img = imagen
-        if (img == null || clave != cual) {
+        var b = brocha
+        if (b == null || clave != cual) {
             val nueva = ImageBitmap(ancho, alto)
             CanvasDrawScope().draw(Density(density, fontScale), layoutDirection, Canvas(nueva), Size(ancho.toFloat(), alto.toFloat())) {
                 translate(0f, -arriba.toFloat()) { pintar() }
             }
-            imagen = nueva; clave = cual; img = nueva
+            b = ShaderBrush(ImageShader(nueva, TileMode.Clamp, TileMode.Clamp))
+            brocha = b; clave = cual
         }
-        drawImage(img, Offset(0f, arriba.toFloat()))
+        translate(0f, arriba.toFloat()) { drawRect(b, Offset.Zero, Size(ancho.toFloat(), alto.toFloat())) }
     }
 }
 
@@ -416,30 +423,44 @@ internal object MuebleEstanteArcontes {
  * que [Volumen.centro], o -1 si esa repisa no tiene. La clave es el número de repisas y el momento.
  */
 internal object LucesHuecoArcontes {
-    @Volatile private var clave = ""
+    @Volatile private var clave = -1
     @Volatile private var centros = FloatArray(0)
     @Volatile private var mensula = -1
+    private val NINGUNA = FloatArray(0)
+    // Las de la última consulta, ya en anchos (cada volumen pregunta por las mismas: no se vuelven a armar).
+    @Volatile private var hechas = NINGUNA
+    @Volatile private var claveHechas = -1
 
-    fun clave(repisas: Int, oscuro: Boolean, noche: Boolean) = "$repisas:$oscuro:$noche"
+    /** La clave de un estante: el número de repisas y el momento (en un número, sin armar texto en cada volumen). */
+    fun clave(repisas: Int, oscuro: Boolean, noche: Boolean) = repisas * 4 + (if (oscuro) 2 else 0) + (if (noche) 1 else 0)
 
-    fun poner(clave: String, c: FloatArray, m: Int) { centros = c; mensula = m; this.clave = clave }
+    fun poner(clave: Int, c: FloatArray, m: Int) {
+        if (clave == this.clave && m == mensula && c.contentEquals(centros)) return
+        centros = c; mensula = m; claveHechas = -1; this.clave = clave
+    }
 
     /** Las lámparas de un estante de [repisas] repisas, en anchos (x, y, x, y…), o ninguna si no se apuntaron. */
     fun velas(repisas: Int, oscuro: Boolean, noche: Boolean): FloatArray {
+        val k0 = clave(repisas, oscuro, noche)
+        if (clave != k0) return NINGUNA
+        if (claveHechas == k0) return hechas
         val c = centros
-        if (clave != clave(repisas, oscuro, noche)) return FloatArray(0)
-        val l = ArrayList<Float>()
         val m = MuebleEstanteArcontes
+        var n = 0
+        for (x in c) if (x >= 0f) n++
+        val l = FloatArray(2 * n + (if (mensula >= 0) 2 else 0))
+        var i = 0
         for (k in c.indices) {
             if (c[k] < 0f) continue
-            l.add(m.LADO + c[k] * (1f - 2 * m.LADO))
-            l.add(m.CORONA + k * m.FILA / m.ANCHO_NOMINAL + (m.ALTO_REPISA.value * (1f - m.VELA_Y)) / m.ANCHO_NOMINAL)
+            l[i++] = m.LADO + c[k] * (1f - 2 * m.LADO)
+            l[i++] = m.CORONA + k * m.FILA / m.ANCHO_NOMINAL + (m.ALTO_REPISA.value * (1f - m.VELA_Y)) / m.ANCHO_NOMINAL
         }
         if (mensula >= 0) {
-            l.add(m.MENSULA_X)
-            l.add(m.CORONA + mensula * m.FILA / m.ANCHO_NOMINAL + m.ALTO_REPISA.value * m.MENSULA_Y / m.ANCHO_NOMINAL)
+            l[i++] = m.MENSULA_X
+            l[i] = m.CORONA + mensula * m.FILA / m.ANCHO_NOMINAL + m.ALTO_REPISA.value * m.MENSULA_Y / m.ANCHO_NOMINAL
         }
-        return l.toFloatArray()
+        hechas = l; claveHechas = k0
+        return l
     }
 }
 

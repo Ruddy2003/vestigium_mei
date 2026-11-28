@@ -44,7 +44,7 @@ internal object CoronaEstanteArcontes {
     fun DrawScope.colgado(s: SitioArcontes, apoyo: Float) {
         val w = size.width
         val c1 = Offset(w * 0.11f, w * 0.105f)
-        val c2 = Offset(w * 0.52f, w * 0.1f)
+        val c2 = Offset(w * 0.52f, w * 0.088f)
         // Las sombras en la roca, una sola vez.
         sombraHisopo(c1, w * 0.16f, s)
         sombraBolsa(c2, s)

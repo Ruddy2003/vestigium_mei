@@ -8,9 +8,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -164,39 +167,33 @@ internal object VolumenEstanteArcontes {
             drawPath(p, SOMBRA_MUEBLE.copy(alpha = 0.32f), style = Stroke(0.7f * u))
             drawPath(q, LUZ_MUEBLE.copy(alpha = 0.22f), style = Stroke(0.5f * u))
         }
+        brochaGrano = baldosaGrano?.let { ShaderBrush(ImageShader(it, TileMode.Repeated, TileMode.Repeated)) }
+        brochaSarga = baldosaSarga?.let { ShaderBrush(ImageShader(it, TileMode.Repeated, TileMode.Repeated)) }
         densidadBaldosas = u
     }
 
-    /** El grano del cuero en [r]: la baldosa de rayitas, pegada (más barato que trazarlas una a una). */
+    private var brochaGrano: ShaderBrush? = null
+    private var brochaSarga: ShaderBrush? = null
+
+    /** El grano del cuero en [r]: la baldosa de rayitas repetida, corrida según la semilla (más barato que trazarlas una a una). */
     private fun DrawScope.grano(r: Rect, semilla: Int, fuerza: Float) {
-        val b = baldosaGrano ?: return
-        mosaico(b, r, 0.55f * fuerza, (b.width * azar(semilla, 7)).toInt(), (b.height * azar(semilla, 8)).toInt())
+        val b = brochaGrano ?: return
+        trama(b, r, 0.55f * fuerza, 60f * density * azar(semilla, 7), 120f * density * azar(semilla, 8))
     }
 
-    /** La sarga de la lana en [r]: la baldosa de diagonales, pegada. */
+    /** La sarga de la lana en [r]: la baldosa de diagonales repetida. */
     private fun DrawScope.sarga(r: Rect, fuerza: Float) {
-        val b = baldosaSarga ?: return
-        mosaico(b, r, 0.65f * fuerza, 0, 0)
+        val b = brochaSarga ?: return
+        trama(b, r, 0.65f * fuerza, 0f, 0f)
     }
 
     /**
-     * La baldosa [b] en mosaico sobre [r], desde el punto ([dx], [dy]) de la baldosa: cada trozo se pega del tamaño justo, sin
-     * recortar (en el escritorio un recorte a medio píxel obliga a pintar con máscara, y eso pesa).
+     * La brocha de una baldosa repetida [b] sobre [r], corrida ([dx], [dy]): un solo rectángulo (pegar la baldosa trozo a trozo,
+     * o recortarla, pesaba al grabar y al pintar).
      */
-    private fun DrawScope.mosaico(b: ImageBitmap, r: Rect, alfa: Float, dx: Int, dy: Int) {
+    private fun DrawScope.trama(b: ShaderBrush, r: Rect, alfa: Float, dx: Float, dy: Float) {
         if (r.width < 2f || r.height < 2f) return
-        val x0 = r.left.toInt(); val y0 = r.top.toInt(); val x1 = r.right.toInt(); val y1 = r.bottom.toInt()
-        var y = y0; var sy = Math.floorMod(dy, b.height); var k = 0
-        while (y < y1 && k < 40) {
-            val hh = minOf(b.height - sy, y1 - y)
-            var x = x0; var sx = Math.floorMod(dx, b.width)
-            while (x < x1 && k < 40) {
-                val ww = minOf(b.width - sx, x1 - x)
-                drawImage(b, IntOffset(sx, sy), IntSize(ww, hh), IntOffset(x, y), IntSize(ww, hh), alpha = alfa)
-                x += ww; sx = 0; k++
-            }
-            y += hh; sy = 0
-        }
+        translate(-dx, -dy) { drawRect(b, Offset(r.left + dx, r.top + dy), r.size, alpha = alfa.coerceIn(0f, 1f)) }
     }
 
     /** La luna de los Sueños: el disco apagado y la media luna de plata encima, con su canto oscuro y su sombra. */

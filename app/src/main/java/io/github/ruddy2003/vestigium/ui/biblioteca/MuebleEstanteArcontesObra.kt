@@ -7,7 +7,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -40,8 +43,8 @@ internal object ObraEstanteArcontes {
     // ---------------------------------------------------------------- la veta del olivo, en baldosas
 
     private var densidadVeta = -1f
-    private var vetaH: ImageBitmap? = null
-    private var vetaV: ImageBitmap? = null
+    private var vetaH: ShaderBrush? = null
+    private var vetaV: ShaderBrush? = null
 
     /**
      * La veta del olivo en una baldosa neutra (sombra violeta y luz crema), pintada una vez por densidad: líneas onduladas que se
@@ -93,21 +96,23 @@ internal object ObraEstanteArcontes {
     /** Cuánto se ve la veta parda: de noche, poco (lejos de la llama el olivo se hunde en el azul violáceo). La pone el estante. */
     var vetaNoche = 1f
 
-    /** La veta sobre [r], en mosaico, empezando en [desde] (para que cada pieza tenga la suya). */
+    /**
+     * La veta sobre [r], con la baldosa repetida en un solo rectángulo (una brocha hecha una vez: pegarla trozo a trozo pesaba
+     * mucho al grabar), corrida [desde] a lo largo para que cada pieza tenga la suya.
+     */
     fun DrawScope.veta(r: Rect, vertical: Boolean, fuerza: Float, desde: Float = 0f) {
         if (r.width < 1f || r.height < 1f) return
         val u = density
-        if (densidadVeta != u) { vetaH = pintarVeta(u, false); vetaV = pintarVeta(u, true); densidadVeta = u }
+        if (densidadVeta != u) {
+            val h = pintarVeta(u, false); val v = pintarVeta(u, true)
+            vetaH = ShaderBrush(ImageShader(h, TileMode.Repeated, TileMode.Repeated)); vetaV = ShaderBrush(ImageShader(v, TileMode.Repeated, TileMode.Repeated))
+            densidadVeta = u
+        }
         val b = (if (vertical) vetaV else vetaH) ?: return
         val a = (fuerza * vetaNoche).coerceIn(0f, 1f)
-        clipRect(r.left, r.top, r.right, r.bottom) {
-            var y = r.top - (if (vertical) desde % b.height else 0f)
-            while (y < r.bottom) {
-                var x = r.left - (if (vertical) 0f else desde % b.width)
-                while (x < r.right) { drawImage(b, Offset(x, y), alpha = a); x += b.width }
-                y += b.height
-            }
-        }
+        val d = desde % (220f * u)
+        val dx = if (vertical) 0f else d; val dy = if (vertical) d else 0f
+        translate(-dx, -dy) { drawRect(b, Offset(r.left + dx, r.top + dy), r.size, alpha = a) }
     }
 
     // ---------------------------------------------------------------- la cornisa
@@ -425,18 +430,18 @@ internal object ObraEstanteArcontes {
             val radio = androidx.compose.ui.geometry.CornerRadius(margen * (0.6f + 0.6f * azar(7816, semilla)))
             drawRoundRect(t.s(0.35f), al.topLeft + Offset(1.4f * u, 1.6f * u), al.size, radio)
             drawRoundRect(t.c(tono, -0.02f), al.topLeft, al.size, radio)
-            clipRect(al.left + 1f * u, al.top + 1f * u, al.right - 1f * u, al.bottom - 1f * u) {
-                with(RocaEstanteArcontes) { textura(al, if (s.a.oscuro) 0.7f else 1f, semilla * 13f) }
-                // El picado de la almohadilla, más bruto que el margen: golpes sueltos.
-                val golpes = Path()
-                for (j in 0 until (al.width * al.height / (u * u * 90f)).toInt().coerceIn(4, 26)) {
-                    val p = Offset(al.left + al.width * azar(7812 + semilla, j), al.top + al.height * azar(7813 + semilla, j))
-                    val a = 0.6f + 1.6f * azar(7817 + semilla, j)
-                    golpes.moveTo(p.x, p.y); golpes.lineTo(p.x + kotlin.math.cos(a) * 2f * u, p.y + kotlin.math.sin(a) * 2f * u)
-                }
-                drawPath(golpes, t.s(0.22f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
-                drawRect(t.s(0.18f), Offset(al.left, al.bottom - al.height * 0.3f), Size(al.width, al.height * 0.3f))
+            // La textura y el picado, dentro de la almohadilla (sin recorte: todo cae dentro).
+            val dentro = al.deflate(1f * u)
+            with(RocaEstanteArcontes) { textura(dentro, if (s.a.oscuro) 0.7f else 1f, semilla * 13f) }
+            // El picado de la almohadilla, más bruto que el margen: golpes sueltos.
+            val golpes = Path()
+            for (j in 0 until (al.width * al.height / (u * u * 90f)).toInt().coerceIn(4, 26)) {
+                val p = Offset(dentro.left + 2f * u + (dentro.width - 4f * u) * azar(7812 + semilla, j), dentro.top + 2f * u + (dentro.height - 4f * u) * azar(7813 + semilla, j))
+                val a = 0.6f + 1.6f * azar(7817 + semilla, j)
+                golpes.moveTo(p.x, p.y); golpes.lineTo(p.x + kotlin.math.cos(a) * 1.8f * u, p.y + kotlin.math.sin(a) * 1.8f * u)
             }
+            drawPath(golpes, t.s(0.22f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
+            drawRect(t.s(0.18f), Offset(dentro.left, dentro.bottom - dentro.height * 0.3f), Size(dentro.width, dentro.height * 0.3f))
             drawRoundRect(t.b(0.35f), al.topLeft - Offset(0.6f * u, 0.6f * u), al.size, radio, style = Stroke(0.8f * u))
         }
         // La junta: honda, de grueso desparejo.

@@ -98,9 +98,8 @@ internal object PaletaArcontes {
     /** La grieta: el blanco y su halo violeta, la única luz que no es de este mundo. */
     val GRIETA = TrazosArcontes.GRIETA
     val GRIETA_HALO = TrazosArcontes.GRIETA_HALO
-    /** La noche de la cueva: el azul negro del cielo antiguo (la del Ideario), la del mueble y la de los Sueños. */
+    /** La noche de la cueva: el azul violáceo negro del cielo antiguo (la del Ideario) y la de los Sueños. */
     val NOCHE = Color(0xFF090B1D)
-    val NOCHE_CUERPO = Color(0xFF0D0E1E)
     val NOCHE_SUENOS = Color(0xFF080B20)
     /** La luna que entra por la boca y su roce frío. */
     val LUNA = Color(0xFFD9E1F2)
@@ -498,6 +497,17 @@ private val TINTES_ARCONTES = listOf(
  */
 internal fun tonoDeDiaArcontes(t: Color?, oscuro: Boolean): Color? {
     if (t == null) return null
+    // Hay pocos ánimos distintos y cada volumen pregunta en cada dibujo: se guarda lo ya buscado (la mezcla es en Oklab y pesa).
+    val clave = t.value.toLong() xor (if (oscuro) 1L else 0L)
+    synchronized(TINTES_HECHOS) { TINTES_HECHOS[clave]?.let { return it } }
+    val v = tonoDeDiaArcontesSinGuardar(t, oscuro)
+    synchronized(TINTES_HECHOS) { if (TINTES_HECHOS.size > 256) TINTES_HECHOS.clear(); TINTES_HECHOS[clave] = v }
+    return v
+}
+
+private val TINTES_HECHOS = HashMap<Long, Color>()
+
+private fun tonoDeDiaArcontesSinGuardar(t: Color, oscuro: Boolean): Color {
     val (dia, noche) = TONOS_ARCONTES
     val x = (if (oscuro) enEscalaArcontes(t, noche) else null) ?: enEscalaArcontes(t, dia) ?: return t
     for (i in 0 until TINTES_ARCONTES.size - 1) {

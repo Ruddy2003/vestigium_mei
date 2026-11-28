@@ -7,7 +7,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -85,17 +88,8 @@ internal object PieEstanteArcontes {
         val t = s.t(Offset(w * 0.5f, (y0 + h) / 2))
         translate(0f, 2f * u) { drawPath(forma, t.s(0.35f)) }
         drawPath(forma, s.aLoAncho(w * 0.12f, w * 0.93f, (y0 + h) / 2) { it.c(P.JUNCO, -0.02f) })
-        clipPath(forma) {
-            // La espiga: hileras de juncos en ángulo, una hacia un lado y la siguiente hacia el otro (en una baldosa).
-            val b = baldosaEspiga(u)
-            val al = if (s.a.oscuro) 0.75f else 1f
-            var y = y0; var k = 0
-            while (y < h + 1f && k < 80) {
-                var x = w * 0.1f; var j = 0
-                while (x < w * 0.95f && j < 40) { drawImage(b, Offset(x, y), alpha = al); x += b.width; j++ }
-                y += b.height; k++
-            }
-        }
+        // La espiga: hileras de juncos en ángulo, una hacia un lado y la siguiente hacia el otro (una baldosa repetida, en una brocha).
+        drawPath(forma, brochaEspiga(u), alpha = if (s.a.oscuro) 0.75f else 1f)
         // La orilla atada, del fondo.
         drawLine(s.aLoAncho(w * 0.2f, w * 0.86f, y0) { it.c(P.JUNCO_OSC, -0.1f) }, Offset(w * 0.2f, y0), Offset(w * 0.86f, y0), 2.4f * u)
         if (!s.a.oscuro) drawLine(t.b(0.35f), Offset(w * 0.2f, y0 - 0.8f * u), Offset(w * 0.86f, y0 - 0.8f * u), 0.7f * u)
@@ -107,6 +101,16 @@ internal object PieEstanteArcontes {
 
     private var densidadEspiga = -1f
     private var espiga: ImageBitmap? = null
+    private var densidadBrocha = -1f
+    private var brocha: ShaderBrush? = null
+
+    private fun brochaEspiga(u: Float): ShaderBrush {
+        val hecha = brocha
+        if (hecha != null && densidadBrocha == u) return hecha
+        val b = ShaderBrush(ImageShader(baldosaEspiga(u), TileMode.Repeated, TileMode.Repeated))
+        brocha = b; densidadBrocha = u
+        return b
+    }
 
     /** El tejido en espiga de la estera, neutro (sombra violeta y luz crema), pintado una vez por densidad y pegado en mosaico. */
     private fun baldosaEspiga(u: Float): ImageBitmap {
