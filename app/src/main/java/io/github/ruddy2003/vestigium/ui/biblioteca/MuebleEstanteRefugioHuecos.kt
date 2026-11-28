@@ -31,14 +31,20 @@ internal object HuecosEstanteRefugio {
         val x0 = ocupado + w * 0.014f
         val libre = r.right - x0 - w * 0.03f
         if (libre < w * 0.12f) return
-        val orden = intArrayOf(0, 3, 1, 4, 2)
         val i = Math.floorMod(2 * k + k / 5, 5)
         if (libre > w * 0.5f) {
             val mitad = libre * 0.5f
-            grupo(orden[i], Rect(x0, r.top, x0 + mitad, r.bottom), g, centrado = true)
-            grupo(orden[Math.floorMod(i + 3, 5)], Rect(x0 + mitad + w * 0.012f, r.top, r.right - w * 0.03f, r.bottom), g, centrado = true)
-        } else grupo(orden[i], Rect(x0, r.top, x0 + libre, r.bottom), g)
+            grupo(primero(k), Rect(x0, r.top, x0 + mitad, r.bottom), g, centrado = true)
+            // El segundo grupo de un hueco ancho, que no repita el de esta repisa ni el de las vecinas.
+            val evitar = setOf(primero(k), primero(k - 1), primero(k + 1))
+            val segundo = listOf(3, 4, 2, 1).map { ORDEN[Math.floorMod(i + it, 5)] }.firstOrNull { it !in evitar } ?: ORDEN[Math.floorMod(i + 3, 5)]
+            grupo(segundo, Rect(x0 + mitad + w * 0.012f, r.top, r.right - w * 0.03f, r.bottom), g, centrado = true)
+        } else grupo(primero(k), Rect(x0, r.top, x0 + libre, r.bottom), g)
     }
+
+    /** El orden en que salen los grupos, repisa a repisa; el de la repisa [k] (la sexta no repite la primera). */
+    private val ORDEN = intArrayOf(0, 3, 1, 4, 2)
+    private fun primero(k: Int): Int = ORDEN[Math.floorMod(2 * k + Math.floorDiv(k, 5), 5)]
 
     /** Un grupo en su sitio [r]: pegado a las entradas o, si comparte un hueco muy ancho con otro, en medio de su mitad. */
     private fun DrawScope.grupo(cual: Int, r: Rect, g: MarcoRefugio, centrado: Boolean = false) {
