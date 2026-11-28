@@ -31,10 +31,15 @@ internal object PieEstanteOrden {
     private fun en(c: Color, f: Float, p: Offset, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float): Color =
         if (a.oscuro) { val b = a.luz(c, cerca(p), frio(p)); if (f < 0f) mezcla(b, P.NOCHE, -f * 0.45f) else b } else a.dia(c, f, cerca(p))
 
-    /** Una franja horizontal en tramos lisos con la luz cambiando a lo ancho. */
+    /** Una franja horizontal con la luz cambiando a lo ancho: con lumbre, en un degradado; de día, en tres tramos lisos. */
     private fun DrawScope.franjaH(r: Rect, c: Color, f: Float, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
         if (r.width <= 0f || r.height <= 0f) return
-        val n = if (a.lumbre) 12 else 3
+        if (a.lumbre) {
+            val paradas = Array(9) { i -> val x = r.left + r.width * i / 8f; (i / 8f) to en(c, f, Offset(x, r.center.y), a, cerca, frio) }
+            drawRect(Brush.horizontalGradient(*paradas, startX = r.left, endX = r.right), r.topLeft, r.size)
+            return
+        }
+        val n = 3
         val paso = r.width / n
         for (i in 0 until n) {
             val x0 = r.left + paso * i
@@ -64,7 +69,7 @@ internal object PieEstanteOrden {
         val u = density
         val w = size.width
         val h = r.height
-        val z = Rect(w * 0.004f, r.top, w * 0.996f, r.bottom)
+        val z = Rect(0f, r.top, w, r.bottom)
         franjaH(z, P.PAVON, 0f, a, cerca, frio)
         // El junquillo de latón y la moldura de arriba.
         franjaH(Rect(z.left, z.top, z.right, z.top + w * 0.008f), P.LATON, 0f, a, cerca, frio)
@@ -293,21 +298,26 @@ internal object PieEstanteOrden {
         drawRect(en(P.OXIDO, 0f, c, a, cerca, frio).copy(alpha = 0.5f), Offset(cuerpo.left, cuerpo.bottom - cuerpo.height * 0.08f), Size(cuerpo.width, cuerpo.height * 0.08f))
         if (a.lumbre) drawRect(a.filo(0.5f * k), Offset(cuerpo.left, cuerpo.top), Size(1.6f * u, cuerpo.height))
         // El trapo gris colgado del borde, con sus pliegues.
-        val t0 = cuerpo.left + cuerpo.width * 0.08f
+        val t0 = cuerpo.left + cuerpo.width * 0.06f
+        val ab = tapa.bottom + w * 0.1f
         val trapo = Path().apply {
-            moveTo(t0, tapa.center.y - w * 0.004f); lineTo(t0 + w * 0.09f, tapa.center.y + w * 0.002f)
-            cubicTo(t0 + w * 0.088f, tapa.bottom + w * 0.03f, t0 + w * 0.075f, tapa.bottom + w * 0.06f, t0 + w * 0.07f, tapa.bottom + w * 0.075f)
-            lineTo(t0 + w * 0.05f, tapa.bottom + w * 0.065f); lineTo(t0 + w * 0.035f, tapa.bottom + w * 0.08f); lineTo(t0 + w * 0.012f, tapa.bottom + w * 0.06f)
-            cubicTo(t0 + w * 0.004f, tapa.bottom + w * 0.03f, t0 - w * 0.004f, tapa.bottom + w * 0.01f, t0, tapa.center.y - w * 0.004f)
+            moveTo(t0, tapa.center.y - w * 0.003f)
+            cubicTo(t0 + w * 0.04f, tapa.center.y - w * 0.008f, t0 + w * 0.09f, tapa.center.y - w * 0.004f, t0 + w * 0.13f, tapa.center.y + w * 0.002f)
+            cubicTo(t0 + w * 0.135f, tapa.bottom + w * 0.03f, t0 + w * 0.13f, ab - w * 0.03f, t0 + w * 0.128f, ab - w * 0.01f)
+            cubicTo(t0 + w * 0.11f, ab + w * 0.004f, t0 + w * 0.098f, ab - w * 0.016f, t0 + w * 0.082f, ab - w * 0.004f)
+            cubicTo(t0 + w * 0.066f, ab + w * 0.01f, t0 + w * 0.05f, ab - w * 0.012f, t0 + w * 0.034f, ab - w * 0.002f)
+            cubicTo(t0 + w * 0.02f, ab + w * 0.006f, t0 + w * 0.008f, ab - w * 0.01f, t0 + w * 0.002f, ab - w * 0.02f)
+            cubicTo(t0 - w * 0.004f, tapa.bottom + w * 0.04f, t0 - w * 0.004f, tapa.bottom + w * 0.01f, t0, tapa.center.y - w * 0.003f)
             close()
         }
         translate(w * 0.006f, w * 0.005f) { drawPath(trapo, a.sombra(0.35f)) }
         val tela = en(Color(0xFF8E9298), 0f, c, a, cerca, frio)
         drawPath(trapo, tela)
         clipPath(trapo) {
-            listOf(0.025f, 0.055f).forEach { f -> drawLine(a.sombra(0.35f), Offset(t0 + w * f, tapa.center.y), Offset(t0 + w * (f + 0.006f), tapa.bottom + w * 0.08f), 2.4f * u) }
-            drawLine(a.brillo(0.3f, k), Offset(t0 + w * 0.014f, tapa.center.y), Offset(t0 + w * 0.02f, tapa.bottom + w * 0.06f), 1.6f * u)
-            drawRect(mezcla(tela, P.BETUN, 0.4f).copy(alpha = 0.4f), Offset(t0 + w * 0.03f, tapa.bottom + w * 0.03f), Size(w * 0.03f, w * 0.02f))
+            listOf(0.03f, 0.07f, 0.105f).forEach { f -> drawLine(a.sombra(0.32f), Offset(t0 + w * f, tapa.bottom), Offset(t0 + w * (f + 0.004f), ab), 2.6f * u, StrokeCap.Round) }
+            listOf(0.018f, 0.052f, 0.09f).forEach { f -> drawLine(a.brillo(0.28f, k), Offset(t0 + w * f, tapa.bottom), Offset(t0 + w * (f + 0.004f), ab - w * 0.01f), 1.4f * u, StrokeCap.Round) }
+            drawRect(a.sombra(0.3f), Offset(t0 - w * 0.01f, tapa.center.y - w * 0.01f), Size(w * 0.16f, tapa.height * 0.6f))
+            drawOval(mezcla(tela, P.BETUN, 0.4f).copy(alpha = 0.45f), Offset(t0 + w * 0.05f, tapa.bottom + w * 0.04f), Size(w * 0.04f, w * 0.025f))
         }
     }
 }

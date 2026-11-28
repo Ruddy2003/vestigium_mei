@@ -192,15 +192,19 @@ internal object VolumenEstanteOrden {
         // La cantonera de arriba, de punta apuntada.
         val capA = h * (0.05f + 0.012f * azar(s, 5)); val capB = h * 0.05f
         cantonera(Rect(0f, 0f, w, capA), capA + h * 0.045f, true, l, hacia2)
-        // La placa de latón del día, bajo la cantonera; su alto, el justo para el día a 16 sp y el mes.
+        // La placa de latón del día: en unos, bajo la cantonera; en otros, a media altura entre los nervios (así la repisa no
+        // hace una fila de placas). Su alto, el justo para el día a 16 sp y el mes.
         val alto = 29f * u
-        val py = capA + h * 0.06f + h * 0.025f * azar(s, 6)
+        val baja = azar(s, 12) > 0.62f
+        val py = if (baja) h * (0.34f + 0.06f * azar(s, 6)) else capA + h * 0.06f + h * 0.025f * azar(s, 6)
         val mx = w * 0.08f
         val pl = Rect(mx, py, w - mx, py + alto)
-        // Los nervios en relieve: uno sobre la placa y dos o tres bajo ella.
-        val zonaA = pl.bottom + 6f * u; val zonaB = h * 0.66f
-        val nN = 2 + (azar(s, 7) * 1.99f).toInt()
-        val nerv = mutableListOf(py - 3.4f * u)
+        // Los nervios en relieve: con la placa arriba, uno sobre ella y dos o tres debajo; con la placa en medio, dos arriba y
+        // uno debajo.
+        val zonaA = if (baja) capA + h * 0.08f else pl.bottom + 6f * u
+        val zonaB = if (baja) py - 7f * u else h * 0.66f
+        val nN = if (baja) 2 else 2 + (azar(s, 7) * 1.99f).toInt()
+        val nerv = mutableListOf(if (baja) minOf(pl.bottom + 7f * u, h * 0.7f) else py - 3.4f * u)
         for (q in 0 until nN) nerv.add(zonaA + (zonaB - zonaA) * q / maxOf(1, nN - 1))
         nerv.forEach { y ->
             drawRect(a.sombra(0.45f), Offset(0f, y + 2.6f * u), Size(w, 1.4f * u))
@@ -216,7 +220,7 @@ internal object VolumenEstanteOrden {
         placa(v, medidor, pl, l)
         cantonera(Rect(0f, h - capB, w, h), h - capB - h * 0.04f, false, l, hacia2)
         // En los Sueños, la media luna de plata, bajo la placa.
-        if (v.noche) lunaPlataOrden(Offset(w * 0.5f, (pl.bottom + zonaA) / 2 + 1.5f * u), minOf(w * 0.17f, 4.6f * u), a)
+        if (v.noche) lunaPlataOrden(Offset(w * 0.5f, if (baja) (capA + h * 0.045f + zonaA) / 2 + 2f * u else (pl.bottom + zonaA) / 2 + 1.5f * u), minOf(w * 0.17f, 4.6f * u), a)
         // La argolla de la cadena, con su grapa, y la cadena que baja a la barra de la repisa (un poco más abajo del lienzo).
         val gy = h * (0.74f + 0.05f * azar(s, 8))
         val gx = w * (0.38f + 0.24f * azar(s, 9))

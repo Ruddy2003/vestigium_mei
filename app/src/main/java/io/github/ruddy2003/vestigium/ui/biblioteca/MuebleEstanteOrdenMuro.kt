@@ -67,8 +67,8 @@ internal object MuroEstanteOrden {
                 // De noche, el halo de la vela del candelero sube por las placas; en la guardia, el frío de la luminaria.
                 val c = Offset(w * M.VELA_X, w * M.VELA_Y)
                 val f = if (a.dormida) 0.5f else 1f
-                mancha(c, w * 0.55f, P.LLAMA.copy(alpha = 0.16f * f))
-                mancha(c, w * 0.22f, P.LLAMA.copy(alpha = 0.24f * f))
+                mancha(c, w * 0.6f, P.LLAMA.copy(alpha = 0.19f * f))
+                mancha(c, w * 0.26f, P.LLAMA.copy(alpha = 0.28f * f))
                 if (a.dormida) mancha(Offset(w * 0.02f, -w * 0.06f), w * 0.85f, P.GUARDIA.copy(alpha = 0.24f))
             }
             placas(r, a, cerca, frio)
@@ -179,14 +179,23 @@ internal object MuroEstanteOrden {
     fun DrawScope.fondo(r: Rect, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
         val u = density
         val w = size.width
-        val n = if (a.lumbre) 12 else 4
-        val paso = r.width / n
         val y = r.top + r.height * 0.55f
-        for (i in 0 until n) {
-            val x0 = r.left + paso * i
-            val p = Offset(x0 + paso / 2, y)
+        fun en(x: Float): Color {
+            val p = Offset(x, y)
             val base = a.dia(P.PARED, -0.38f, cerca(p), frio(p))
-            drawRect(if (!a.oscuro) a.luminaria(base, M.luminaria(p.x / w, r.top / w) * 0.25f) else base, Offset(x0, r.top), Size(paso + (if (i < n - 1) 1f else 0f), r.height))
+            return if (!a.oscuro) a.luminaria(base, M.luminaria(p.x / w, r.top / w) * 0.25f) else base
+        }
+        if (a.lumbre) {
+            // Con lumbre, un degradado a lo ancho: el muro pasa de un charco a la sombra sin escalones.
+            val paradas = Array(9) { i -> (i / 8f) to en(r.left + r.width * i / 8f) }
+            drawRect(Brush.horizontalGradient(*paradas, startX = r.left, endX = r.right), r.topLeft, r.size)
+        } else {
+            val n = 4
+            val paso = r.width / n
+            for (i in 0 until n) {
+                val x0 = r.left + paso * i
+                drawRect(en(x0 + paso / 2), Offset(x0, r.top), Size(paso + (if (i < n - 1) 1f else 0f), r.height))
+            }
         }
         clipRect(r.left, r.top, r.right, r.bottom) {
             // Las costuras que caen en este casillero.

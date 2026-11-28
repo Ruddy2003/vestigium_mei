@@ -45,11 +45,19 @@ internal object ObraEstanteOrden {
         else a.luminaria(a.dia(c, f, cerca(p)), M.luminaria(x / w, y / w) * dia)
     }
 
-    /** Una franja horizontal [r] de [c] con la luz cambiando a lo ancho, en tramos lisos y opacos (doce con lumbre, cuatro de día). */
+    /**
+     * Una franja horizontal [r] de [c] con la luz cambiando a lo ancho: con lumbre, en un degradado de nueve paradas (en tramos
+     * se veían los escalones entre un charco y otro); de día, en cuatro tramos lisos y opacos (la luz de la sala apenas cambia).
+     */
     private fun DrawScope.franjaH(r: Rect, c: Color, f: Float, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float, dia: Float = 0.3f) {
         if (r.width <= 0f || r.height <= 0f) return
-        val n = if (a.lumbre) 12 else 4
         val y = r.center.y
+        if (a.lumbre) {
+            val paradas = Array(9) { i -> val x = r.left + r.width * i / 8f; (i / 8f) to en(c, f, x, y, a, cerca, frio, dia) }
+            drawRect(Brush.horizontalGradient(*paradas, startX = r.left, endX = r.right), r.topLeft, r.size)
+            return
+        }
+        val n = 4
         val paso = r.width / n
         for (i in 0 until n) {
             val x0 = r.left + paso * i

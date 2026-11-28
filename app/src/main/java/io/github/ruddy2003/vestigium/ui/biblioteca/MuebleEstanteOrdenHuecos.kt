@@ -18,9 +18,9 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /**
  * Lo que acompaña en los huecos libres de las repisas de Orden, en grupos de dos o tres cosas solapadas que cambian de un hueco
- * a otro: el estuche del micrómetro abierto (el del Ideario, aquí en la repisa) con el cartabón de latón apoyado detrás; los
- * rollos de plano atados, tumbados en pirámide, con otro de pie y una pesa; el candado grande con su cadena y su llave delante
- * del estandarte enrollado en su asta; y, donde arde la vela de media altura, la palmatoria con su vela, dos manuales tumbados y la
+ * a otro: el estuche del micrómetro abierto (el del Ideario, aquí en la repisa) con el cartabón de acero apoyado detrás; los
+ * rollos de plano atados, tumbados en pirámide, con otro de pie y una pesa; la arqueta blindada de las reliquias con el candado
+ * grande en su aldabón, su cadena y su llave; y, donde arde la vela de media altura, la palmatoria con su vela, tres manuales tumbados y la
  * lupa apoyada.
  */
 internal object HuecosEstanteOrden {
@@ -49,7 +49,7 @@ internal object HuecosEstanteOrden {
         var i = 0
         while (i < 3) {
             val clase = Math.floorMod(n + puestos + r.top.toInt() / 7, 3)
-            val ancho = when (clase) { 0 -> w * 0.2f; 1 -> w * 0.2f; else -> w * 0.19f }
+            val ancho = when (clase) { 0 -> w * 0.2f; 1 -> w * 0.2f; else -> w * 0.24f }
             if (fin - x < ancho) break
             when (clase) {
                 0 -> estuche(x, r, a, cerca, frio)
@@ -75,8 +75,9 @@ internal object HuecosEstanteOrden {
             val t = poligonoOrden(x0 + w * 0.06f, y, x0 + w * 0.185f, y, x0 + w * 0.06f, y - hh * 0.86f)
             val hueco = poligonoOrden(x0 + w * 0.078f, y - hh * 0.1f, x0 + w * 0.142f, y - hh * 0.1f, x0 + w * 0.078f, y - hh * 0.55f)
             translate(w * 0.012f, w * 0.004f) { drawPath(t, a.sombra(0.3f)) }
-            val lat = en(P.LATON, 0f, Offset(x0 + w * 0.1f, y - hh * 0.4f), a, cerca, frio)
+            val lat = en(P.ACERO_CLARO, 0f, Offset(x0 + w * 0.1f, y - hh * 0.4f), a, cerca, frio)
             drawPath(t, lat)
+            drawPath(t, en(P.LATON, 0f, Offset(x0 + w * 0.1f, y - hh * 0.4f), a, cerca, frio), style = Stroke(1.6f * u))
             drawPath(hueco, en(P.PARED, -0.45f, Offset(x0 + w * 0.1f, y - hh * 0.3f), a, cerca, frio))
             drawPath(hueco, a.sombra(0.4f), style = Stroke(1f * u))
             drawLine(a.destello(0.6f, cerca(c0), frio(c0)), Offset(x0 + w * 0.06f, y), Offset(x0 + w * 0.06f, y - hh * 0.86f), 1.2f * u)
@@ -205,106 +206,115 @@ internal object HuecosEstanteOrden {
         drawCircle(a.destello(0.7f, cerca(cuerpo.center), frio(cuerpo.center)), w * 0.002f, Offset(px - w * 0.002f, cuerpo.top - w * 0.008f))
     }
 
-    // ---------------------------------------------------------------- el candado y el estandarte enrollado
+    // ---------------------------------------------------------------- la arqueta y el candado
 
+    /**
+     * La arqueta blindada de las reliquias, pintada del gris azulado de las gavetas del Ideario: el cuerpo con sus dos flejes de
+     * latón remachados, la tapa abombada, el aldabón con el candado grande colgado, la cadena enrollada a su pie y una llave
+     * tumbada delante.
+     */
     private fun DrawScope.candado(x0: Float, r: Rect, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
         val u = density
         val w = size.width
         val hh = r.height
         val y = r.bottom - 2.5f * u
-        // El estandarte de la orden, enrollado en su asta y apoyado contra el muro: no se le ve el bordado.
-        val pie = Offset(x0 + w * 0.03f, y)
-        rotate(9f, pie) {
-            val asta = Rect(pie.x - w * 0.0045f, y - hh * 0.95f, pie.x + w * 0.0045f, y)
-            translate(w * 0.012f, w * 0.004f) { drawRect(a.sombra(0.28f), asta.topLeft, asta.size) }
-            redondoOrden(asta, en(P.ACERO_MEDIO, 0f, asta.center, a, cerca, frio), en(P.ACERO_CLARO, 0f, asta.center, a, cerca, frio), en(P.ACERO_HONDO, 0f, asta.center, a, cerca, frio), -1f)
-            drawRect(en(P.LATON, 0f, asta.center, a, cerca, frio), Offset(asta.left - w * 0.002f, y - hh * 0.06f), Size(asta.width + w * 0.004f, hh * 0.06f))
-            // La tela enrollada: un huso carmesí con sus vueltas en espiral y el fleco de latón que asoma.
-            val t0 = y - hh * 0.88f; val t1 = y - hh * 0.22f
-            val ancho = w * 0.026f
-            val huso = Path().apply {
-                moveTo(pie.x - w * 0.006f, t0)
-                cubicTo(pie.x - ancho, t0 + (t1 - t0) * 0.25f, pie.x - ancho, t0 + (t1 - t0) * 0.7f, pie.x - w * 0.007f, t1)
-                lineTo(pie.x + w * 0.007f, t1)
-                cubicTo(pie.x + ancho, t0 + (t1 - t0) * 0.7f, pie.x + ancho, t0 + (t1 - t0) * 0.25f, pie.x + w * 0.006f, t0)
-                close()
-            }
-            translate(w * 0.012f, w * 0.004f) { drawPath(huso, a.sombra(0.3f)) }
-            val tela = en(P.GRANA, 0f, Offset(pie.x, (t0 + t1) / 2), a, cerca, frio)
-            drawPath(huso, tela)
-            clipPath(huso) {
-                drawRect(en(P.GRANA_LUZ, 0f, Offset(pie.x, t0), a, cerca, frio).copy(alpha = 0.6f), Offset(pie.x - ancho, t0), Size(ancho * 0.6f, t1 - t0))
-                drawRect(en(P.GRANA_HONDA, 0f, Offset(pie.x, t0), a, cerca, frio).copy(alpha = 0.75f), Offset(pie.x + ancho * 0.35f, t0), Size(ancho * 0.7f, t1 - t0))
-                var yy = t0 + (t1 - t0) * 0.08f
-                var q = 0
-                while (yy < t1 && q < 20) {
-                    drawLine(en(P.GRANA_HONDA, 0f, Offset(pie.x, yy), a, cerca, frio), Offset(pie.x - ancho, yy + w * 0.012f), Offset(pie.x + ancho, yy - w * 0.006f), 1.4f * u)
-                    drawLine(en(P.LATON, 0f, Offset(pie.x, yy), a, cerca, frio).copy(alpha = 0.8f), Offset(pie.x - ancho, yy + w * 0.012f + 1.6f * u), Offset(pie.x + ancho, yy - w * 0.006f + 1.6f * u), 0.9f * u)
-                    yy += (t1 - t0) * 0.16f; q++
-                }
-            }
-            // El cordón de latón que lo ata, con su borla colgando.
-            val cy = t0 + (t1 - t0) * 0.55f
-            drawLine(en(P.LATON, 0f, Offset(pie.x, cy), a, cerca, frio), Offset(pie.x - ancho * 0.95f, cy), Offset(pie.x + ancho * 0.95f, cy - w * 0.003f), 1.8f * u)
-            val b0 = Offset(pie.x + ancho * 0.8f, cy)
-            drawLine(en(P.LATON, 0f, b0, a, cerca, frio), b0, b0 + Offset(w * 0.004f, hh * 0.12f), 1f * u)
-            drawPath(poligonoOrden(b0.x + w * 0.001f, b0.y + hh * 0.11f, b0.x + w * 0.007f, b0.y + hh * 0.11f, b0.x + w * 0.011f, b0.y + hh * 0.2f, b0.x - w * 0.003f, b0.y + hh * 0.2f), en(P.LATON, 0f, b0, a, cerca, frio))
-            // El remate: una bola de latón.
-            val bc = Offset(pie.x, y - hh * 0.95f - w * 0.006f)
-            drawCircle(en(P.LATON, 0f, bc, a, cerca, frio), w * 0.008f, bc)
-            drawCircle(a.destello(0.8f, cerca(bc), frio(bc)), w * 0.0028f, bc - Offset(w * 0.003f, w * 0.003f))
+        val cuerpo = Rect(x0 + w * 0.008f, y - hh * 0.4f, x0 + w * 0.178f, y)
+        val tapa = Rect(cuerpo.left - w * 0.004f, cuerpo.top - hh * 0.3f, cuerpo.right + w * 0.004f, cuerpo.top + 1f * u)
+        val k = cerca(cuerpo.center); val fr = frio(cuerpo.center)
+        // Su sombra en el muro y en la repisa.
+        translate(w * 0.012f, w * 0.004f) { drawRect(a.sombra(0.26f), Offset(cuerpo.left, tapa.top + hh * 0.05f), Size(cuerpo.width, y - tapa.top - hh * 0.05f)) }
+        contactoOrden(Offset(cuerpo.center.x, y), cuerpo.width * 1.12f, 5f * u, a, 0.5f)
+        // El cuerpo pintado, con su luz a la izquierda y su sombra a la derecha, y la pintura gastada en las aristas.
+        val pint = en(P.PINTURA, 0f, cuerpo.center, a, cerca, frio)
+        redondoOrden(cuerpo, pint, mezcla(pint, if (a.oscuro) P.LLAMA else P.LUZ_FRIA, if (a.oscuro) 0.15f * k else 0.22f), mezcla(pint, P.NOCHE, 0.45f), -1f, 0.45f)
+        drawRect(a.sombra(0.35f), Offset(cuerpo.left, cuerpo.bottom - 2f * u), Size(cuerpo.width, 2f * u))
+        val gastes = Path()
+        for (q in 0 until 9) {
+            val x = cuerpo.left + cuerpo.width * azar(1311, q)
+            val yy = if (q % 2 == 0) cuerpo.top + 1.5f * u else cuerpo.bottom - 3.5f * u
+            gastes.addOval(Rect(x, yy, x + w * (0.006f + 0.01f * azar(1312, q)), yy + 2f * u))
         }
-        // La cadena enrollada a su pie, en un óvalo de eslabones.
-        val cc = Offset(x0 + w * 0.1f, y - hh * 0.05f)
-        contactoOrden(Offset(x0 + w * 0.1f, y), w * 0.17f, 5f * u, a, 0.5f)
+        drawPath(gastes, en(P.ACERO_CLARO, 0f, cuerpo.center, a, cerca, frio).copy(alpha = 0.6f))
+        // La tapa abombada: su luz arriba, su canto y su sombra sobre el cuerpo.
+        val tp = Path().apply {
+            moveTo(tapa.left, tapa.bottom); lineTo(tapa.left, tapa.top + tapa.height * 0.62f)
+            cubicTo(tapa.left, tapa.top - tapa.height * 0.18f, tapa.right, tapa.top - tapa.height * 0.18f, tapa.right, tapa.top + tapa.height * 0.62f)
+            lineTo(tapa.right, tapa.bottom); close()
+        }
+        drawPath(tp, pint)
+        clipPath(tp) {
+            drawRect(mezcla(pint, if (a.oscuro) P.LLAMA else P.LUZ_FRIA, if (a.oscuro) 0.2f * k else 0.3f), tapa.topLeft, Size(tapa.width, tapa.height * 0.3f))
+            drawRect(mezcla(pint, if (a.oscuro) P.LLAMA else P.LUZ_FRIA, if (a.oscuro) 0.1f * k else 0.14f), Offset(tapa.left, tapa.top + tapa.height * 0.3f), Size(tapa.width, tapa.height * 0.2f))
+            // Su canto de abajo, que vuela un poco sobre el cuerpo.
+            drawRect(mezcla(pint, P.NOCHE, 0.2f), Offset(tapa.left, tapa.bottom - 3f * u), Size(tapa.width, 3f * u))
+            drawRect(mezcla(pint, P.NOCHE, 0.4f), Offset(tapa.left, tapa.bottom - tapa.height * 0.3f), Size(tapa.width, tapa.height * 0.3f))
+            drawRect(mezcla(pint, P.NOCHE, 0.3f), Offset(tapa.right - tapa.width * 0.2f, tapa.top), Size(tapa.width * 0.2f, tapa.height))
+        }
+        drawRect(a.sombra(0.5f), Offset(cuerpo.left, cuerpo.top), Size(cuerpo.width, 2.2f * u))
+        // Los dos flejes de latón, de la tapa al suelo, con sus remaches.
+        listOf(0.2f, 0.8f).forEach { f ->
+            val x = cuerpo.left + cuerpo.width * f
+            val fl = Path().apply {
+                moveTo(x - w * 0.007f, cuerpo.bottom); lineTo(x - w * 0.007f, tapa.top + tapa.height * 0.3f)
+                cubicTo(x - w * 0.007f, tapa.top + tapa.height * 0.12f, x + w * 0.007f, tapa.top + tapa.height * 0.12f, x + w * 0.007f, tapa.top + tapa.height * 0.3f)
+                lineTo(x + w * 0.007f, cuerpo.bottom); close()
+            }
+            translate(1f * u, 0f) { drawPath(fl, a.sombra(0.35f)) }
+            drawPath(fl, en(P.LATON, 0f, Offset(x, cuerpo.center.y), a, cerca, frio))
+            drawLine(a.destello(0.55f, k, fr), Offset(x - w * 0.006f, tapa.top + tapa.height * 0.3f), Offset(x - w * 0.006f, cuerpo.bottom), 0.8f * u)
+            var yy = tapa.top + tapa.height * 0.5f
+            var q = 0
+            while (yy < cuerpo.bottom - 3f * u && q < 12) { drawCircle(en(P.LATON_HONDO, 0f, Offset(x, yy), a, cerca, frio), 1.2f * u, Offset(x, yy)); yy += hh * 0.11f; q++ }
+        }
+        // El aldabón en el centro y el candado colgado de él.
+        val ax = cuerpo.center.x
+        val ald = Rect(ax - w * 0.009f, tapa.bottom - hh * 0.08f, ax + w * 0.009f, cuerpo.top + hh * 0.1f)
+        drawRect(a.sombra(0.4f), ald.topLeft + Offset(1f * u, 1.2f * u), ald.size)
+        drawRect(en(P.ACERO_HONDO, 0f, ald.center, a, cerca, frio), ald.topLeft, ald.size)
+        drawRect(a.destello(0.45f, k, fr), ald.topLeft, Size(ald.width, 0.8f * u))
+        val ojo = Offset(ax, ald.bottom - hh * 0.03f)
+        drawCircle(en(P.BETUN, 0f, ojo, a, cerca, frio), w * 0.0035f, ojo)
+        val cu = Rect(ax - w * 0.032f, ojo.y + hh * 0.07f, ax + w * 0.032f, ojo.y + hh * 0.07f + w * 0.07f)
+        val arco = Path().apply {
+            val l = cu.left + cu.width * 0.2f; val rr = cu.right - cu.width * 0.2f
+            moveTo(l, cu.top); lineTo(l, ojo.y + hh * 0.01f)
+            cubicTo(l, ojo.y - hh * 0.06f, rr, ojo.y - hh * 0.06f, rr, ojo.y + hh * 0.01f)
+            lineTo(rr, cu.top)
+        }
+        translate(1.2f * u, 1.4f * u) { drawPath(arco, a.sombra(0.4f), style = Stroke(w * 0.008f)) }
+        drawPath(arco, en(P.ACERO_CLARO, 0f, ojo, a, cerca, frio), style = Stroke(w * 0.008f))
+        drawPath(arco, a.destello(0.55f, k, fr), style = Stroke(0.8f * u))
+        translate(1.6f * u, 2f * u) { drawRoundRect(a.sombra(0.45f), cu.topLeft, cu.size, androidx.compose.ui.geometry.CornerRadius(cu.width * 0.18f)) }
+        val ccu = Path().apply { addRoundRect(RoundRect(cu, CornerRadius(cu.width * 0.18f))) }
+        drawPath(ccu, en(P.ACERO_MEDIO, 0f, cu.center, a, cerca, frio))
+        clipPath(ccu) {
+            drawRect(a.brillo(0.3f, k), cu.topLeft, Size(cu.width * 0.22f, cu.height))
+            drawRect(a.sombra(0.4f), Offset(cu.right - cu.width * 0.25f, cu.top), Size(cu.width * 0.25f, cu.height))
+        }
+        val bc = Offset(cu.center.x, cu.top + cu.height * 0.55f)
+        drawCircle(en(P.LATON, 0f, bc, a, cerca, frio), cu.width * 0.2f, bc)
+        drawCircle(en(P.BETUN, 0f, bc, a, cerca, frio), cu.width * 0.06f, bc - Offset(0f, cu.width * 0.03f))
+        drawRect(en(P.BETUN, 0f, bc, a, cerca, frio), Offset(bc.x - cu.width * 0.025f, bc.y - cu.width * 0.03f), Size(cu.width * 0.05f, cu.width * 0.13f))
+        // La cadena enrollada a su pie, del lado de la luz.
+        val cc = Offset(x0 + w * 0.205f, y - hh * 0.035f)
         val acero = en(P.ACERO_MEDIO, 0f, cc, a, cerca, frio)
         val luz = a.destello(0.55f, cerca(cc), frio(cc))
+        contactoOrden(Offset(cc.x, y), w * 0.08f, 4f * u, a, 0.45f)
         var t = 0.0
         var q = 0
         while (t < Math.PI * 2 && q < 40) {
-            val p = Offset(cc.x + w * 0.065f * kotlin.math.cos(t).toFloat(), cc.y + hh * 0.045f * kotlin.math.sin(t).toFloat())
+            val p = Offset(cc.x + w * 0.03f * kotlin.math.cos(t).toFloat(), cc.y + hh * 0.03f * kotlin.math.sin(t).toFloat())
             rotate(Math.toDegrees(t + Math.PI / 2).toFloat(), p) {
                 if (q % 2 == 0) {
-                    drawOval(a.sombra(0.4f), Offset(p.x - w * 0.007f + 1f * u, p.y - w * 0.004f + 1.2f * u), Size(w * 0.014f, w * 0.008f), style = Stroke(1.6f * u))
-                    drawOval(acero, Offset(p.x - w * 0.007f, p.y - w * 0.004f), Size(w * 0.014f, w * 0.008f), style = Stroke(1.6f * u))
-                    drawArc(luz, 190f, 90f, false, Offset(p.x - w * 0.007f, p.y - w * 0.004f), Size(w * 0.014f, w * 0.008f), style = Stroke(0.7f * u))
-                } else drawLine(acero, Offset(p.x - w * 0.006f, p.y), Offset(p.x + w * 0.006f, p.y), 2f * u, StrokeCap.Round)
+                    drawOval(acero, Offset(p.x - w * 0.006f, p.y - w * 0.0035f), Size(w * 0.012f, w * 0.007f), style = Stroke(1.5f * u))
+                    drawArc(luz, 190f, 90f, false, Offset(p.x - w * 0.006f, p.y - w * 0.0035f), Size(w * 0.012f, w * 0.007f), style = Stroke(0.6f * u))
+                } else drawLine(acero, Offset(p.x - w * 0.005f, p.y), Offset(p.x + w * 0.005f, p.y), 1.8f * u, StrokeCap.Round)
             }
-            t += 0.42; q++
-        }
-        // El candado grande, de pie: el cuerpo de acero con su remache, el arco y la bocallave.
-        val cuerpo = Rect(x0 + w * 0.05f, y - hh * 0.42f, x0 + w * 0.15f, y - hh * 0.04f)
-        val k = cerca(cuerpo.center); val fr = frio(cuerpo.center)
-        contactoOrden(Offset(cuerpo.center.x, y - hh * 0.04f), cuerpo.width * 1.1f, 4f * u, a, 0.4f)
-        val arco = Path().apply {
-            val l = cuerpo.left + cuerpo.width * 0.16f; val rr = cuerpo.right - cuerpo.width * 0.16f
-            moveTo(l, cuerpo.top); lineTo(l, cuerpo.top - hh * 0.12f)
-            cubicTo(l, cuerpo.top - hh * 0.3f, rr, cuerpo.top - hh * 0.3f, rr, cuerpo.top - hh * 0.12f)
-            lineTo(rr, cuerpo.top)
-        }
-        translate(1.4f * u, 1.6f * u) { drawPath(arco, a.sombra(0.4f), style = Stroke(w * 0.012f)) }
-        drawPath(arco, en(P.ACERO_CLARO, 0f, cuerpo.center, a, cerca, frio), style = Stroke(w * 0.012f))
-        drawPath(arco, a.destello(0.55f, k, fr), style = Stroke(1f * u))
-        val cu = Path().apply { addRoundRect(RoundRect(cuerpo, CornerRadius(cuerpo.width * 0.16f))) }
-        drawPath(cu, en(P.ACERO_MEDIO, 0f, cuerpo.center, a, cerca, frio))
-        clipPath(cu) {
-            drawRect(a.brillo(0.3f, k), cuerpo.topLeft, Size(cuerpo.width * 0.22f, cuerpo.height))
-            drawRect(a.sombra(0.4f), Offset(cuerpo.right - cuerpo.width * 0.25f, cuerpo.top), Size(cuerpo.width * 0.25f, cuerpo.height))
-            drawRect(a.sombra(0.25f), Offset(cuerpo.left, cuerpo.bottom - cuerpo.height * 0.15f), Size(cuerpo.width, cuerpo.height * 0.15f))
-        }
-        // El escudete de latón de la bocallave y la bocallave.
-        val bc = Offset(cuerpo.center.x, cuerpo.top + cuerpo.height * 0.56f)
-        drawCircle(en(P.LATON, 0f, bc, a, cerca, frio), cuerpo.width * 0.2f, bc)
-        drawCircle(a.destello(0.5f, k, fr), cuerpo.width * 0.06f, bc - Offset(cuerpo.width * 0.08f, cuerpo.width * 0.08f))
-        drawCircle(en(P.BETUN, 0f, bc, a, cerca, frio), cuerpo.width * 0.055f, bc - Offset(0f, cuerpo.width * 0.03f))
-        drawRect(en(P.BETUN, 0f, bc, a, cerca, frio), Offset(bc.x - cuerpo.width * 0.025f, bc.y - cuerpo.width * 0.03f), Size(cuerpo.width * 0.05f, cuerpo.width * 0.13f))
-        listOf(cuerpo.left + cuerpo.width * 0.2f, cuerpo.right - cuerpo.width * 0.2f).forEach { xx ->
-            val p = Offset(xx, cuerpo.top + cuerpo.height * 0.16f)
-            roblonOrden(p, 1.6f * u, a, cerca(p), P.ACERO_CLARO, frio(p))
+            t += 0.55; q++
         }
         // La llave tumbada delante: el anillo, la caña y el paletón.
         val ky = y - 1.6f * u
-        val kx = x0 + w * 0.12f
+        val kx = x0 + w * 0.03f
         drawLine(a.sombra(0.4f), Offset(kx + 1f * u, ky + 1.2f * u), Offset(kx + w * 0.07f, ky + 1.2f * u), 2.2f * u)
         val hierro = en(mezcla(P.ACERO_HONDO, P.OXIDO, 0.2f), 0f, Offset(kx, ky), a, cerca, frio)
         drawOval(hierro, Offset(kx - w * 0.012f, ky - w * 0.007f), Size(w * 0.024f, w * 0.014f), style = Stroke(1.8f * u))
@@ -315,17 +325,18 @@ internal object HuecosEstanteOrden {
 
     // ---------------------------------------------------------------- la vela de media altura
 
-    /** La palmatoria con su vela (la luz de este hueco), los dos manuales tumbados detrás y la lupa apoyada en ellos. */
+    /** La palmatoria con su vela (la luz de este hueco), los tres manuales tumbados detrás y la lupa apoyada en ellos. */
     private fun DrawScope.vela(x0: Float, r: Rect, a: AireOrden, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
         val u = density
         val w = size.width
         val hh = r.height
         val y = r.bottom - 2.5f * u
         // Los dos manuales tumbados, uno sobre otro.
-        val m1 = Rect(x0 + w * 0.07f, y - hh * 0.13f, x0 + w * 0.2f, y)
-        val m2 = Rect(x0 + w * 0.08f, m1.top - hh * 0.11f, x0 + w * 0.19f, m1.top)
-        contactoOrden(Offset(m1.center.x, y), m1.width * 1.08f, 4f * u, a, 0.45f)
-        listOf(m1 to P.CUERO_PARDO, m2 to P.GRANA_HONDA).forEach { (m, cuero) ->
+        val m0 = Rect(x0 + w * 0.065f, y - hh * 0.14f, x0 + w * 0.205f, y)
+        val m1 = Rect(x0 + w * 0.075f, m0.top - hh * 0.12f, x0 + w * 0.195f, m0.top)
+        val m2 = Rect(x0 + w * 0.085f, m1.top - hh * 0.11f, x0 + w * 0.185f, m1.top)
+        contactoOrden(Offset(m0.center.x, y), m0.width * 1.08f, 4f * u, a, 0.45f)
+        listOf(m0 to P.CUERO, m1 to P.CUERO_PARDO, m2 to P.GRANA_HONDA).forEach { (m, cuero) ->
             val c = en(cuero, 0f, m.center, a, cerca, frio)
             drawRect(c, m.topLeft, m.size)
             drawRect(mezcla(c, if (a.oscuro) P.LLAMA else P.LUZ_FRIA, if (a.oscuro) 0.25f * cerca(m.center) else 0.2f), m.topLeft, Size(m.width, m.height * 0.25f))
@@ -341,8 +352,8 @@ internal object HuecosEstanteOrden {
             }
         }
         // La lupa de latón apoyada en los manuales.
-        val lc = Offset(x0 + w * 0.175f, m2.top - hh * 0.12f)
-        val lr = hh * 0.13f
+        val lc = Offset(x0 + w * 0.17f, m2.top - hh * 0.13f)
+        val lr = hh * 0.14f
         rotate(18f, lc) {
             drawLine(en(P.CUERO, 0f, lc, a, cerca, frio), Offset(lc.x, lc.y + lr), Offset(lc.x, lc.y + lr + hh * 0.17f), w * 0.011f, StrokeCap.Round)
             drawLine(a.destello(0.3f, cerca(lc), frio(lc)), Offset(lc.x - w * 0.003f, lc.y + lr + 2f * u), Offset(lc.x - w * 0.003f, lc.y + lr + hh * 0.15f), 0.7f * u)

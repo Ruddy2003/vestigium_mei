@@ -489,11 +489,11 @@ internal object CoronaEstanteOrden {
             drawCircle(en(P.LATON_HONDO, 0f, b0, a, cerca, frio), w * 0.004f, b0)
         }
         // La válvula: el zócalo de baquelita con su guía y la ampolla de vidrio con su punta.
-        val zocalo = Rect(cx - w * 0.02f, cojin.top + w * 0.004f - w * 0.024f, cx + w * 0.02f, cojin.top + w * 0.006f)
+        val zocalo = Rect(cx - w * 0.024f, cojin.top + w * 0.004f - w * 0.028f, cx + w * 0.024f, cojin.top + w * 0.006f)
         val bq = en(P.BAQUELITA, 0f, zocalo.center, a, cerca, frio)
         redondoOrden(zocalo, bq, mezcla(bq, P.LUZ_FRIA, if (a.oscuro) 0.06f else 0.28f), mezcla(bq, P.NOCHE, 0.4f), -1f)
         drawRect(a.sombra(0.4f), Offset(zocalo.left, zocalo.bottom - 1.4f * u), Size(zocalo.width, 1.4f * u))
-        val amp = Rect(cx - w * 0.027f, zocalo.top - w * 0.125f, cx + w * 0.027f, zocalo.top + w * 0.002f)
+        val amp = Rect(cx - w * 0.033f, zocalo.top - w * 0.16f, cx + w * 0.033f, zocalo.top + w * 0.002f)
         val ampolla = Path().apply {
             moveTo(amp.left, amp.bottom); lineTo(amp.left, amp.top + amp.width * 0.5f)
             cubicTo(amp.left, amp.top + amp.width * 0.1f, amp.right, amp.top + amp.width * 0.1f, amp.right, amp.top + amp.width * 0.5f)
@@ -505,7 +505,7 @@ internal object CoronaEstanteOrden {
             drawRect(en(Color(0xFFB8BEC6), 0.1f, amp.center, a, cerca, frio), Offset(amp.left, amp.top), Size(amp.width, amp.width * 0.38f))
             drawRect(en(Color(0xFF5E636B), 0f, amp.center, a, cerca, frio), Offset(amp.left, amp.top + amp.width * 0.3f), Size(amp.width, amp.width * 0.1f))
         }
-        val placa = Rect(cx - w * 0.016f, amp.top + amp.height * 0.36f, cx + w * 0.016f, amp.bottom - amp.height * 0.18f)
+        val placa = Rect(cx - w * 0.02f, amp.top + amp.height * 0.36f, cx + w * 0.02f, amp.bottom - amp.height * 0.16f)
         val gris = en(Color(0xFF4A4F57), 0f, placa.center, a, cerca, frio)
         drawRect(gris, placa.topLeft, placa.size)
         drawRect(mezcla(gris, P.LUZ_FRIA, if (a.oscuro) 0.06f else 0.3f), placa.topLeft, Size(placa.width * 0.3f, placa.height))
@@ -514,7 +514,7 @@ internal object CoronaEstanteOrden {
             drawRect(en(Color(0xFFE6E2D4), 0f, placa.center, a, cerca, frio).copy(alpha = 0.85f), Offset(amp.left + w * 0.003f, y), Size(amp.width - w * 0.006f, w * 0.004f))
         }
         val hilo = en(P.ACERO_CLARO, 0f, placa.center, a, cerca, frio).copy(alpha = 0.7f)
-        listOf(-0.022f, 0.022f).forEach { dx -> drawLine(hilo, Offset(cx + w * dx * 0.95f, placa.top - w * 0.004f), Offset(cx + w * dx * 0.95f, amp.bottom), 0.6f * u) }
+        listOf(-0.027f, 0.027f).forEach { dx -> drawLine(hilo, Offset(cx + w * dx * 0.95f, placa.top - w * 0.004f), Offset(cx + w * dx * 0.95f, amp.bottom), 0.6f * u) }
         for (q in 0 until 5) drawLine(hilo.copy(alpha = 0.35f), Offset(placa.left - w * 0.003f, placa.top + placa.height * (q + 0.5f) / 5), Offset(placa.right + w * 0.003f, placa.top + placa.height * (q + 0.5f) / 5), 0.5f * u)
         // El vidrio de la ampolla: su canto y sus brillos.
         drawPath(ampolla, a.luz(P.VIDRIO, k, fr).copy(alpha = 0.55f), style = Stroke(1f * u))
@@ -522,7 +522,7 @@ internal object CoronaEstanteOrden {
         drawLine(en(P.VIDRIO, 0f, amp.center, a, cerca, frio), Offset(cx, amp.top + amp.width * 0.24f), Offset(cx, amp.top - w * 0.005f), 1.6f * u, StrokeCap.Round)
         // La campana de vidrio: casi transparente, con el muro detrás un punto más frío; sus cantos y brillos.
         val cam = Path().apply { addRoundRect(RoundRect(campana, CornerRadius(campana.width / 2, campana.width / 2))) }
-        drawPath(cam, a.luz(P.VIDRIO, k * 0.5f, fr).copy(alpha = if (a.oscuro) 0.07f else 0.12f))
+        drawPath(cam, a.luz(P.VIDRIO, k * 0.5f, fr).copy(alpha = if (a.oscuro) 0.12f else 0.14f))
         clipPath(cam) {
             // Los reflejos: una banda ancha a la izquierda (la luminaria) y una fina a la derecha.
             val luzV = if (a.oscuro) (if (a.dormida) P.GUARDIA.copy(alpha = 0.28f) else P.LLAMA.copy(alpha = 0.12f + 0.3f * k)) else (if (a.noche) P.VIGILIA else P.LUZ_FRIA).copy(alpha = 0.42f)
@@ -532,7 +532,7 @@ internal object CoronaEstanteOrden {
             if (a.oscuro && !a.dormida) drawRect(P.LLAMA.copy(alpha = 0.5f), Offset(campana.right - campana.width * 0.16f, campana.top + campana.height * 0.32f), Size(campana.width * 0.05f, campana.height * 0.16f))
             drawRect(a.sombra(0.14f), Offset(campana.right - campana.width * 0.12f, campana.top), Size(campana.width * 0.12f, campana.height))
         }
-        drawPath(cam, a.luz(mezcla(P.VIDRIO, P.ACERO_CLARO, 0.3f), k, fr).copy(alpha = if (a.oscuro) 0.4f else 0.6f), style = Stroke(1.4f * u))
+        drawPath(cam, a.luz(mezcla(P.VIDRIO, P.ACERO_CLARO, 0.3f), maxOf(k, 0.35f), fr).copy(alpha = if (a.oscuro) 0.6f else 0.65f), style = Stroke(1.6f * u))
         drawArc(a.brillo(0.8f, maxOf(k, 0.3f)), 200f, 60f, false, Offset(campana.left + campana.width * 0.12f, campana.top + campana.width * 0.12f), Size(campana.width * 0.76f, campana.width * 0.76f), style = Stroke(1.6f * u))
         // El pomo de vidrio de arriba.
         val pomo = Offset(cx, campana.top - w * 0.006f)
