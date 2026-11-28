@@ -63,11 +63,14 @@ internal class PanosUrss(val ox: Float, val oy: Float, val ux: Float, val uy: Fl
     }
 }
 
-/** El último sol de los Sueños en claro: bajo y largo, casi tendido, en la cal de arriba, con sus tres paños. */
-internal val OCASO_URSS = PanosUrss(0.2f, 0.03f, 0.3f, 0.05f, 0.05f, 0.19f, 3, 0.14f)
+/**
+ * El último sol de los Sueños en claro: entra bajo por una ventana alta de fuera del cuadro, a la izquierda; sus dos paños anchos bajan
+ * por la cal, cruzan la cornisa y llegan a la primera repisa.
+ */
+internal val OCASO_URSS = PanosUrss(-0.04f, 0.05f, 0.42f, 0.07f, 0.16f, 0.86f, 2, 0.08f)
 
-/** La luna de los Sueños en oscuro: más chica y más alta, en la cal entre el altavoz y el pliego. */
-internal val LUNA_URSS = PanosUrss(0.17f, 0.015f, 0.27f, 0.045f, 0.05f, 0.2f, 3, 0.16f)
+/** La luna de los Sueños en oscuro: por la misma ventana, más alta y más angosta; baja por la cal hasta la cornisa. */
+internal val LUNA_URSS = PanosUrss(0.14f, 0.0f, 0.26f, 0.04f, 0.1f, 0.56f, 3, 0.15f)
 
 /**
  * Dibuja [pieza] con la mancha apagada y, recortada a los paños de la ventana para lo que está a [delante] anchos de la pared, otra
@@ -163,24 +166,19 @@ internal fun tonoDeDiaUrss(t: Color?, oscuro: Boolean): Color? {
 }
 
 /**
- * El material del ánimo: se ubica el color (de día) en la escala del tema y se toma el mismo punto en [materiales] (tela, papel o
- * pintura, de lo malo a lo bueno: rojo, crudo, negro). Si el color no está en la escala, queda igual.
+ * El material del ánimo: se ubica el color (de día) en la escala del tema y se toma el mismo punto en [materiales], cinco puntos de
+ * lo malo a lo bueno (rojo, coral, crudo, topo, negro: la misma escala del tema, con cuerpo en cada tramo). Si el color no está en la
+ * escala, queda igual.
  */
 internal fun materialDelAnimoUrss(t: Color, materiales: List<Color>): Color {
-    val x = enEscalaUrss(t, TONOS_URSS.first) ?: return t
-    if (x >= 0.5f) {
-        // Del crudo al negro: el gris de en medio, algo cálido (el del papel sucio, no un gris de oficina).
-        val c = mezcla(materiales[1], materiales[2], (x - 0.5f) * 2)
-        return vivoUrss(c, 1.25f)
-    }
-    // Del rojo al crudo: el rosa de en medio, con más color (un coral de cartel, no un rosa lavado) y un punto más hondo.
-    val c = mezcla(materiales[0], materiales[1], x * 2)
-    val f = 1f - abs(x - 0.25f) * 4f
-    return vivoUrss(Color(c.red, c.green * (1f - 0.12f * f), c.blue * (1f - 0.12f * f), c.alpha), 1f + 0.45f * f.coerceIn(0f, 1f))
+    val x = (enEscalaUrss(t, TONOS_URSS.first) ?: return t).coerceIn(0f, 1f)
+    val i = (0 until PUNTOS_ANIMO_URSS.size - 1).firstOrNull { x <= PUNTOS_ANIMO_URSS[it + 1] } ?: (PUNTOS_ANIMO_URSS.size - 2)
+    val a = PUNTOS_ANIMO_URSS[i]; val b = PUNTOS_ANIMO_URSS[i + 1]
+    return mezcla(materiales[i.coerceAtMost(materiales.size - 2)], materiales[(i + 1).coerceAtMost(materiales.size - 1)], ((x - a) / maxOf(0.001f, b - a)).coerceIn(0f, 1f))
 }
 
-/** [c] con más color: se aleja de su gris (del mismo valor) en [f]; así los tonos de en medio no se lavan. */
-internal fun vivoUrss(c: Color, f: Float): Color {
-    val g = 0.3f * c.red + 0.59f * c.green + 0.11f * c.blue
-    return Color((g + (c.red - g) * f).coerceIn(0f, 1f), (g + (c.green - g) * f).coerceIn(0f, 1f), (g + (c.blue - g) * f).coerceIn(0f, 1f), c.alpha)
-}
+/**
+ * Dónde cae cada uno de los cinco materiales en la escala (de 0, lo malo, a 1, lo bueno): el coral, cerca del rojo; el topo, cerca del
+ * crudo. Así los tramos de en medio (los más frecuentes) salen en coral y en topo oscuro, con cuerpo, no en rosa ni en ceniza.
+ */
+private val PUNTOS_ANIMO_URSS = floatArrayOf(0f, 0.3f, 0.5f, 0.64f, 1f)

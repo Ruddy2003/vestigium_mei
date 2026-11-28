@@ -93,13 +93,12 @@ internal fun blandaUrss(c: Offset, rx: Float, ry: Float, semilla: Int, m: Int = 
  * El volumen de una forma en planos de gouache, de un solo relleno: el plano de luz, el tono entero y el plano de sombra, con
  * bordes nítidos entre ellos. [hacia]: -1 si la luz viene de la izquierda, 1 si de la derecha.
  */
-internal fun DrawScope.planosUrss(f: Path, base: Color, l: LuzUrss, hacia: Float, luzAncho: Float, sombraAncho: Float) {
+internal fun DrawScope.planosUrss(f: Path, base: Color, l: LuzUrss, hacia: Float, luzAncho: Float, sombraAncho: Float, tostado: Boolean = false) {
     val r = f.getBounds()
     if (r.width < 1f) { drawPath(f, base); return }
     val claro = Color((base.red * 1.16f + 0.06f).coerceAtMost(1f), (base.green * 1.14f + 0.06f).coerceAtMost(1f), (base.blue * 1.1f + 0.05f).coerceAtMost(1f), base.alpha)
     val luz = if (l.a.oscuro) mezcla(base, mezcla(claro, l.tinte, 0.25f), (0.12f + 1.4f * l.k).coerceAtMost(1f)) else claro
-    val honda = if (l.a.oscuro) mezcla(base, l.a.hondo, 0.5f)
-        else mezcla(Color(base.red * 0.7f, base.green * 0.71f, base.blue * 0.76f, base.alpha), l.a.sombra(1f).copy(alpha = 1f), 0.14f)
+    val honda = if (l.a.oscuro) mezcla(base, l.a.hondo, 0.5f) else sombraPropiaUrss(base, l, tostado)
     val media = mezcla(base, honda, 0.55f)
     val izq = if (hacia < 0f) luz else honda
     val der = if (hacia < 0f) honda else luz
@@ -114,11 +113,11 @@ internal fun DrawScope.planosUrss(f: Path, base: Color, l: LuzUrss, hacia: Float
  * El volumen de una forma redonda (un rollo, una lata, una bobina): degradado a lo ancho del claro a la sombra, con el brillo largo
  * del lado de la luz.
  */
-internal fun DrawScope.cilindroUrss(f: Path, base: Color, l: LuzUrss, hacia: Float, brillo: Float = 0.6f, r0: Rect? = null) {
+internal fun DrawScope.cilindroUrss(f: Path, base: Color, l: LuzUrss, hacia: Float, brillo: Float = 0.6f, r0: Rect? = null, tostado: Boolean = false) {
     val r = r0 ?: f.getBounds()
     if (r.width < 1f) { drawPath(f, base); return }
     val claro = if (l.a.oscuro) mezcla(base, l.tinte, 0.1f + 0.5f * l.k) else Color((base.red * 1.18f + 0.08f).coerceAtMost(1f), (base.green * 1.16f + 0.08f).coerceAtMost(1f), (base.blue * 1.12f + 0.08f).coerceAtMost(1f), base.alpha)
-    val honda = mezcla(base, if (l.a.oscuro) l.a.hondo else l.a.sombra(1f).copy(alpha = 1f), if (l.a.oscuro) 0.55f else 0.36f)
+    val honda = if (l.a.oscuro) mezcla(base, l.a.hondo, 0.55f) else if (tostado) sombraPropiaUrss(base, l, true) else mezcla(base, l.a.sombra(1f).copy(alpha = 1f), 0.36f)
     val izqADer = listOf(mezcla(base, claro, 0.5f), claro, base, base, mezcla(base, honda, 0.6f), honda)
     drawPath(f, Brush.horizontalGradient(if (hacia < 0f) izqADer else izqADer.asReversed(), r.left, r.right))
     if (brillo > 0f) {
@@ -126,6 +125,14 @@ internal fun DrawScope.cilindroUrss(f: Path, base: Color, l: LuzUrss, hacia: Flo
         drawRect(l.b(brillo), Offset(bx, r.top + r.height * 0.06f), Size(r.width * 0.09f, r.height * 0.88f))
     }
 }
+
+/**
+ * La sombra propia de un color de día: hondo y un poco violeta (la sombra con color de los muebles) o, con [tostado], tostada: el
+ * crudo del papel y de la tela se oscurece hacia el pardo de la estraza, no hacia el gris.
+ */
+internal fun sombraPropiaUrss(base: Color, l: LuzUrss, tostado: Boolean): Color =
+    if (tostado) mezcla(Color(base.red * 0.76f, base.green * 0.64f, base.blue * 0.5f, base.alpha), l.a.sombra(1f).copy(alpha = 1f), 0.06f)
+    else mezcla(Color(base.red * 0.7f, base.green * 0.71f, base.blue * 0.76f, base.alpha), l.a.sombra(1f).copy(alpha = 1f), 0.14f)
 
 /** Un tornillo de cabeza ranurada: la cabeza, su ranura y el brillo. */
 internal fun DrawScope.tornilloUrss(c: Offset, r: Float, l: LuzUrss, semilla: Int, metal: Color = P.LATON) {

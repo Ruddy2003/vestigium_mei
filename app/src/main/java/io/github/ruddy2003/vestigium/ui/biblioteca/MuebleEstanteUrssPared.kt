@@ -147,7 +147,7 @@ internal object ParedEstanteUrss {
         // ancho y, encima, la baldosa de los brochazos.
         val oleo = mezcla(P.OLEO, P.OLEO_OSC, 0.5f)
         drawRect(Brush.horizontalGradient(xs.map { g.luz(it, r.center.y, 0f).c(oleo) }, r.left, r.right), r.topLeft, r.size)
-        drawRect(TexturasUrss.oleo(u), r.topLeft, r.size, alpha = if (g.a.oscuro) 0.4f else 0.55f)
+        drawRect(TexturasUrss.oleo(u), r.topLeft, r.size, alpha = if (g.a.oscuro) 0.18f else 0.55f)
         val s = 7300 + k * 17
         // Un desconchón en algunos huecos, alto, donde se ve entre lo guardado.
         if (azar(s, 1) < 0.45f) {

@@ -41,7 +41,7 @@ internal object CoronaEstanteUrss {
 
     fun DrawScope.delante(g: MarcoUrss) {
         val w = g.w
-        conPanosUrss(g, 0.05f, Rect(0f, 0f, w, g.apoyo)) { s ->
+        conPanosUrss(g, 0.1f, Rect(0f, 0f, w, g.apoyo)) { s ->
             g.forzar = s
             charco(g)
             regla(g)
@@ -55,6 +55,43 @@ internal object CoronaEstanteUrss {
             vaso(g, Offset(w * 0.627f, w * 0.492f))
             libros(g)
             g.forzar = null
+        }
+    }
+
+    /**
+     * Las sombras largas que echan sobre los paños de la ventana (el último sol, la luna) las cosas de delante de la pared: el
+     * altavoz y el reloj, cerca de ella; las bobinas y el proyector, más lejos; la lámpara colgada, la más lejos. Solo dentro de los
+     * paños: fuera, la pared ya está en la penumbra del anochecer.
+     */
+    fun DrawScope.sombrasEnPanos(g: MarcoUrss) {
+        val e = g.panos ?: return
+        val w = g.w
+        val camino = e.camino(w)
+        val b = camino.getBounds()
+        if (b.isEmpty) return
+        // El proyector y sus bobinas se dibujan agrandados desde su pie de la izquierda (ver [delante]).
+        fun gr(p: Offset) = Offset(w * 0.06f + (p.x - w * 0.06f) * 1.14f, w * 0.49f + (p.y - w * 0.49f) * 1.14f)
+        fun circulo(c: Offset, r: Float) = ovaloUrss(gr(c), r * 1.14f, r * 1.14f)
+        val pr0 = gr(Offset(w * 0.085f, w * 0.338f)); val pr1 = gr(Offset(w * 0.452f, w * 0.488f))
+        val cosas = listOf(
+            Path().apply { addRect(Rect(w * 0.03f, w * 0.03f, w * 0.162f, w * 0.15f)) } to 1.2f,
+            ovaloUrss(Offset(w * 0.37f, w * 0.085f), w * 0.054f, w * 0.054f) to 1f,
+            circulo(Offset(w * 0.165f, w * 0.258f), w * 0.095f) to 2.6f,
+            circulo(Offset(w * 0.355f, w * 0.285f), w * 0.07f) to 2.4f,
+            Path().apply { addRect(Rect(pr0.x, pr0.y + (pr1.y - pr0.y) * 0.3f, pr1.x, pr1.y)) } to 1.6f,
+            Path().apply {
+                addRect(Rect(w * 0.562f, 0f, w * 0.568f, w * 0.176f))
+                addOval(Rect(w * 0.46f, w * 0.17f, w * 0.67f, w * 0.26f))
+            } to 3.6f,
+        )
+        val sombra = g.a.sombra(if (g.a.oscuro) 0.55f else 0.42f)
+        clipRect(b.left, b.top, b.right, b.bottom) {
+            clipPath(camino) {
+                cosas.forEach { (p, largo) ->
+                    val o = g.arrojada(largo, p.getBounds().center.x)
+                    drawPath(corridoUrss(p, o.x, o.y), sombra)
+                }
+            }
         }
     }
 

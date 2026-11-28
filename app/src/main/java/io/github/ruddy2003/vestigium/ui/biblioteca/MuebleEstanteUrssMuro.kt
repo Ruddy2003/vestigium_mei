@@ -28,7 +28,7 @@ internal object MuroEstanteUrss {
 
     fun DrawScope.colgado(g: MarcoUrss) {
         val w = g.w
-        conPanosTodoUrss(g, 0.01f, Rect(0f, 0f, w, g.apoyo)) {
+        conPanosTodoUrss(g, 0.035f, Rect(0f, 0f, w, g.apoyo)) {
             pliego(g)
             altavoz(g)
             reloj(g)
@@ -233,12 +233,23 @@ internal object MuroEstanteUrss {
             drawPath(corridoUrss(campana, sa.x, sa.y), l.s(0.2f))
             drawLine(l.s(0.18f), Offset(cx + sa.x, 0f), Offset(cx + sa.x, ya + sa.y), 1.6f * u)
         }
-        // El cordón y el portalámparas.
-        drawLine(l.c(mezcla(P.PARQUET_OSC, P.NEGRO, 0.5f)), Offset(cx, 0f), Offset(cx, ya - w * 0.016f), 2f * u)
-        drawLine(l.c(P.BRAMANTE).copy(alpha = 0.35f), Offset(cx - 0.4f * u, 0f), Offset(cx - 0.4f * u, ya - w * 0.016f), 0.6f * u)
-        val porta = Rect(cx - w * 0.012f, ya - w * 0.022f, cx + w * 0.012f, ya + w * 0.004f)
-        drawRoundRect(l.c(P.NEGRO), porta.topLeft, porta.size, CornerRadius(w * 0.004f))
-        drawRect(l.b(0.5f), Offset(porta.left + w * 0.003f, porta.top), Size(1.2f * u, porta.height))
+        // El cordón de tela trenzada (dos hilos retorcidos, con el brillo a trechos), que baja de fuera del cuadro.
+        val yc = ya - w * 0.03f
+        val lc = g.luz(cx, yc * 0.5f, 0.07f)
+        drawLine(lc.s(0.3f), Offset(cx + 1.4f * u, 0f), Offset(cx + 1.4f * u, yc), 2.4f * u)
+        drawLine(lc.c(mezcla(P.PARQUET_OSC, P.NEGRO, 0.45f)), Offset(cx, 0f), Offset(cx, yc), 2.6f * u)
+        drawLine(lc.c(mezcla(P.BRAMANTE, P.LATON, 0.3f)).copy(alpha = 0.5f), Offset(cx - 0.5f * u, 0f), Offset(cx - 0.5f * u, yc), 1f * u,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.3f * u, 2.1f * u)))
+        drawLine(lc.c(P.NEGRO).copy(alpha = 0.6f), Offset(cx + 0.7f * u, 0f), Offset(cx + 0.7f * u, yc), 0.8f * u,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.3f * u, 2.1f * u), 1.7f * u))
+        // El sujetacables de baquelita y el portalámparas: el cuerpo negro con su anillo de latón abajo.
+        val lp = g.luz(cx, ya - w * 0.015f, 0.07f)
+        drawRoundRect(lp.c(P.NEGRO), Offset(cx - w * 0.006f, yc - w * 0.006f), Size(w * 0.012f, w * 0.012f), CornerRadius(w * 0.003f))
+        val porta = Rect(cx - w * 0.013f, ya - w * 0.026f, cx + w * 0.013f, ya + w * 0.002f)
+        drawRoundRect(lp.c(P.NEGRO), porta.topLeft, porta.size, CornerRadius(w * 0.005f))
+        drawRect(lp.b(0.55f), Offset(porta.left + w * 0.004f, porta.top + 1f * u), Size(1.2f * u, porta.height - 2f * u))
+        drawRect(lp.c(P.LATON), Offset(porta.left - w * 0.002f, porta.bottom - w * 0.008f), Size(porta.width + w * 0.004f, w * 0.006f))
+        drawRect(lp.b(0.6f), Offset(porta.left - w * 0.002f, porta.bottom - w * 0.008f), Size(porta.width + w * 0.004f, 0.9f * u))
         // La bombilla, que asoma por debajo del borde.
         val bc = Offset(cx, w * m.LAMPARA_Y)
         if (enc) {
@@ -259,9 +270,6 @@ internal object MuroEstanteUrss {
                 drawPath(Path().apply { moveTo(cx - an * 0.86f, yb - w * 0.024f); cubicTo(cx - an * 0.78f, yb - w * 0.05f, cx - an * 0.6f, ya + w * 0.012f, cx - an * 0.26f, ya + w * 0.008f) },
                     l.b(0.8f), style = Stroke(2f * u, cap = StrokeCap.Round))
             }
-            // El borde: lo blanco de dentro que asoma.
-            drawPath(Path().apply { moveTo(cx - an, yb); cubicTo(cx - an * 0.5f, yb + w * 0.012f, cx + an * 0.5f, yb + w * 0.012f, cx + an, yb) },
-                l.c(mezcla(P.CARTULINA, P.VERDE, 0.2f)), style = Stroke(1.8f * u))
         } else {
             val lv = mezcla(P.VERDE, P.VERDE_LUZ, 0.25f + 0.3f * f)
             drawPath(campana, lv)
@@ -274,8 +282,31 @@ internal object MuroEstanteUrss {
             drawPath(Path().apply { moveTo(cx - an, yb); cubicTo(cx - an * 0.5f, yb + w * 0.012f, cx + an * 0.5f, yb + w * 0.012f, cx + an, yb) },
                 Color(0xFFFFF4DA).copy(alpha = 0.6f + 0.4f * f), style = Stroke(2f * u))
         }
-        // El aro de latón de arriba de la campana.
-        drawRect(l.c(P.LATON), Offset(cx - an * 0.24f, ya - w * 0.004f), Size(an * 0.48f, w * 0.007f))
-        drawRect(l.b(0.6f), Offset(cx - an * 0.24f, ya - w * 0.004f), Size(an * 0.48f, 1f * u))
+        // El filo del vidrio: el canto grueso del vidrio verde forrado de blanco, con su brillo; de noche, encendido.
+        val filo = Path().apply { moveTo(cx - an, yb); cubicTo(cx - an * 0.5f, yb + w * 0.012f, cx + an * 0.5f, yb + w * 0.012f, cx + an, yb) }
+        if (!enc) {
+            drawPath(corridoUrss(filo, 0f, 1.6f * u), l.c(mezcla(P.VERDE, P.NEGRO, 0.3f)), style = Stroke(1.4f * u))
+            drawPath(filo, l.c(mezcla(P.CARTULINA, P.VERDE, 0.12f)), style = Stroke(2.6f * u))
+            drawPath(corridoUrss(filo, 0f, -0.6f * u), l.b(0.8f), style = Stroke(0.8f * u))
+        }
+        // La galería de latón que abraza el cuello de la campana, con sus tres tornillos (se ven dos, a los lados, y el de delante).
+        val gal = Rect(cx - an * 0.3f, ya - w * 0.006f, cx + an * 0.3f, ya + w * 0.006f)
+        drawRoundRect(l.s(0.35f), gal.topLeft + Offset(1f * u, 1.4f * u), gal.size, CornerRadius(w * 0.003f))
+        drawRoundRect(l.c(P.LATON), gal.topLeft, gal.size, CornerRadius(w * 0.003f))
+        drawRect(l.b(0.6f), Offset(gal.left + 1f * u, gal.top), Size(gal.width - 2f * u, 1f * u))
+        drawRect(l.c(P.LATON_OSC), Offset(gal.left, gal.bottom - 1f * u), Size(gal.width, 1f * u))
+        listOf(gal.left - w * 0.003f, cx, gal.right + w * 0.003f).forEach { x ->
+            drawCircle(l.c(P.LATON), w * 0.0045f, Offset(x, gal.center.y))
+            drawCircle(l.b(0.7f), w * 0.0016f, Offset(x - w * 0.0015f, gal.center.y - w * 0.0015f))
+        }
+        // La cadenita del interruptor, que baja del portalámparas por dentro de la campana y asoma bajo el borde, con su bolita.
+        val xcad = cx + an * 0.32f
+        val y0c = yb - w * 0.004f
+        val lcad = g.luz(xcad, yb + w * 0.03f, 0.07f)
+        for (k in 0..9) drawCircle(lcad.c(mezcla(P.LATON, P.METAL, 0.4f)), 0.95f * u, Offset(xcad + w * 0.0012f * kotlin.math.sin(k * 0.6f), y0c + k * w * 0.0058f))
+        val bola = Offset(xcad + w * 0.001f, y0c + w * 0.062f)
+        drawCircle(lcad.s(0.35f), w * 0.0055f, bola + Offset(1f * u, 1.2f * u))
+        drawCircle(lcad.c(P.LATON), w * 0.0055f, bola)
+        drawCircle(if (enc) P.LLAMA.copy(alpha = 0.9f) else lcad.b(0.75f), w * 0.002f, bola - Offset(w * 0.002f, w * 0.002f))
     }
 }

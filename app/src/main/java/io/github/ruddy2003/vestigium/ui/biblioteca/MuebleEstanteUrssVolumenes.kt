@@ -80,9 +80,9 @@ private fun DrawScope.contactoUrss(x0: Float, x1: Float, l: LuzUrss, hacia: Floa
 }
 
 /** La caja de la etiqueta: tan ancha como cabe el día (unos 16 sp) sin pasar del ancho del objeto [an], con su arriba en [y]. */
-private fun DrawScope.rectEtiquetaUrss(x0: Float, an: Float, y: Float, alto: Float = 30f): Rect {
+private fun DrawScope.rectEtiquetaUrss(x0: Float, an: Float, y: Float, alto: Float = 29f): Rect {
     val u = density
-    val ancho = minOf(an * 0.9f, 31f * u).coerceAtLeast(minOf(an, 22f * u))
+    val ancho = minOf(an * 0.86f, 28f * u).coerceAtLeast(minOf(an, 22f * u))
     val cx = x0 + an / 2
     return Rect(cx - ancho / 2, y, cx + ancho / 2, y + alto * u)
 }
@@ -98,7 +98,7 @@ private fun DrawScope.etiquetaUrss(v: Volumen, medidor: TextMeasurer, l: LuzUrss
     if (raya) drawRect(mezcla(carton, P.ROJO, 0.65f), Offset(r.left, r.top + 2.4f * u), Size(r.width, 0.9f * u))
     drawRect(mezcla(carton, P.ESTRAZA, 0.4f).copy(alpha = 0.3f), Offset(r.left, r.bottom - r.height * 0.22f), Size(r.width, r.height * 0.22f))
     val tinta = l.tinta(carton)
-    val zonaDia = Rect(r.left - 0.4f * u, r.top + 3.8f * u, r.right + 0.4f * u, r.top + 20.6f * u)
+    val zonaDia = Rect(r.left - 0.4f * u, r.top + 2.8f * u, r.right + 0.4f * u, r.top + 19.6f * u)
     textoEn(medidor, v.dia, zonaDia, P.LETRA, tinta, 16f, minimo = 9f)
     val zonaMes = Rect(r.left + 0.4f * u, zonaDia.bottom - 1.2f * u, r.right - 0.4f * u, r.bottom - 0.8f * u)
     textoEn(medidor, mesCortoUrss(v.mes), zonaMes, P.LETRA, tinta.copy(alpha = 0.85f), 8f, minimo = 6f)
@@ -106,7 +106,8 @@ private fun DrawScope.etiquetaUrss(v: Volumen, medidor: TextMeasurer, l: LuzUrss
 }
 
 /** La tinta de lo estampado sobre [fondo]: negra sobre lo rojo y lo crudo, roja sobre lo negro. */
-private fun tintaSobreUrss(fondo: Color): Color = if (luminanciaUrss(fondo) < 0.05f) P.ROJO else if (fondo.red > fondo.green * 1.6f) P.NEGRO else (if (fondo.red > 0.7f) P.ROJO else P.NEGRO)
+/** La tinta de lo estampado sobre [fondo]: cruda sobre lo oscuro (el topo y el carbón), negra sobre lo rojo, el coral y el crudo. */
+private fun tintaSobreUrss(fondo: Color): Color = if (luminanciaUrss(fondo) < 0.12f) mezcla(P.CARTULINA, P.CARTON, 0.25f) else P.NEGRO
 
 // ---------------------------------------------------------------- el libro de tela
 
@@ -150,7 +151,7 @@ private fun DrawScope.libroUrss(v: Volumen, tono: Color?, medidor: TextMeasurer,
         drawRect(l.c(P.CARTULINA), ficha.topLeft, ficha.size)
         drawRect(l.c(P.ROJO), Offset(ficha.left, ficha.top + 2f * u), Size(ficha.width, 0.9f * u))
         drawRect(l.b(0.4f), ficha.topLeft, Size(1f * u, ficha.height))
-        planosUrss(lomo, tela, l, hacia, 0.2f, 0.26f)
+        planosUrss(lomo, tela, l, hacia, 0.2f, 0.26f, tostado = true)
         // Lo de encima del lomo va recortado a su rectángulo (más barato que a su forma; las esquinas casi no se redondean).
         clipRect(x0, top, x0 + an, h - 0.5f * u) {
             // La trama de la tela: unos hilos finos a lo largo, en un solo camino.
@@ -171,26 +172,28 @@ private fun DrawScope.libroUrss(v: Volumen, tono: Color?, medidor: TextMeasurer,
                 drawLine(l.s(0.35f), Offset(x0 + an * 0.12f, yy), Offset(x0 + an * 0.88f, yy), 0.8f * u)
                 drawLine(l.b(0.25f), Offset(x0 + an * 0.12f, yy + 0.8f * u), Offset(x0 + an * 0.88f, yy + 0.8f * u), 0.6f * u)
             }
-            // La composición estampada en el lomo, en la tinta que contraste: campos y bandas a todo el ancho y una cuña en diagonal,
-            // sin piezas sueltas que se toquen (así no se forma ninguna letra) y sin discos.
+            // Las franjas de remate estampadas en el lomo, negras o crudas según la tela (sin piezas sueltas que se toquen, así no se
+            // forma ninguna letra, y sin discos): la tela del ánimo manda.
             val tinta = l.c(tintaSobreUrss(telaBase))
             val z0 = top + h * 0.12f; val z1 = top + h * 0.4f
             val dz = z1 - z0
             when ((azar(s, 11) * 3f).toInt()) {
                 0 -> {
-                    // Un campo entero del otro color y una banda fina debajo.
-                    drawRect(tinta, Offset(x0, z0), Size(an, dz * 0.5f))
-                    drawRect(tinta, Offset(x0, z0 + dz * 0.68f), Size(an, dz * 0.09f))
+                    // Una franja ancha arriba y una fina debajo; y otra fina al pie.
+                    drawRect(tinta, Offset(x0, z0 + dz * 0.08f), Size(an, dz * 0.17f))
+                    drawRect(tinta, Offset(x0, z0 + dz * 0.34f), Size(an, dz * 0.06f))
+                    drawRect(tinta, Offset(x0, h * 0.875f), Size(an, h * 0.022f))
                 }
                 1 -> {
-                    // La cuña: una banda ancha en diagonal que cruza el lomo.
-                    drawPath(poligonoUrss(Offset(x0, z1), Offset(x0 + an, z0 + dz * 0.15f), Offset(x0 + an, z0 + dz * 0.45f), Offset(x0, z1 + dz * 0.3f)), tinta)
+                    // La cuña: una banda en diagonal que cruza el lomo.
+                    drawPath(poligonoUrss(Offset(x0, z1), Offset(x0 + an, z0 + dz * 0.25f), Offset(x0 + an, z0 + dz * 0.42f), Offset(x0, z1 + dz * 0.17f)), tinta)
                 }
                 else -> {
-                    // Tres bandas a todo el ancho, de grueso decreciente.
-                    drawRect(tinta, Offset(x0, z0 + dz * 0.05f), Size(an, dz * 0.24f))
-                    drawRect(tinta, Offset(x0, z0 + dz * 0.42f), Size(an, dz * 0.13f))
-                    drawRect(tinta, Offset(x0, z0 + dz * 0.68f), Size(an, dz * 0.06f))
+                    // Tres franjas finas, de grueso decreciente, arriba; una al pie.
+                    drawRect(tinta, Offset(x0, z0 + dz * 0.06f), Size(an, dz * 0.1f))
+                    drawRect(tinta, Offset(x0, z0 + dz * 0.24f), Size(an, dz * 0.06f))
+                    drawRect(tinta, Offset(x0, z0 + dz * 0.37f), Size(an, dz * 0.035f))
+                    drawRect(tinta, Offset(x0, h * 0.875f), Size(an, h * 0.016f))
                 }
             }
             // Lo gastado de la tela en las esquinas: asoma el cartón.
@@ -199,7 +202,7 @@ private fun DrawScope.libroUrss(v: Volumen, tono: Color?, medidor: TextMeasurer,
             if (azar(s, 12) < 0.6f) drawPath(poligonoUrss(Offset(x0 + an, h), Offset(x0 + an * 0.84f, h), Offset(x0 + an, h - h * 0.03f)), carton)
         }
         // El tejuelo de la biblioteca: la cartulina con su marco impreso, el día y el mes.
-        val eti = rectEtiquetaUrss(x0, an, h * (0.58f + 0.06f * azar(s, 15)))
+        val eti = rectEtiquetaUrss(x0, an, h * (0.6f + 0.06f * azar(s, 15)))
         drawRect(l.s(0.35f), eti.topLeft + Offset(-hacia * 1.2f * u, 1.2f * u), eti.size)
         etiquetaUrss(v, medidor, l, eti, raya = false)
         drawRect(l.c(P.NEGRO).copy(alpha = 0.55f), eti.deflate(1.4f * u).topLeft, eti.deflate(1.4f * u).size, style = Stroke(0.6f * u))
@@ -251,11 +254,12 @@ private fun DrawScope.rolloUrss(v: Volumen, tono: Color?, medidor: TextMeasurer,
     val nudo = Offset(pivote.x + (px * kotlin.math.cos(ang) - py * kotlin.math.sin(ang)).toFloat(), pivote.y + (px * kotlin.math.sin(ang) + py * kotlin.math.cos(ang)).toFloat())
     rotate(giro, pivote) {
         sombraDetrasUrss(cuerpo, l, hacia)
-        cilindroUrss(cuerpo, papel, l, hacia, 0f, caja)
+        cilindroUrss(cuerpo, papel, l, hacia, 0f, caja, tostado = true)
         clipPath(cuerpo) {
-            val margen = h * (0.06f + 0.03f * azar(s, 6))
-            val crudoP = Path().apply { addRect(Rect(xa, top, xa + d, top + ry + margen)); addRect(Rect(xa, h - margen * 0.7f, xa + d, h + ry)) }
-            cilindroUrss(crudoP, crudo, l, hacia, 0f, caja)
+            // Solo un margen crudo arriba, angosto (el pliego enrollado con lo impreso hacia fuera): el papel del color manda.
+            val margen = h * (0.025f + 0.015f * azar(s, 6))
+            val crudoP = Path().apply { addRect(Rect(xa, top, xa + d, top + ry + margen)) }
+            cilindroUrss(crudoP, crudo, l, hacia, 0f, caja, tostado = true)
             // Lo impreso de otro color: una banda ancha en diagonal y, en algunos, otra fina.
             val yb = h * (0.55f + 0.18f * azar(s, 7))
             drawPath(poligonoUrss(Offset(xa, yb), Offset(xa + d, yb - h * 0.1f), Offset(xa + d, yb - h * 0.04f), Offset(xa, yb + h * 0.06f)), tinta)
@@ -299,7 +303,7 @@ private fun DrawScope.rolloUrss(v: Volumen, tono: Color?, medidor: TextMeasurer,
     contactoUrss(xa, xa + d, l, hacia)
     // La etiqueta de cartón, colgada a plomo del nudo por su hilo, con las esquinas de arriba cortadas y su ojal.
     val cuerda = l.c(P.BRAMANTE)
-    val eti0 = rectEtiquetaUrss(0f, w, nudo.y + 6f * u, 31f)
+    val eti0 = rectEtiquetaUrss(0f, w, nudo.y + 6f * u, 30f)
     val eti = Rect((nudo.x - eti0.width / 2).coerceIn(0f, (w - eti0.width).coerceAtLeast(0f)), eti0.top, 0f, eti0.bottom).let { Rect(it.left, it.top, it.left + eti0.width, it.bottom) }
     val ladeo = (-4f + 8f * azar(s, 11))
     drawLine(cuerda, nudo, Offset(eti.center.x, eti.top + 2.6f * u), 1.1f * u)
@@ -353,17 +357,25 @@ private fun DrawScope.boteUrss(v: Volumen, tono: Color?, medidor: TextMeasurer, 
     contactoUrss(x0, x0 + an, l, hacia)
     drawPath(asa, l.s(0.3f), style = Stroke(1.4f * u))
     drawPath(corridoUrss(asa, 0.8f * u, -0.8f * u), l.c(P.METAL), style = Stroke(1.2f * u))
-    // La lata de hojalata.
-    cilindroUrss(lata, l.c(mezcla(P.METAL, P.ACERO, 0.25f)), l, hacia, 0.65f, Rect(x0, yt, x0 + an, h))
+    // La lata esmaltada del color de su pintura, entera; la hojalata solo asoma en los rebordes de arriba y de abajo.
+    val caja = Rect(x0, yt, x0 + an, h)
+    cilindroUrss(lata, pintura, l, hacia, 0.5f, caja, tostado = true)
     clipPath(lata) {
-        // Los aros prensados de la hojalata.
-        listOf(0.16f, 0.9f).forEach { f ->
-            val yy = yt + alto * f
-            drawLine(l.s(0.35f), Offset(x0, yy), Offset(x0 + an, yy), 1f * u)
-            drawLine(l.b(0.4f), Offset(x0, yy + 1f * u), Offset(x0 + an, yy + 1f * u), 0.7f * u)
+        // Los rebordes de hojalata, en un color con su brillo y su sombra a los lados (sin degradado: pesa menos).
+        val metal = l.c(mezcla(P.METAL, P.ACERO, 0.25f))
+        val sombraM = sombraPropiaUrss(metal, l, false)
+        listOf(Rect(x0, yt - 1f, x0 + an, yt + alto * 0.07f), Rect(x0, h - alto * 0.08f, x0 + an, h + ry)).forEach { rb ->
+            drawRect(metal, rb.topLeft, rb.size)
+            drawRect(if (l.a.oscuro) l.a.hondo.copy(alpha = 0.5f) else sombraM, Offset(if (hacia < 0f) x0 + an * 0.7f else x0, rb.top), Size(an * 0.3f, rb.height))
+            drawRect(l.b(0.5f), Offset(if (hacia < 0f) x0 + an * 0.16f else x0 + an * 0.74f, rb.top), Size(an * 0.08f, rb.height))
         }
-        // La pintura que chorreó desde el borde: un manto de bordes caídos y unas gotas largas, más cuanto más escribiste.
-        val baja = alto * (0.2f + 0.1f * azar(s, 7) + 0.08f * v.lleno)
+        listOf(yt + alto * 0.07f, h - alto * 0.08f).forEach { yy ->
+            drawLine(l.s(0.4f), Offset(x0, yy), Offset(x0 + an, yy), 1f * u)
+            drawLine(l.b(0.35f), Offset(x0, yy + 1f * u), Offset(x0 + an, yy + 1f * u), 0.6f * u)
+        }
+        // La pintura que chorreó desde el borde por encima del reborde y del esmalte: el mismo color, más brillante, con su relieve
+        // (la sombra bajo cada lengua y el filo de luz), y unas gotas largas, más cuanto más escribiste.
+        val baja = alto * (0.18f + 0.1f * azar(s, 7) + 0.08f * v.lleno)
         val manto = Path().apply {
             moveTo(x0 - 1f, yt - 1f)
             lineTo(x0 + an + 1f, yt - 1f)
@@ -376,17 +388,14 @@ private fun DrawScope.boteUrss(v: Volumen, tono: Color?, medidor: TextMeasurer, 
             }
             close()
         }
-        drawPath(manto, pintura)
-        drawPath(manto, Brush.horizontalGradient(if (hacia < 0f) listOf(l.b(0.3f), Color.Transparent, l.s(0.35f)) else listOf(l.s(0.35f), Color.Transparent, l.b(0.3f)), x0, x0 + an))
-        drawPath(corridoUrss(manto, -hacia * 0.8f * u, 0f), l.b(0.35f), style = Stroke(0.7f * u))
+        drawPath(corridoUrss(manto, -hacia * 0.8f * u, 1.4f * u), sombraPropiaUrss(pintura, l, true).copy(alpha = 0.8f))
+        drawPath(manto, mezcla(pintura, Color.White, if (l.a.oscuro) 0.03f else 0.08f))
+        drawPath(corridoUrss(manto, hacia * 0.8f * u, -0.4f * u), l.b(0.45f), style = Stroke(0.7f * u))
         // La etiqueta de papel de la fábrica, pegada abajo: el día y el mes, y la banda del color de la pintura.
-        val eti = rectEtiquetaUrss(x0, an, (h - ry * 0.6f - 32f * u).coerceAtLeast(yt + baja * 0.6f), 30f)
+        val eti = rectEtiquetaUrss(x0, an, (h - alto * 0.08f - 30f * u).coerceAtLeast(yt + baja * 0.6f))
         drawRect(l.s(0.3f), eti.topLeft + Offset(-hacia * 1f * u, 1f * u), eti.size)
         etiquetaUrss(v, medidor, l, eti, raya = false)
-        drawRect(pintura, Offset(eti.left, eti.top), Size(eti.width, 2.6f * u))
-        // Una gota que bajó por encima de la etiqueta, por el borde.
-        val xg = if (hacia < 0f) eti.right - 2.4f * u else eti.left + 1f * u
-        drawRoundRect(pintura, Offset(xg, eti.top), Size(1.6f * u, eti.height * (0.25f + 0.35f * azar(s, 8))), CornerRadius(0.8f * u))
+        drawRect(mezcla(pintura, P.NEGRO, 0.15f), Offset(eti.left, eti.top), Size(eti.width, 2.4f * u))
     }
     // La boca: el borde enrollado de la lata, lo de dentro (hojalata en sombra) y la superficie de la pintura, con su brillo.
     val boca = Rect(x0, yt - ry, x0 + an, yt + ry)

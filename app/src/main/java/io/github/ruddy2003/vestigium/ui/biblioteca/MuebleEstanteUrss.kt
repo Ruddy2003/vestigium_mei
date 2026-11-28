@@ -77,16 +77,26 @@ internal object PaletaUrss {
     /** El aire de la noche del cuarto (el azul verdoso hondo del Ideario), el de los Sueños, el anochecer y su ocaso. */
     val NOCHE = Color(0xFF0A191D)
     val NOCHE_SUENOS = Color(0xFF0B1722)
+    /**
+     * El oscuro en que se hunde lo que no alumbra ninguna bombilla: el mismo azul verdoso del Ideario, un punto más claro que el de
+     * las sombras, para que entre los charcos se vea el paso del cálido al frío en el roble y en la pared.
+     */
+    val NOCHE_CUERPO = Color(0xFF10262F)
+    val NOCHE_CUERPO_SUENOS = Color(0xFF0F2131)
     val ANOCHECER = Color(0xFF3B3A55)
     val CREPUSCULO = Color(0xFFF2A26E)
     val MELOCOTON = Color(0xFFF6C8A0)
 
-    /** El ánimo en tela de encuadernar (de lo malo a lo bueno): tela roja, lino crudo, tela negra. */
-    val TELAS = listOf(Color(0xFFAE1E1C), Color(0xFFD8CBA6), Color(0xFF282422))
-    /** El ánimo en papel de cartel: rojo de cartel, papel crudo, tinta negra. */
-    val PAPELES = listOf(Color(0xFFC41A1A), Color(0xFFE5D8B4), Color(0xFF221F1D))
-    /** El ánimo en pintura de carteles: roja, cruda, negra. */
-    val PINTURAS = listOf(Color(0xFFCC2219), Color(0xFFECE0C2), Color(0xFF1C1A19))
+    /**
+     * El ánimo en tela de encuadernar, de lo malo a lo bueno, en cinco puntos de la misma escala del tema (rojo, crudo, negro): el
+     * rojo, el coral, el lino crudo, el gris topo oscuro y el carbón cálido. Así cada tramo tiene cuerpo (el de en medio del crudo
+     * al negro no se queda en gris ceniza).
+     */
+    val TELAS = listOf(Color(0xFFAB1E1B), Color(0xFFD9573C), Color(0xFFDCCCA2), Color(0xFF6E5C4D), Color(0xFF2D2824))
+    /** El ánimo en papel de cartel: rojo de cartel, coral, papel crudo, topo, tinta negra. */
+    val PAPELES = listOf(Color(0xFFC41A1A), Color(0xFFE2603E), Color(0xFFE6D6AC), Color(0xFF766455), Color(0xFF282320))
+    /** El ánimo en esmalte de pintura de carteles: rojo, coral, crudo, topo, negro. */
+    val PINTURAS = listOf(Color(0xFFCC2219), Color(0xFFE8623C), Color(0xFFEDDDB6), Color(0xFF7A6A5C), Color(0xFF221D1A))
 
     /** La letra del tema (la de sus rótulos). */
     val LETRA: FontFamily = LetraExtra.russo
@@ -113,18 +123,20 @@ internal class AireUrss(val oscuro: Boolean, val noche: Boolean) {
     fun en(k: Float, tinte: Color, mancha: Float, amb: Float, lav: Float = 0f, verde: Float = 0f) =
         LuzUrss(this, k.coerceIn(0f, 1f), tinte, mancha.coerceIn(0f, 1f), amb.coerceIn(0f, 1f), lav.coerceIn(0f, 1f), verde.coerceIn(0f, 1f))
 
+    /** El oscuro del cuerpo: el azul verdoso del Ideario (de noche) o el de las sombras (de día y al anochecer). */
+    private val cuerpo: Color get() = if (oscuro) (if (noche) p.NOCHE_CUERPO_SUENOS else p.NOCHE_CUERPO) else hondo
+
     /** El color propio de algo, hundido: oscuro, de su mismo tono (no gris), con el aire azul verdoso del cuarto. */
     fun hundido(c: Color): Color {
-        val n = hondo
+        val n = cuerpo
         return Color(c.red * 0.16f + n.red * 0.84f, c.green * 0.16f + n.green * 0.84f, c.blue * 0.16f + n.blue * 0.84f, c.alpha)
     }
 
-    /** El color del ánimo hundido: guarda más de su tono que lo demás, para que las entradas lejanas se sigan distinguiendo. */
-    fun hundidoAnimo(c: Color): Color {
-        val n = hondo
-        val f = if (noche) 0.24f else 0.25f
-        return Color(c.red * f + n.red * (1f - f), c.green * f + n.green * (1f - f), c.blue * f + n.blue * (1f - f), c.alpha)
-    }
+    /**
+     * El color del ánimo hundido: baja de valor pero conserva su matiz, tostándose (el rojo queda rojo oscuro; el crudo, tostado
+     * oscuro; el carbón, casi negro), con algo del aire del cuarto; así las entradas lejanas se siguen distinguiendo por su color.
+     */
+    fun hundidoAnimo(c: Color): Color = mezcla(Color(c.red * 0.42f, c.green * 0.34f, c.blue * 0.26f, c.alpha), cuerpo, 0.32f)
 
     fun sombra(a: Float): Color = when {
         oscuro -> hondo.copy(alpha = (a * 1.3f).coerceIn(0f, 1f))
@@ -246,8 +258,8 @@ internal class LuzUrss(val a: AireUrss, val k: Float, val tinte: Color, val manc
     }
 }
 
-/** La cartulina de las etiquetas: amarillenta, de valor medio (no blanca). */
-internal val ETIQUETA_URSS = Color(0xFFCDBB92)
+/** La cartulina de las etiquetas: tostada, de valor medio (no blanca), como la tarjeta vieja de los portaetiquetas del Ideario. */
+internal val ETIQUETA_URSS = Color(0xFFBBA273)
 
 internal fun luminanciaUrss(c: Color): Float {
     fun ch(v: Float) = if (v <= 0.04045f) v / 12.92f else Math.pow(((v + 0.055f) / 1.055f).toDouble(), 2.4).toFloat()
@@ -325,8 +337,8 @@ internal object MuebleEstanteUrss {
     /** La boca de la lámpara de pinza del costado izquierdo, a lo ancho (sobre el costado: no tapa lo guardado). */
     const val PINZA_X = 0.058f
     /** El dial del receptor: a lo ancho, y su altura sobre el pie del lienzo (en anchos). */
-    const val DIAL_X = 0.91f
-    const val DIAL_Y = 0.288f
+    const val DIAL_X = 0.919f
+    const val DIAL_Y = 0.268f
 
     /** El alto del cuerpo (de la corona al pie de la última repisa) con [repisas] repisas, en anchos. */
     fun cuerpo(repisas: Int): Float = repisas * FILA / ANCHO_NOMINAL
@@ -448,15 +460,18 @@ internal object MuebleEstanteUrss {
         val clave = "${w.toInt()}|${ch.toInt()}|$oscuro|$noche|$density"
         CapaUrss.pegar(this, if (noche) 1 else 0, clave, ch) {
             with(ParedEstanteUrss) { paredArriba(g) }
+            with(CoronaEstanteUrss) { sombrasEnPanos(g) }
             with(MuroEstanteUrss) { colgado(g) }
             with(CoronaEstanteUrss) { detras(g) }
             with(ObraEstanteUrss) { cornisa(g) }
             with(CoronaEstanteUrss) { delante(g) }
-            with(MuroEstanteUrss) { lampara(g) }
+            conPanosTodoUrss(g, 0.14f, Rect(0f, 0f, w, g.apoyo)) { with(MuroEstanteUrss) { lampara(g) } }
             granoMueble(Rect(0f, 0f, w, ch), oscuro)
         }
         if (n == 0) return
-        with(ParedEstanteUrss) { d.repisas.forEachIndexed { k, r -> fondoHueco(k, r, d.ocupado.getOrNull(k) ?: r.right, g) } }
+        // En los Sueños, lo que toca la luz de la ventana (la pared de los huecos, las tablas y los costados) se pinta dos veces: fuera y
+        // dentro de sus paños, con el borde neto.
+        with(ParedEstanteUrss) { d.repisas.forEachIndexed { k, r -> conPanosTodoUrss(g, 0f, r) { fondoHueco(k, r, d.ocupado.getOrNull(k) ?: r.right, g) } } }
         with(HuecosEstanteUrss) {
             d.repisas.forEachIndexed { k, r ->
                 val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
@@ -465,9 +480,9 @@ internal object MuebleEstanteUrss {
         }
         with(ObraEstanteUrss) {
             juntas(g, d)
-            d.tablas.forEachIndexed { k, r -> tabla(k, r, g) }
-            d.placas.forEach { p -> placa(p, medidor, g) }
-            costados(g, d)
+            d.tablas.forEachIndexed { k, r -> conPanosTodoUrss(g, 0.04f, r) { tabla(k, r, g) } }
+            d.placas.forEach { p -> conPanosTodoUrss(g, 0.045f, p.r) { placa(p, medidor, g) } }
+            conPanosTodoUrss(g, 0.04f, Rect(0f, g.ch, w, g.fondo)) { costados(g, d) }
         }
         with(PieEstanteUrss) { pie(g) }
         with(ObraEstanteUrss) { pinza(g, d) }

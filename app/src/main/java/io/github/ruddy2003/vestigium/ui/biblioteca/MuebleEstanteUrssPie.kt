@@ -57,10 +57,12 @@ internal object PieEstanteUrss {
         val w = g.w; val h = g.h; val u = density
         val alto = h - suelo
         val fieltro = Color(0xFF8C877C)
-        listOf(Triple(0.585f, 0.2f, true), Triple(0.535f, 0.1f, false)).forEach { (fx, fy, atras) ->
+        listOf(Triple(0.6f, 0.12f, true), Triple(0.535f, 0.03f, false)).forEach { (fx, fy, atras) ->
             val pie = h - alto * fy
             val x = w * fx
-            val l = g.luz(x, pie - w * 0.06f, 0.07f)
+            val l = g.luz(x, pie - w * 0.08f, 0.08f)
+            // Grandes y cerca: cada bota se agranda desde su pie.
+            scale(1.42f, 1.42f, Offset(x, pie)) {
             val cana = w * 0.045f; val altoB = w * 0.13f; val largo = w * 0.085f
             val bota = Path().apply {
                 moveTo(x + cana * 0.5f, pie - altoB)
@@ -91,6 +93,7 @@ internal object PieEstanteUrss {
             drawOval(l.c(mezcla(col, P.NEGRO, 0.5f)), boca.topLeft, boca.size)
             drawArc(l.c(mezcla(col, Color.White, 0.15f)), 180f, 180f, false, boca.topLeft, boca.size, style = Stroke(1.6f * u))
             if (l.k > 0.05f) drawLine(l.filo(0.8f), Offset(x + cana * 0.5f, pie - altoB), Offset(x + cana * 0.55f, pie - w * 0.03f), 1.2f * u)
+            }
         }
     }
 
@@ -182,10 +185,10 @@ internal object PieEstanteUrss {
     private fun DrawScope.periodicos(g: MarcoUrss, suelo: Float) {
         val w = g.w; val h = g.h; val u = density
         val alto = h - suelo
-        val pie = h - alto * 0.12f
-        val x0 = -w * 0.04f; val x1 = w * 0.25f
-        val ya = pie - w * 0.15f
-        val fx = w * 0.03f; val fy = w * 0.026f
+        val pie = h - alto * 0.07f
+        val x0 = -w * 0.05f; val x1 = w * 0.31f
+        val ya = pie - w * 0.205f
+        val fx = w * 0.036f; val fy = w * 0.03f
         val l = g.luz(w * 0.1f, pie - w * 0.06f, 0.06f)
         // Su sombra en el suelo y en el zócalo.
         drawPath(poligonoUrss(listOf(Offset(x1, pie), Offset(x1 + fx, pie - fy), Offset(x1 + fx + w * 0.05f, pie - fy + w * 0.014f), Offset(x1 + w * 0.04f, pie + w * 0.008f), Offset(x0, pie + w * 0.008f))), l.s(0.4f))
@@ -243,8 +246,8 @@ internal object PieEstanteUrss {
         val w = g.w; val h = g.h; val u = density
         val alto = h - suelo
         val pieD = h - alto * 0.1f
-        val asiento = pieD - w * 0.12f
-        val x0 = w * 0.68f; val x1 = w * 1.02f
+        val asiento = pieD - w * 0.085f
+        val x0 = w * 0.66f; val x1 = w * 1.03f
         val l = g.luz(w * 0.82f, asiento, 0.06f)
         val madera = mezcla(P.ROBLE, P.TE, 0.2f)
         // La sombra del taburete en el suelo.
@@ -269,7 +272,7 @@ internal object PieEstanteUrss {
         drawRect(l.b(0.5f), canto.topLeft, Size(canto.width, 1.2f * u))
         drawRect(l.s(0.35f), Offset(canto.left, canto.bottom - 1.4f * u), Size(canto.width, 1.4f * u))
         // El receptor.
-        val r = Rect(w * 0.705f, canto.top - w * 0.015f - w * 0.132f, w * 0.965f, canto.top - w * 0.015f)
+        val r = Rect(w * 0.68f, canto.top - w * 0.015f - w * 0.16f, w * 0.98f, canto.top - w * 0.015f)
         // La caja recibe la luz del cuarto, no la de su propio dial (que alumbra hacia fuera): se le quita la del dial.
         val l0 = g.luz(r.center, 0.06f)
         val kd = g.a.dial * MuebleEstanteUrss.kDial(r.center.x / w, r.center.y / w, h / w)
