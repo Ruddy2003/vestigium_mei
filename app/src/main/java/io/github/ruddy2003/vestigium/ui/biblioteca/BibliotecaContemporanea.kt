@@ -8726,37 +8726,24 @@ object EstanteAbismo : DisenoBiblioteca {
 }
 
 /**
- * URSS: la biblioteca de la casa de cultura. Un estante de nogal pulido, de líneas sobrias, con costados de moldura
- * escalonada y un fondo de contrachapado. En la pared, encima, la banderola roja colgada de su barra, con su fleco dorado,
- * tres estrellas y bandas geométricas en lugar de lemas; sobre el mueble, la radio de mesa de madera con su rejilla de tela,
- * el dial y dos perillas de baquelita, y la lámpara de escritorio de pantalla verde. Abajo, el zócalo y un linóleo con su
- * pasillo de alfombra roja. Los meses van en tiras de esmalte rojo atornilladas. Cada entrada es un libro de tapa de tela con
- * la estrella estampada, el mes a lo largo, el sello violeta de la biblioteca, la ficha de préstamo asomando de su bolsillo
- * por arriba (con más sellos de fecha cuanto más escribiste) y el día como signatura en el tejuelo; de noche, una luna en
- * lugar del sello. De noche se enciende la lámpara verde y alumbra el estante, y el dial de la radio brilla. Distinto del
- * Ideario, que es la kartoteka metálica de cajoncitos.
- * La tapa es ese libro de tela de frente, con la cuña negra, la estrella en su círculo, la etiqueta «ОТЧЁТ · INFORME»
+ * URSS: la biblioteca del club de la fábrica. El estante del diario es la estantería abierta de roble de la sala, en la otra
+ * pared del mismo cuarto que el fichero del Ideario (`MuebleEstanteUrss.kt`: la pared a dos tonos, el proyector de cine, la lámpara
+ * colgada de vidrio verde; cada entrada es un libro de tela, un rollo de carteles o un bote de pintura de carteles).
+ * La tapa es el libro de tela de frente, con la cuña negra, la estrella en su círculo, la etiqueta «ОТЧЁТ · INFORME»
  * con la fecha, el sello violeta (de noche, la luna), la signatura y la ficha de préstamo asomando.
  */
 object EstanteUrss : DisenoBiblioteca {
     private val NOGAL = Color(0xFF5B3A26)
     private val NOGAL_LUZ = Color(0xFF7C5236)
     private val NOGAL_VETA = Color(0xFF3A2416)
-    private val FONDO = Color(0xFFC9A777)
     private val PARED = Color(0xFFD8CCAE)
     private val ROJO = Color(0xFFB0241E)
     private val ROJO_OSC = Color(0xFF7E1914)
     private val ORO = Color(0xFFD9A93E)
     private val CREMA = Color(0xFFEFE4C9)
-    private val RADIO = Color(0xFF6E4A2C)
     private val TELA_RADIO = Color(0xFFBFAE88)
     private val BAQUELITA = Color(0xFF2A2420)
-    private val PANTALLA = Color(0xFF2E6B4A)
-    private val PANTALLA_LUZ = Color(0xFF5FA07A)
     private val LATON = Color(0xFFC4A052)
-    private val LINOLEO = Color(0xFF7A5A3E)
-    private val ALFOMBRA = Color(0xFF8E2A24)
-    private val ALFOMBRA_ORLA = Color(0xFF2E4E36)
     private val TINTA = Color(0xFF1E1C1A)
     private val VIOLETA = Color(0xFF6A4FA0)
     /** Las telas de las tapas: ladrillo, gris azulado, oliva, ocre oscuro, verde oscuro y castaño. */
@@ -8773,206 +8760,28 @@ object EstanteUrss : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.34f
-    override val base = 0.1f
-    override val lado = 0.055f
-    override val altoRepisa: Dp = 112.dp
-    override val tabla: Dp = 16.dp
-    override val separa: Dp = 2.dp
+    // =================================================================
+    //  El estante y las entradas: la estantería de roble de la biblioteca del club (`MuebleEstanteUrss.kt`)
+    // =================================================================
+
+    override val corona = MuebleEstanteUrss.CORONA
+    override val base = MuebleEstanteUrss.BASE
+    override val lado = MuebleEstanteUrss.LADO
+    override val altoRepisa: Dp = MuebleEstanteUrss.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteUrss.TABLA
+    override val separa: Dp = MuebleEstanteUrss.SEPARA
     override val letra: FontFamily = LetraExtra.russo
 
-    override fun ancho(palabras: Int): Dp = (20 + (palabras / 45).coerceAtMost(18)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.8f + 0.15f * azar(semilla, 12)
+    override val auraEnReposo = false
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El fondo de contrachapado, con sus juntas.
-        val cuerpo = Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, d.base.top)
-        drawRect(c(FONDO), cuerpo.topLeft, cuerpo.size)
-        vetas(cuerpo, c(NOGAL_LUZ).copy(alpha = 0.3f), 400, densidad = 0.5f, vertical = true, grosor = 0.6f, ondulacion = 2f)
-        listOf(0.33f, 0.66f).forEach { f -> drawLine(c(NOGAL_VETA).copy(alpha = 0.5f), Offset(cuerpo.left + cuerpo.width * f, cuerpo.top), Offset(cuerpo.left + cuerpo.width * f, cuerpo.bottom), 0.8f * u) }
-        // Cada repisa: la sombra de la tabla de arriba.
-        d.repisas.forEach { rep ->
-            drawRect(Color.Black.copy(alpha = if (noche) 0.4f else 0.26f), rep.topLeft, Size(rep.width, 7 * u))
-            drawRect(Color.Black.copy(alpha = 0.12f), rep.topLeft, Size(rep.width, 14 * u))
-            drawRect(Color.Black.copy(alpha = 0.16f), rep.topLeft, Size(6 * u, rep.height))
-            drawRect(Color.Black.copy(alpha = 0.16f), Offset(rep.right - 6 * u, rep.top), Size(6 * u, rep.height))
-        }
-        // De noche, la luz de la lámpara verde baja sobre la primera repisa.
-        if (noche) {
-            val cl = d.corona.left + d.corona.width * 0.76f
-            val fin = minOf(cuerpo.bottom, cuerpo.top + 180 * u)
-            val cono = Path().apply { moveTo(cl - d.corona.width * 0.08f, cuerpo.top); lineTo(cl + d.corona.width * 0.08f, cuerpo.top); lineTo(cl + d.corona.width * 0.3f, fin); lineTo(cl - d.corona.width * 0.3f, fin); close() }
-            drawPath(cono, Brush.verticalGradient(listOf(LUZ.copy(alpha = 0.22f), Color.Transparent), cuerpo.top, fin))
-        }
-        // Los costados de nogal pulido, con su moldura escalonada.
-        listOf(d.izquierda to true, d.derecha to false).forEach { (lad, izq) ->
-            drawRect(c(NOGAL), lad.topLeft, lad.size)
-            vetas(lad, c(NOGAL_VETA).copy(alpha = 0.5f), if (izq) 410 else 411, densidad = 1f, vertical = true, grosor = 0.6f)
-            val e = lad.width * 0.18f
-            val x1 = if (izq) lad.left + e else lad.right - e
-            val x2 = if (izq) lad.left + e * 2 else lad.right - e * 2
-            drawLine(Color.Black.copy(alpha = 0.3f), Offset(x1, lad.top), Offset(x1, lad.bottom), 1 * u)
-            drawLine(c(NOGAL_LUZ), Offset(x2, lad.top), Offset(x2, lad.bottom), 1 * u)
-            drawRect(Color.White.copy(alpha = 0.08f), Offset(lad.left + lad.width * 0.55f, lad.top), Size(lad.width * 0.08f, lad.height))
-            bisel(lad, Color.White.copy(alpha = 0.14f), Color.Black.copy(alpha = 0.22f), 1.2f * u)
-        }
-        // Las tablas de nogal.
-        d.tablas.forEachIndexed { k, tb ->
-            drawRect(c(NOGAL), tb.topLeft, tb.size)
-            vetas(tb, c(NOGAL_VETA).copy(alpha = 0.5f), 420 + k, densidad = 0.7f, grosor = 0.7f)
-            drawRect(c(NOGAL_LUZ), tb.topLeft, Size(tb.width, 2 * u))
-            drawLine(Color.Black.copy(alpha = 0.25f), Offset(tb.left, tb.top + tb.height * 0.55f), Offset(tb.right, tb.top + tb.height * 0.55f), 0.6f * u)
-            drawRect(Color.Black.copy(alpha = 0.25f), Offset(tb.left, tb.bottom), Size(tb.width, 3 * u))
-        }
-        // La tira de esmalte rojo de cada mes, atornillada.
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRect(Color.Black.copy(alpha = 0.25f), Offset(r.left + 1 * u, r.top + 1 * u), r.size)
-            drawRoundRect(c(ROJO), r.topLeft, r.size, CornerRadius(1.5f * u))
-            drawRoundRect(c(CREMA).copy(alpha = 0.7f), r.deflate(1.4f * u).topLeft, r.deflate(1.4f * u).size, CornerRadius(1 * u), style = Stroke(0.6f * u))
-            listOf(r.left + 4 * u, r.right - 4 * u).forEach { x -> drawCircle(c(LATON), 1.2f * u, Offset(x, r.center.y)); drawLine(c(ROJO_OSC), Offset(x - 0.9f * u, r.center.y), Offset(x + 0.9f * u, r.center.y), 0.5f * u) }
-            textoEn(medidor, p.texto, Rect(r.left + 8 * u, r.top + 1 * u, r.right - 8 * u, r.bottom - 1 * u), letra, c(CREMA), 10f, espaciado = 1f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el zócalo de nogal, el linóleo y el pasillo de alfombra roja con su orla.
-        val b = d.base
-        val piso = b.top + b.height * 0.58f
-        drawRect(c(LINOLEO), Offset(0f, piso), Size(w, h - piso))
-        val pasillo = Rect(w * 0.12f, piso + (h - piso) * 0.2f, w * 0.88f, h)
-        drawRect(c(ALFOMBRA), pasillo.topLeft, pasillo.size)
-        drawRect(c(ALFOMBRA_ORLA), pasillo.topLeft, Size(pasillo.width, (h - piso) * 0.14f))
-        drawRect(c(ALFOMBRA_ORLA), pasillo.topLeft, Size(pasillo.width * 0.04f, pasillo.height))
-        drawRect(c(ALFOMBRA_ORLA), Offset(pasillo.right - pasillo.width * 0.04f, pasillo.top), Size(pasillo.width * 0.04f, pasillo.height))
-        val zocalo = Rect(b.left, b.top, b.right, piso)
-        drawRect(c(NOGAL), zocalo.topLeft, zocalo.size)
-        vetas(zocalo, c(NOGAL_VETA).copy(alpha = 0.5f), 430, densidad = 0.7f, grosor = 0.7f)
-        drawRect(c(NOGAL_LUZ), zocalo.topLeft, Size(zocalo.width, 2 * u))
-        drawRect(Color.Black.copy(alpha = 0.22f), Offset(zocalo.left, zocalo.top + zocalo.height * 0.35f), Size(zocalo.width, 1.2f * u))
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(zocalo.left, piso), Size(zocalo.width, 3 * u))
-    }
+    override fun ancho(palabras: Int): Dp = MuebleEstanteUrss.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteUrss.alto(semilla, palabras)
 
-    /** La banderola roja con sus estrellas, la radio de mesa y la lámpara de pantalla verde. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        drawRect(c(PARED), r.topLeft, r.size)
-        // La barra y la banderola, con sus pliegues, sus estrellas, sus bandas y el fleco.
-        val barraY = r.top + r.height * 0.07f
-        drawLine(c(LATON), Offset(r.left + r.width * 0.06f, barraY), Offset(r.right - r.width * 0.06f, barraY), 2 * u)
-        listOf(r.left + r.width * 0.06f, r.right - r.width * 0.06f).forEach { x -> drawCircle(c(LATON), 2.6f * u, Offset(x, barraY)) }
-        val bandera = Rect(r.left + r.width * 0.1f, barraY, r.right - r.width * 0.1f, r.top + r.height * 0.44f)
-        drawRect(c(ROJO), bandera.topLeft, bandera.size)
-        listOf(0.18f, 0.42f, 0.66f, 0.86f).forEach { f -> drawRect(c(ROJO_OSC).copy(alpha = 0.35f), Offset(bandera.left + bandera.width * f, bandera.top), Size(bandera.width * 0.05f, bandera.height)) }
-        val oro = c(ORO)
-        drawLine(oro, Offset(bandera.left + 6 * u, bandera.top + bandera.height * 0.18f), Offset(bandera.right - 6 * u, bandera.top + bandera.height * 0.18f), 1 * u)
-        drawLine(oro, Offset(bandera.left + 6 * u, bandera.bottom - bandera.height * 0.18f), Offset(bandera.right - 6 * u, bandera.bottom - bandera.height * 0.18f), 1 * u)
-        val re = bandera.height * 0.22f
-        listOf(0.2f, 0.5f, 0.8f).forEachIndexed { k, f ->
-            drawPath(estrella(Offset(bandera.left + bandera.width * f, bandera.center.y), if (k == 1) re * 1.2f else re, 5, 0.42f), oro)
-        }
-        listOf(0.32f, 0.62f).forEach { f ->
-            for (j in 0 until 3) drawRect(oro, Offset(bandera.left + bandera.width * f + j * 4 * u, bandera.center.y - re * 0.5f), Size(2 * u, re))
-        }
-        var fx = bandera.left
-        while (fx < bandera.right) { drawLine(oro, Offset(fx, bandera.bottom), Offset(fx, bandera.bottom + 4 * u), 0.8f * u); fx += 2.5f * u }
-        // La tabla de arriba del estante.
-        val tope = r.bottom - r.height * 0.12f
-        drawRect(c(NOGAL), Offset(r.left, tope), Size(r.width, r.bottom - tope))
-        vetas(Rect(r.left, tope, r.right, r.bottom), c(NOGAL_VETA).copy(alpha = 0.5f), 440, densidad = 0.7f, grosor = 0.7f)
-        drawRect(c(NOGAL_LUZ), Offset(r.left, tope), Size(r.width, 2 * u))
-        // La radio de mesa: caja de madera, rejilla de tela con listones, el dial y dos perillas.
-        val radio = Rect(r.left + r.width * 0.12f, tope - r.height * 0.4f, r.left + r.width * 0.42f, tope)
-        drawRoundRect(c(RADIO), radio.topLeft, radio.size, CornerRadius(radio.height * 0.18f))
-        vetas(radio, c(NOGAL_VETA).copy(alpha = 0.45f), 450, densidad = 0.6f, grosor = 0.6f)
-        val rejilla = Rect(radio.left + radio.width * 0.06f, radio.top + radio.height * 0.14f, radio.left + radio.width * 0.52f, radio.bottom - radio.height * 0.12f)
-        drawRoundRect(c(TELA_RADIO), rejilla.topLeft, rejilla.size, CornerRadius(rejilla.width * 0.2f))
-        for (j in 1..4) drawLine(c(RADIO), Offset(rejilla.left + rejilla.width * j / 5f, rejilla.top), Offset(rejilla.left + rejilla.width * j / 5f, rejilla.bottom), 1.6f * u)
-        val dial = Rect(radio.left + radio.width * 0.58f, radio.top + radio.height * 0.18f, radio.right - radio.width * 0.06f, radio.top + radio.height * 0.48f)
-        drawRect(if (noche) LUZ.copy(alpha = 0.8f) else c(CREMA), dial.topLeft, dial.size)
-        for (j in 0 until 7) drawLine(c(TINTA).copy(alpha = 0.6f), Offset(dial.left + dial.width * (0.1f + 0.13f * j), dial.bottom - dial.height * 0.4f), Offset(dial.left + dial.width * (0.1f + 0.13f * j), dial.bottom), 0.6f * u)
-        drawLine(c(ROJO), Offset(dial.left + dial.width * 0.62f, dial.top), Offset(dial.left + dial.width * 0.62f, dial.bottom), 1 * u)
-        drawRect(c(LATON), dial.topLeft, dial.size, style = Stroke(0.8f * u))
-        listOf(0.68f, 0.86f).forEach { f ->
-            val pk = Offset(radio.left + radio.width * f, radio.top + radio.height * 0.72f)
-            drawCircle(c(BAQUELITA), radio.height * 0.1f, pk)
-            drawCircle(Color.White.copy(alpha = 0.15f), radio.height * 0.04f, Offset(pk.x - radio.height * 0.03f, pk.y - radio.height * 0.03f))
-        }
-        // Una pila de libros junto a la radio.
-        listOf(Triple(0.48f, 0.16f, TELAS[1]), Triple(0.49f, 0.14f, TELAS[3]), Triple(0.475f, 0.17f, TELAS[0])).forEachIndexed { k, (x0, an, col) ->
-            val alto0 = r.height * 0.05f
-            drawRect(c(col), Offset(r.left + r.width * x0, tope - alto0 * (k + 1)), Size(r.width * an, alto0))
-            drawRect(c(CREMA).copy(alpha = 0.8f), Offset(r.left + r.width * (x0 + an * 0.9f), tope - alto0 * (k + 1) + alto0 * 0.15f), Size(r.width * an * 0.07f, alto0 * 0.7f))
-        }
-        // La lámpara de escritorio: base y brazo de latón, pantalla de vidrio verde; de noche, encendida.
-        val lx = r.left + r.width * 0.76f
-        val pantallaR = Rect(lx - r.width * 0.09f, tope - r.height * 0.4f, lx + r.width * 0.09f, tope - r.height * 0.27f)
-        drawRoundRect(c(LATON), Offset(lx - r.width * 0.06f, tope - r.height * 0.05f), Size(r.width * 0.12f, r.height * 0.05f), CornerRadius(2 * u))
-        drawLine(c(LATON), Offset(lx, tope - r.height * 0.05f), Offset(lx, pantallaR.bottom), 2 * u)
-        if (noche) mancha(Offset(lx, pantallaR.bottom + r.height * 0.04f), r.height * 0.4f, LUZ.copy(alpha = 0.5f))
-        val pantalla = Path().apply {
-            moveTo(pantallaR.left, pantallaR.bottom)
-            arcTo(Rect(pantallaR.left, pantallaR.top, pantallaR.right, pantallaR.bottom + pantallaR.height), 180f, 180f, false)
-            close()
-        }
-        drawPath(pantalla, if (noche) mezcla(PANTALLA, PANTALLA_LUZ, 0.5f) else c(PANTALLA))
-        drawRect(Color.White.copy(alpha = 0.18f), Offset(pantallaR.left + pantallaR.width * 0.2f, pantallaR.top + pantallaR.height * 0.3f), Size(pantallaR.width * 0.12f, pantallaR.height * 0.5f))
-        drawLine(c(LATON), Offset(pantallaR.left, pantallaR.bottom), Offset(pantallaR.right, pantallaR.bottom), 1.4f * u)
-        if (noche) drawOval(LUZ, Offset(lx - r.width * 0.05f, pantallaR.bottom - 1 * u), Size(r.width * 0.1f, 3 * u))
-        drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, r.bottom - 3 * u), Size(r.width, 3 * u))
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteUrss) { estante(d, medidor, oscuro, noche) }
 
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val i = (v.semilla and 0x7fffffff) % TELAS.size
-        val base = TELAS[i]
-        val tela = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        val arriba = h * 0.07f
-        // La ficha de préstamo que asoma de su bolsillo, con sellos de fecha: más cuanto más escribiste.
-        val ficha = Rect(w * 0.2f, 0f, w * 0.64f, arriba + 3 * u)
-        drawRect(c(CREMA), ficha.topLeft, ficha.size)
-        drawLine(c(ROJO).copy(alpha = 0.6f), Offset(ficha.left, ficha.top + 1.2f * u), Offset(ficha.right, ficha.top + 1.2f * u), 0.5f * u)
-        val sellos = 1 + (v.lleno * 2).toInt()
-        for (j in 0 until sellos) drawRect(c(VIOLETA).copy(alpha = 0.6f), Offset(ficha.left + ficha.width * (0.12f + 0.28f * j), ficha.top + ficha.height * 0.45f), Size(ficha.width * 0.2f, 1 * u))
-        // La tapa de tela, con su trama, la cabeza y el pie en sombra.
-        drawRoundRect(tela, Offset(0f, arriba), Size(w, h - arriba), CornerRadius(1.5f * u))
-        var k = arriba
-        while (k < h) { drawLine(Color.White.copy(alpha = 0.04f), Offset(0f, k), Offset(w, k), 0.5f * u); k += 2 * u }
-        drawRect(Color.Black.copy(alpha = 0.24f), Offset(0f, arriba), Size(w * 0.1f, h - arriba))
-        drawRect(Color.White.copy(alpha = 0.08f), Offset(w * 0.3f, arriba), Size(w * 0.1f, h - arriba))
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(0f, arriba), Size(w, h * 0.03f))
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(0f, h * 0.97f), Size(w, h * 0.03f))
-        // La estrella estampada, roja (o dorada sobre la tela ladrillo), entre dos filetes en seco.
-        val sc = Offset(w * 0.5f, h * 0.19f)
-        val sr = minOf(w * 0.3f, h * 0.07f)
-        drawLine(Color.Black.copy(alpha = 0.25f), Offset(w * 0.12f, h * 0.11f), Offset(w * 0.88f, h * 0.11f), 0.8f * u)
-        drawLine(Color.Black.copy(alpha = 0.25f), Offset(w * 0.12f, h * 0.27f), Offset(w * 0.88f, h * 0.27f), 0.8f * u)
-        drawPath(estrella(sc, sr, 5, 0.42f), c(if (i == 0) ORO else ROJO))
-        drawPath(estrella(sc, sr, 5, 0.42f), Color.Black.copy(alpha = 0.25f), style = Stroke(0.5f * u))
-        // El mes a lo largo.
-        textoEn(medidor, v.mes, Rect(w * 0.18f, h * 0.3f, w * 0.82f, h * 0.62f), letra, c(CREMA), 8f, vertical = true, minimo = 4f, espaciado = 0.4f)
-        // El sello violeta de la biblioteca; de noche, una luna.
-        val cs = Offset(w * 0.5f, h * 0.68f)
-        val rs = minOf(w * 0.24f, 5.5f * u)
-        if (v.noche) {
-            drawCircle(LUNA, rs * 0.7f, cs)
-            drawCircle(tela, rs * 0.6f, Offset(cs.x + rs * 0.32f, cs.y - rs * 0.18f))
-        } else {
-            drawCircle(c(VIOLETA).copy(alpha = 0.75f), rs, cs, style = Stroke(0.8f * u))
-            drawCircle(c(VIOLETA).copy(alpha = 0.6f), rs * 0.6f, cs, style = Stroke(0.5f * u))
-            drawCircle(c(VIOLETA).copy(alpha = 0.6f), rs * 0.18f, cs)
-        }
-        // El tejuelo con la signatura: el día.
-        val tj = Rect(w * 0.12f, h * 0.75f, w * 0.88f, h * 0.93f)
-        drawRect(c(CREMA), tj.topLeft, tj.size)
-        drawRect(c(TINTA).copy(alpha = 0.5f), tj.topLeft, tj.size, style = Stroke(0.6f * u))
-        drawLine(c(TINTA).copy(alpha = 0.5f), Offset(tj.left + tj.width * 0.15f, tj.top + tj.height * 0.24f), Offset(tj.right - tj.width * 0.15f, tj.top + tj.height * 0.24f), 0.6f * u)
-        textoEn(medidor, v.dia, Rect(tj.left + 1 * u, tj.top + tj.height * 0.28f, tj.right - 1 * u, tj.bottom - 1 * u), letra, c(TINTA), 12f)
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteUrss) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
