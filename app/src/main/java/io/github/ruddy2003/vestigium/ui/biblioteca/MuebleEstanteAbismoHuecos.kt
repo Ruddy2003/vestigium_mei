@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.drawscope.translate
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
@@ -24,9 +23,9 @@ import kotlin.math.sin
  * Lo que acompaña en los huecos libres de las repisas de Abismo ([MuebleEstanteAbismo]): grupos de dos o tres cosas del pañol,
  * solapadas, del 70 al 90 % del alto del hueco, que cambian de un hueco a otro: el farolillo de vela en su cardán (de noche, la luz
  * de media altura), las pizarras de buceo atadas con su lápiz y la piola, el catalejo de pie con la brújula de bote en su caja, la
- * esponja de copa con el caracol y el erizo, el molinillo de café de latón con la taza, la botella de ron con el vaso de lata. Cada
- * cosa con su luz, su sombra en el fondo
- * y su sombra en la tabla.
+ * esponja de copa con el cubo de lona de la cosecha, el caracol y el erizo, el molinillo de café de latón con la lata de café y la
+ * taza, la botella de ron con el rollo de cabo y el vaso de lata (las piezas nuevas, en [PiezasHuecoAbismo]). Cada cosa con su
+ * luz, su sombra en el fondo y su sombra en la tabla.
  */
 internal object HuecosEstanteAbismo {
     private val P = PaletaAbismo
@@ -46,7 +45,7 @@ internal object HuecosEstanteAbismo {
         if (ancho < w * 0.08f) return
         // Cinco grupos que se turnan de una repisa a otra; en un hueco muy ancho, dos o tres distintos.
         val grupo = Math.floorMod(k * 2 + 1 + k / 5, 5)
-        grupoEn(grupo, x0, minOf(fin, x0 + w * 0.3f), r, a, cerca)
+        grupoEn(grupo, x0, if (ancho > w * 0.46f) x0 + w * 0.3f else fin, r, a, cerca)
         if (ancho > w * 0.46f) grupoEn(Math.floorMod(grupo + 2, 5), x0 + w * 0.31f, minOf(fin, x0 + w * 0.6f), r, a, cerca)
         if (ancho > w * 0.62f) grupoEn(Math.floorMod(grupo + 4, 5), x0 + w * 0.58f, minOf(fin, x0 + w * 0.86f), r, a, cerca)
     }
@@ -58,10 +57,21 @@ internal object HuecosEstanteAbismo {
         val y = r.bottom
         when (g) {
             0 -> { pizarras(Offset(cx - w * 0.01f, y), h, a, cerca); piola(Offset(minOf(x1 - w * 0.03f, cx + w * 0.07f), y), h, a, cerca) }
-            1 -> { catalejo(Offset(cx - w * 0.04f, y), h, a, cerca); brujula(Offset(cx + w * 0.03f, y), h, a, cerca) }
-            2 -> { esponjaCopa(Offset(cx - w * 0.02f, y), h, a, cerca); caracol(Offset(cx + w * 0.07f, y), h, a, cerca) }
-            3 -> { molinillo(Offset(cx - w * 0.035f, y), h, a, cerca); taza(Offset(cx + w * 0.05f, y), h, a, cerca) }
-            else -> botella(Offset(cx - w * 0.02f, y), h, a, cerca)
+            1 -> { catalejo(Offset(cx - w * 0.06f, y), h, a, cerca); brujula(Offset(cx + w * 0.02f, y), h, a, cerca) }
+            2 -> {
+                esponjaCopa(Offset(cx - w * 0.045f, y), h, a, cerca)
+                with(PiezasHuecoAbismo) { cuboLona(Offset(cx + w * 0.055f, y), h, a, cerca) }
+                caracol(Offset(cx - w * 0.005f, y), h, a, cerca)
+            }
+            3 -> {
+                molinillo(Offset(cx - w * 0.07f, y), h, a, cerca)
+                with(PiezasHuecoAbismo) { lataCafe(Offset(cx + w * 0.005f, y), h, a, cerca) }
+                taza(Offset(cx + w * 0.07f, y), h, a, cerca)
+            }
+            else -> {
+                botella(Offset(cx + w * 0.01f, y), h, a, cerca)
+                with(PiezasHuecoAbismo) { rolloCabo(Offset(cx - w * 0.06f, y), h, a, cerca) }
+            }
         }
     }
 
@@ -226,13 +236,13 @@ internal object HuecosEstanteAbismo {
     private fun DrawScope.brujula(pie: Offset, h: Float, a: AireAbismo, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
         val k = cerca(Offset(pie.x, pie.y - h * 0.15f))
-        val bw = w * 0.11f; val bh = h * 0.24f
+        val bw = w * 0.13f; val bh = h * 0.3f
         val caja = Rect(pie.x - bw / 2, pie.y - bh, pie.x + bw / 2, pie.y)
         // La tapa, abierta y apoyada en el fondo.
-        val tapa = poligonoAbismo(caja.left + w * 0.006f, caja.top, caja.right - w * 0.006f, caja.top, caja.right - w * 0.014f, caja.top - h * 0.36f, caja.left + w * 0.014f, caja.top - h * 0.36f)
+        val tapa = poligonoAbismo(caja.left + w * 0.006f, caja.top, caja.right - w * 0.006f, caja.top, caja.right - w * 0.014f, caja.top - h * 0.44f, caja.left + w * 0.014f, caja.top - h * 0.44f)
         drawPath(corridoAbismo(tapa, w * 0.012f, w * 0.004f), a.sombra(0.25f))
         drawPath(tapa, a.dia(P.TECA, -0.05f, k))
-        drawPath(poligonoAbismo(caja.left + w * 0.016f, caja.top - h * 0.03f, caja.right - w * 0.016f, caja.top - h * 0.03f, caja.right - w * 0.022f, caja.top - h * 0.33f, caja.left + w * 0.022f, caja.top - h * 0.33f), a.dia(Color(0xFF3E5C50), 0f, k))
+        drawPath(poligonoAbismo(caja.left + w * 0.016f, caja.top - h * 0.03f, caja.right - w * 0.016f, caja.top - h * 0.03f, caja.right - w * 0.022f, caja.top - h * 0.41f, caja.left + w * 0.022f, caja.top - h * 0.41f), a.dia(Color(0xFF3E5C50), 0f, k))
         contactoAbismo(Offset(pie.x + w * 0.006f, pie.y - 1f), bw * 1.3f, w * 0.014f, a, 0.42f)
         drawRect(a.dia(P.TECA, 0f, k), caja.topLeft, caja.size)
         drawRect(a.brillo(0.45f, k), caja.topLeft, Size(caja.width, 1.2f * u))
@@ -259,7 +269,7 @@ internal object HuecosEstanteAbismo {
     private fun DrawScope.esponjaCopa(pie: Offset, h: Float, a: AireAbismo, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
         val k = cerca(Offset(pie.x, pie.y - h * 0.4f))
-        val alto = h * 0.74f; val an = w * 0.13f
+        val alto = h * 0.84f; val an = w * 0.14f
         sombras(pie, an, alto, a, k)
         // El contorno: el perfil de la copa con bultos irregulares a los dos lados.
         val n = 14
@@ -314,7 +324,7 @@ internal object HuecosEstanteAbismo {
         val w = size.width; val u = density
         val k = cerca(Offset(pie.x, pie.y - h * 0.35f))
         val hacia = lado(a, pie, w)
-        val alto = h * 0.72f; val an = w * 0.062f
+        val alto = h * 0.82f; val an = w * 0.066f
         sombras(pie, an, alto, a, k)
         val cuerpo = Path().apply {
             moveTo(pie.x - an / 2, pie.y)
@@ -377,7 +387,7 @@ internal object HuecosEstanteAbismo {
         val w = size.width; val u = density
         val k = cerca(Offset(pie.x, pie.y - h * 0.4f))
         val hacia = lado(a, pie, w)
-        val alto = h * 0.7f; val an = w * 0.05f
+        val alto = h * 0.82f; val an = w * 0.058f
         sombras(pie, an, alto, a, k)
         val r = Rect(pie.x - an / 2, pie.y - alto, pie.x + an / 2, pie.y)
         drawRect(a.dia(P.LATON, 0f, k), r.topLeft, r.size)

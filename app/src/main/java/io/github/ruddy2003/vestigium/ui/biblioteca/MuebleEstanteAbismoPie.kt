@@ -11,16 +11,12 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.drawscope.translate
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
 import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
  * El pie del estante de Abismo ([MuebleEstanteAbismo]): la cubierta calafateada del Ideario (tablas que corren de lado a lado, más
@@ -150,15 +146,17 @@ internal object PieEstanteAbismo {
     }
 
     /**
-     * El anafe de barro: el cuerpo de vasija con la boca del tiro por delante (las brasas que se ven), la parrilla de arriba y el
-     * cazo de café de cobre con su mango largo. De noche, las brasas son la luz del pie.
+     * El anafe de barro (el hornillo de los esponjeros): el cuerpo con su pie, la boca del tiro ancha por delante con las brasas, el
+     * lecho de brasas que se ve por arriba entre los tres tetones, el cazo de café de cobre encima con su mango largo, las tenazas
+     * apoyadas y unos tizones en la cubierta. De noche, las brasas son la luz del pie.
      */
     private fun DrawScope.anafe(pie: Offset, b: Rect, a: AireAbismo, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
         val k = if (a.oscuro) cerca(Offset(pie.x, pie.y - w * 0.08f)) * 0.5f else cerca(Offset(pie.x, pie.y - w * 0.08f))
         fun c(col: Color, f: Float = 0f) = a.dia(col, f, k)
-        val an = w * 0.2f; val alto = w * 0.16f
+        val an = w * 0.2f; val alto = w * 0.15f
         val y0 = pie.y - alto
+        val brasa = if (a.lumbre) P.BRASA else mezcla(P.BRASA, Color(0xFF6A2E1A), 0.45f)
         // De noche, el charco de las brasas en la cubierta y en el zócalo (por debajo de todo lo del anafe).
         if (a.lumbre) {
             val f = if (a.oscuro) (if (a.noche) 0.55f else 1f) else 0.5f
@@ -166,65 +164,103 @@ internal object PieEstanteAbismo {
             mancha(Offset(pie.x, pie.y - alto * 0.2f), w * 0.2f, P.LLAMA.copy(alpha = 0.24f * f))
         }
         contactoAbismo(Offset(pie.x + w * 0.012f, pie.y), an * 1.35f, w * 0.026f, a, 0.48f)
+        // Los tizones en la cubierta, delante a la izquierda.
+        for (j in 0 until 4) {
+            val p = Offset(pie.x - an * (0.55f + 0.18f * azar(8530, j)), pie.y - w * 0.004f - w * 0.006f * azar(8531, j))
+            drawOval(Color(0xFF1E1410), Offset(p.x - w * 0.01f, p.y - w * 0.006f), Size(w * 0.02f, w * 0.011f))
+            drawOval(c(P.HIERRO_LUZ).copy(alpha = 0.6f), Offset(p.x - w * 0.006f, p.y - w * 0.006f), Size(w * 0.008f, w * 0.003f))
+        }
+        // El cuerpo: el pie, la panza recta y el borde ancho.
         val cuerpo = Path().apply {
-            moveTo(pie.x - an * 0.5f, y0 + alto * 0.12f)
-            cubicTo(pie.x - an * 0.56f, y0 + alto * 0.55f, pie.x - an * 0.42f, pie.y - alto * 0.12f, pie.x - an * 0.3f, pie.y)
-            lineTo(pie.x + an * 0.3f, pie.y)
-            cubicTo(pie.x + an * 0.42f, pie.y - alto * 0.12f, pie.x + an * 0.56f, y0 + alto * 0.55f, pie.x + an * 0.5f, y0 + alto * 0.12f)
+            moveTo(pie.x - an * 0.44f, y0 + alto * 0.1f)
+            lineTo(pie.x - an * 0.4f, pie.y - alto * 0.16f)
+            lineTo(pie.x - an * 0.47f, pie.y)
+            lineTo(pie.x + an * 0.47f, pie.y)
+            lineTo(pie.x + an * 0.4f, pie.y - alto * 0.16f)
+            lineTo(pie.x + an * 0.44f, y0 + alto * 0.1f)
             close()
         }
         drawPath(cuerpo, c(P.BARRO))
         clipPath(cuerpo) {
-            val sx = if (!a.oscuro) 1f else 0f
-            drawRect(a.brillo(0.22f, k), Offset(pie.x - an * 0.45f, y0), Size(an * 0.18f, alto))
-            if (sx > 0f) drawRect(a.sombra(0.3f), Offset(pie.x + an * 0.12f, y0), Size(an * 0.4f, alto))
-            drawRect(c(P.BARRO_OSC).copy(alpha = 0.5f), Offset(pie.x - an * 0.6f, y0 + alto * 0.12f), Size(an * 1.2f, alto * 0.06f))
-            // El hollín sobre la boca.
-            drawOval(c(P.TINTA).copy(alpha = 0.35f), Offset(pie.x - an * 0.2f, y0 + alto * 0.3f), Size(an * 0.4f, alto * 0.2f))
+            drawRect(a.brillo(0.22f, k), Offset(pie.x - an * 0.42f, y0), Size(an * 0.14f, alto))
+            if (!a.oscuro) drawRect(a.sombra(0.3f), Offset(pie.x + an * 0.16f, y0), Size(an * 0.4f, alto))
+            drawRect(c(P.BARRO_OSC).copy(alpha = 0.6f), Offset(pie.x - an * 0.6f, pie.y - alto * 0.17f), Size(an * 1.2f, alto * 0.03f))
+            drawOval(c(P.TINTA).copy(alpha = 0.3f), Offset(pie.x - an * 0.3f, y0 + alto * 0.1f), Size(an * 0.6f, alto * 0.22f))
         }
-        // La boca del tiro con las brasas.
+        // La boca del tiro: ancha, en arco, con su labio de barro y las brasas dentro.
         val boca = Path().apply {
-            moveTo(pie.x - an * 0.22f, pie.y - alto * 0.1f)
-            lineTo(pie.x - an * 0.2f, pie.y - alto * 0.46f)
-            quadraticTo(pie.x, pie.y - alto * 0.54f, pie.x + an * 0.2f, pie.y - alto * 0.46f)
-            lineTo(pie.x + an * 0.22f, pie.y - alto * 0.1f)
+            moveTo(pie.x - an * 0.28f, pie.y - alto * 0.2f)
+            lineTo(pie.x - an * 0.28f, pie.y - alto * 0.5f)
+            quadraticTo(pie.x, pie.y - alto * 0.72f, pie.x + an * 0.28f, pie.y - alto * 0.5f)
+            lineTo(pie.x + an * 0.28f, pie.y - alto * 0.2f)
             close()
         }
         drawPath(boca, Color(0xFF1C0E08))
         clipPath(boca) {
-            val brasa = if (a.lumbre) P.BRASA else mezcla(P.BRASA, Color(0xFF4A2A1C), 0.55f)
-            for (j in 0 until 7) {
-                val p = Offset(pie.x - an * 0.14f + an * 0.28f * azar(8521, j), pie.y - alto * (0.14f + 0.2f * azar(8522, j)))
-                drawCircle(Color(0xFF2A1810), w * 0.012f, p)
-                drawCircle(brasa.copy(alpha = 0.7f + 0.3f * azar(8523, j)), w * (0.004f + 0.004f * azar(8524, j)), p - Offset(w * 0.002f, w * 0.002f))
+            if (a.lumbre) mancha(Offset(pie.x, pie.y - alto * 0.3f), an * 0.35f, P.LLAMA.copy(alpha = 0.55f))
+            for (j in 0 until 9) {
+                val p = Offset(pie.x - an * 0.22f + an * 0.44f * azar(8521, j), pie.y - alto * (0.22f + 0.16f * azar(8522, j)))
+                drawCircle(Color(0xFF2A1810), w * 0.013f, p)
+                drawCircle(brasa.copy(alpha = 0.75f + 0.25f * azar(8523, j)), w * (0.005f + 0.004f * azar(8524, j)), p - Offset(w * 0.002f, w * 0.002f))
             }
-            if (a.lumbre) mancha(Offset(pie.x, pie.y - alto * 0.25f), an * 0.25f, P.LLAMA.copy(alpha = 0.5f))
+            // La rejilla de hierro que sujeta las brasas.
+            for (j in 0 until 5) drawLine(c(P.HIERRO), Offset(pie.x - an * 0.28f + an * 0.14f * j, pie.y - alto * 0.38f), Offset(pie.x - an * 0.28f + an * 0.14f * j, pie.y - alto * 0.2f), 1.2f * u)
         }
-        drawPath(boca, c(P.BARRO_OSC), style = Stroke(1.6f * u))
-        // El labio de arriba y la parrilla.
-        drawOval(c(P.BARRO, 0.1f), Offset(pie.x - an * 0.52f, y0 + alto * 0.04f), Size(an * 1.04f, alto * 0.16f))
-        drawOval(Color(0xFF241208), Offset(pie.x - an * 0.42f, y0 + alto * 0.07f), Size(an * 0.84f, alto * 0.1f))
-        if (a.lumbre) drawOval(P.BRASA.copy(alpha = if (a.oscuro) 0.7f else 0.45f), Offset(pie.x - an * 0.32f, y0 + alto * 0.08f), Size(an * 0.64f, alto * 0.07f))
-        for (j in 0 until 4) drawLine(c(P.HIERRO), Offset(pie.x - an * (0.34f - 0.22f * j), y0 + alto * 0.08f), Offset(pie.x - an * (0.3f - 0.22f * j), y0 + alto * 0.16f), 1.4f * u)
-        // El cazo de café (el briki) de cobre, con su mango largo de latón.
-        val cz = Offset(pie.x - an * 0.06f, y0 + alto * 0.1f)
-        val cw = w * 0.05f; val chh = w * 0.055f
+        drawPath(boca, c(P.BARRO, 0.12f), style = Stroke(2.4f * u))
+        drawPath(boca, c(P.BARRO_OSC), style = Stroke(0.8f * u))
+        // El borde ancho de arriba y el lecho de brasas que se ve entre los tetones.
+        drawOval(c(P.BARRO, 0.12f), Offset(pie.x - an * 0.5f, y0), Size(an, alto * 0.2f))
+        drawOval(Color(0xFF241208), Offset(pie.x - an * 0.42f, y0 + alto * 0.03f), Size(an * 0.84f, alto * 0.13f))
+        clipPath(Path().apply { addOval(Rect(pie.x - an * 0.42f, y0 + alto * 0.03f, pie.x + an * 0.42f, y0 + alto * 0.16f)) }) {
+            for (j in 0 until 10) {
+                val p = Offset(pie.x - an * 0.38f + an * 0.76f * azar(8525, j), y0 + alto * (0.05f + 0.1f * azar(8526, j)))
+                drawCircle(Color(0xFF2E1A10), w * 0.01f, p)
+                drawCircle(brasa.copy(alpha = if (a.lumbre) 0.95f else 0.6f), w * 0.0045f, p - Offset(w * 0.002f, w * 0.0015f))
+            }
+        }
+        // Los tres tetones del borde.
+        listOf(-0.36f, 0f, 0.36f).forEach { f ->
+            val p = Offset(pie.x + an * f, y0 + alto * (if (f == 0f) 0.04f else 0.09f))
+            drawRoundRect(c(P.BARRO, 0.05f), Offset(p.x - w * 0.01f, p.y - w * 0.014f), Size(w * 0.02f, w * 0.018f), CornerRadius(w * 0.005f))
+            drawRect(a.brillo(0.3f, k), Offset(p.x - w * 0.01f, p.y - w * 0.014f), Size(w * 0.02f, 1f * u))
+        }
+        // El cazo de café de cobre: la panza, la cintura, la boca abierta con su pico, y el mango largo de latón con su puño.
+        val cz = Offset(pie.x - an * 0.04f, y0 + alto * 0.02f)
+        val cw = w * 0.07f; val chh = w * 0.07f
         val cazo = Path().apply {
-            moveTo(cz.x - cw * 0.5f, cz.y); lineTo(cz.x + cw * 0.5f, cz.y)
-            lineTo(cz.x + cw * 0.38f, cz.y - chh * 0.7f); lineTo(cz.x + cw * 0.48f, cz.y - chh)
-            lineTo(cz.x - cw * 0.5f, cz.y - chh); lineTo(cz.x - cw * 0.38f, cz.y - chh * 0.7f)
+            moveTo(cz.x - cw * 0.5f, cz.y)
+            lineTo(cz.x + cw * 0.5f, cz.y)
+            cubicTo(cz.x + cw * 0.55f, cz.y - chh * 0.3f, cz.x + cw * 0.3f, cz.y - chh * 0.55f, cz.x + cw * 0.32f, cz.y - chh * 0.72f)
+            lineTo(cz.x + cw * 0.5f, cz.y - chh)
+            lineTo(cz.x - cw * 0.44f, cz.y - chh)
+            lineTo(cz.x - cw * 0.32f, cz.y - chh * 0.72f)
+            cubicTo(cz.x - cw * 0.3f, cz.y - chh * 0.55f, cz.x - cw * 0.55f, cz.y - chh * 0.3f, cz.x - cw * 0.5f, cz.y)
             close()
         }
+        drawPath(corridoAbismo(cazo, w * 0.006f, w * 0.004f), a.sombra(0.3f))
         drawPath(cazo, c(P.COBRE))
-        clipPath(cazo) { cilindroAbismo(Rect(cz.x - cw * 0.5f, cz.y - chh, cz.x + cw * 0.5f, cz.y), a, k, if (a.lumbre) -1f else -1f, 1.3f) }
-        drawRect(c(P.COBRE_OSC), Offset(cz.x - cw * 0.5f, cz.y - chh), Size(cw, 1.2f * u))
-        drawLine(c(P.LATON), Offset(cz.x + cw * 0.4f, cz.y - chh * 0.75f), Offset(cz.x + cw * 2.2f, cz.y - chh * 1.05f), 2f * u, StrokeCap.Round)
-        drawLine(c(P.TECA_OSC), Offset(cz.x + cw * 1.5f, cz.y - chh * 0.93f), Offset(cz.x + cw * 2.2f, cz.y - chh * 1.05f), 3f * u, StrokeCap.Round)
-        if (a.lumbre) drawRect(a.filo(0.8f), Offset(cz.x - cw * 0.5f, cz.y - chh * 0.2f), Size(cw, 1.4f * u))
-        destelloAbismo(Offset(cz.x - cw * 0.25f, cz.y - chh * 0.55f), 1.2f * u, a, k)
-        // De día, un hilo de humo.
+        clipPath(cazo) {
+            cilindroAbismo(Rect(cz.x - cw * 0.55f, cz.y - chh, cz.x + cw * 0.55f, cz.y), a, k, -1f, 1.4f)
+            drawRect(c(P.COBRE_OSC), Offset(cz.x - cw * 0.6f, cz.y - chh * 0.74f), Size(cw * 1.2f, w * 0.004f))
+            if (a.lumbre) drawRect(a.filo(0.9f), Offset(cz.x - cw * 0.6f, cz.y - w * 0.006f), Size(cw * 1.2f, w * 0.006f))
+        }
+        drawOval(c(P.COBRE_OSC, -0.1f), Offset(cz.x - cw * 0.44f, cz.y - chh - w * 0.004f), Size(cw * 0.94f, w * 0.009f))
+        val mango0 = Offset(cz.x + cw * 0.42f, cz.y - chh * 0.62f)
+        val mango1 = Offset(cz.x + cw * 2.3f, cz.y - chh * 1.15f)
+        drawLine(a.sombra(0.3f), mango0 + Offset(1.5f * u, 2f * u), mango1 + Offset(1.5f * u, 2f * u), 2.6f * u, StrokeCap.Round)
+        drawLine(c(P.LATON), mango0, mango1, 2.4f * u, StrokeCap.Round)
+        drawLine(c(P.TECA_OSC), Offset(mango0.x + (mango1.x - mango0.x) * 0.55f, mango0.y + (mango1.y - mango0.y) * 0.55f), mango1, 4f * u, StrokeCap.Round)
+        destelloAbismo(Offset(cz.x - cw * 0.25f, cz.y - chh * 0.4f), 1.4f * u, a, k)
+        // Las tenazas de hierro apoyadas en el costado derecho.
+        val t0 = Offset(pie.x + an * 0.56f, pie.y - w * 0.002f)
+        val t1 = Offset(pie.x + an * 0.38f, y0 - alto * 0.1f)
+        drawLine(a.sombra(0.3f), t0 + Offset(2f * u, 1f * u), t1 + Offset(2f * u, 1f * u), 2f * u)
+        drawLine(c(P.HIERRO), t0, t1, 1.8f * u, StrokeCap.Round)
+        drawLine(c(P.HIERRO), Offset(t0.x + w * 0.008f, t0.y), Offset(t1.x + w * 0.004f, t1.y + w * 0.004f), 1.8f * u, StrokeCap.Round)
+        drawCircle(c(P.HIERRO), w * 0.007f, t1, style = Stroke(1.6f * u))
+        // De día, un hilo de humo del cazo.
         if (!a.oscuro) {
-            val humo = Path().apply { moveTo(cz.x - cw * 0.2f, cz.y - chh); cubicTo(cz.x - cw * 0.8f, cz.y - chh * 1.8f, cz.x + cw * 0.4f, cz.y - chh * 2.2f, cz.x - cw * 0.3f, cz.y - chh * 3f) }
+            val humo = Path().apply { moveTo(cz.x - cw * 0.1f, cz.y - chh); cubicTo(cz.x - cw * 0.6f, cz.y - chh * 1.7f, cz.x + cw * 0.4f, cz.y - chh * 2.1f, cz.x - cw * 0.2f, cz.y - chh * 2.8f) }
             drawPath(humo, luzMueble(0.25f), style = Stroke(2.4f * u, cap = StrokeCap.Round))
         }
         if (a.lumbre) drawPath(cuerpo, a.filo(0.4f), style = Stroke(1.2f * u))

@@ -68,8 +68,8 @@ internal object FarolEstanteAbismo {
         val cr = Rect(cx - fw * 0.42f, crT, cx + fw * 0.42f, crB)
         if (encendido) {
             val baja = a.oscuro && a.noche
-            drawRoundRect(if (baja) Color(0xFFB9894E) else Color(0xFFFFD98E), cr.topLeft, cr.size, CornerRadius(fw * 0.12f))
-            drawRect(P.LLAMA.copy(alpha = 0.6f), Offset(cr.left, cr.bottom - cr.height * 0.35f), Size(cr.width, cr.height * 0.35f))
+            drawRoundRect(if (baja) Color(0xFF8A6840) else Color(0xFFFFD98E), cr.topLeft, cr.size, CornerRadius(fw * 0.12f))
+            drawRect(P.LLAMA.copy(alpha = if (baja) 0.3f else 0.6f), Offset(cr.left, cr.bottom - cr.height * 0.35f), Size(cr.width, cr.height * 0.35f))
             val lc = Offset(cx, llamaY)
             val esc = if (baja) 0.7f else 1f
             drawOval(Color(0xFFFFB24A), Offset(lc.x - fw * 0.1f * esc, lc.y - fw * 0.22f * esc), Size(fw * 0.2f * esc, fw * 0.36f * esc))
@@ -95,7 +95,7 @@ internal object FarolEstanteAbismo {
         if (!a.oscuro) destelloAbismo(Offset(dep.left + dep.width * 0.25f, dep.top + dep.height * 0.35f), 1.2f * u, a, 1f)
         // La luz del farol, por encima de lo que tiene cerca.
         if (a.oscuro) {
-            val f = if (a.noche) 0.38f else 1f
+            val f = if (a.noche) 0.26f else 1f
             val l = Offset(cx, llamaY)
             mancha(l + Offset(0f, w * 0.04f), w * 0.46f, P.LLAMA.copy(alpha = 0.09f * f))
             mancha(l + Offset(0f, w * 0.02f), w * 0.2f, P.LLAMA.copy(alpha = 0.2f * f))

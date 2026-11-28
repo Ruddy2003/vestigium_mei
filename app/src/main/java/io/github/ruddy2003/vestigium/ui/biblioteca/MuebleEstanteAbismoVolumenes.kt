@@ -155,18 +155,16 @@ internal object VolumenEstanteAbismo {
     private fun DrawScope.etiquetaDia(v: Volumen, medidor: TextMeasurer, et: Rect, l: Luz, giro: Float = 0f) {
         val u = density
         val a = l.a
-        // De noche, lejos de toda luz, el papel se hunde y el día se lee en claro; cerca de la llama, ámbar con la tinta oscura.
-        val hundida = a.oscuro && l.k + l.luna * 0.6f < 0.3f
-        val fondo = if (hundida) mezcla(Color(0xFF263230), Color(0xFF3E4038), ((l.k + l.luna * 0.6f) / 0.3f).coerceIn(0f, 1f)) else l.etiqueta(P.ETIQUETA)
-        val borde = if (hundida) Color(0xFF1A2224) else l.etiqueta(P.ETIQUETA_OSC)
-        val letra = if (hundida) Color(0xFFD6CCB0) else tinta(a, l.k)
+        val fondo = l.etiqueta(P.ETIQUETA)
+        val borde = l.etiqueta(P.ETIQUETA_OSC)
+        val letra = tinta(a, l.k)
         rotate(giro, et.center) {
             drawRect(a.sombra(0.4f), Offset(et.left + 1f * u, et.top + 1.3f * u), et.size)
             drawRect(fondo, et.topLeft, et.size)
             drawRect(borde.copy(alpha = 0.45f), Offset(et.left, et.bottom - et.height * 0.12f), Size(et.width, et.height * 0.12f))
             drawRect(borde.copy(alpha = 0.3f), Offset(et.right - et.width * 0.1f, et.top), Size(et.width * 0.1f, et.height))
             val d = Rect(et.left + 1.5f * u, et.top + 1.5f * u, et.right - 1.5f * u, et.bottom - 1.5f * u)
-            drawRect((if (hundida) letra else a.luz(P.TINTA, maxOf(l.k, 0.5f))).copy(alpha = if (hundida) 0.3f else if (a.oscuro) 0.5f else 0.55f), d.topLeft, d.size, style = Stroke(0.6f * u))
+            drawRect(a.luz(P.TINTA, maxOf(l.k, 0.5f)).copy(alpha = if (a.oscuro) 0.5f else 0.55f), d.topLeft, d.size, style = Stroke(0.6f * u))
             diaYMes(v, medidor, Rect(et.left + 1.8f * u, et.top + 1.8f * u, et.right - 1.8f * u, et.bottom - 1.8f * u), letra)
         }
     }
@@ -306,7 +304,7 @@ internal object VolumenEstanteAbismo {
                 pl.moveTo(x0, cuello + h * 0.02f)
                 pl.quadraticTo(x0 + w * (0.06f - 0.06f * i), cuello + h * 0.14f, x0 + w * (0.12f - 0.12f * i), cuello + h * (0.22f + 0.06f * azar(s, 12 + i)))
             }
-            pl.moveTo(w * 0.12f, h * 0.9f); pl.quadraticTo(w * 0.5f, h * 0.86f, w * 0.88f, h * 0.91f)
+            pl.moveTo(w * 0.6f, h * 0.86f); pl.lineTo(w * 0.8f, h * 0.92f)
             drawPath(pl, t.hondo.copy(alpha = 0.55f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
             translate(-1.2f * u, -1f * u) { drawPath(pl, t.claro.copy(alpha = 0.45f), style = Stroke(0.9f * u, cap = StrokeCap.Round)) }
             // Un remiendo en algunos.

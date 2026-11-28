@@ -107,11 +107,11 @@ internal object MuebleEstanteAbismo {
 
     /** El farol: cuánta luz llega (de 1 a 0) a un punto a [dx] y [dy] de la llama, en anchos del mueble. */
     fun farol(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.62f else 1.65f) * exp(-3.2f * sqrt(dx * dx * 1.1f + dy * dy * (if (dy > 0f) 0.62f else 0.9f)))).coerceIn(0f, 1f)
+        ((if (suenos) 0.45f else 1.65f) * exp(-3.2f * sqrt(dx * dx * 1.1f + dy * dy * (if (dy > 0f) 0.62f else 0.9f)))).coerceIn(0f, 1f)
 
     /** El farol en la pared y en lo de arriba: más corto que en el cuerpo, para que lo lejano se hunda. */
     fun farolArriba(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.62f else 1.5f) * exp(-3.5f * sqrt(dx * dx + dy * dy * 1.1f))).coerceIn(0.02f, 1f)
+        ((if (suenos) 0.45f else 1.5f) * exp(-3.5f * sqrt(dx * dx + dy * dy * 1.1f))).coerceIn(0.02f, 1f)
 
     /**
      * Las brasas del anafe, al pie: bajas y anaranjadas, salen por la boca del anafe hacia delante y hacia arriba; lo que queda muy

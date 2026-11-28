@@ -39,9 +39,11 @@ internal object MuroEstanteAbismo {
     const val OJO_R = 0.1f
     /** El bao: hasta dónde baja, en anchos. */
     const val BAO = 0.05f
+    /** Cuánto se corre la mancha de la escotilla en el canto del bao, que está más adelante que la pared (en anchos). */
+    const val BAO_FRENTE = -0.045f
     /** Dónde baja la tubería hacia la bomba y dónde acaba su racor (ahí se le une la manguera), en anchos. */
     const val TUBO_X = 0.585f
-    const val TUBO_FIN = 0.2f
+    const val TUBO_FIN = 0.14f
 
     // ---------------------------------------------------------------- la pared
 
@@ -50,7 +52,7 @@ internal object MuroEstanteAbismo {
         val w = size.width
         paredCon(a, apoyo, cerca, null, 0f)
         if (m != null) {
-            clipPath(m.forma(w, 0f, 0.05f)) { paredCon(a, apoyo, cerca, m, 0.45f) }
+            clipPath(m.forma(w, 0f, 0.012f)) { paredCon(a, apoyo, cerca, m, 0.4f) }
             clipPath(m.forma(w)) { paredCon(a, apoyo, cerca, m, 1f) }
         }
     }
@@ -133,7 +135,7 @@ internal object MuroEstanteAbismo {
     fun DrawScope.colgado(a: AireAbismo, apoyo: Float, cerca: (Offset) -> Float, m: ManchaAbismo?) {
         ojoDeBuey(a, cerca, m)
         tuberia(a, cerca, m)
-        bao(a, cerca)
+        bao(a, cerca, m)
         cabillero(a, apoyo, cerca, m)
         red(a, apoyo, cerca)
     }
@@ -235,18 +237,26 @@ internal object MuroEstanteAbismo {
      * El bao de teca que cruza el techo: la tablazón de la cubierta de arriba, el canto del bao con su luz y su sombra, los pernos,
      * y la curva que lo ata al costado a la derecha. De día, el reverbero del agua que entra por el ojo de buey baila en él.
      */
-    private fun DrawScope.bao(a: AireAbismo, cerca: (Offset) -> Float) {
+    private fun DrawScope.bao(a: AireAbismo, cerca: (Offset) -> Float, m: ManchaAbismo?) {
         val w = size.width; val u = density
         val y0 = w * 0.012f; val y1 = BAO * w
         val n = if (a.lumbre) 16 else 1
-        for (t in 0 until n) {
-            val x0 = w * t / n; val x1 = w * (t + 1) / n + 1f
-            val k = cerca(Offset((x0 + x1) / 2, y1))
-            drawRect(a.dia(P.TECA_HONDA, 0f, k * 0.7f), Offset(x0, 0f), Size(x1 - x0, y0))
-            drawRect(a.dia(P.TECA, 0f, k), Offset(x0, y0), Size(x1 - x0, y1 - y0))
-            drawRect(a.dia(P.TECA_LUZ, 0f, k), Offset(x0, y0), Size(x1 - x0, 1.6f * u))
-            drawRect(a.dia(P.TECA_OSC, 0f, k), Offset(x0, y1 - w * 0.008f), Size(x1 - x0, w * 0.008f))
+        fun canto(lit: Float, mm: ManchaAbismo?) {
+            for (t in 0 until n) {
+                val x0 = w * t / n; val x1 = w * (t + 1) / n + 1f
+                val k = cerca(Offset((x0 + x1) / 2, y1))
+                drawRect(a.dia(P.TECA_HONDA, 0f, k * 0.7f), Offset(x0, 0f), Size(x1 - x0, y0))
+                drawRect(a.en(P.TECA, 0f, k, lit, mm), Offset(x0, y0), Size(x1 - x0, y1 - y0))
+                drawRect(a.en(P.TECA_LUZ, 0f, k, lit, mm), Offset(x0, y0), Size(x1 - x0, 1.6f * u))
+                drawRect(a.en(P.TECA_OSC, 0f, k, lit * 0.6f, mm), Offset(x0, y1 - w * 0.008f), Size(x1 - x0, w * 0.008f))
+            }
         }
+        canto(0f, null)
+        // La luz de la escotilla en el canto del bao: la misma mancha, corrida porque el bao está más adelante que la pared.
+        if (m != null && !a.oscuro) clipPath(m.forma(w, BAO_FRENTE)) { canto(1f, m) }
+        // En los Sueños oscuros, la luna que entra por el ojo de buey deja su paño frío en el bao, encima de él.
+        val lunaBao = if (a.oscuro && a.noche) ManchaAbismo(floatArrayOf(0.1f, 0f, 0.4f, 0f, 0.47f, 0.06f, 0.15f, 0.06f), P.LUNA, 0.75f) else null
+        if (lunaBao != null) clipPath(lunaBao.forma(w)) { canto(1f, lunaBao) }
         // Las juntas de la tablazón de arriba.
         var x = w * 0.03f
         while (x < w) { drawRect(a.sombra(0.5f), Offset(x, 0f), Size(1.2f * u, y0)); x += w * 0.11f }
@@ -274,18 +284,19 @@ internal object MuroEstanteAbismo {
         drawPath(borde, a.brillo(0.45f, kc), style = Stroke(1.2f * u))
         clavoAbismo(Offset(w * 0.975f, w * 0.08f), 1.6f * u, a, kc, P.PLOMO)
         // El reverbero del agua: líneas de luz que se anudan y bailan en el bao y en lo alto de la pared, cerca del ojo de buey.
-        if (!a.oscuro) {
-            val col = if (a.noche) P.OCASO.copy(alpha = 0.5f) else luzMueble(0.62f)
+        if (!a.oscuro || a.noche) {
+            val col = if (a.oscuro) P.LUNA_RAS.copy(alpha = 0.6f) else if (a.noche) P.OCASO.copy(alpha = 0.5f) else luzMueble(0.62f)
+            val ini = if (a.oscuro) 0.08f else 0.27f
             val r = Path()
             for (j in 0 until 7) {
-                val x0 = w * (0.27f + 0.06f * j + 0.02f * azar(8135, j))
+                val x0 = w * (ini + 0.06f * j + 0.02f * azar(8135, j))
                 val yy = w * (0.017f + 0.03f * azar(8136, j))
                 r.moveTo(x0, yy)
                 r.cubicTo(x0 + w * 0.02f, yy - w * 0.008f, x0 + w * 0.035f, yy + w * 0.012f, x0 + w * 0.06f, yy + w * 0.002f)
                 r.moveTo(x0 + w * 0.01f, yy + w * 0.014f)
                 r.cubicTo(x0 + w * 0.025f, yy + w * 0.004f, x0 + w * 0.03f, yy + w * 0.02f, x0 + w * 0.05f, yy + w * 0.017f)
             }
-            clipRect(w * 0.24f, 0f, w * 0.72f, y1 + w * 0.03f) { drawPath(r, col, style = Stroke(1.5f * u, cap = StrokeCap.Round)) }
+            clipRect(w * (ini - 0.03f), 0f, w * (ini + 0.45f), y1 + w * 0.03f) { drawPath(r, col, style = Stroke(1.5f * u, cap = StrokeCap.Round)) }
         }
     }
 
@@ -299,7 +310,7 @@ internal object MuroEstanteAbismo {
         val y = w * 0.078f
         val g = w * 0.014f
         val xc = w * TUBO_X
-        val baja = w * 0.17f
+        val baja = w * 0.11f
         val tubo = Path().apply {
             moveTo(w + w * 0.02f, y); lineTo(xc + w * 0.03f, y)
             cubicTo(xc + w * 0.005f, y, xc, y + w * 0.005f, xc, y + w * 0.03f); lineTo(xc, baja)

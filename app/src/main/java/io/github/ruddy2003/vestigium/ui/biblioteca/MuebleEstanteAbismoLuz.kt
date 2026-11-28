@@ -53,8 +53,8 @@ internal object PaletaAbismo {
     val OXIDO = Color(0xFF9A5530)
     /** El papel de las cartas, el de las etiquetas (de valor medio, tostado) y la tinta. */
     val PAPEL = Color(0xFFEDE3C8)
-    val ETIQUETA = Color(0xFFCDB88A)
-    val ETIQUETA_OSC = Color(0xFF9C8558)
+    val ETIQUETA = Color(0xFFC3AD7E)
+    val ETIQUETA_OSC = Color(0xFF927C50)
     val TINTA = Color(0xFF1E2226)
     /** La manila de los cabos, el esparto y el corcho. */
     val MANILA = Color(0xFFC7A66A)
@@ -215,13 +215,13 @@ internal class AireAbismo(val oscuro: Boolean, val noche: Boolean, val cuerpo: B
     }
 
     /**
-     * El papel de la etiqueta del día: ámbar cerca de la llama y, lejos, el papel en la sombra del pañol (más frío y apagado), sin
-     * bajar del 4.5 a 1 con la tinta casi negra.
+     * El papel de la etiqueta del día: ámbar cerca de la llama y, lejos, el papel en la sombra del pañol (hundido en su verde
+     * azulado), de una a otra sin saltos y sin bajar del 4.5 a 1 con la tinta casi negra.
      */
     fun etiqueta(c: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) alOcaso(c) else c
-        val lejos = if (noche) Color(0xFF7E8682) else Color(0xFF85857A)
+        val lejos = if (noche) Color(0xFF74827E) else Color(0xFF71817A)
         val alumbrado = Color((c.red * 1.05f).coerceAtMost(1f), c.green * 0.93f, c.blue * 0.7f, c.alpha)
         return mezcla(lejos, alumbrado, Math.pow(k.toDouble(), 1.4).toFloat().coerceAtMost(1f))
     }
@@ -272,10 +272,10 @@ internal class ManchaAbismo(val q: FloatArray, val color: Color, val fuerza: Flo
  * derecha del ojo de buey, en la pared y en la bomba; al ocaso, más tendida y más baja; la luna de los Sueños, más angosta y tenue.
  */
 internal fun manchaAbismo(a: AireAbismo): ManchaAbismo? = when {
-    a.oscuro && a.noche -> ManchaAbismo(floatArrayOf(0.13f, 0.455f, 0.33f, 0.47f, 0.36f, 0.54f, 0.15f, 0.53f), PaletaAbismo.LUNA, 0.6f)
+    a.oscuro && a.noche -> ManchaAbismo(floatArrayOf(0.1f, 0.45f, 0.38f, 0.465f, 0.42f, 0.54f, 0.12f, 0.53f), PaletaAbismo.LUNA, 0.75f)
     a.oscuro -> null
-    a.noche -> ManchaAbismo(floatArrayOf(0.34f, 0.2f, 0.7f, 0.25f, 0.78f, 0.5f, 0.42f, 0.46f), PaletaAbismo.OCASO, 0.75f)
-    else -> ManchaAbismo(floatArrayOf(0.34f, 0.06f, 0.6f, 0.1f, 0.7f, 0.5f, 0.44f, 0.46f), PaletaAbismo.SOL, 0.85f)
+    a.noche -> ManchaAbismo(floatArrayOf(0.33f, 0.16f, 0.7f, 0.22f, 0.78f, 0.5f, 0.42f, 0.46f), PaletaAbismo.OCASO, 0.6f)
+    else -> ManchaAbismo(floatArrayOf(0.31f, 0.0f, 0.57f, 0.035f, 0.7f, 0.5f, 0.44f, 0.46f), PaletaAbismo.SOL, 0.6f)
 }
 
 /**
@@ -285,7 +285,7 @@ internal fun manchaAbismo(a: AireAbismo): ManchaAbismo? = when {
 internal fun lunaCuerpoAbismo(a: AireAbismo, fx: Float, fy: Float): Float {
     if (!(a.oscuro && a.noche)) return 0f
     val dx = fx - 0.15f; val dy = (fy - 0.6f) * 0.7f
-    return (1.05f - kotlin.math.sqrt(dx * dx + dy * dy) / 0.85f).coerceIn(0f, 1f)
+    return (1.05f - kotlin.math.sqrt(dx * dx + dy * dy) / 0.6f).coerceIn(0f, 1f)
 }
 
 /** Un polígono cerrado por sus puntos (x, y, x, y…). */
