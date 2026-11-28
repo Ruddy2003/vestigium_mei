@@ -10,7 +10,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -431,6 +430,6 @@ internal object CoronaEstanteUrss {
     /** La mancha cálida de la lámpara en la tapa, de noche, debajo de lo que alumbra. */
     private fun DrawScope.charco(g: MarcoUrss) {
         if (g.a.lampara <= 0f) return
-        mancha(Offset(g.lampara.x, g.w * 0.485f), g.w * 0.25f, P.LLAMA.copy(alpha = 0.12f * g.a.lampara))
+        mancha(Offset(g.lampara.x, g.w * 0.485f), g.w * 0.22f, P.LLAMA.copy(alpha = 0.07f * g.a.lampara))
     }
 }

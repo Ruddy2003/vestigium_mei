@@ -139,24 +139,20 @@ internal object ParedEstanteUrss {
      * brochazos; la cara de dentro de los costados, la sombra franca de la tabla de arriba y la del costado que tapa la luz, el roce
      * de los libros abajo, algún desconchón o chorreón, y de noche el charco de la bombilla que le toca.
      */
-    fun DrawScope.fondoHueco(k: Int, r: Rect, g: MarcoUrss) {
+    fun DrawScope.fondoHueco(k: Int, r: Rect, ocupado: Float, g: MarcoUrss) {
         val w = g.w; val u = density
         if (r.width < 2f || r.height < 2f) return
         val xs = List(9) { j -> r.left + r.width * j / 8f }
-        // El óleo de la pared en la sombra de la estantería: el mismo, más hondo, para que lo guardado resalte.
+        // El óleo de la pared en la sombra de la estantería: el mismo, más hondo, para que lo guardado resalte. Un solo degradado a lo
+        // ancho y, encima, la baldosa de los brochazos.
         val oleo = mezcla(P.OLEO, P.OLEO_OSC, 0.5f)
-        val arriba = xs.map { g.luz(it, r.top + r.height * 0.22f, 0f).c(oleo) }
-        val abajo = xs.map { g.luz(it, r.top + r.height * 0.78f, 0f).c(oleo) }
-        drawRect(Brush.horizontalGradient(arriba, r.left, r.right), r.topLeft, Size(r.width, r.height * 0.5f + 1f))
-        drawRect(Brush.horizontalGradient(abajo, r.left, r.right), Offset(r.left, r.top + r.height * 0.5f), Size(r.width, r.height * 0.5f))
+        drawRect(Brush.horizontalGradient(xs.map { g.luz(it, r.center.y, 0f).c(oleo) }, r.left, r.right), r.topLeft, r.size)
         drawRect(TexturasUrss.oleo(u), r.topLeft, r.size, alpha = if (g.a.oscuro) 0.4f else 0.55f)
         val s = 7300 + k * 17
-        // El roce de abajo: el óleo mate y sucio a la altura de los lomos.
-        drawRect(g.a.sombra(if (g.a.oscuro) 0.12f else 0.08f), Offset(r.left, r.bottom - r.height * 0.3f), Size(r.width, r.height * 0.3f))
-        // Un desconchón o un chorreón en algunos huecos (lo tapa lo que haya delante, o no).
-        if (azar(s, 1) < 0.65f) {
-            val c = Offset(r.left + r.width * (0.12f + 0.76f * azar(s, 2)), r.top + r.height * (0.28f + 0.3f * azar(s, 3)))
-            desconchon(g, c, w * (0.009f + 0.006f * azar(s, 4)), s + 5, 1.2f + 0.5f * azar(s, 6), mezcla(P.CAL_OSC, P.OLEO, 0.3f))
+        // Un desconchón en algunos huecos, alto, donde se ve entre lo guardado.
+        if (azar(s, 1) < 0.45f) {
+            val c = Offset(r.left + r.width * (0.15f + 0.7f * azar(s, 2)), r.top + r.height * (0.2f + 0.12f * azar(s, 3)))
+            desconchon(g, c, w * (0.014f + 0.006f * azar(s, 4)), s + 5, 1.3f + 0.4f * azar(s, 6), mezcla(P.CAL_OSC, P.OLEO, 0.3f))
         }
         // La cara de dentro de los costados: la de la izquierda mira a la derecha (en sombra de día), la de la derecha mira a la luz.
         val hondo = 0.024f * w
@@ -193,8 +189,8 @@ internal object ParedEstanteUrss {
             val mx = kc.indices.maxByOrNull { kc[it] } ?: 0
             if (kc[mx] > 0.15f) mancha(Offset(xs[mx], r.center.y), r.height * 0.85f, g.luz(xs[mx], r.center.y, 0f).tinte.copy(alpha = 0.1f * kc[mx]))
         }
-        // Un trozo de cartel viejo pegado al fondo en algunos huecos (lo tapa lo que haya delante): papel crudo con una banda roja.
-        if (k % 3 == 1) {
+        // Un trozo de cartel viejo pegado al fondo en algunos huecos, solo donde no hay entradas delante: papel crudo con una banda roja.
+        if (k % 3 == 1 && r.right - 0.21f * w > ocupado + 0.02f * w) {
             val pr = Rect(r.right - 0.19f * w, r.top + r.height * 0.3f, r.right - 0.08f * w, r.top + r.height * 0.72f)
             val lp = g.luz(pr.center.x, pr.center.y, 0.004f)
             clipRect(r.left, r.top, r.right, r.bottom) {

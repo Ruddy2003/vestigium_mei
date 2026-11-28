@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.font.FontWeight
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaUrss as P
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mancha

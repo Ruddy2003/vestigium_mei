@@ -112,7 +112,7 @@ internal object PaletaUrss {
 internal class AireUrss(val oscuro: Boolean, val noche: Boolean) {
     private val p = PaletaUrss
     /** Cuánto arde la lámpara colgada (de 0 a 1). */
-    val lampara: Float get() = if (oscuro && !noche) 1f else if (oscuro) 0.42f else 0f
+    val lampara: Float get() = if (oscuro && !noche) 1f else if (oscuro) 0.32f else 0f
     /** Cuánto arde la lámpara de pinza del costado. */
     val pinza: Float get() = if (oscuro && !noche) 1f else 0f
     /** Cuánto alumbra el dial del receptor. */
@@ -134,7 +134,7 @@ internal class AireUrss(val oscuro: Boolean, val noche: Boolean) {
     /** El color del ánimo hundido: guarda más de su tono que lo demás, para que las entradas lejanas se sigan distinguiendo. */
     fun hundidoAnimo(c: Color): Color {
         val n = hondo
-        val f = if (noche) 0.25f else 0.28f
+        val f = if (noche) 0.24f else 0.25f
         return Color(c.red * f + n.red * (1f - f), c.green * f + n.green * (1f - f), c.blue * f + n.blue * (1f - f), c.alpha)
     }
 
@@ -168,12 +168,12 @@ internal class LuzUrss(val a: AireUrss, val k: Float, val tinte: Color, val manc
         a.oscuro -> {
             // Lo hundido, aclarado por el rebote de la lámpara en la pared hacia su propio color apagado.
             val base = if (lav > 0.01f) mezcla(a.hundido(col), apagado(col), lav) else a.hundido(col)
-            var r = mezcla(mezcla(base, alFuego(col), q), tinte, 0.1f * k)
+            var r = mezcla(mezcla(base, alFuego(col), q), tinte, 0.07f * k)
             if (verde > 0.01f) r = mezcla(r, mezcla(alVerde(col), p.VERDE_LUZ, 0.15f), 0.5f * verde)
             if (luna > 0.01f) r = mezcla(r, lunaFria(col), 0.7f * luna)
             r
         }
-        a.noche -> mezcla(mezcla(anochecer(col, (0.34f + 0.3f * (1f - amb) - 0.5f * ocaso).coerceIn(0.08f, 0.62f)), alOcaso(col), ocaso), tinte, 0.3f * k)
+        a.noche -> mezcla(mezcla(anochecer(col, (0.26f + 0.24f * (1f - amb) - 0.45f * ocaso).coerceIn(0.08f, 0.5f)), alOcaso(col), ocaso), tinte, 0.3f * k)
         else -> alDia(col)
     }
 
@@ -196,7 +196,7 @@ internal class LuzUrss(val a: AireUrss, val k: Float, val tinte: Color, val manc
 
     /** Un color bajo la bombilla: la luz de color se multiplica por el del objeto y aclara; lo cercano es lo más claro del cuadro. */
     private fun alFuego(c: Color): Color = mezcla(Color((c.red * 1.06f + 0.03f).coerceAtMost(1f), (c.green * 1.02f + 0.02f).coerceAtMost(1f), (c.blue * 0.98f).coerceAtMost(1f), c.alpha),
-        Color((c.red * tinte.red * 1.32f + 0.04f).coerceAtMost(1f), (c.green * tinte.green * 1.2f + 0.02f).coerceAtMost(1f), (c.blue * tinte.blue * 1.25f).coerceAtMost(1f), c.alpha), 0.6f)
+        Color((c.red * tinte.red * 1.32f + 0.04f).coerceAtMost(1f), (c.green * tinte.green * 1.2f + 0.02f).coerceAtMost(1f), (c.blue * tinte.blue * 1.25f).coerceAtMost(1f), c.alpha), 0.48f)
 
     /** Un color bajo el vidrio verde: su valor a media luz, virado al verde. */
     private fun alVerde(c: Color): Color =
@@ -204,7 +204,7 @@ internal class LuzUrss(val a: AireUrss, val k: Float, val tinte: Color, val manc
 
     /** Un color bajo la luna: el mismo, virado a frío y un paso más claro que la noche. */
     private fun lunaFria(c: Color): Color =
-        Color((c.red * 0.28f + 0.03f).coerceAtMost(1f), (c.green * 0.36f + 0.05f).coerceAtMost(1f), (c.blue * 0.42f + 0.08f).coerceAtMost(1f), c.alpha)
+        Color((c.red * 0.38f + 0.04f).coerceAtMost(1f), (c.green * 0.48f + 0.06f).coerceAtMost(1f), (c.blue * 0.56f + 0.1f).coerceAtMost(1f), c.alpha)
 
     /** Un color apagado por la luz floja del cuarto: su propio color a media luz, con algo del azul verdoso de la noche. */
     private fun apagado(c: Color): Color {
@@ -246,7 +246,7 @@ internal class LuzUrss(val a: AireUrss, val k: Float, val tinte: Color, val manc
      * que le toca (cálido junto a la bombilla, frío bajo la luna, hundido lejos); nunca tanto que el número deje de leerse.
      */
     fun etiqueta(base: Color = ETIQUETA_URSS): Color = when {
-        a.oscuro -> mezcla(mezcla(mezcla(base, a.hondo, 0.66f), alFuego(mezcla(base, Color.White, 0.12f)), (q * 1.4f).coerceAtMost(1f)), lunaFria(base), 0.5f * luna)
+        a.oscuro -> mezcla(mezcla(mezcla(base, a.hondo, 0.7f), alFuego(mezcla(base, Color.White, 0.12f)), (q * 1.4f).coerceAtMost(1f)), lunaFria(base), 0.5f * luna)
         a.noche -> mezcla(mezcla(base, p.ANOCHECER, 0.22f - 0.12f * maxOf(ocaso, k)), p.CREPUSCULO, 0.14f * ocaso)
         else -> c(base)
     }
@@ -414,7 +414,7 @@ internal object MuebleEstanteUrss {
         val a = dx * ax + dy * ay
         val perp = abs(dx * ay - dy * ax)
         val cono = if (a <= 0f) 0.22f else (1f - (atan2(perp, a) * 57.2958f - 46f) / 14f).coerceIn(0.22f, 1f)
-        return (1.75f * exp(-4.6f * largo)).coerceAtMost(1f) * cono
+        return (1.8f * exp(-3.9f * largo)).coerceAtMost(1f) * cono
     }
 
     /** Cuánto alumbra el dial del receptor un punto: un charco bajo y corto, que sube por el zócalo y la última repisa. */
@@ -467,7 +467,7 @@ internal object MuebleEstanteUrss {
             granoMueble(Rect(0f, 0f, w, ch), oscuro)
         }
         if (n == 0) return
-        with(ParedEstanteUrss) { d.repisas.forEachIndexed { k, r -> fondoHueco(k, r, g) } }
+        with(ParedEstanteUrss) { d.repisas.forEachIndexed { k, r -> fondoHueco(k, r, d.ocupado.getOrNull(k) ?: r.right, g) } }
         with(HuecosEstanteUrss) {
             d.repisas.forEachIndexed { k, r ->
                 val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
@@ -525,10 +525,10 @@ internal class PanosUrss(val ox: Float, val oy: Float, val ux: Float, val uy: Fl
 }
 
 /** El último sol de los Sueños en claro: bajo y largo, casi tendido, en la cal de arriba, con sus tres paños. */
-internal val OCASO_URSS = PanosUrss(-0.03f, 0.075f, 0.58f, 0.1f, 0.035f, 0.13f, 3, 0.15f)
+internal val OCASO_URSS = PanosUrss(0.2f, 0.03f, 0.3f, 0.05f, 0.05f, 0.19f, 3, 0.14f)
 
 /** La luna de los Sueños en oscuro: más chica y más alta, en la cal entre el altavoz y el pliego. */
-internal val LUNA_URSS = PanosUrss(0.13f, 0.02f, 0.26f, 0.05f, 0.04f, 0.15f, 3, 0.18f)
+internal val LUNA_URSS = PanosUrss(0.17f, 0.015f, 0.27f, 0.045f, 0.05f, 0.2f, 3, 0.16f)
 
 /**
  * Las medidas que comparten las piezas, en píxeles: el ancho [w] y el alto [h] del lienzo, el pie de la corona [ch], el borde de

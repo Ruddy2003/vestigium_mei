@@ -42,13 +42,64 @@ internal object PieEstanteUrss {
         zocalo(g, y0, suelo)
         cable(g, suelo)
         periodicos(g, suelo)
+        valenki(g, suelo)
         scale(1.12f, 1.12f, Offset(w * 0.86f, h - (h - suelo) * 0.1f)) { receptor(g, suelo) }
+    }
+
+    // ---------------------------------------------------------------- las valenki
+
+    /**
+     * Las botas de fieltro del guarda (las valenki), un par de pie junto al taburete, vistas de lado con la punta a la izquierda:
+     * la caña de fieltro gris con su vuelta de arriba, el pie redondo y los chanclos de goma negra con su brillo; el fieltro con su
+     * pelusa. La de atrás, algo más alta en el cuadro y más honda.
+     */
+    private fun DrawScope.valenki(g: MarcoUrss, suelo: Float) {
+        val w = g.w; val h = g.h; val u = density
+        val alto = h - suelo
+        val fieltro = Color(0xFF8C877C)
+        listOf(Triple(0.585f, 0.2f, true), Triple(0.535f, 0.1f, false)).forEach { (fx, fy, atras) ->
+            val pie = h - alto * fy
+            val x = w * fx
+            val l = g.luz(x, pie - w * 0.06f, 0.07f)
+            val cana = w * 0.045f; val altoB = w * 0.13f; val largo = w * 0.085f
+            val bota = Path().apply {
+                moveTo(x + cana * 0.5f, pie - altoB)
+                lineTo(x + cana * 0.55f, pie - w * 0.02f)
+                cubicTo(x + cana * 0.58f, pie, x + cana * 0.3f, pie, x, pie)
+                lineTo(x - largo + w * 0.02f, pie)
+                cubicTo(x - largo - w * 0.006f, pie, x - largo - w * 0.006f, pie - w * 0.036f, x - largo + w * 0.022f, pie - w * 0.04f)
+                lineTo(x - cana * 0.5f, pie - w * 0.05f)
+                lineTo(x - cana * 0.5f, pie - altoB)
+                close()
+            }
+            drawOval(l.s(0.45f), Offset(x - largo - w * 0.004f, pie - w * 0.008f), Size(largo + cana + w * 0.02f, w * 0.016f))
+            val col = if (atras) mezcla(fieltro, P.NEGRO, 0.15f) else fieltro
+            planosUrss(bota, l.c(col), l, -1f, 0.22f, 0.3f)
+            clipPath(bota) {
+                // La pelusa del fieltro: motas claras y hondas.
+                for (j in 0 until 24) {
+                    val p = Offset(x - largo + (largo + cana) * azar(8701 + (if (atras) 1 else 0), j), pie - altoB * azar(8703, j))
+                    drawCircle(if (j % 2 == 0) l.b(0.2f) else l.s(0.18f), (0.6f + 0.7f * azar(8704, j)) * u, p)
+                }
+                // Los chanclos de goma negra, con su brillo.
+                val chanclo = Path().apply { addRect(Rect(x - largo - w * 0.01f, pie - w * 0.03f, x + cana, pie + 1f)) }
+                drawPath(chanclo, l.c(mezcla(P.NEGRO, P.OLEO_OSC, 0.2f)))
+                drawLine(l.b(0.6f), Offset(x - largo + w * 0.01f, pie - w * 0.026f), Offset(x + cana * 0.3f, pie - w * 0.026f), 1.2f * u)
+            }
+            // La vuelta de arriba de la caña, con su boca.
+            val boca = Rect(x - cana * 0.5f, pie - altoB - w * 0.008f, x + cana * 0.5f, pie - altoB + w * 0.008f)
+            drawOval(l.c(mezcla(col, P.NEGRO, 0.5f)), boca.topLeft, boca.size)
+            drawArc(l.c(mezcla(col, Color.White, 0.15f)), 180f, 180f, false, boca.topLeft, boca.size, style = Stroke(1.6f * u))
+            if (l.k > 0.05f) drawLine(l.filo(0.8f), Offset(x + cana * 0.5f, pie - altoB), Offset(x + cana * 0.55f, pie - w * 0.03f), 1.2f * u)
+        }
     }
 
     // ---------------------------------------------------------------- el parquet
 
-    private fun DrawScope.parquet(g: MarcoUrss, suelo: Float) {
+    private fun DrawScope.parquet(g: MarcoUrss, suelo0: Float) {
         val w = g.w; val h = g.h; val u = density
+        // Desde el píxel entero de arriba: la junta con el zócalo (que se pinta encima) puede caer a medio píxel.
+        val suelo = floor(suelo0)
         val alto = h - suelo
         if (alto < 1f) return
         // El roble con la luz de cada sitio: franjas a lo alto, cada una con su degradado a lo ancho.
@@ -219,7 +270,10 @@ internal object PieEstanteUrss {
         drawRect(l.s(0.35f), Offset(canto.left, canto.bottom - 1.4f * u), Size(canto.width, 1.4f * u))
         // El receptor.
         val r = Rect(w * 0.705f, canto.top - w * 0.015f - w * 0.132f, w * 0.965f, canto.top - w * 0.015f)
-        val lr = g.luz(r.center, 0.06f)
+        // La caja recibe la luz del cuarto, no la de su propio dial (que alumbra hacia fuera): se le quita la del dial.
+        val l0 = g.luz(r.center, 0.06f)
+        val kd = g.a.dial * MuebleEstanteUrss.kDial(r.center.x / w, r.center.y / w, h / w)
+        val lr = g.a.en((l0.k - kd).coerceAtLeast(0f), l0.tinte, l0.mancha, l0.amb, 0f, l0.verde)
         val hacia = g.hacia(r.center.x, r.center.y)
         val caja = Path().apply { addRoundRect(RoundRect(r, CornerRadius(w * 0.028f, w * 0.028f))) }
         drawPath(corridoUrss(caja, -hacia * w * 0.012f, w * 0.006f), lr.s(0.3f))
@@ -247,7 +301,8 @@ internal object PieEstanteUrss {
         val dial = Rect(r.left + r.width * 0.62f, r.top + r.height * 0.16f, r.right - r.width * 0.07f, r.top + r.height * 0.56f)
         val enc = g.a.dial > 0f
         if (enc) {
-            mancha(dial.center, w * 0.08f, P.DIAL.copy(alpha = 0.5f * g.a.dial))
+            // El resplandor del dial en la madera de alrededor, y la escala encendida.
+            mancha(dial.center, dial.width * 0.9f, P.DIAL.copy(alpha = 0.32f * g.a.dial))
             drawRect(mezcla(P.DIAL, Color(0xFFFFF1D0), 0.35f), dial.topLeft, dial.size)
         } else drawRect(lr.c(mezcla(P.CARTULINA, P.LATON, 0.25f)), dial.topLeft, dial.size)
         val rayas = Path()

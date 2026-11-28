@@ -8,10 +8,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.TextMeasurer
 import io.github.ruddy2003.vestigium.ui.Temas
@@ -136,7 +136,7 @@ private fun DrawScope.libroUrss(v: Volumen, tono: Color?, medidor: TextMeasurer,
         clipPath(hojas) {
             val canto = Path()
             var xh = x0 + an * 0.2f; var jh = 0
-            while (xh < x0 + an * 0.82f && jh < 30) { canto.moveTo(xh, top - hondo); canto.lineTo(xh, top + 1f * u); xh += 1.5f * u; jh++ }
+            while (xh < x0 + an * 0.82f && jh < 16) { canto.moveTo(xh, top - hondo); canto.lineTo(xh, top + 1f * u); xh += 2.2f * u; jh++ }
             drawPath(canto, l.s(0.16f), style = Stroke(0.5f * u))
             drawRect(l.b(0.35f), Offset(x0, top - hondo), Size(an, 1f * u))
         }
@@ -151,11 +151,12 @@ private fun DrawScope.libroUrss(v: Volumen, tono: Color?, medidor: TextMeasurer,
         drawRect(l.c(P.ROJO), Offset(ficha.left, ficha.top + 2f * u), Size(ficha.width, 0.9f * u))
         drawRect(l.b(0.4f), ficha.topLeft, Size(1f * u, ficha.height))
         planosUrss(lomo, tela, l, hacia, 0.2f, 0.26f)
-        clipPath(lomo) {
-            // La trama de la tela: hilos finos a lo largo, en un solo camino.
+        // Lo de encima del lomo va recortado a su rectángulo (más barato que a su forma; las esquinas casi no se redondean).
+        clipRect(x0, top, x0 + an, h - 0.5f * u) {
+            // La trama de la tela: unos hilos finos a lo largo, en un solo camino.
             val trama = Path()
-            var xx = x0 + an * 0.06f; var j = 0
-            while (xx < x0 + an * 0.96f && j < 40) { trama.moveTo(xx, top); trama.lineTo(xx, h); xx += 2.2f * u; j++ }
+            var xx = x0 + an * 0.08f; var j = 0
+            while (xx < x0 + an * 0.94f && j < 14) { trama.moveTo(xx, top); trama.lineTo(xx, h); xx += 3.6f * u; j++ }
             drawPath(trama, l.s(0.07f), style = Stroke(0.6f * u))
             // Los cajos: el surco de cada tapa junto a los cantos del lomo, con su filo de luz.
             listOf(0.1f, 0.9f).forEach { fx ->
